@@ -1,0 +1,149 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!--
+<meta property="og:title" content="GameEditor" />
+<meta property="og:description" content="GameEditor for simple games" />
+<meta property="og:image" content="" />
+-->
+
+<title>litegl.js: points example</title>
+	<link rel="stylesheet" type="text/css" href="style.css" />
+	<style type='text/css'>
+		body { background-color: #DDD;}
+		h1 { color: #777; background-color: #CCC; }
+	</style>
+	<script type="text/javascript" src="../external/gl-matrix.js"></script>
+	<script type="text/javascript" src="../build/litegl.js"></script>
+	<script type="text/javascript">
+
+	function init()
+	{
+		//create the rendering context
+		var gl = GL.create({width:1000,height:500});
+		var container = document.querySelector("#content");
+		container.appendChild(gl.canvas);
+
+		//build the mesh
+		var offset = 5;
+		var num = 20000*3;
+		var vertices = new Float32Array(num);
+		for(var i = 3; i < vertices.length; i++) 
+			vertices[i] = vertices[i - 3] + Math.random() * offset - offset*0.5; //random increments
+		var mesh = GL.Mesh.load({vertices: vertices });
+
+		//create basic matrices for cameras and transformation
+		var persp = mat4.create();
+		var view = mat4.create();
+		var mvp = mat4.create();
+		var temp = mat4.create();
+		var cam_pos = vec3.fromValues(0,0,100);
+		var center = vec3.create();
+
+		//set the camera position
+		mat4.perspective(persp, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 0.1, 1000);
+		mat4.lookAt(view, cam_pos, center, [0,1,0]);
+
+		var mode = gl.POINTS;
+
+		//events
+		gl.captureMouse();
+		gl.onmousemove = function(e)
+		{
+			if(e.dragging)
+				vec3.rotateY(cam_pos,cam_pos,e.deltaX * 0.01);
+		}
+
+		gl.onmouseup = function(e) {
+			if(e.click_time < 300)
+				mode = (mode == gl.LINE_STRIP ? gl.POINTS : gl.LINE_STRIP );
+		};
+
+		//basic rendering shader
+		var cloud_shader = new Shader('\
+				precision highp float;\
+				attribute vec3 a_vertex;\
+				uniform mat4 u_mvp;\
+				void main() {\
+					gl_Position = u_mvp * vec4(a_vertex,1.0);\
+					gl_PointSize = 500.0 / gl_Position.z;\
+				}\
+				', '\
+				precision highp float;\
+				uniform vec4 u_color;\
+				void main() {\
+				  gl_FragColor = u_color;\
+				}\
+			');
+
+
+		gl.clearColor(0.9,0.9,0.9,1);
+
+		//rendering loop
+		gl.ondraw = function()
+		{
+			gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
+
+			mat4.lookAt(view,cam_pos,center, [0,1,0]);
+			mat4.multiply(mvp,persp,view);
+
+			gl.enable(gl.BLEND );
+			gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+			gl.disable(gl.DEPTH_TEST);
+			cloud_shader.uniforms({
+				u_color: [0.1,0.1,0.1,0.05],
+				u_mvp: mvp
+			}).draw(mesh, mode);
+			gl.disable(gl.BLEND );
+		};
+
+		//update loop
+		gl.onupdate = function(dt)
+		{
+			//rotate world
+			vec3.rotateY(cam_pos,cam_pos,dt*0.1);
+
+			//apply lorenz attractor equation to every point
+			var rho = 28, sigma = 10, beta = 8/3., t = 0.001;
+
+			var temp = vec3.create();
+			vec3.zero(center);
+
+			var buffer = mesh.vertexBuffers["a_vertex"];
+			var vertices = buffer.data;
+
+			for(var i = 0; i < vertices.length; i+=3)
+			{
+				var point = vertices.subarray(i,i+3);
+				temp[0] = sigma*(point[1] - point[0]) * t;
+				temp[1] = (point[0] * (rho - point[2]) - point[1]) * t;
+				temp[2] = (point[0] * point[1] - beta * point[2]) * t;
+				vec3.add(point, point, temp); //apply delta movement
+				vec3.add(center, center, point); //compute system center
+			}
+
+			//update buffers info
+			buffer.compile(gl.DYNAMIC_DRAW);
+
+			//compute the scene center and point the camera to it
+			vec3.scale(center, center, 3 / vertices.length);
+			//vec3.transformMat4(center, center, model);
+		};
+	}	
+	</script>
+</head>
+<body>
+
+<div id="wrap">
+	<div id="main">
+		<h1>Points DEMO</h1>
+		<div id="content"></div>
+	</div>
+</div>
+
+<script>init();</script>
+</body>
+</html>
+
+
