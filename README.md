@@ -12,6 +12,10 @@ Some of the main differences:
  * Better event handling (mouse position, mouse wheel, dragging)
  * Textures expanded to support Arraybuffers and Cubemaps
 
+Demos
+-----
+Demos are included in the Examples folder but you can check them in [this website](http://tamats.com/webglstudio/litegl/#examples).
+
 Usage
 -----
 
