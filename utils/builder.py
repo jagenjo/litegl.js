@@ -26,11 +26,16 @@ parser.add_argument('-o2', dest='fullcode_output_file', action='store',
 parser.add_argument('--all', dest='all_files', action='store_const',
                    const=True, default=False,
                    help='Compile all JS files individually first.')
+parser.add_argument('--nomin', dest='no_minify', action='store_const',
+                   const=True, default=False,
+                   help='Do not minify the JS file')
+
 args = parser.parse_args()
 
 check_files_individually = args.all_files
 output_file = args.output_file
 fullcode_output_file = args.fullcode_output_file
+no_minify = args.no_minify
 
 root_path = "./" + os.path.dirname(args.input_file) + "/"
 sys.stderr.write(" + Root folder: " + root_path + "\n")
@@ -41,17 +46,17 @@ def packJSCode(files):
     
     for filename in files:
         filename = filename.strip()
-        if filename[0] == "#" or len(filename) == 0:
+        if len(filename) == 0 or filename[0] == "#":
             continue
         sys.stderr.write(" + Processing... " + filename + " " )
         src_file = root_path + filename
         if os.path.exists(src_file) == False:
-            print "JS File not found"
+            sys.stderr.write('\033[91m'+"JS File not found"+'\033[0m\n')
             continue
         data += open(src_file).read() + "\n"
         if check_files_individually:
               os.system("java -jar %s --js %s --js_output_file %s" % (compiler_path, src_file, "temp.js") )
-        sys.stderr.write("OK\n")
+        sys.stderr.write('\033[92m' + "OK\n" + '\033[0m')
     
     os.write(f1,data)
     os.close(f1)
@@ -71,7 +76,7 @@ def compileAndMinify(input_path, output_path):
 
 #load project info
 if os.path.exists(args.input_file) == False:
-    sys.stderr.write("Error, input file not found: " + args.input_file + "\n")
+    sys.stderr.write("\033[91m Error, input file not found: " + args.input_file + "\033[0m\n")
     exit(0)
 
 js_files = open(args.input_file).read().splitlines()
@@ -82,4 +87,5 @@ if fullcode_output_file != None:
     shutil.copy2(fullcode_path, fullcode_output_file)
     sys.stderr.write(" * Fullcode Stored in " + fullcode_output_file + "\n");
 
-compileAndMinify( fullcode_path, output_file )
+if not no_minify:
+    compileAndMinify( fullcode_path, output_file )

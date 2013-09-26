@@ -98,7 +98,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "../src/litegl.js",
-            "line": 1233,
+            "line": 1263,
             "description": "Shader class to upload programs to the GPU",
             "is_constructor": 1,
             "params": [
@@ -128,7 +128,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "../src/litegl.js",
-            "line": 1470,
+            "line": 1500,
             "description": "The static module that contains all the features"
         }
     },
@@ -358,7 +358,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 757,
+            "line": 759,
             "description": "Returns if depth texture is supported by the GPU",
             "itemtype": "method",
             "name": "isDepthSupported",
@@ -366,7 +366,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 769,
+            "line": 771,
             "description": "Binds the texture to one texture unit",
             "itemtype": "method",
             "name": "bind",
@@ -385,7 +385,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 781,
+            "line": 784,
             "description": "Unbinds the texture",
             "itemtype": "method",
             "name": "unbind",
@@ -404,7 +404,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 797,
+            "line": 801,
             "description": "Given an Image it uploads it to the GPU",
             "itemtype": "method",
             "name": "uploadImage",
@@ -419,7 +419,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 825,
+            "line": 829,
             "description": "Uploads data to the GPU (data must have the appropiate size)",
             "itemtype": "method",
             "name": "uploadData",
@@ -434,7 +434,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 840,
+            "line": 844,
             "description": "Render to texture using FBO, just pass the callback to a rendering function and the content of the texture will be updated",
             "itemtype": "method",
             "name": "drawTo",
@@ -449,7 +449,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 880,
+            "line": 884,
             "description": "Copy content of one texture into another",
             "itemtype": "method",
             "name": "copyTo",
@@ -464,7 +464,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 914,
+            "line": 918,
             "description": "Render texture to full viewport size",
             "itemtype": "method",
             "name": "toScreen",
@@ -484,7 +484,22 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 941,
+            "line": 945,
+            "description": "Copy texture content to a canvas",
+            "itemtype": "method",
+            "name": "toCanvas",
+            "params": [
+                {
+                    "name": "canvas",
+                    "description": "must have the same size, if different the canvas will be resized",
+                    "type": "Canvas"
+                }
+            ],
+            "class": "Texture"
+        },
+        {
+            "file": "../src/litegl.js",
+            "line": 971,
             "description": "Similar to drawTo but it also stores the depth in a depth texture",
             "itemtype": "method",
             "name": "toScreen",
@@ -509,7 +524,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 970,
+            "line": 1000,
             "description": "Loads and uploads a texture from a url",
             "itemtype": "method",
             "name": "Texture.fromURL",
@@ -538,7 +553,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 1016,
+            "line": 1046,
             "description": "Create a texture from an Image",
             "itemtype": "method",
             "name": "Texture.fromImage",
@@ -562,7 +577,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 1039,
+            "line": 1069,
             "description": "Create a clone of a texture",
             "itemtype": "method",
             "name": "Texture.fromTexture",
@@ -586,7 +601,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 1053,
+            "line": 1083,
             "description": "Create a texture from an ArrayBuffer containing the pixels",
             "itemtype": "method",
             "name": "Texture.fromTexture",
@@ -620,7 +635,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 1090,
+            "line": 1120,
             "description": "Create a cubemap texture from a set of 6 images",
             "itemtype": "method",
             "name": "Texture.cubemapFromImages",
@@ -644,7 +659,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 1126,
+            "line": 1156,
             "description": "Create a cubemap texture from a single image that contains all six images arranged vertically",
             "itemtype": "method",
             "name": "Texture.cubemapFromImage",
@@ -668,7 +683,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 1156,
+            "line": 1186,
             "description": "returns a Blob containing all the data from the texture",
             "itemtype": "method",
             "name": "Texture.toBlob",
@@ -680,7 +695,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 1192,
+            "line": 1222,
             "description": "returns a base64 String containing all the data from the texture",
             "itemtype": "method",
             "name": "Texture.toBase64",
@@ -692,7 +707,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 1220,
+            "line": 1250,
             "description": "generates some basic metadata about the image",
             "itemtype": "method",
             "name": "generateMetadata",
@@ -704,7 +719,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 1276,
+            "line": 1306,
             "description": "Uploads a set of uniforms to the Shader",
             "itemtype": "method",
             "name": "uniforms",
@@ -719,7 +734,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 1334,
+            "line": 1364,
             "description": "Renders a mesh using this shader",
             "itemtype": "method",
             "name": "draw",
@@ -739,7 +754,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 1346,
+            "line": 1376,
             "description": "Renders a range of a mesh using this shader",
             "itemtype": "method",
             "name": "drawRange",
@@ -769,7 +784,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 1361,
+            "line": 1391,
             "description": "Renders a range of a mesh using this shader",
             "itemtype": "method",
             "name": "drawBuffers",
@@ -804,7 +819,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 1478,
+            "line": 1508,
             "description": "creates a new WebGL canvas",
             "itemtype": "method",
             "name": "create",
@@ -823,7 +838,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 1542,
+            "line": 1585,
             "description": "Tells the system to capture mouse events on the canvas. This will trigger onmousedown, onmousemove, onmouseup, onmousewheel callbacks in the canvas.",
             "itemtype": "method",
             "name": "gl.captureMouse",
@@ -838,7 +853,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 1581,
+            "line": 1624,
             "description": "Tells the system to capture key events on the canvas. This will trigger onkey",
             "itemtype": "method",
             "name": "gl.captureKeys",
@@ -853,7 +868,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 1600,
+            "line": 1643,
             "description": "Tells the system to capture gamepad events on the canvas.",
             "itemtype": "method",
             "name": "gl.captureGamepads",
@@ -861,7 +876,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 1619,
+            "line": 1662,
             "description": "returns the detected gamepads on the system",
             "itemtype": "method",
             "name": "gl.getGamepads",

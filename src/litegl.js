@@ -703,6 +703,8 @@ Mesh.sphere = function(options) {
 */
 function Texture(width, height, options) {
 	options = options || {};
+	if(typeof(width) != "number" || typeof(height) != "number")
+		throw("GL.Texture width and height must be number");
 	this.handler = gl.createTexture();
 	this.width = width;
 	this.height = height;
@@ -773,9 +775,10 @@ var renderbuffer;
 * @return {number} returns the texture unit
 */
 Texture.prototype.bind = function(unit) {
-	gl.activeTexture(gl.TEXTURE0 + (unit || 0));
+	if(unit == undefined) unit = 0;
+	gl.activeTexture(gl.TEXTURE0 + unit);
 	gl.bindTexture(this.texture_type, this.handler);
-	return unit || 0;
+	return unit;
 }
 
 /**
@@ -785,7 +788,8 @@ Texture.prototype.bind = function(unit) {
 * @return {number} returns the texture unit
 */
 Texture.prototype.unbind = function(unit) {
-	gl.activeTexture(gl.TEXTURE0 + (unit || 0));
+	if(unit == undefined) unit = 0;
+	gl.activeTexture(gl.TEXTURE0 + unit );
 	gl.bindTexture(this.texture_type, null);
 }
 
@@ -936,6 +940,32 @@ Texture.prototype.toScreen = function(shader, uniforms)
 		shader.uniforms(uniforms);
 	this.bind(0);
 	shader.uniforms({texture: 0}).draw( mesh, gl.TRIANGLES );
+}
+
+/**
+* Copy texture content to a canvas
+* @method toCanvas
+* @param {Canvas} canvas must have the same size, if different the canvas will be resized
+*/
+Texture.prototype.toCanvas = function(canvas)
+{
+	var w = this.width;
+	var h = this.height;
+	canvas = canvas || createCanvas(w,h);
+	if(canvas.width != w) canvas.width = w;
+	if(canvas.height != h) canvas.height = h;
+
+	var buffer = new Uint8Array(w*h*4);
+	this.drawTo( function() {
+		gl.readPixels(0,0,w,h,gl.RGBA,gl.UNSIGNED_BYTE,buffer);
+	});
+
+	var ctx = canvas.getContext("2d");
+	var pixels = ctx.getImageData(0,0,w,h);
+	pixels.data.set( buffer );
+	ctx.putImageData(pixels,0,0);
+
+	return canvas;
 }
 
 /**
@@ -1483,7 +1513,20 @@ var GL = {
 	*/
 	create: function(options) {
 		options = options || {};
-		var canvas = options.canvas || createCanvas(  options.width || 800, options.height || 600 );
+		var canvas = null;
+		if(options.canvas)
+		{
+			if(typeof(options.canvas) == "string")
+			{
+				canvas = document.getElementById( options.canvas );
+				if(!canvas) throw("Canvas element not found: " + options.canvas );
+			}
+			else 
+				canvas = options.canvas;
+		}
+		else
+			canvas = createCanvas(  options.width || 800, options.height || 600 );
+
 		if (!('alpha' in options)) options.alpha = false;
 		try { gl = canvas.getContext('webgl', options); } catch (e) {}
 		try { gl = gl || canvas.getContext('experimental-webgl', options); } catch (e) {}
