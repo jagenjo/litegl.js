@@ -1,5 +1,11 @@
-../src/litegl.js
+../external/dds.js
+
 ../src/gl-matrix-extra.js
+../src/utils.js
+../src/mesh.js
+../src/texture.js
+../src/shader.js
+../src/litegl.js
 ../src/levent.js
 ../src/geo.js
 ../src/raytracer.js

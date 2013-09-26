@@ -704,6 +704,8 @@ Mesh.sphere = function(options) {
 */
 function Texture(width, height, options) {
 	options = options || {};
+	if(typeof(width) != "number" || typeof(height) != "number")
+		throw("GL.Texture width and height must be number");
 	this.handler = gl.createTexture();
 	this.width = width;
 	this.height = height;
@@ -941,6 +943,11 @@ Texture.prototype.toScreen = function(shader, uniforms)
 	shader.uniforms({texture: 0}).draw( mesh, gl.TRIANGLES );
 }
 
+/**
+* Copy texture content to a canvas
+* @method toCanvas
+* @param {Canvas} canvas must have the same size, if different the canvas will be resized
+*/
 Texture.prototype.toCanvas = function(canvas)
 {
 	var w = this.width;

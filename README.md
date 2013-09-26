@@ -7,10 +7,11 @@ Some of the main differences:
 
  * Matrices have been replaced by glMatrix
  * Meshes are forced to be stored in ArrayBuffer formats
- * Meshes support range rendering with offset</li>
+ * Meshes support range rendering with offset
  * Removed fixed pipeline behaviour
  * Better event handling (mouse position, mouse wheel, dragging)
  * Textures expanded to support Arraybuffers and Cubemaps
+ * Events system to trigger events from any object
 
 Demos
 -----
@@ -22,7 +23,6 @@ Usage
 Include the library and dependencies
 ```html
 <script src="js/gl-matrix-min.js"></script>
-<script src="js/dds.js"></script>
 <script src="js/litegl.js"></script>
 ```
 
