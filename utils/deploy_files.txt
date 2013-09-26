@@ -1,7 +1,8 @@
+../src/utils.js
+
 ../external/dds.js
 
 ../src/gl-matrix-extra.js
-../src/utils.js
 ../src/mesh.js
 ../src/texture.js
 ../src/shader.js
