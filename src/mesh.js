@@ -372,13 +372,16 @@ Mesh.prototype.computeBounding = function( vertices ) {
 		vec3.max( max,v, max);
 	}
 
-	var center = vec3.scale( vec3.add(min,max, vec3.create() ), 0.5);
-	var half_size = vec3.subtract( max, center, vec3.create() );
+	var center = vec3.add(vec3.create(), min,max );
+	vec3.scale( center, center, 0.5);
+	var half_size = vec3.subtract( vec3.create(), max, center );
 
-	this.bounding.aabb_center = vec3.toArray( center );
-	this.bounding.aabb_half = vec3.toArray( half_size );
-	this.bounding.aabb_min = vec3.toArray(min);
-	this.bounding.aabb_max = vec3.toArray(max);
+	if(!this.bounding)
+		this.bounding = {};
+	this.bounding.aabb_center = center;
+	this.bounding.aabb_half = half_size;
+	this.bounding.aabb_min = min;
+	this.bounding.aabb_max = max;
 	this.bounding.radius = vec3.length( half_size );
 }
 

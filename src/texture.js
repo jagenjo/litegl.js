@@ -5,8 +5,8 @@
 */
 function Texture(width, height, options) {
 	options = options || {};
-	if(typeof(width) != "number" || typeof(height) != "number")
-		throw("GL.Texture width and height must be number");
+	width = parseInt(width); 
+	height = parseInt(height);
 	this.handler = gl.createTexture();
 	this.width = width;
 	this.height = height;
