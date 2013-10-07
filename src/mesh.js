@@ -668,3 +668,16 @@ Mesh.sphere = function(options) {
 	};
 	return Mesh.load(buffers, options);
 }
+
+
+Mesh.getScreenQuad = function()
+{
+	if(this._screen_quad)
+		return this._screen_quad;
+	var vertices = new Float32Array(18);
+	var coords = new Float32Array([-1,-1, 1,1, -1,1,  -1,-1, 1,-1, 1,1 ]);
+	this.screen_quad = new GL.Mesh.load({
+		vertices: vertices,
+		coords: coords});
+	return this.screen_quad;
+}

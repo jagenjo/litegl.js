@@ -193,20 +193,10 @@ Texture.prototype.copyTo = function(target_texture) {
 
 	//copy content
 	target_texture.drawTo(function() {
-		if(!Shader.screen_shader.shader)
-			Shader.screen_shader.shader = new GL.Shader( Shader.screen_shader.vertex_shader, Shader.screen_shader.pixel_shader );
 		gl.disable( gl.BLEND );
 		gl.disable( gl.DEPTH_TEST );
 		gl.disable( gl.CULL_FACE );
-
-		var vertices = new Float32Array(18);
-		var coords = [-1,-1, 1,1, -1,1,  -1,-1, 1,-1, 1,1 ];
-
-		var mesh = new GL.Mesh.load({
-			vertices: vertices,
-			coords: coords});
-		that.bind(0);
-		Shader.screen_shader.shader.uniforms({texture: 0}).draw( mesh, gl.TRIANGLES );
+		that.toViewport();
 	});
 
 	if (target_texture.minFilter && target_texture.minFilter != gl.NEAREST && target_texture.minFilter != gl.LINEAR) {
@@ -218,26 +208,15 @@ Texture.prototype.copyTo = function(target_texture) {
 }
 
 /**
-* Render texture to full viewport size
-* @method toScreen
+* Render texture in a quad to full viewport size
+* @method toViewport
 * @param {Shader} shader to apply, otherwise a default textured shader is applied
 * @param {Object} uniforms for the shader if needed
 */
-Texture.prototype.toScreen = function(shader, uniforms)
+Texture.prototype.toViewport = function(shader, uniforms)
 {
-	//create default shader
-	if(!Shader.screen_shader.shader)
-		Shader.screen_shader.shader = new GL.Shader( Shader.screen_shader.vertex_shader, Shader.screen_shader.pixel_shader );
-
-	shader = shader || Shader.screen_shader.shader;
-	if(!Shader.screen_shader.mesh)
-	{
-		var vertices = new Float32Array(18);
-		var coords = new Float32Array([-1,-1, 1,1, -1,1,  -1,-1, 1,-1, 1,1 ]);
-		Shader.screen_shader.mesh = new GL.Mesh.load({
-			vertices: vertices,
-			coords: coords});
-	}
+	shader = shader || Shader.getScreenShader();
+	var mesh = Mesh.getScreenQuad();
 	if(uniforms)
 		shader.uniforms(uniforms);
 	this.bind(0);
@@ -272,7 +251,7 @@ Texture.prototype.toCanvas = function(canvas)
 
 /**
 * Similar to drawTo but it also stores the depth in a depth texture
-* @method toScreen
+* @method drawToColorAndDepth
 * @param {Texture} color_texture
 * @param {Texture} depth_texture
 * @param {Function} callback

@@ -185,8 +185,12 @@ Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_
 }
 
 //used to render one texture into another
-Shader.screen_shader = {
-	vertex_shader: "\n\
+Shader.getScreenShader = function()
+{
+	if(this._screen_shader)
+		return this._screen_shader;
+
+	var shader = new GL.Shader("\n\
 			precision highp float;\n\
 			attribute vec3 a_vertex;\n\
 			attribute vec2 a_coord;\n\
@@ -195,13 +199,14 @@ Shader.screen_shader = {
 				coord = a_coord; \n\
 				gl_Position = vec4(coord * 2.0 - 1.0, 0.0, 1.0); \n\
 			}\n\
-			",
-	pixel_shader: "\n\
+			","\n\
 			precision highp float;\n\
 			uniform sampler2D texture;\n\
 			varying vec2 coord;\n\
 			void main() {\n\
 				gl_FragColor = texture2D(texture, coord);\n\
 			}\n\
-			"
-};
+			");
+	this._screen_shader = shader;
+	return this._screen_shader;
+}

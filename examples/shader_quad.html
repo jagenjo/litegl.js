@@ -1,0 +1,84 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!--
+<meta property="og:title" content="GameEditor" />
+<meta property="og:description" content="GameEditor for simple games" />
+<meta property="og:image" content="" />
+-->
+
+<title>litegl.js: Quad example</title>
+	<link rel="stylesheet" type="text/css" href="style.css" />
+	<style type='text/css'>
+		body { background-color: #DDD;}
+		h1 { color: #777; background-color: #CCC; }
+	</style>
+	<script type="text/javascript" src="../external/gl-matrix.js"></script>
+	<script type="text/javascript" src="../build/litegl.js"></script>
+	<script type="text/javascript">
+	
+	function init()
+	{
+		//create the rendering context
+		var gl = GL.create({width:1000,height:500});
+		var container = document.querySelector("#content");
+		container.appendChild(gl.canvas);
+
+		//build the mesh
+		var texture = GL.Texture.fromURL("texture.png",{temp_color:[80,120,40,255], minFilter: gl.LINEAR_MIPMAP_LINEAR});
+		var start_time = getTime();
+
+		//basic distort shader
+		var shader = new Shader("\n\
+			precision highp float;\n\
+			attribute vec3 a_vertex;\n\
+			attribute vec2 a_coord;\n\
+			varying vec2 coord;\n\
+			void main() { \n\
+				coord = a_coord; \n\
+				gl_Position = vec4(coord * 2.0 - 1.0, 0.0, 1.0); \n\
+			}\n\
+			","\
+			precision highp float;\n\
+			uniform sampler2D texture;\n\
+			uniform float u_time;\n\
+			varying vec2 coord;\n\
+			void main() {\n\
+			    vec2 offset = vec2( 0.05 * sin(coord.y*10.0 + u_time), 0.0);\n\
+				gl_FragColor.r = texture2D(texture, coord + offset + vec2(0.001,0.0)).r;\n\
+				gl_FragColor.g = texture2D(texture, coord + offset).g;\n\
+				gl_FragColor.b = texture2D(texture, coord + offset + vec2(-0.001,0.0)).b;\n\
+			}\n\
+		");
+
+		//generic gl flags and settings
+		gl.disable( gl.DEPTH_TEST );
+
+		//rendering loop
+		gl.ondraw = function()
+		{
+			//render mesh using the shader
+			texture.toScreen( shader, {
+				u_texture: 0,
+				u_time: (getTime() - start_time ) * 0.001 
+			});
+		};
+	}	
+	
+	</script>
+</head>
+<body>
+
+<div id="wrap">
+	<div id="main">
+		<h1>SHADER DEMO</h1>
+		<div id="content"></div>
+	</div>
+</div>
+
+<script>init();</script>
+</body>
+</html>
+
+
