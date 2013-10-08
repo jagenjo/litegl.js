@@ -12,19 +12,62 @@
             "name": "../src/litegl.js",
             "modules": {},
             "classes": {
-                "Indexer": 1,
-                "Buffer": 1,
-                "Mesh": 1,
-                "Texture": 1,
-                "Shader": 1,
                 "GL": 1
             },
+            "fors": {},
+            "namespaces": {}
+        },
+        "../src/mesh.js": {
+            "name": "../src/mesh.js",
+            "modules": {},
+            "classes": {
+                "Indexer": 1,
+                "Buffer": 1,
+                "Mesh": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
+        "../src/shader.js": {
+            "name": "../src/shader.js",
+            "modules": {},
+            "classes": {
+                "Shader": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
+        "../src/texture.js": {
+            "name": "../src/texture.js",
+            "modules": {},
+            "classes": {
+                "Texture": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
+        "../src/utils.js": {
+            "name": "../src/utils.js",
+            "modules": {},
+            "classes": {},
             "fors": {},
             "namespaces": {}
         }
     },
     "modules": {},
     "classes": {
+        "GL": {
+            "name": "GL",
+            "shortname": "GL",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "../src/litegl.js",
+            "line": 3,
+            "description": "The static module that contains all the features"
+        },
         "Indexer": {
             "name": "Indexer",
             "shortname": "Indexer",
@@ -33,8 +76,8 @@
             "extensions": [],
             "plugin_for": [],
             "extension_for": [],
-            "file": "../src/litegl.js",
-            "line": 31,
+            "file": "../src/mesh.js",
+            "line": 1,
             "description": "Indexer used to reuse vertices among a mesh",
             "is_constructor": 1
         },
@@ -46,8 +89,8 @@
             "extensions": [],
             "plugin_for": [],
             "extension_for": [],
-            "file": "../src/litegl.js",
-            "line": 52,
+            "file": "../src/mesh.js",
+            "line": 22,
             "description": "A data buffer to be stored in the GPU",
             "is_constructor": 1,
             "params": [
@@ -71,22 +114,9 @@
             "extensions": [],
             "plugin_for": [],
             "extension_for": [],
-            "file": "../src/litegl.js",
-            "line": 114,
+            "file": "../src/mesh.js",
+            "line": 84,
             "description": "Mesh class to upload geometry to the GPU",
-            "is_constructor": 1
-        },
-        "Texture": {
-            "name": "Texture",
-            "shortname": "Texture",
-            "classitems": [],
-            "plugins": [],
-            "extensions": [],
-            "plugin_for": [],
-            "extension_for": [],
-            "file": "../src/litegl.js",
-            "line": 699,
-            "description": "Texture class to upload images to the GPU",
             "is_constructor": 1
         },
         "Shader": {
@@ -97,8 +127,8 @@
             "extensions": [],
             "plugin_for": [],
             "extension_for": [],
-            "file": "../src/litegl.js",
-            "line": 1263,
+            "file": "../src/shader.js",
+            "line": 1,
             "description": "Shader class to upload programs to the GPU",
             "is_constructor": 1,
             "params": [
@@ -119,59 +149,94 @@
                 }
             ]
         },
-        "GL": {
-            "name": "GL",
-            "shortname": "GL",
+        "Texture": {
+            "name": "Texture",
+            "shortname": "Texture",
             "classitems": [],
             "plugins": [],
             "extensions": [],
             "plugin_for": [],
             "extension_for": [],
-            "file": "../src/litegl.js",
-            "line": 1500,
-            "description": "The static module that contains all the features"
+            "file": "../src/texture.js",
+            "line": 1,
+            "description": "Texture class to upload images to the GPU",
+            "is_constructor": 1
         }
     },
     "classitems": [
         {
             "file": "../src/gl-matrix-extra.js",
             "line": 95,
-            "class": "Indexer"
+            "class": "GL"
         },
         {
             "file": "../src/litegl.js",
-            "line": 9,
-            "description": "Tells if one number is power of two (used for textures)",
+            "line": 11,
+            "description": "creates a new WebGL canvas",
             "itemtype": "method",
-            "name": "isPowerOfTwo",
+            "name": "create",
             "params": [
                 {
-                    "name": "number",
-                    "description": "",
-                    "type": "V"
+                    "name": "options",
+                    "description": "supported are: width, height",
+                    "type": "Object"
                 }
             ],
             "return": {
-                "description": "",
-                "type": "Boolean"
+                "description": "gl context for webgl",
+                "type": "Gl"
             },
-            "class": "Indexer"
+            "class": "GL"
         },
         {
             "file": "../src/litegl.js",
-            "line": 20,
-            "description": "Get current time in milliseconds",
+            "line": 92,
+            "description": "Tells the system to capture mouse events on the canvas. This will trigger onmousedown, onmousemove, onmouseup, onmousewheel callbacks in the canvas.",
             "itemtype": "method",
-            "name": "getTime",
-            "return": {
-                "description": "",
-                "type": "Number"
-            },
-            "class": "Indexer"
+            "name": "gl.captureMouse",
+            "params": [
+                {
+                    "name": "capture_wheel",
+                    "description": "capture also the mouse wheel",
+                    "type": "Boolean"
+                }
+            ],
+            "class": "GL"
         },
         {
             "file": "../src/litegl.js",
-            "line": 66,
+            "line": 131,
+            "description": "Tells the system to capture key events on the canvas. This will trigger onkey",
+            "itemtype": "method",
+            "name": "gl.captureKeys",
+            "params": [
+                {
+                    "name": "prevent_default",
+                    "description": "prevent default behaviour (like scroll on the web, etc)",
+                    "type": "Boolean"
+                }
+            ],
+            "class": "GL"
+        },
+        {
+            "file": "../src/litegl.js",
+            "line": 150,
+            "description": "Tells the system to capture gamepad events on the canvas.",
+            "itemtype": "method",
+            "name": "gl.captureGamepads",
+            "class": "GL"
+        },
+        {
+            "file": "../src/litegl.js",
+            "line": 169,
+            "description": "returns the detected gamepads on the system",
+            "itemtype": "method",
+            "name": "gl.getGamepads",
+            "class": "GL"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 36,
             "description": "Uploads the buffer data (stored in this.data) to the GPU",
             "itemtype": "method",
             "name": "compile",
@@ -185,8 +250,8 @@
             "class": "Buffer"
         },
         {
-            "file": "../src/litegl.js",
-            "line": 147,
+            "file": "../src/mesh.js",
+            "line": 117,
             "description": "Creates a new empty buffer and attachs it to this mesh",
             "itemtype": "method",
             "name": "addVertexBuffer",
@@ -205,8 +270,8 @@
             "class": "Mesh"
         },
         {
-            "file": "../src/litegl.js",
-            "line": 164,
+            "file": "../src/mesh.js",
+            "line": 134,
             "description": "Creates a new empty index buffer and attachs it to this mesh",
             "itemtype": "method",
             "name": "addIndexBuffer",
@@ -220,8 +285,8 @@
             "class": "Mesh"
         },
         {
-            "file": "../src/litegl.js",
-            "line": 175,
+            "file": "../src/mesh.js",
+            "line": 145,
             "description": "Uploads data of buffers to VRAM",
             "itemtype": "method",
             "name": "compile",
@@ -235,32 +300,32 @@
             "class": "Mesh"
         },
         {
-            "file": "../src/litegl.js",
-            "line": 194,
+            "file": "../src/mesh.js",
+            "line": 164,
             "description": "Computes some data about the mesh",
             "itemtype": "method",
             "name": "generateMetadata",
             "class": "Mesh"
         },
         {
-            "file": "../src/litegl.js",
-            "line": 265,
+            "file": "../src/mesh.js",
+            "line": 235,
             "description": "Creates a new index stream with wireframe",
             "itemtype": "method",
             "name": "computeWireframe",
             "class": "Mesh"
         },
         {
-            "file": "../src/litegl.js",
-            "line": 301,
+            "file": "../src/mesh.js",
+            "line": 271,
             "description": "Creates a new stream with the tangents",
             "itemtype": "method",
             "name": "computeTangents",
             "class": "Mesh"
         },
         {
-            "file": "../src/litegl.js",
-            "line": 386,
+            "file": "../src/mesh.js",
+            "line": 356,
             "description": "Computes bounding information",
             "itemtype": "method",
             "name": "computeBounding",
@@ -274,16 +339,16 @@
             "class": "Mesh"
         },
         {
-            "file": "../src/litegl.js",
-            "line": 415,
+            "file": "../src/mesh.js",
+            "line": 388,
             "description": "Remove all local memory from the streams (leaving it only in the VRAM) to save RAM",
             "itemtype": "method",
             "name": "freeData",
             "class": "Mesh"
         },
         {
-            "file": "../src/litegl.js",
-            "line": 433,
+            "file": "../src/mesh.js",
+            "line": 406,
             "description": "Static method for the class Mesh to create a mesh from a list of streams",
             "itemtype": "method",
             "name": "Mesh.load",
@@ -297,8 +362,8 @@
             "class": "Mesh"
         },
         {
-            "file": "../src/litegl.js",
-            "line": 474,
+            "file": "../src/mesh.js",
+            "line": 447,
             "description": "Returns a planar mesh (you can choose how many subdivisions)",
             "itemtype": "method",
             "name": "Mesh.plane",
@@ -312,8 +377,8 @@
             "class": "Mesh"
         },
         {
-            "file": "../src/litegl.js",
-            "line": 529,
+            "file": "../src/mesh.js",
+            "line": 502,
             "description": "Returns a cube mesh",
             "itemtype": "method",
             "name": "Mesh.cube",
@@ -327,8 +392,8 @@
             "class": "Mesh"
         },
         {
-            "file": "../src/litegl.js",
-            "line": 560,
+            "file": "../src/mesh.js",
+            "line": 533,
             "description": "Returns a cube mesh",
             "itemtype": "method",
             "name": "Mesh.cylinder",
@@ -342,8 +407,8 @@
             "class": "Mesh"
         },
         {
-            "file": "../src/litegl.js",
-            "line": 629,
+            "file": "../src/mesh.js",
+            "line": 602,
             "description": "Returns a sphere mesh",
             "itemtype": "method",
             "name": "Mesh.sphere",
@@ -357,369 +422,8 @@
             "class": "Mesh"
         },
         {
-            "file": "../src/litegl.js",
-            "line": 759,
-            "description": "Returns if depth texture is supported by the GPU",
-            "itemtype": "method",
-            "name": "isDepthSupported",
-            "class": "Texture"
-        },
-        {
-            "file": "../src/litegl.js",
-            "line": 771,
-            "description": "Binds the texture to one texture unit",
-            "itemtype": "method",
-            "name": "bind",
-            "params": [
-                {
-                    "name": "unit",
-                    "description": "texture unit",
-                    "type": "Number"
-                }
-            ],
-            "return": {
-                "description": "returns the texture unit",
-                "type": "Number"
-            },
-            "class": "Texture"
-        },
-        {
-            "file": "../src/litegl.js",
-            "line": 784,
-            "description": "Unbinds the texture",
-            "itemtype": "method",
-            "name": "unbind",
-            "params": [
-                {
-                    "name": "unit",
-                    "description": "texture unit",
-                    "type": "Number"
-                }
-            ],
-            "return": {
-                "description": "returns the texture unit",
-                "type": "Number"
-            },
-            "class": "Texture"
-        },
-        {
-            "file": "../src/litegl.js",
-            "line": 801,
-            "description": "Given an Image it uploads it to the GPU",
-            "itemtype": "method",
-            "name": "uploadImage",
-            "params": [
-                {
-                    "name": "img",
-                    "description": "",
-                    "type": "Image"
-                }
-            ],
-            "class": "Texture"
-        },
-        {
-            "file": "../src/litegl.js",
-            "line": 829,
-            "description": "Uploads data to the GPU (data must have the appropiate size)",
-            "itemtype": "method",
-            "name": "uploadData",
-            "params": [
-                {
-                    "name": "data",
-                    "description": "",
-                    "type": "ArrayBuffer"
-                }
-            ],
-            "class": "Texture"
-        },
-        {
-            "file": "../src/litegl.js",
-            "line": 844,
-            "description": "Render to texture using FBO, just pass the callback to a rendering function and the content of the texture will be updated",
-            "itemtype": "method",
-            "name": "drawTo",
-            "params": [
-                {
-                    "name": "callback",
-                    "description": "function that does all the rendering inside this texture",
-                    "type": "Function"
-                }
-            ],
-            "class": "Texture"
-        },
-        {
-            "file": "../src/litegl.js",
-            "line": 884,
-            "description": "Copy content of one texture into another",
-            "itemtype": "method",
-            "name": "copyTo",
-            "params": [
-                {
-                    "name": "target_texture",
-                    "description": "",
-                    "type": "Texture"
-                }
-            ],
-            "class": "Texture"
-        },
-        {
-            "file": "../src/litegl.js",
-            "line": 918,
-            "description": "Render texture to full viewport size",
-            "itemtype": "method",
-            "name": "toScreen",
-            "params": [
-                {
-                    "name": "shader",
-                    "description": "to apply, otherwise a default textured shader is applied",
-                    "type": "Shader"
-                },
-                {
-                    "name": "uniforms",
-                    "description": "for the shader if needed",
-                    "type": "Object"
-                }
-            ],
-            "class": "Texture"
-        },
-        {
-            "file": "../src/litegl.js",
-            "line": 945,
-            "description": "Copy texture content to a canvas",
-            "itemtype": "method",
-            "name": "toCanvas",
-            "params": [
-                {
-                    "name": "canvas",
-                    "description": "must have the same size, if different the canvas will be resized",
-                    "type": "Canvas"
-                }
-            ],
-            "class": "Texture"
-        },
-        {
-            "file": "../src/litegl.js",
-            "line": 971,
-            "description": "Similar to drawTo but it also stores the depth in a depth texture",
-            "itemtype": "method",
-            "name": "toScreen",
-            "params": [
-                {
-                    "name": "color_texture",
-                    "description": "",
-                    "type": "Texture"
-                },
-                {
-                    "name": "depth_texture",
-                    "description": "",
-                    "type": "Texture"
-                },
-                {
-                    "name": "callback",
-                    "description": "",
-                    "type": "Function"
-                }
-            ],
-            "class": "Texture"
-        },
-        {
-            "file": "../src/litegl.js",
-            "line": 1000,
-            "description": "Loads and uploads a texture from a url",
-            "itemtype": "method",
-            "name": "Texture.fromURL",
-            "params": [
-                {
-                    "name": "url",
-                    "description": "",
-                    "type": "String"
-                },
-                {
-                    "name": "options",
-                    "description": "",
-                    "type": "Object"
-                },
-                {
-                    "name": "on_complete",
-                    "description": "",
-                    "type": "Function"
-                }
-            ],
-            "return": {
-                "description": "the texture",
-                "type": "Texture"
-            },
-            "class": "Texture"
-        },
-        {
-            "file": "../src/litegl.js",
-            "line": 1046,
-            "description": "Create a texture from an Image",
-            "itemtype": "method",
-            "name": "Texture.fromImage",
-            "params": [
-                {
-                    "name": "image",
-                    "description": "",
-                    "type": "Image"
-                },
-                {
-                    "name": "options",
-                    "description": "",
-                    "type": "Object"
-                }
-            ],
-            "return": {
-                "description": "the texture",
-                "type": "Texture"
-            },
-            "class": "Texture"
-        },
-        {
-            "file": "../src/litegl.js",
-            "line": 1069,
-            "description": "Create a clone of a texture",
-            "itemtype": "method",
-            "name": "Texture.fromTexture",
-            "params": [
-                {
-                    "name": "old_texture",
-                    "description": "",
-                    "type": "Texture"
-                },
-                {
-                    "name": "options",
-                    "description": "",
-                    "type": "Object"
-                }
-            ],
-            "return": {
-                "description": "the texture",
-                "type": "Texture"
-            },
-            "class": "Texture"
-        },
-        {
-            "file": "../src/litegl.js",
-            "line": 1083,
-            "description": "Create a texture from an ArrayBuffer containing the pixels",
-            "itemtype": "method",
-            "name": "Texture.fromTexture",
-            "params": [
-                {
-                    "name": "width",
-                    "description": "",
-                    "type": "Number"
-                },
-                {
-                    "name": "height",
-                    "description": "",
-                    "type": "Number"
-                },
-                {
-                    "name": "pixels",
-                    "description": "",
-                    "type": "ArrayBuffer"
-                },
-                {
-                    "name": "options",
-                    "description": "",
-                    "type": "Object"
-                }
-            ],
-            "return": {
-                "description": "the texture",
-                "type": "Texture"
-            },
-            "class": "Texture"
-        },
-        {
-            "file": "../src/litegl.js",
-            "line": 1120,
-            "description": "Create a cubemap texture from a set of 6 images",
-            "itemtype": "method",
-            "name": "Texture.cubemapFromImages",
-            "params": [
-                {
-                    "name": "images",
-                    "description": "",
-                    "type": "Array"
-                },
-                {
-                    "name": "options",
-                    "description": "",
-                    "type": "Object"
-                }
-            ],
-            "return": {
-                "description": "the texture",
-                "type": "Texture"
-            },
-            "class": "Texture"
-        },
-        {
-            "file": "../src/litegl.js",
-            "line": 1156,
-            "description": "Create a cubemap texture from a single image that contains all six images arranged vertically",
-            "itemtype": "method",
-            "name": "Texture.cubemapFromImage",
-            "params": [
-                {
-                    "name": "image",
-                    "description": "",
-                    "type": "Image"
-                },
-                {
-                    "name": "options",
-                    "description": "",
-                    "type": "Object"
-                }
-            ],
-            "return": {
-                "description": "the texture",
-                "type": "Texture"
-            },
-            "class": "Texture"
-        },
-        {
-            "file": "../src/litegl.js",
-            "line": 1186,
-            "description": "returns a Blob containing all the data from the texture",
-            "itemtype": "method",
-            "name": "Texture.toBlob",
-            "return": {
-                "description": "the blob containing the data",
-                "type": "Blob"
-            },
-            "class": "Texture"
-        },
-        {
-            "file": "../src/litegl.js",
-            "line": 1222,
-            "description": "returns a base64 String containing all the data from the texture",
-            "itemtype": "method",
-            "name": "Texture.toBase64",
-            "return": {
-                "description": "the data in base64 format",
-                "type": "String"
-            },
-            "class": "Texture"
-        },
-        {
-            "file": "../src/litegl.js",
-            "line": 1250,
-            "description": "generates some basic metadata about the image",
-            "itemtype": "method",
-            "name": "generateMetadata",
-            "return": {
-                "description": "",
-                "type": "Object"
-            },
-            "class": "Texture"
-        },
-        {
-            "file": "../src/litegl.js",
-            "line": 1306,
+            "file": "../src/shader.js",
+            "line": 44,
             "description": "Uploads a set of uniforms to the Shader",
             "itemtype": "method",
             "name": "uniforms",
@@ -733,8 +437,8 @@
             "class": "Shader"
         },
         {
-            "file": "../src/litegl.js",
-            "line": 1364,
+            "file": "../src/shader.js",
+            "line": 102,
             "description": "Renders a mesh using this shader",
             "itemtype": "method",
             "name": "draw",
@@ -753,8 +457,8 @@
             "class": "Shader"
         },
         {
-            "file": "../src/litegl.js",
-            "line": 1376,
+            "file": "../src/shader.js",
+            "line": 114,
             "description": "Renders a range of a mesh using this shader",
             "itemtype": "method",
             "name": "drawRange",
@@ -783,8 +487,8 @@
             "class": "Shader"
         },
         {
-            "file": "../src/litegl.js",
-            "line": 1391,
+            "file": "../src/shader.js",
+            "line": 129,
             "description": "Renders a range of a mesh using this shader",
             "itemtype": "method",
             "name": "drawBuffers",
@@ -818,69 +522,396 @@
             "class": "Shader"
         },
         {
-            "file": "../src/litegl.js",
-            "line": 1508,
-            "description": "creates a new WebGL canvas",
+            "file": "../src/texture.js",
+            "line": 61,
+            "description": "Returns if depth texture is supported by the GPU",
             "itemtype": "method",
-            "name": "create",
+            "name": "isDepthSupported",
+            "class": "Texture"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 73,
+            "description": "Binds the texture to one texture unit",
+            "itemtype": "method",
+            "name": "bind",
             "params": [
                 {
+                    "name": "unit",
+                    "description": "texture unit",
+                    "type": "Number"
+                }
+            ],
+            "return": {
+                "description": "returns the texture unit",
+                "type": "Number"
+            },
+            "class": "Texture"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 86,
+            "description": "Unbinds the texture",
+            "itemtype": "method",
+            "name": "unbind",
+            "params": [
+                {
+                    "name": "unit",
+                    "description": "texture unit",
+                    "type": "Number"
+                }
+            ],
+            "return": {
+                "description": "returns the texture unit",
+                "type": "Number"
+            },
+            "class": "Texture"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 103,
+            "description": "Given an Image it uploads it to the GPU",
+            "itemtype": "method",
+            "name": "uploadImage",
+            "params": [
+                {
+                    "name": "img",
+                    "description": "",
+                    "type": "Image"
+                }
+            ],
+            "class": "Texture"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 131,
+            "description": "Uploads data to the GPU (data must have the appropiate size)",
+            "itemtype": "method",
+            "name": "uploadData",
+            "params": [
+                {
+                    "name": "data",
+                    "description": "",
+                    "type": "ArrayBuffer"
+                }
+            ],
+            "class": "Texture"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 146,
+            "description": "Render to texture using FBO, just pass the callback to a rendering function and the content of the texture will be updated",
+            "itemtype": "method",
+            "name": "drawTo",
+            "params": [
+                {
+                    "name": "callback",
+                    "description": "function that does all the rendering inside this texture",
+                    "type": "Function"
+                }
+            ],
+            "class": "Texture"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 186,
+            "description": "Copy content of one texture into another",
+            "itemtype": "method",
+            "name": "copyTo",
+            "params": [
+                {
+                    "name": "target_texture",
+                    "description": "",
+                    "type": "Texture"
+                }
+            ],
+            "class": "Texture"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 210,
+            "description": "Render texture in a quad to full viewport size",
+            "itemtype": "method",
+            "name": "toViewport",
+            "params": [
+                {
+                    "name": "shader",
+                    "description": "to apply, otherwise a default textured shader is applied",
+                    "type": "Shader"
+                },
+                {
+                    "name": "uniforms",
+                    "description": "for the shader if needed",
+                    "type": "Object"
+                }
+            ],
+            "class": "Texture"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 226,
+            "description": "Copy texture content to a canvas",
+            "itemtype": "method",
+            "name": "toCanvas",
+            "params": [
+                {
+                    "name": "canvas",
+                    "description": "must have the same size, if different the canvas will be resized",
+                    "type": "Canvas"
+                }
+            ],
+            "class": "Texture"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 252,
+            "description": "Similar to drawTo but it also stores the depth in a depth texture",
+            "itemtype": "method",
+            "name": "drawToColorAndDepth",
+            "params": [
+                {
+                    "name": "color_texture",
+                    "description": "",
+                    "type": "Texture"
+                },
+                {
+                    "name": "depth_texture",
+                    "description": "",
+                    "type": "Texture"
+                },
+                {
+                    "name": "callback",
+                    "description": "",
+                    "type": "Function"
+                }
+            ],
+            "class": "Texture"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 281,
+            "description": "Loads and uploads a texture from a url",
+            "itemtype": "method",
+            "name": "Texture.fromURL",
+            "params": [
+                {
+                    "name": "url",
+                    "description": "",
+                    "type": "String"
+                },
+                {
                     "name": "options",
-                    "description": "supported are: width, height",
+                    "description": "",
+                    "type": "Object"
+                },
+                {
+                    "name": "on_complete",
+                    "description": "",
+                    "type": "Function"
+                }
+            ],
+            "return": {
+                "description": "the texture",
+                "type": "Texture"
+            },
+            "class": "Texture"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 327,
+            "description": "Create a texture from an Image",
+            "itemtype": "method",
+            "name": "Texture.fromImage",
+            "params": [
+                {
+                    "name": "image",
+                    "description": "",
+                    "type": "Image"
+                },
+                {
+                    "name": "options",
+                    "description": "",
                     "type": "Object"
                 }
             ],
             "return": {
-                "description": "gl context for webgl",
-                "type": "Gl"
+                "description": "the texture",
+                "type": "Texture"
             },
-            "class": "GL"
+            "class": "Texture"
         },
         {
-            "file": "../src/litegl.js",
-            "line": 1585,
-            "description": "Tells the system to capture mouse events on the canvas. This will trigger onmousedown, onmousemove, onmouseup, onmousewheel callbacks in the canvas.",
+            "file": "../src/texture.js",
+            "line": 350,
+            "description": "Create a clone of a texture",
             "itemtype": "method",
-            "name": "gl.captureMouse",
+            "name": "Texture.fromTexture",
             "params": [
                 {
-                    "name": "capture_wheel",
-                    "description": "capture also the mouse wheel",
-                    "type": "Boolean"
+                    "name": "old_texture",
+                    "description": "",
+                    "type": "Texture"
+                },
+                {
+                    "name": "options",
+                    "description": "",
+                    "type": "Object"
                 }
             ],
-            "class": "GL"
+            "return": {
+                "description": "the texture",
+                "type": "Texture"
+            },
+            "class": "Texture"
         },
         {
-            "file": "../src/litegl.js",
-            "line": 1624,
-            "description": "Tells the system to capture key events on the canvas. This will trigger onkey",
+            "file": "../src/texture.js",
+            "line": 364,
+            "description": "Create a texture from an ArrayBuffer containing the pixels",
             "itemtype": "method",
-            "name": "gl.captureKeys",
+            "name": "Texture.fromTexture",
             "params": [
                 {
-                    "name": "prevent_default",
-                    "description": "prevent default behaviour (like scroll on the web, etc)",
-                    "type": "Boolean"
+                    "name": "width",
+                    "description": "",
+                    "type": "Number"
+                },
+                {
+                    "name": "height",
+                    "description": "",
+                    "type": "Number"
+                },
+                {
+                    "name": "pixels",
+                    "description": "",
+                    "type": "ArrayBuffer"
+                },
+                {
+                    "name": "options",
+                    "description": "",
+                    "type": "Object"
                 }
             ],
-            "class": "GL"
+            "return": {
+                "description": "the texture",
+                "type": "Texture"
+            },
+            "class": "Texture"
         },
         {
-            "file": "../src/litegl.js",
-            "line": 1643,
-            "description": "Tells the system to capture gamepad events on the canvas.",
+            "file": "../src/texture.js",
+            "line": 401,
+            "description": "Create a cubemap texture from a set of 6 images",
             "itemtype": "method",
-            "name": "gl.captureGamepads",
-            "class": "GL"
+            "name": "Texture.cubemapFromImages",
+            "params": [
+                {
+                    "name": "images",
+                    "description": "",
+                    "type": "Array"
+                },
+                {
+                    "name": "options",
+                    "description": "",
+                    "type": "Object"
+                }
+            ],
+            "return": {
+                "description": "the texture",
+                "type": "Texture"
+            },
+            "class": "Texture"
         },
         {
-            "file": "../src/litegl.js",
-            "line": 1662,
-            "description": "returns the detected gamepads on the system",
+            "file": "../src/texture.js",
+            "line": 437,
+            "description": "Create a cubemap texture from a single image that contains all six images arranged vertically",
             "itemtype": "method",
-            "name": "gl.getGamepads",
-            "class": "GL"
+            "name": "Texture.cubemapFromImage",
+            "params": [
+                {
+                    "name": "image",
+                    "description": "",
+                    "type": "Image"
+                },
+                {
+                    "name": "options",
+                    "description": "",
+                    "type": "Object"
+                }
+            ],
+            "return": {
+                "description": "the texture",
+                "type": "Texture"
+            },
+            "class": "Texture"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 467,
+            "description": "returns a Blob containing all the data from the texture",
+            "itemtype": "method",
+            "name": "Texture.toBlob",
+            "return": {
+                "description": "the blob containing the data",
+                "type": "Blob"
+            },
+            "class": "Texture"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 503,
+            "description": "returns a base64 String containing all the data from the texture",
+            "itemtype": "method",
+            "name": "Texture.toBase64",
+            "return": {
+                "description": "the data in base64 format",
+                "type": "String"
+            },
+            "class": "Texture"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 531,
+            "description": "generates some basic metadata about the image",
+            "itemtype": "method",
+            "name": "generateMetadata",
+            "return": {
+                "description": "",
+                "type": "Object"
+            },
+            "class": "Texture"
+        },
+        {
+            "file": "../src/utils.js",
+            "line": 9,
+            "description": "Tells if one number is power of two (used for textures)",
+            "itemtype": "method",
+            "name": "isPowerOfTwo",
+            "params": [
+                {
+                    "name": "number",
+                    "description": "",
+                    "type": "V"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "Boolean"
+            },
+            "class": ""
+        },
+        {
+            "file": "../src/utils.js",
+            "line": 20,
+            "description": "Get current time in milliseconds",
+            "itemtype": "method",
+            "name": "getTime",
+            "return": {
+                "description": "",
+                "type": "Number"
+            },
+            "class": ""
         }
     ],
     "warnings": [
