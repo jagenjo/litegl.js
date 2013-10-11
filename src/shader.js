@@ -4,7 +4,7 @@
 * @constructor
 * @param {String} vertexSource
 * @param {String} fragmentSource
-* @param {Object} macros precompiler macros to be applied when compiling
+* @param {Object} macros (optional) precompiler macros to be applied when compiling
 */
 function Shader(vertexSource, fragmentSource, macros)
 {
@@ -100,7 +100,7 @@ Shader.prototype.uniforms = function(uniforms) {
 }//uniforms
 
 /**
-* Renders a mesh using this shader
+* Renders a mesh using this shader, remember to use the function uniforms before to enable the shader
 * @method draw
 * @param {Mesh} mesh
 * @param {number} mode could be gl.LINES, gl.POINTS, gl.TRIANGLES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN
@@ -184,7 +184,9 @@ Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_
 	return this;
 }
 
-//used to render one texture into another
+//Now some common shaders everybody needs
+
+//Screen shader: used to render one texture into another
 Shader.getScreenShader = function()
 {
 	if(this._screen_shader)
@@ -209,4 +211,42 @@ Shader.getScreenShader = function()
 			");
 	this._screen_shader = shader;
 	return this._screen_shader;
+}
+
+//Blur shader
+Shader.getBlurShader = function()
+{
+	if(this._blur_shader)
+		return this._blur_shader;
+
+	var shader = new GL.Shader("\n\
+			precision highp float;\n\
+			attribute vec3 a_vertex;\n\
+			attribute vec2 a_coord;\n\
+			varying vec2 v_coord;\n\
+			void main() {\n\
+				v_coord = a_coord; gl_Position = vec4(v_coord * 2.0 - 1.0, 0.0, 1.0);\n\
+			}\n\
+			","\n\
+			precision highp float;\n\
+			varying vec2 v_coord;\n\
+			uniform sampler2D u_texture;\n\
+			uniform vec2 u_offset;\n\
+			uniform float u_intensity;\n\
+			void main() {\n\
+			   vec4 sum = vec4(0.0);\n\
+			   sum += texture2D(u_texture, v_coord + u_offset * -4.0) * 0.05/0.98;\n\
+			   sum += texture2D(u_texture, v_coord + u_offset * -3.0) * 0.09/0.98;\n\
+			   sum += texture2D(u_texture, v_coord + u_offset * -2.0) * 0.12/0.98;\n\
+			   sum += texture2D(u_texture, v_coord + u_offset * -1.0) * 0.15/0.98;\n\
+			   sum += texture2D(u_texture, v_coord) * 0.16/0.98;\n\
+			   sum += texture2D(u_texture, v_coord + u_offset * 4.0) * 0.05/0.98;\n\
+			   sum += texture2D(u_texture, v_coord + u_offset * 3.0) * 0.09/0.98;\n\
+			   sum += texture2D(u_texture, v_coord + u_offset * 2.0) * 0.12/0.98;\n\
+			   sum += texture2D(u_texture, v_coord + u_offset * 1.0) * 0.15/0.98;\n\
+			   gl_FragColor = u_intensity * sum;\n\
+			}\n\
+			");
+	this._blur_shader = shader;
+	return this._blur_shader;
 }

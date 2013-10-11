@@ -1420,8 +1420,22 @@ Mesh.getScreenQuad = function()
 	return this.screen_quad;
 }
 /**
-* Texture class to upload images to the GPU
+* Texture class to upload images to the GPU, default is gl.TEXTURE_2D, gl.RGBAof gl.UNSIGNED_BYTE with filter gl.LINEAR, and gl.CLAMP_TO_EDGE
+	There is a list of options
+	==========================
+	- texture_type: gl.TEXTURE_2D, gl.TEXTURE_CUBE_MAP
+	- format: gl.RGB, gl.RGBA, gl.DEPTH_COMPONENT
+	- type: gl.UNSIGNED_BYTE, gl.UNSIGNED_SHORT, gl.HALF_FLOAT_OES, gl.FLOAT
+	- filter: filtering for mag and min: gl.NEAREST or gl.LINEAR
+	- magFilter: magnifying filter: gl.NEAREST, gl.LINEAR
+	- minFilter: minifying filter: gl.NEAREST, gl.LINEAR, gl.LINEAR_MIPMAP_LINEAR
+	- premultiply_alpha: multiplies alpha channel by every color channel
+	- wrap: texture wrapping: gl.CLAMP_TO_EDGE, gl.REPEAT, gl.MIRROR
+
 * @class Texture
+* @param {number} width texture width (any supported but Power of Two allows to have mipmaps), 0 means no memory reserved till its filled
+* @param {number} height texture height (any supported but Power of Two allows to have mipmaps), 0 means no memory reserved till its filled
+* @param {Object} options Check the list in the description
 * @constructor
 */
 function Texture(width, height, options) {
@@ -1440,12 +1454,12 @@ function Texture(width, height, options) {
 
 	this.has_mipmaps = false;
 
-	if(this.format == gl.DEPTH_COMPONENT)
-	{
-		this.depth_ext = gl.getExtension("WEBGL_depth_texture") || gl.getExtension("WEBKIT_WEBGL_depth_texture") || gl.getExtension("MOZ_WEBGL_depth_texture");
-		if(!this.depth_ext)
-			throw("Depth Texture not supported");
-	}
+	if(this.format == gl.DEPTH_COMPONENT && !gl.depth_ext)
+		throw("Depth Texture not supported");
+	if(this.format == gl.FLOAT && !gl.float_ext)
+		throw("Float Texture not supported");
+	if(this.format == gl.HALF_FLOAT_OES && !gl.half_float_ext)
+		throw("Half Float Texture not supported");
 
 	if(width && height)
 	{
@@ -1522,7 +1536,7 @@ Texture.prototype.setParameter = function(param,value) {
 }
 
 /**
-* Given an Image it uploads it to the GPU
+* Given an Image/Canvas/Video it uploads it to the GPU
 * @method uploadImage
 * @param {Image} img
 */
@@ -1531,8 +1545,8 @@ Texture.prototype.uploadImage = function(image)
 	this.bind();
 	try {
 		gl.texImage2D(gl.TEXTURE_2D, 0, this.format, this.format, this.type, image);
-		this.width = image.width;
-		this.height = image.height;
+		this.width = image.videoWidth || image.width;
+		this.height = image.videoHeight || image.height;
 	} catch (e) {
 		if (location.protocol == 'file:') {
 			throw 'image not loaded for security reasons (serve this page over "http://" instead)';
@@ -1769,6 +1783,29 @@ Texture.fromImage = function(image, options) {
 };
 
 /**
+* Create a texture from a Video
+* @method Texture.fromVideo
+* @param {Video} video
+* @param {Object} options
+* @return {Texture} the texture
+*/
+Texture.fromVideo = function(video, options) {
+	options = options || {};
+	var texture = options.texture || new GL.Texture(video.videoWidth, video.videoHeight, options);
+	texture.bind();
+	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, (options.flipY != true ? 1 : 0) );
+	gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, !!options.premultiply_alpha );
+	texture.uploadImage(video);
+	if (options.minFilter && options.minFilter != gl.NEAREST && options.minFilter != gl.LINEAR) {
+		texture.bind();
+		gl.generateMipmap(texture.texture_type);
+		texture.has_mipmaps = true;
+	}
+	gl.bindTexture(texture.texture_type, null); //disable
+	return texture;
+};
+
+/**
 * Create a clone of a texture
 * @method Texture.fromTexture
 * @param {Texture} old_texture
@@ -1967,7 +2004,7 @@ Texture.prototype.generateMetadata = function()
 * @constructor
 * @param {String} vertexSource
 * @param {String} fragmentSource
-* @param {Object} macros precompiler macros to be applied when compiling
+* @param {Object} macros (optional) precompiler macros to be applied when compiling
 */
 function Shader(vertexSource, fragmentSource, macros)
 {
@@ -2063,7 +2100,7 @@ Shader.prototype.uniforms = function(uniforms) {
 }//uniforms
 
 /**
-* Renders a mesh using this shader
+* Renders a mesh using this shader, remember to use the function uniforms before to enable the shader
 * @method draw
 * @param {Mesh} mesh
 * @param {number} mode could be gl.LINES, gl.POINTS, gl.TRIANGLES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN
@@ -2147,7 +2184,9 @@ Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_
 	return this;
 }
 
-//used to render one texture into another
+//Now some common shaders everybody needs
+
+//Screen shader: used to render one texture into another
 Shader.getScreenShader = function()
 {
 	if(this._screen_shader)
@@ -2172,6 +2211,44 @@ Shader.getScreenShader = function()
 			");
 	this._screen_shader = shader;
 	return this._screen_shader;
+}
+
+//Blur shader
+Shader.getBlurShader = function()
+{
+	if(this._blur_shader)
+		return this._blur_shader;
+
+	var shader = new GL.Shader("\n\
+			precision highp float;\n\
+			attribute vec3 a_vertex;\n\
+			attribute vec2 a_coord;\n\
+			varying vec2 v_coord;\n\
+			void main() {\n\
+				v_coord = a_coord; gl_Position = vec4(v_coord * 2.0 - 1.0, 0.0, 1.0);\n\
+			}\n\
+			","\n\
+			precision highp float;\n\
+			varying vec2 v_coord;\n\
+			uniform sampler2D u_texture;\n\
+			uniform vec2 u_offset;\n\
+			uniform float u_intensity;\n\
+			void main() {\n\
+			   vec4 sum = vec4(0.0);\n\
+			   sum += texture2D(u_texture, v_coord + u_offset * -4.0) * 0.05/0.98;\n\
+			   sum += texture2D(u_texture, v_coord + u_offset * -3.0) * 0.09/0.98;\n\
+			   sum += texture2D(u_texture, v_coord + u_offset * -2.0) * 0.12/0.98;\n\
+			   sum += texture2D(u_texture, v_coord + u_offset * -1.0) * 0.15/0.98;\n\
+			   sum += texture2D(u_texture, v_coord) * 0.16/0.98;\n\
+			   sum += texture2D(u_texture, v_coord + u_offset * 4.0) * 0.05/0.98;\n\
+			   sum += texture2D(u_texture, v_coord + u_offset * 3.0) * 0.09/0.98;\n\
+			   sum += texture2D(u_texture, v_coord + u_offset * 2.0) * 0.12/0.98;\n\
+			   sum += texture2D(u_texture, v_coord + u_offset * 1.0) * 0.15/0.98;\n\
+			   gl_FragColor = u_intensity * sum;\n\
+			}\n\
+			");
+	this._blur_shader = shader;
+	return this._blur_shader;
 }
 
 
@@ -2211,6 +2288,13 @@ var GL = {
 		if (!gl) { throw 'WebGL not supported'; }
 
 		gl.derivatives_supported = gl.getExtension('OES_standard_derivatives') || false ;
+		gl.depth_ext = gl.getExtension("WEBGL_depth_texture") || gl.getExtension("WEBKIT_WEBGL_depth_texture") || gl.getExtension("MOZ_WEBGL_depth_texture");
+		//for float textures
+		gl.float_ext = gl.getExtension("OES_texture_float");
+		gl.float_ext_linear = gl.getExtension("OES_texture_float_linear");
+		gl.half_float_ext = gl.getExtension("OES_texture_half_float");
+		gl.half_float_ext_linear = gl.getExtension("OES_texture_half_float_linear");
+		gl.HALF_FLOAT_OES = 0x8D61; 
 
 		//just some checks
 		if(typeof(glMatrix) == "undefined")

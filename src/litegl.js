@@ -36,6 +36,13 @@ var GL = {
 		if (!gl) { throw 'WebGL not supported'; }
 
 		gl.derivatives_supported = gl.getExtension('OES_standard_derivatives') || false ;
+		gl.depth_ext = gl.getExtension("WEBGL_depth_texture") || gl.getExtension("WEBKIT_WEBGL_depth_texture") || gl.getExtension("MOZ_WEBGL_depth_texture");
+		//for float textures
+		gl.float_ext = gl.getExtension("OES_texture_float");
+		gl.float_ext_linear = gl.getExtension("OES_texture_float_linear");
+		gl.half_float_ext = gl.getExtension("OES_texture_half_float");
+		gl.half_float_ext_linear = gl.getExtension("OES_texture_half_float_linear");
+		gl.HALF_FLOAT_OES = 0x8D61; 
 
 		//just some checks
 		if(typeof(glMatrix) == "undefined")

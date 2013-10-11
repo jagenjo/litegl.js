@@ -112,7 +112,17 @@
 
 
 <div class="box intro">
-    <p>Texture class to upload images to the GPU</p>
+    <p>Texture class to upload images to the GPU, default is gl.TEXTURE_2D, gl.RGBAof gl.UNSIGNED_BYTE with filter gl.LINEAR, and gl.CLAMP_TO_EDGE</p>
+<pre class="code prettyprint"><code>There is a list of options
+==========================
+- texture_type: gl.TEXTURE_2D, gl.TEXTURE_CUBE_MAP
+- format: gl.RGB, gl.RGBA, gl.DEPTH_COMPONENT
+- type: gl.UNSIGNED_BYTE, gl.UNSIGNED_SHORT, gl.HALF_FLOAT_OES, gl.FLOAT
+- filter: filtering for mag and min: gl.NEAREST or gl.LINEAR
+- magFilter: magnifying filter: gl.NEAREST, gl.LINEAR
+- minFilter: minifying filter: gl.NEAREST, gl.LINEAR, gl.LINEAR_MIPMAP_LINEAR
+- premultiply_alpha: multiplies alpha channel by every color channel
+- wrap: texture wrapping: gl.CLAMP_TO_EDGE, gl.REPEAT, gl.MIRROR</code></pre>
 
 </div>
 
@@ -123,7 +133,29 @@
     <h3 class="name"><code>Texture</code></h3>
 
     
-        <span class="paren">()</span>
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>width</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>height</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>options</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
     
 
     
@@ -165,6 +197,62 @@
         
     </div>
 
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">width</code>
+                        <span class="type">Number</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>texture width (any supported but Power of Two allows to have mipmaps), 0 means no memory reserved till its filled</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">height</code>
+                        <span class="type">Number</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>texture height (any supported but Power of Two allows to have mipmaps), 0 means no memory reserved till its filled</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">options</code>
+                        <span class="type">Object</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>Check the list in the description</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
     
 
     
@@ -282,6 +370,13 @@
                             </li>
                         
                             <li class="index-item method">
+                                <a href="#method_Texture.fromVideo">Texture.fromVideo</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
                                 <a href="#method_Texture.toBase64">Texture.toBase64</a>
 
                                 
@@ -392,7 +487,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l73"><code>..&#x2F;src&#x2F;texture.js:73</code></a>
+        <a href="../files/.._src_texture.js.html#l87"><code>..&#x2F;src&#x2F;texture.js:87</code></a>
         
         </p>
 
@@ -495,7 +590,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l186"><code>..&#x2F;src&#x2F;texture.js:186</code></a>
+        <a href="../files/.._src_texture.js.html#l200"><code>..&#x2F;src&#x2F;texture.js:200</code></a>
         
         </p>
 
@@ -583,7 +678,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l146"><code>..&#x2F;src&#x2F;texture.js:146</code></a>
+        <a href="../files/.._src_texture.js.html#l160"><code>..&#x2F;src&#x2F;texture.js:160</code></a>
         
         </p>
 
@@ -684,7 +779,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l252"><code>..&#x2F;src&#x2F;texture.js:252</code></a>
+        <a href="../files/.._src_texture.js.html#l266"><code>..&#x2F;src&#x2F;texture.js:266</code></a>
         
         </p>
 
@@ -796,7 +891,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l531"><code>..&#x2F;src&#x2F;texture.js:531</code></a>
+        <a href="../files/.._src_texture.js.html#l568"><code>..&#x2F;src&#x2F;texture.js:568</code></a>
         
         </p>
 
@@ -863,7 +958,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l61"><code>..&#x2F;src&#x2F;texture.js:61</code></a>
+        <a href="../files/.._src_texture.js.html#l75"><code>..&#x2F;src&#x2F;texture.js:75</code></a>
         
         </p>
 
@@ -938,7 +1033,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l437"><code>..&#x2F;src&#x2F;texture.js:437</code></a>
+        <a href="../files/.._src_texture.js.html#l474"><code>..&#x2F;src&#x2F;texture.js:474</code></a>
         
         </p>
 
@@ -1065,7 +1160,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l401"><code>..&#x2F;src&#x2F;texture.js:401</code></a>
+        <a href="../files/.._src_texture.js.html#l438"><code>..&#x2F;src&#x2F;texture.js:438</code></a>
         
         </p>
 
@@ -1192,7 +1287,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l327"><code>..&#x2F;src&#x2F;texture.js:327</code></a>
+        <a href="../files/.._src_texture.js.html#l341"><code>..&#x2F;src&#x2F;texture.js:341</code></a>
         
         </p>
 
@@ -1217,6 +1312,133 @@
                     
                         <code class="param-name">image</code>
                         <span class="type">Image</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">options</code>
+                        <span class="type">Object</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>:
+                    
+                    <p>the texture</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_Texture.fromTexture" class="method item">
+    <h3 class="name"><code>Texture.fromTexture</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>old_texture</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>options</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_texture.js.html#l387"><code>..&#x2F;src&#x2F;texture.js:387</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Create a clone of a texture</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">old_texture</code>
+                        <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>
                     
 
                     
@@ -1331,7 +1553,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l364"><code>..&#x2F;src&#x2F;texture.js:364</code></a>
+        <a href="../files/.._src_texture.js.html#l401"><code>..&#x2F;src&#x2F;texture.js:401</code></a>
         
         </p>
 
@@ -1386,133 +1608,6 @@
                     
                         <code class="param-name">pixels</code>
                         <span class="type">ArrayBuffer</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                         
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">options</code>
-                        <span class="type">Object</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                         
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>:
-                    
-                    <p>the texture</p>
-
-                
-            </div>
-        </div>
-    
-
-    
-</div>
-
-                
-                    <div id="method_Texture.fromTexture" class="method item">
-    <h3 class="name"><code>Texture.fromTexture</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>old_texture</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>options</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-        <span class="returns-inline">
-            <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>
-        </span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/.._src_texture.js.html#l350"><code>..&#x2F;src&#x2F;texture.js:350</code></a>
-        
-        </p>
-
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        <p>Create a clone of a texture</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">old_texture</code>
-                        <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>
                     
 
                     
@@ -1621,7 +1716,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l281"><code>..&#x2F;src&#x2F;texture.js:281</code></a>
+        <a href="../files/.._src_texture.js.html#l295"><code>..&#x2F;src&#x2F;texture.js:295</code></a>
         
         </p>
 
@@ -1711,6 +1806,133 @@
 </div>
 
                 
+                    <div id="method_Texture.fromVideo" class="method item">
+    <h3 class="name"><code>Texture.fromVideo</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>video</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>options</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_texture.js.html#l364"><code>..&#x2F;src&#x2F;texture.js:364</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Create a texture from a Video</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">video</code>
+                        <span class="type">Video</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">options</code>
+                        <span class="type">Object</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>:
+                    
+                    <p>the texture</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
                     <div id="method_Texture.toBase64" class="method item">
     <h3 class="name"><code>Texture.toBase64</code></h3>
 
@@ -1747,7 +1969,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l503"><code>..&#x2F;src&#x2F;texture.js:503</code></a>
+        <a href="../files/.._src_texture.js.html#l540"><code>..&#x2F;src&#x2F;texture.js:540</code></a>
         
         </p>
 
@@ -1820,7 +2042,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l467"><code>..&#x2F;src&#x2F;texture.js:467</code></a>
+        <a href="../files/.._src_texture.js.html#l504"><code>..&#x2F;src&#x2F;texture.js:504</code></a>
         
         </p>
 
@@ -1899,7 +2121,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l226"><code>..&#x2F;src&#x2F;texture.js:226</code></a>
+        <a href="../files/.._src_texture.js.html#l240"><code>..&#x2F;src&#x2F;texture.js:240</code></a>
         
         </p>
 
@@ -1994,7 +2216,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l210"><code>..&#x2F;src&#x2F;texture.js:210</code></a>
+        <a href="../files/.._src_texture.js.html#l224"><code>..&#x2F;src&#x2F;texture.js:224</code></a>
         
         </p>
 
@@ -2103,7 +2325,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l86"><code>..&#x2F;src&#x2F;texture.js:86</code></a>
+        <a href="../files/.._src_texture.js.html#l100"><code>..&#x2F;src&#x2F;texture.js:100</code></a>
         
         </p>
 
@@ -2206,7 +2428,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l131"><code>..&#x2F;src&#x2F;texture.js:131</code></a>
+        <a href="../files/.._src_texture.js.html#l145"><code>..&#x2F;src&#x2F;texture.js:145</code></a>
         
         </p>
 
@@ -2294,7 +2516,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l103"><code>..&#x2F;src&#x2F;texture.js:103</code></a>
+        <a href="../files/.._src_texture.js.html#l117"><code>..&#x2F;src&#x2F;texture.js:117</code></a>
         
         </p>
 
@@ -2305,7 +2527,7 @@
     </div>
 
     <div class="description">
-        <p>Given an Image it uploads it to the GPU</p>
+        <p>Given an Image/Canvas/Video it uploads it to the GPU</p>
 
     </div>
 

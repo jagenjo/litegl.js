@@ -1,6 +1,20 @@
 /**
-* Texture class to upload images to the GPU
+* Texture class to upload images to the GPU, default is gl.TEXTURE_2D, gl.RGBAof gl.UNSIGNED_BYTE with filter gl.LINEAR, and gl.CLAMP_TO_EDGE
+	There is a list of options
+	==========================
+	- texture_type: gl.TEXTURE_2D, gl.TEXTURE_CUBE_MAP
+	- format: gl.RGB, gl.RGBA, gl.DEPTH_COMPONENT
+	- type: gl.UNSIGNED_BYTE, gl.UNSIGNED_SHORT, gl.HALF_FLOAT_OES, gl.FLOAT
+	- filter: filtering for mag and min: gl.NEAREST or gl.LINEAR
+	- magFilter: magnifying filter: gl.NEAREST, gl.LINEAR
+	- minFilter: minifying filter: gl.NEAREST, gl.LINEAR, gl.LINEAR_MIPMAP_LINEAR
+	- premultiply_alpha: multiplies alpha channel by every color channel
+	- wrap: texture wrapping: gl.CLAMP_TO_EDGE, gl.REPEAT, gl.MIRROR
+
 * @class Texture
+* @param {number} width texture width (any supported but Power of Two allows to have mipmaps), 0 means no memory reserved till its filled
+* @param {number} height texture height (any supported but Power of Two allows to have mipmaps), 0 means no memory reserved till its filled
+* @param {Object} options Check the list in the description
 * @constructor
 */
 function Texture(width, height, options) {
@@ -19,12 +33,12 @@ function Texture(width, height, options) {
 
 	this.has_mipmaps = false;
 
-	if(this.format == gl.DEPTH_COMPONENT)
-	{
-		this.depth_ext = gl.getExtension("WEBGL_depth_texture") || gl.getExtension("WEBKIT_WEBGL_depth_texture") || gl.getExtension("MOZ_WEBGL_depth_texture");
-		if(!this.depth_ext)
-			throw("Depth Texture not supported");
-	}
+	if(this.format == gl.DEPTH_COMPONENT && !gl.depth_ext)
+		throw("Depth Texture not supported");
+	if(this.format == gl.FLOAT && !gl.float_ext)
+		throw("Float Texture not supported");
+	if(this.format == gl.HALF_FLOAT_OES && !gl.half_float_ext)
+		throw("Half Float Texture not supported");
 
 	if(width && height)
 	{
@@ -101,7 +115,7 @@ Texture.prototype.setParameter = function(param,value) {
 }
 
 /**
-* Given an Image it uploads it to the GPU
+* Given an Image/Canvas/Video it uploads it to the GPU
 * @method uploadImage
 * @param {Image} img
 */
@@ -110,8 +124,8 @@ Texture.prototype.uploadImage = function(image)
 	this.bind();
 	try {
 		gl.texImage2D(gl.TEXTURE_2D, 0, this.format, this.format, this.type, image);
-		this.width = image.width;
-		this.height = image.height;
+		this.width = image.videoWidth || image.width;
+		this.height = image.videoHeight || image.height;
 	} catch (e) {
 		if (location.protocol == 'file:') {
 			throw 'image not loaded for security reasons (serve this page over "http://" instead)';
@@ -338,6 +352,29 @@ Texture.fromImage = function(image, options) {
 	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, (options.flipY != true ? 1 : 0) );
 	gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, !!options.premultiply_alpha );
 	texture.uploadImage(image);
+	if (options.minFilter && options.minFilter != gl.NEAREST && options.minFilter != gl.LINEAR) {
+		texture.bind();
+		gl.generateMipmap(texture.texture_type);
+		texture.has_mipmaps = true;
+	}
+	gl.bindTexture(texture.texture_type, null); //disable
+	return texture;
+};
+
+/**
+* Create a texture from a Video
+* @method Texture.fromVideo
+* @param {Video} video
+* @param {Object} options
+* @return {Texture} the texture
+*/
+Texture.fromVideo = function(video, options) {
+	options = options || {};
+	var texture = options.texture || new GL.Texture(video.videoWidth, video.videoHeight, options);
+	texture.bind();
+	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, (options.flipY != true ? 1 : 0) );
+	gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, !!options.premultiply_alpha );
+	texture.uploadImage(video);
 	if (options.minFilter && options.minFilter != gl.NEAREST && options.minFilter != gl.LINEAR) {
 		texture.bind();
 		gl.generateMipmap(texture.texture_type);

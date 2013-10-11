@@ -159,7 +159,24 @@
             "extension_for": [],
             "file": "../src/texture.js",
             "line": 1,
-            "description": "Texture class to upload images to the GPU",
+            "description": "Texture class to upload images to the GPU, default is gl.TEXTURE_2D, gl.RGBAof gl.UNSIGNED_BYTE with filter gl.LINEAR, and gl.CLAMP_TO_EDGE\n\tThere is a list of options\n\t==========================\n\t- texture_type: gl.TEXTURE_2D, gl.TEXTURE_CUBE_MAP\n\t- format: gl.RGB, gl.RGBA, gl.DEPTH_COMPONENT\n\t- type: gl.UNSIGNED_BYTE, gl.UNSIGNED_SHORT, gl.HALF_FLOAT_OES, gl.FLOAT\n\t- filter: filtering for mag and min: gl.NEAREST or gl.LINEAR\n\t- magFilter: magnifying filter: gl.NEAREST, gl.LINEAR\n\t- minFilter: minifying filter: gl.NEAREST, gl.LINEAR, gl.LINEAR_MIPMAP_LINEAR\n\t- premultiply_alpha: multiplies alpha channel by every color channel\n\t- wrap: texture wrapping: gl.CLAMP_TO_EDGE, gl.REPEAT, gl.MIRROR",
+            "params": [
+                {
+                    "name": "width",
+                    "description": "texture width (any supported but Power of Two allows to have mipmaps), 0 means no memory reserved till its filled",
+                    "type": "Number"
+                },
+                {
+                    "name": "height",
+                    "description": "texture height (any supported but Power of Two allows to have mipmaps), 0 means no memory reserved till its filled",
+                    "type": "Number"
+                },
+                {
+                    "name": "options",
+                    "description": "Check the list in the description",
+                    "type": "Object"
+                }
+            ],
             "is_constructor": 1
         }
     },
@@ -190,7 +207,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 92,
+            "line": 99,
             "description": "Tells the system to capture mouse events on the canvas. This will trigger onmousedown, onmousemove, onmouseup, onmousewheel callbacks in the canvas.",
             "itemtype": "method",
             "name": "gl.captureMouse",
@@ -205,7 +222,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 131,
+            "line": 138,
             "description": "Tells the system to capture key events on the canvas. This will trigger onkey",
             "itemtype": "method",
             "name": "gl.captureKeys",
@@ -220,7 +237,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 150,
+            "line": 157,
             "description": "Tells the system to capture gamepad events on the canvas.",
             "itemtype": "method",
             "name": "gl.captureGamepads",
@@ -228,7 +245,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 169,
+            "line": 176,
             "description": "returns the detected gamepads on the system",
             "itemtype": "method",
             "name": "gl.getGamepads",
@@ -523,7 +540,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 61,
+            "line": 75,
             "description": "Returns if depth texture is supported by the GPU",
             "itemtype": "method",
             "name": "isDepthSupported",
@@ -531,7 +548,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 73,
+            "line": 87,
             "description": "Binds the texture to one texture unit",
             "itemtype": "method",
             "name": "bind",
@@ -550,7 +567,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 86,
+            "line": 100,
             "description": "Unbinds the texture",
             "itemtype": "method",
             "name": "unbind",
@@ -569,8 +586,8 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 103,
-            "description": "Given an Image it uploads it to the GPU",
+            "line": 117,
+            "description": "Given an Image/Canvas/Video it uploads it to the GPU",
             "itemtype": "method",
             "name": "uploadImage",
             "params": [
@@ -584,7 +601,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 131,
+            "line": 145,
             "description": "Uploads data to the GPU (data must have the appropiate size)",
             "itemtype": "method",
             "name": "uploadData",
@@ -599,7 +616,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 146,
+            "line": 160,
             "description": "Render to texture using FBO, just pass the callback to a rendering function and the content of the texture will be updated",
             "itemtype": "method",
             "name": "drawTo",
@@ -614,7 +631,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 186,
+            "line": 200,
             "description": "Copy content of one texture into another",
             "itemtype": "method",
             "name": "copyTo",
@@ -629,7 +646,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 210,
+            "line": 224,
             "description": "Render texture in a quad to full viewport size",
             "itemtype": "method",
             "name": "toViewport",
@@ -649,7 +666,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 226,
+            "line": 240,
             "description": "Copy texture content to a canvas",
             "itemtype": "method",
             "name": "toCanvas",
@@ -664,7 +681,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 252,
+            "line": 266,
             "description": "Similar to drawTo but it also stores the depth in a depth texture",
             "itemtype": "method",
             "name": "drawToColorAndDepth",
@@ -689,7 +706,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 281,
+            "line": 295,
             "description": "Loads and uploads a texture from a url",
             "itemtype": "method",
             "name": "Texture.fromURL",
@@ -718,7 +735,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 327,
+            "line": 341,
             "description": "Create a texture from an Image",
             "itemtype": "method",
             "name": "Texture.fromImage",
@@ -742,7 +759,31 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 350,
+            "line": 364,
+            "description": "Create a texture from a Video",
+            "itemtype": "method",
+            "name": "Texture.fromVideo",
+            "params": [
+                {
+                    "name": "video",
+                    "description": "",
+                    "type": "Video"
+                },
+                {
+                    "name": "options",
+                    "description": "",
+                    "type": "Object"
+                }
+            ],
+            "return": {
+                "description": "the texture",
+                "type": "Texture"
+            },
+            "class": "Texture"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 387,
             "description": "Create a clone of a texture",
             "itemtype": "method",
             "name": "Texture.fromTexture",
@@ -766,7 +807,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 364,
+            "line": 401,
             "description": "Create a texture from an ArrayBuffer containing the pixels",
             "itemtype": "method",
             "name": "Texture.fromTexture",
@@ -800,7 +841,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 401,
+            "line": 438,
             "description": "Create a cubemap texture from a set of 6 images",
             "itemtype": "method",
             "name": "Texture.cubemapFromImages",
@@ -824,7 +865,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 437,
+            "line": 474,
             "description": "Create a cubemap texture from a single image that contains all six images arranged vertically",
             "itemtype": "method",
             "name": "Texture.cubemapFromImage",
@@ -848,7 +889,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 467,
+            "line": 504,
             "description": "returns a Blob containing all the data from the texture",
             "itemtype": "method",
             "name": "Texture.toBlob",
@@ -860,7 +901,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 503,
+            "line": 540,
             "description": "returns a base64 String containing all the data from the texture",
             "itemtype": "method",
             "name": "Texture.toBase64",
@@ -872,7 +913,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 531,
+            "line": 568,
             "description": "generates some basic metadata about the image",
             "itemtype": "method",
             "name": "generateMetadata",
