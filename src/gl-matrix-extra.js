@@ -1,4 +1,6 @@
 /* this file adds some extra functions to gl-matrix library */
+if(typeof(glMatrix) == "undefined")
+	throw("You must include glMatrix on your project");
 
 vec3.zero = function(a)
 {

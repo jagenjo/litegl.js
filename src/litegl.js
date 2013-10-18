@@ -268,7 +268,7 @@ var GL = {
 		function(callback) { setTimeout(callback, 1000 / 60); };
 		var time = new Date().getTime();
 
-		//update online if tab visible
+		//update only if browser tab visible
 		function update() {
 			var now = new Date().getTime();
 			//launch the event to every WEBGL context
@@ -296,6 +296,8 @@ var GL = {
 			setTimeout(forceUpdate, 1000 / 60);
 			time_forced = now;
 		}
+
+		gl.relaunch = function() { post(update); }
 
 		update(); //only if the tab is in focus
 		forceUpdate(); //always

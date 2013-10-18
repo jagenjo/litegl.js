@@ -29,7 +29,8 @@ function Texture(width, height, options) {
 	this.texture_type = options.texture_type || gl.TEXTURE_2D;
 	this.magFilter = options.magFilter || options.filter || gl.LINEAR;
 	this.minFilter = options.minFilter || options.filter || gl.LINEAR;
-
+	this.wrapS = options.wrap || options.wrapS || gl.CLAMP_TO_EDGE;
+	this.wrapT = options.wrap || options.wrapT || gl.CLAMP_TO_EDGE;
 
 	this.has_mipmaps = false;
 
@@ -39,6 +40,8 @@ function Texture(width, height, options) {
 		throw("Float Texture not supported");
 	if(this.format == gl.HALF_FLOAT_OES && !gl.half_float_ext)
 		throw("Half Float Texture not supported");
+	if((this.minFilter == gl.LINEAR_MIPMAP_LINEAR || this.wrapS != gl.CLAMP_TO_EDGE || this.wrapT != gl.CLAMP_TO_EDGE) && (!isPowerOfTwo(this.width) || !isPowerOfTwo(this.height)))
+		throw("Cannot use texture-wrap or mipmaps in Non-Power-of-Two textures");
 
 	if(width && height)
 	{
@@ -51,8 +54,8 @@ function Texture(width, height, options) {
 		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
 		gl.texParameteri(this.texture_type, gl.TEXTURE_MAG_FILTER, this.magFilter );
 		gl.texParameteri(this.texture_type, gl.TEXTURE_MIN_FILTER, this.minFilter );
-		gl.texParameteri(this.texture_type, gl.TEXTURE_WRAP_S, options.wrap || options.wrapS || gl.CLAMP_TO_EDGE);
-		gl.texParameteri(this.texture_type, gl.TEXTURE_WRAP_T, options.wrap || options.wrapT || gl.CLAMP_TO_EDGE);
+		gl.texParameteri(this.texture_type, gl.TEXTURE_WRAP_S, this.wrapS );
+		gl.texParameteri(this.texture_type, gl.TEXTURE_WRAP_T, this.wrapT );
 
 		//gl.TEXTURE_1D is not supported by WebGL...
 		if(this.texture_type == gl.TEXTURE_2D)

@@ -84,6 +84,7 @@ Buffer.prototype.compile = function(stream_type) { //default gl.STATIC_DRAW (oth
 /**
 * Mesh class to upload geometry to the GPU
 * @class Mesh
+* @param {Object} options which streams do you want to create
 * @constructor
 */
 function Mesh(options) {
@@ -108,6 +109,8 @@ Mesh.common_buffers = {
 	"coords2": {size:2, attribute: "a_coord2"},
 	"colors": {size:4, attribute: "a_color"},
 	"tangents": {size:3, attribute: "a_tangent"},
+	"bones": {size:4, attribute: "a_bones"},
+	"weights": {size:4, attribute: "a_weights"},
 	"extra": {size:1, attribute: "a_extra"},
 	"extra2": {size:2, attribute: "a_extra2"},
 	"extra3": {size:3, attribute: "a_extra3"},
@@ -121,13 +124,20 @@ Mesh.common_buffers = {
 * @param {String} attribute name of the stream in the shader
 */
 
-Mesh.prototype.addVertexBuffer = function(name, attribute) {
+Mesh.prototype.addVertexBuffer = function(name, attribute, buffer_spacing, buffer_data, buffer_type ) {
 	var buffer = this.vertexBuffers[attribute] = new Buffer(gl.ARRAY_BUFFER, Float32Array);
 	buffer.name = name;
 	this[name] = []; //this created a regular array
 
-	if (Mesh.common_buffers[name])
+	if (!buffer_spacing && Mesh.common_buffers[name])
 		buffer.spacing = Mesh.common_buffers[name].size;
+
+	if(buffer_data)
+	{
+		buffer.data = buffer_data;
+		buffer.compile(buffer_type);
+	}
+
 	return buffer;
 }
 
@@ -385,6 +395,12 @@ Mesh.prototype.computeBounding = function( vertices ) {
 	this.bounding.radius = vec3.length( half_size );
 }
 
+/*
+Mesh.prototype.toBinary = function() {
+
+}
+*/
+
 /**
 * Remove all local memory from the streams (leaving it only in the VRAM) to save RAM
 * @method freeData
@@ -447,7 +463,7 @@ Mesh.load = function(buffers, options) {
 /**
 * Returns a planar mesh (you can choose how many subdivisions)
 * @method Mesh.plane
-* @param {Object} options valid options: detail, detailX, detailY, xz
+* @param {Object} options valid options: detail, detailX, detailY, size, width, heigth, xz (horizontal plane)
 */
 Mesh.plane = function(options) {
 	options = options || {};
@@ -455,7 +471,11 @@ Mesh.plane = function(options) {
 	var mesh = new Mesh(options);
 	var detailX = options.detailX || options.detail || 1;
 	var detailY = options.detailY || options.detail || 1;
+	var width = options.width || options.size || 1;
+	var height = options.height || options.size || 1;
 	var xz = options.xz;
+	width *= 0.5;
+	height *= 0.5;
 
 	var triangles = mesh.triangles;
 	var vertices = mesh.vertices;
@@ -467,9 +487,9 @@ Mesh.plane = function(options) {
 	for (var x = 0; x <= detailX; x++) {
 	  var s = x / detailX;
 	  if(xz)
-		  vertices.push(2 * s - 1, 0, 2 * t - 1);
+		  vertices.push((2 * s - 1) * width, 0, (2 * t - 1) * width);
 	  else
-		  vertices.push(2 * s - 1, 2 * t - 1, 0);
+		  vertices.push((2 * s - 1) * width, (2 * t - 1) * height, 0);
 	  if (coords) coords.push(s, t);
 	  if (normals) normals.push(0, xz?1:0, xz?0:1);
 	  if (x < detailX && y < detailY) {
@@ -490,10 +510,10 @@ Mesh.plane = function(options) {
 
 	mesh.bounding = {
 		aabb_center: [0,0,0],
-		aabb_half: xz ? [s,0,s] : [s,s,0],
-		aabb_min: xz ? [-s,0,-s] : [-s,-s,0],
-		aabb_max: xz ? [s,0,s] : [s,s,0],
-		radius: vec3.length([s,0,s])
+		aabb_half: xz ? [width,0,height] : [width,height,0],
+		aabb_min: xz ? [-width,0,-height] : [-width,-height,0],
+		aabb_max: xz ? [width,0,height] : [s,height,0],
+		radius: vec3.length([width,0,height])
 	};
 	mesh.compile();
 	return mesh;
