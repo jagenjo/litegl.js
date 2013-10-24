@@ -10,3 +10,4 @@
 ../src/levent.js
 ../src/geo.js
 ../src/raytracer.js
+../src/parsers.js

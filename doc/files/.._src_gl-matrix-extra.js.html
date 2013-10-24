@@ -97,6 +97,8 @@
 <div class="file">
     <pre class="code prettyprint linenums">
 /* this file adds some extra functions to gl-matrix library */
+if(typeof(glMatrix) == &quot;undefined&quot;)
+	throw(&quot;You must include glMatrix on your project&quot;);
 
 vec3.zero = function(a)
 {

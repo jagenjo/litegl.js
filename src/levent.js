@@ -4,6 +4,8 @@ var LEvent = {
 
 	bind: function( instance, event_name, callback, instance2 )
 	{
+		if(!instance) throw("cannot bind event to null");
+		if(!callback) throw("cannot bind to null callback");
 		if(instance.constructor === String ) throw("cannot bind event to a string");
 		if(instance.hasOwnProperty("__on_" + event_name))
 			instance["__on_" + event_name].push([callback,instance2]);
@@ -13,8 +15,10 @@ var LEvent = {
 
 	unbind: function( instance, event_name, callback, instance2 )
 	{
+		if(!instance) throw("cannot unbind event to null");
+		if(!callback) throw("cannot unbind from null callback");
 		if(instance.constructor === String ) throw("cannot bind event to a string");
-		if(!instance || !instance.hasOwnProperty("__on_" + event_name)) return;
+		if(!instance.hasOwnProperty("__on_" + event_name)) return;
 
 		for(var i in instance["__on_" + event_name])
 		{
@@ -44,6 +48,7 @@ var LEvent = {
 
 	trigger: function( instance, event, params, skip_jquery )
 	{
+		if(!instance) throw("cannot trigger event from null");
 		if(instance.constructor === String ) throw("cannot bind event to a string");
 		//you can resend the events as jQuery events, but to avoid collisions with system events, we use ":" at the begining
 		if(typeof(event) == "string")
