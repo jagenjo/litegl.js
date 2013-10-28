@@ -1,6 +1,7 @@
 /* Lite Events system (similar to jQuery) but lightweight, to use to hook rendering stages */
 var LEvent = {
-	jQuery: false, //dispatch as jQuery events (enable this if you want to hook regular jQuery events to SceneGraph elements)
+	jQuery: false, //dispatch as jQuery events (enable this if you want to hook regular jQuery events to instances, they are dispatches as ":eventname" to avoid collisions)
+	//map: new Weakmap(),
 
 	bind: function( instance, event_name, callback, instance2 )
 	{
@@ -34,6 +35,39 @@ var LEvent = {
 			delete instance["__on_" + event_name];
 	},
 
+	unbindAll: function(instance, instance2)
+	{
+		if(!instance) throw("cannot unbind event to null");
+		if(!instance2) //remove all
+		{
+			var remove = [];
+			for(var i in instance)
+			{
+				if(i.substring(0,5) != "__on_") continue;
+				remove.push(i);
+			}
+			for(var i in remove)
+				delete instance[remove[i]];
+			return;
+		}
+
+		//remove only the instance2
+		//for every property in the instance
+		for(var i in instance)
+		{
+			if(i.substring(0,5) != "__on_") continue; //skip non-LEvent properties
+			var array = instance[i];
+			for(var j=0; j < array.length; ++j)
+			{
+				if( array[j][1] != instance2 ) continue;
+				array.splice(j,1);//remove
+				--j;//iterate from the gap
+			}
+			if(array.length == 0)
+				delete instance[i];
+		}
+	},
+
 	isbind: function( instance, event_name, callback, instance2 )
 	{
 		if(!instance || !instance.hasOwnProperty("__on_" + event_name)) return false;
@@ -63,6 +97,8 @@ var LEvent = {
 			if( v[0].call(v[1], event, params) == false || event.stop)
 				break; //stopPropagation
 		}
+
+		return event;
 	},
 
 	_stopPropagation: function() { this.stop = true; }

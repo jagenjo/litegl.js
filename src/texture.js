@@ -36,9 +36,9 @@ function Texture(width, height, options) {
 
 	if(this.format == gl.DEPTH_COMPONENT && !gl.depth_ext)
 		throw("Depth Texture not supported");
-	if(this.format == gl.FLOAT && !gl.float_ext)
+	if(this.type == gl.FLOAT && !gl.float_ext)
 		throw("Float Texture not supported");
-	if(this.format == gl.HALF_FLOAT_OES && !gl.half_float_ext)
+	if(this.type == gl.HALF_FLOAT_OES && !gl.half_float_ext)
 		throw("Half Float Texture not supported");
 	if((this.minFilter == gl.LINEAR_MIPMAP_LINEAR || this.wrapS != gl.CLAMP_TO_EDGE || this.wrapT != gl.CLAMP_TO_EDGE) && (!isPowerOfTwo(this.width) || !isPowerOfTwo(this.height)))
 		throw("Cannot use texture-wrap or mipmaps in Non-Power-of-Two textures");

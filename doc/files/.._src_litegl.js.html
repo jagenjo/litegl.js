@@ -133,6 +133,7 @@ var GL = {
 		try { gl = gl || canvas.getContext(&#x27;experimental-webgl&#x27;, options); } catch (e) {}
 		if (!gl) { throw &#x27;WebGL not supported&#x27;; }
 
+		//get some useful extensions
 		gl.derivatives_supported = gl.getExtension(&#x27;OES_standard_derivatives&#x27;) || false ;
 		gl.depth_ext = gl.getExtension(&quot;WEBGL_depth_texture&quot;) || gl.getExtension(&quot;WEBKIT_WEBGL_depth_texture&quot;) || gl.getExtension(&quot;MOZ_WEBGL_depth_texture&quot;);
 		//for float textures
@@ -153,9 +154,28 @@ var GL = {
 		this.contexts.push(gl);
 
 		var last_click_time = 0;
+
+		/**
+		* Tells the system to capture mouse events on the canvas. This will trigger onmousedown, onmousemove, onmouseup, onmousewheel callbacks in the canvas.
+		* @method gl.captureMouse
+		* @param {boolean} capture_wheel capture also the mouse wheel
+		*/
+		gl.captureMouse = function(capture_wheel) {
+			canvas.addEventListener(&quot;mousedown&quot;, onmouse);
+			canvas.addEventListener(&quot;mousemove&quot;, onmouse);
+			if(capture_wheel)
+			{
+				canvas.addEventListener(&quot;mousewheel&quot;, onmouse, false);
+				canvas.addEventListener(&quot;wheel&quot;, onmouse, false);
+				//canvas.addEventListener(&quot;DOMMouseScroll&quot;, onmouse, false);
+			}
+		}
+
 		function onmouse(e) {
 			GL.augmentEvent(e, canvas);
-			if(e.type == &quot;mousedown&quot;)
+			e.eventType = e.type; //type cannot be overwritten, so I make a clone to allow me to overwrite
+
+			if(e.eventType == &quot;mousedown&quot;)
 			{
 				canvas.removeEventListener(&quot;mousemove&quot;, onmouse);
 				document.addEventListener(&quot;mousemove&quot;, onmouse);
@@ -164,7 +184,7 @@ var GL = {
 
 				if(gl.onmousedown) gl.onmousedown(e);
 			}
-			else if(e.type == &quot;mousemove&quot; &amp;&amp; gl.onmousemove)
+			else if(e.eventType == &quot;mousemove&quot; &amp;&amp; gl.onmousemove)
 			{ 
 				//move should be propagated (otherwise other components may fail)
 				var now = new Date().getTime();
@@ -172,7 +192,7 @@ var GL = {
 				gl.onmousemove(e); 
 				return; 
 			} 
-			else if(e.type == &quot;mouseup&quot;)
+			else if(e.eventType == &quot;mouseup&quot;)
 			{
 				canvas.addEventListener(&quot;mousemove&quot;, onmouse);
 				document.removeEventListener(&quot;mousemove&quot;, onmouse);
@@ -183,8 +203,9 @@ var GL = {
 
 				if(gl.onmouseup) gl.onmouseup(e);
 			}
-			else if(gl.onmousewheel &amp;&amp; (e.type == &quot;mousewheel&quot; || e.type == &quot;DOMMouseScroll&quot;))
+			else if(gl.onmousewheel &amp;&amp; (e.eventType == &quot;mousewheel&quot; || e.eventType == &quot;wheel&quot; || e.eventType == &quot;DOMMouseScroll&quot;))
 			{ 
+				e.eventType = &quot;mousewheel&quot;;
 				e.wheel = (e.wheelDeltaY != null ? e.wheelDeltaY : e.detail * -60);
 				gl.onmousewheel(e);
 			}
@@ -195,24 +216,20 @@ var GL = {
 		}
 
 		/**
-		* Tells the system to capture mouse events on the canvas. This will trigger onmousedown, onmousemove, onmouseup, onmousewheel callbacks in the canvas.
-		* @method gl.captureMouse
-		* @param {boolean} capture_wheel capture also the mouse wheel
+		* Tells the system to capture key events on the canvas. This will trigger onkey
+		* @method gl.captureKeys
+		* @param {boolean} prevent_default prevent default behaviour (like scroll on the web, etc)
 		*/
-		gl.captureMouse = function(capture_wheel) {
+		gl.captureKeys = function( prevent_default ) {
 			gl.keys = {};
-			canvas.addEventListener(&quot;mousedown&quot;, onmouse);
-			canvas.addEventListener(&quot;mousemove&quot;, onmouse);
-			if(capture_wheel)
-			{
-				canvas.addEventListener(&quot;mousewheel&quot;, onmouse, false);
-				canvas.addEventListener(&quot;DOMMouseScroll&quot;, onmouse, false);
-			}
+			document.addEventListener(&quot;keydown&quot;, function(e) { onkey(e, prevent_default); });
+			document.addEventListener(&quot;keyup&quot;, function(e) { onkey(e, prevent_default); });
 		}
 
 		function onkey(e, prevent_default)
 		{
 			//trace(e);
+			e.eventType = e.type; //type cannot be overwritten, so I make a clone to allow me to overwrite
 
 			var target_element = e.target.nodeName.toLowerCase();
 			if(target_element == &quot;input&quot; || target_element == &quot;textarea&quot; || target_element == &quot;select&quot;)
@@ -231,16 +248,6 @@ var GL = {
 
 			if(prevent_default &amp;&amp; (e.isChar || GL.blockable_keys[e.keyIdentifier]) )
 				e.preventDefault();
-		}
-
-		/**
-		* Tells the system to capture key events on the canvas. This will trigger onkey
-		* @method gl.captureKeys
-		* @param {boolean} prevent_default prevent default behaviour (like scroll on the web, etc)
-		*/
-		gl.captureKeys = function( prevent_default ) {
-			document.addEventListener(&quot;keydown&quot;, function(e) { onkey(e, prevent_default); });
-			document.addEventListener(&quot;keyup&quot;, function(e) { onkey(e, prevent_default); });
 		}
 
 		//gamepads
@@ -334,8 +341,8 @@ var GL = {
 		e.mousey = e.pageY - b.top;
 		e.canvasx = e.mousex;
 		e.canvasy = b.height - e.mousey;
-		e.deltaX = 0;
-		e.deltaY = 0;
+		e.deltax = 0;
+		e.deltay = 0;
 
 		if(e.type == &quot;mousedown&quot;)
 			this.dragging = true;
@@ -348,8 +355,8 @@ var GL = {
 
 		if(this.last_pos)
 		{
-			e.deltaX = e.mousex - this.last_pos[0];
-			e.deltaY = e.mousey - this.last_pos[1];
+			e.deltax = e.mousex - this.last_pos[0];
+			e.deltay = e.mousey - this.last_pos[1];
 		}
 
 		this.last_pos = [e.mousex, e.mousey];

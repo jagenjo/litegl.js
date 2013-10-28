@@ -222,7 +222,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 99,
+            "line": 60,
             "description": "Tells the system to capture mouse events on the canvas. This will trigger onmousedown, onmousemove, onmouseup, onmousewheel callbacks in the canvas.",
             "itemtype": "method",
             "name": "gl.captureMouse",
@@ -237,7 +237,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 138,
+            "line": 120,
             "description": "Tells the system to capture key events on the canvas. This will trigger onkey",
             "itemtype": "method",
             "name": "gl.captureKeys",
@@ -252,7 +252,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 157,
+            "line": 164,
             "description": "Tells the system to capture gamepad events on the canvas.",
             "itemtype": "method",
             "name": "gl.captureGamepads",
@@ -260,7 +260,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 176,
+            "line": 183,
             "description": "returns the detected gamepads on the system",
             "itemtype": "method",
             "name": "gl.getGamepads",
@@ -425,7 +425,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 553,
+            "line": 554,
             "description": "Returns a cube mesh",
             "itemtype": "method",
             "name": "Mesh.cylinder",
@@ -440,7 +440,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 622,
+            "line": 623,
             "description": "Returns a sphere mesh",
             "itemtype": "method",
             "name": "Mesh.sphere",
