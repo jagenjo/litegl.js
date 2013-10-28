@@ -2386,7 +2386,10 @@ var GL = {
 			else if(gl.onmousewheel && (e.eventType == "mousewheel" || e.eventType == "wheel" || e.eventType == "DOMMouseScroll"))
 			{ 
 				e.eventType = "mousewheel";
-				e.wheel = (e.wheelDeltaY != null ? e.wheelDeltaY : e.detail * -60);
+				if(e.type == "wheel")
+					e.wheel = -e.deltaY;
+				else
+					e.wheel = (e.wheelDeltaY != null ? e.wheelDeltaY : e.detail * -60);
 				gl.onmousewheel(e);
 			}
 
