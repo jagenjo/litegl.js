@@ -55,6 +55,13 @@ function createCanvas(width, height) {
     canvas.height = height;
     return canvas;
 }
+
+String.prototype.replaceAll = function(words){
+	var str = this;
+	for(var i in words)
+		str = str.split(i).join(words[i]);
+    return str;
+};
 /**
  * @fileoverview dds - Utilities for loading DDS texture files
  * @author Brandon Jones
@@ -716,6 +723,38 @@ quat.fromEuler = function(out, vec) {
 		out = quat.create();
 	return quat.set(out, x,y,z,w );
 };
+
+//not tested
+quat.fromMat4 = function(out,m)
+{
+	var trace = m[0] + m[5] + m[10];
+	if ( trace > 0.0 )
+	{
+		var s = Math.sqrt( trace + 1.0 );
+		out[3] = s * 0.5;//w
+		var recip = 0.5 / s;
+		out[0] = ( m[9] - m[6] ) * recip; //2,1  1,2
+		out[1] = ( m[2] - m[8] ) * recip; //0,2  2,0
+		out[2] = ( m[4] - m[1] ) * recip; //1,0  0,1
+	}
+	else
+	{
+		var i = 0;
+		if( m[5] > m[0] )
+		 i = 1;
+		if( m[10] > m[i*4+i] )
+		 i = 2;
+		var j = ( i + 1 ) % 3;
+		var k = ( j + 1 ) % 3;
+		var s = Math.sqrt( m[i*4+i] - m[j*4+j] - m[k*4+k] + 1.0 );
+		out[i] = 0.5 * s;
+		var recip = 0.5 / s;
+		out[3] = ( m[k*4+j] - m[j*4+k] ) * recip;//w
+		out[j] = ( m[j*4+i] + m[i*4+j] ) * recip;
+		out[k] = ( m[k*4+i] + m[i*4+k] ) * recip;
+	}
+	quat.normalize(out,out);
+}
 
 /* doesnt work 
 quat.lookAt = function(target, up, quat) {
@@ -2073,8 +2112,9 @@ function Shader(vertexSource, fragmentSource, macros)
 * @param {Object} uniforms
 */
 Shader.prototype.uniforms = function(uniforms) {
-	//upload uniforms
+
 	gl.useProgram(this.program);
+	//var last_slot = 0;
 
 	for (var name in uniforms) {
 		var location = this.uniformLocations[name] || gl.getUniformLocation(this.program, name);
@@ -2094,6 +2134,13 @@ Shader.prototype.uniforms = function(uniforms) {
 				case 16: gl.uniformMatrix4fv(location, false, value); break; //matrix4
 				default: throw 'don\'t know how to load uniform "' + name + '" of length ' + value.length;
 			}
+		/*
+		} else if ((value.constructor == Texture) //for textures, warning, if mixed with manual bind it will overwrite
+		{
+			gl.uniform1i(location, last_slot);
+			value.bind(last_slot);
+			++last_slot;
+		*/
 		} else if (isArray(value))
 		{
 			switch (value.length) {
@@ -2322,6 +2369,7 @@ var GL = {
 		gl.half_float_ext = gl.getExtension("OES_texture_half_float");
 		gl.half_float_ext_linear = gl.getExtension("OES_texture_half_float_linear");
 		gl.HALF_FLOAT_OES = 0x8D61; 
+		gl.max_texture_units = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
 
 		//just some checks
 		if(typeof(glMatrix) == "undefined")

@@ -26,7 +26,7 @@
 		container.appendChild(gl.canvas);
 
 		//build the mesh
-		var cube_mesh = GL.Mesh.cube({size:5});
+		var cube_mesh = GL.Mesh.cube({size:10});
 		var cam_pos = vec3.fromValues(100,0,100);
 
 		//create basic matrices for cameras and transformation
@@ -104,6 +104,8 @@
 		gl.enable( gl.DEPTH_TEST );
 		gl.enable( gl.CULL_FACE );
 
+		var modelt = mat4.create();
+
 		//rendering loop
 		gl.ondraw = function()
 		{
@@ -120,7 +122,7 @@
 				mat4.multiply(mvp,persp,temp); //modelviewprojection
 
 				//compute rotation matrix for normals
-				var modelt = mat4.toRotationMat4(mat4.create(), model);
+				mat4.toRotationMat4(modelt, model);
 
 				//render mesh using the shader
 				shader.uniforms({

@@ -47,8 +47,9 @@ function Shader(vertexSource, fragmentSource, macros)
 * @param {Object} uniforms
 */
 Shader.prototype.uniforms = function(uniforms) {
-	//upload uniforms
+
 	gl.useProgram(this.program);
+	//var last_slot = 0;
 
 	for (var name in uniforms) {
 		var location = this.uniformLocations[name] || gl.getUniformLocation(this.program, name);
@@ -68,6 +69,13 @@ Shader.prototype.uniforms = function(uniforms) {
 				case 16: gl.uniformMatrix4fv(location, false, value); break; //matrix4
 				default: throw 'don\'t know how to load uniform "' + name + '" of length ' + value.length;
 			}
+		/*
+		} else if ((value.constructor == Texture) //for textures, warning, if mixed with manual bind it will overwrite
+		{
+			gl.uniform1i(location, last_slot);
+			value.bind(last_slot);
+			++last_slot;
+		*/
 		} else if (isArray(value))
 		{
 			switch (value.length) {
@@ -183,6 +191,10 @@ Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_
 
 	return this;
 }
+
+
+
+
 
 //Now some common shaders everybody needs
 

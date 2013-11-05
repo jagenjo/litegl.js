@@ -52,7 +52,7 @@
 		gl.onmousemove = function(e)
 		{
 			if(e.dragging)
-				vec3.rotateY(cam_pos,cam_pos,e.deltaX * 0.01);
+				vec3.rotateY(cam_pos,cam_pos,e.deltax * 0.01);
 		}
 
 		gl.onmouseup = function(e) {

@@ -44,6 +44,7 @@ var GL = {
 		gl.half_float_ext = gl.getExtension("OES_texture_half_float");
 		gl.half_float_ext_linear = gl.getExtension("OES_texture_half_float_linear");
 		gl.HALF_FLOAT_OES = 0x8D61; 
+		gl.max_texture_units = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
 
 		//just some checks
 		if(typeof(glMatrix) == "undefined")

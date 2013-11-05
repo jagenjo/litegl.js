@@ -239,6 +239,38 @@ quat.fromEuler = function(out, vec) {
 	return quat.set(out, x,y,z,w );
 };
 
+//not tested
+quat.fromMat4 = function(out,m)
+{
+	var trace = m[0] + m[5] + m[10];
+	if ( trace > 0.0 )
+	{
+		var s = Math.sqrt( trace + 1.0 );
+		out[3] = s * 0.5;//w
+		var recip = 0.5 / s;
+		out[0] = ( m[9] - m[6] ) * recip; //2,1  1,2
+		out[1] = ( m[2] - m[8] ) * recip; //0,2  2,0
+		out[2] = ( m[4] - m[1] ) * recip; //1,0  0,1
+	}
+	else
+	{
+		var i = 0;
+		if( m[5] > m[0] )
+		 i = 1;
+		if( m[10] > m[i*4+i] )
+		 i = 2;
+		var j = ( i + 1 ) % 3;
+		var k = ( j + 1 ) % 3;
+		var s = Math.sqrt( m[i*4+i] - m[j*4+j] - m[k*4+k] + 1.0 );
+		out[i] = 0.5 * s;
+		var recip = 0.5 / s;
+		out[3] = ( m[k*4+j] - m[j*4+k] ) * recip;//w
+		out[j] = ( m[j*4+i] + m[i*4+j] ) * recip;
+		out[k] = ( m[k*4+i] + m[i*4+k] ) * recip;
+	}
+	quat.normalize(out,out);
+}
+
 /* doesnt work 
 quat.lookAt = function(target, up, quat) {
 	var forward = vec3.normalize( target, vec3.create() );

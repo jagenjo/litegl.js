@@ -59,7 +59,7 @@
 		gl.ondraw = function()
 		{
 			//render mesh using the shader
-			texture.toScreen( shader, {
+			texture.toViewport( shader, {
 				u_texture: 0,
 				u_time: (getTime() - start_time ) * 0.001 
 			});
