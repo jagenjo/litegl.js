@@ -142,6 +142,15 @@ mat4.setTranslation = function (out, v)
 	return out;
 }
 
+
+mat4.getTranslation = function (out, matrix)
+{
+	out[0] = matrix[12];
+	out[1] = matrix[13];
+	out[2] = matrix[14];
+	return out;
+}
+
 //returns the matrix without rotation
 mat4.toRotationMat4 = function (out, mat) {
 	mat4.copy(out,mat);

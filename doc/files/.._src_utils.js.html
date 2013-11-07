@@ -152,6 +152,13 @@ function createCanvas(width, height) {
     canvas.height = height;
     return canvas;
 }
+
+String.prototype.replaceAll = function(words){
+	var str = this;
+	for(var i in words)
+		str = str.split(i).join(words[i]);
+    return str;
+};
     </pre>
 </div>
 

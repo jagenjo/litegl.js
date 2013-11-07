@@ -123,12 +123,22 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "../src/mesh.js",
-            "line": 84,
+            "line": 63,
             "description": "Mesh class to upload geometry to the GPU",
             "params": [
                 {
+                    "name": "vertexBuffers",
+                    "description": "object with all the vertex streams",
+                    "type": "Object"
+                },
+                {
+                    "name": "indexBuffers",
+                    "description": "object with all the indices streams",
+                    "type": "Object"
+                },
+                {
                     "name": "options",
-                    "description": "which streams do you want to create",
+                    "description": "",
                     "type": "Object"
                 }
             ],
@@ -222,7 +232,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 60,
+            "line": 61,
             "description": "Tells the system to capture mouse events on the canvas. This will trigger onmousedown, onmousemove, onmouseup, onmousewheel callbacks in the canvas.",
             "itemtype": "method",
             "name": "gl.captureMouse",
@@ -237,7 +247,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 120,
+            "line": 124,
             "description": "Tells the system to capture key events on the canvas. This will trigger onkey",
             "itemtype": "method",
             "name": "gl.captureKeys",
@@ -252,7 +262,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 164,
+            "line": 168,
             "description": "Tells the system to capture gamepad events on the canvas.",
             "itemtype": "method",
             "name": "gl.captureGamepads",
@@ -260,7 +270,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 183,
+            "line": 187,
             "description": "returns the detected gamepads on the system",
             "itemtype": "method",
             "name": "gl.getGamepads",
@@ -268,7 +278,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 36,
+            "line": 38,
             "description": "Uploads the buffer data (stored in this.data) to the GPU",
             "itemtype": "method",
             "name": "compile",
@@ -283,7 +293,27 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 120,
+            "line": 109,
+            "description": "Adds vertex and indices buffers to a mesh",
+            "itemtype": "method",
+            "name": "addBuffers",
+            "params": [
+                {
+                    "name": "vertexBuffers",
+                    "description": "object with all the vertex streams",
+                    "type": "Object"
+                },
+                {
+                    "name": "indexBuffers",
+                    "description": "object with all the indices streams",
+                    "type": "Object"
+                }
+            ],
+            "class": "Mesh"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 185,
             "description": "Creates a new empty buffer and attachs it to this mesh",
             "itemtype": "method",
             "name": "addVertexBuffer",
@@ -303,7 +333,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 144,
+            "line": 213,
             "description": "Creates a new empty index buffer and attachs it to this mesh",
             "itemtype": "method",
             "name": "addIndexBuffer",
@@ -312,14 +342,24 @@
                     "name": "name",
                     "description": "",
                     "type": "String"
+                },
+                {
+                    "name": "data",
+                    "description": "",
+                    "type": "Typed array"
+                },
+                {
+                    "name": "buffer_type",
+                    "description": "gl.STATIC_DRAW, gl.DYNAMIC_DRAW, gl.STREAM_DRAW",
+                    "type": "Enum"
                 }
             ],
             "class": "Mesh"
         },
         {
             "file": "../src/mesh.js",
-            "line": 155,
-            "description": "Uploads data of buffers to VRAM",
+            "line": 233,
+            "description": "Uploads data of buffers to VRAM. Checks the buffers defined, and then search for a typed array with the same name in the mesh properties,\n\tit that is the case, it uploads the data to the buffer.",
             "itemtype": "method",
             "name": "compile",
             "params": [
@@ -333,7 +373,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 174,
+            "line": 253,
             "description": "Computes some data about the mesh",
             "itemtype": "method",
             "name": "generateMetadata",
@@ -341,7 +381,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 245,
+            "line": 324,
             "description": "Creates a new index stream with wireframe",
             "itemtype": "method",
             "name": "computeWireframe",
@@ -349,7 +389,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 281,
+            "line": 358,
             "description": "Creates a new stream with the tangents",
             "itemtype": "method",
             "name": "computeTangents",
@@ -357,7 +397,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 366,
+            "line": 441,
             "description": "Computes bounding information",
             "itemtype": "method",
             "name": "computeBounding",
@@ -372,7 +412,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 404,
+            "line": 479,
             "description": "Remove all local memory from the streams (leaving it only in the VRAM) to save RAM",
             "itemtype": "method",
             "name": "freeData",
@@ -380,14 +420,19 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 422,
+            "line": 497,
             "description": "Static method for the class Mesh to create a mesh from a list of streams",
             "itemtype": "method",
             "name": "Mesh.load",
             "params": [
                 {
-                    "name": "json",
-                    "description": "streams",
+                    "name": "buffers",
+                    "description": "object will all the buffers",
+                    "type": "Object"
+                },
+                {
+                    "name": "options",
+                    "description": "",
                     "type": "Object"
                 }
             ],
@@ -395,7 +440,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 463,
+            "line": 553,
             "description": "Returns a planar mesh (you can choose how many subdivisions)",
             "itemtype": "method",
             "name": "Mesh.plane",
@@ -410,7 +455,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 522,
+            "line": 612,
             "description": "Returns a cube mesh",
             "itemtype": "method",
             "name": "Mesh.cube",
@@ -425,7 +470,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 554,
+            "line": 644,
             "description": "Returns a cube mesh",
             "itemtype": "method",
             "name": "Mesh.cylinder",
@@ -440,7 +485,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 623,
+            "line": 713,
             "description": "Returns a sphere mesh",
             "itemtype": "method",
             "name": "Mesh.sphere",
@@ -470,7 +515,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 102,
+            "line": 110,
             "description": "Renders a mesh using this shader, remember to use the function uniforms before to enable the shader",
             "itemtype": "method",
             "name": "draw",
@@ -490,7 +535,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 114,
+            "line": 122,
             "description": "Renders a range of a mesh using this shader",
             "itemtype": "method",
             "name": "drawRange",
@@ -520,7 +565,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 129,
+            "line": 137,
             "description": "Renders a range of a mesh using this shader",
             "itemtype": "method",
             "name": "drawBuffers",

@@ -100,7 +100,7 @@
 
     
         <div class="foundat">
-            Defined in: <a href="../files/.._src_mesh.js.html#l84"><code>..&#x2F;src&#x2F;mesh.js:84</code></a>
+            Defined in: <a href="../files/.._src_mesh.js.html#l63"><code>..&#x2F;src&#x2F;mesh.js:63</code></a>
         </div>
     
 
@@ -125,6 +125,18 @@
     
         <div class="args">
             <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>vertexBuffers</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>indexBuffers</code>
+                    
+                </li>
             
                 <li class="arg">
                     
@@ -161,7 +173,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l84"><code>..&#x2F;src&#x2F;mesh.js:84</code></a>
+        <a href="../files/.._src_mesh.js.html#l63"><code>..&#x2F;src&#x2F;mesh.js:63</code></a>
         
         </p>
 
@@ -183,6 +195,38 @@
             
                 <li class="param">
                     
+                        <code class="param-name">vertexBuffers</code>
+                        <span class="type">Object</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>object with all the vertex streams</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">indexBuffers</code>
+                        <span class="type">Object</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>object with all the indices streams</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
                         <code class="param-name">options</code>
                         <span class="type">Object</span>
                     
@@ -190,8 +234,7 @@
                     
 
                     <div class="param-description">
-                        <p>which streams do you want to create</p>
-
+                         
                     </div>
 
                     
@@ -230,6 +273,13 @@
                     <h3>Methods</h3>
 
                     <ul class="index-list methods">
+                        
+                            <li class="index-item method">
+                                <a href="#method_addBuffers">addBuffers</a>
+
+                                
+                                
+                            </li>
                         
                             <li class="index-item method">
                                 <a href="#method_addIndexBuffer">addIndexBuffer</a>
@@ -338,8 +388,8 @@
                 <h2 class="off-left">Methods</h2>
 
                 
-                    <div id="method_addIndexBuffer" class="method item">
-    <h3 class="name"><code>addIndexBuffer</code></h3>
+                    <div id="method_addBuffers" class="method item">
+    <h3 class="name"><code>addBuffers</code></h3>
 
     
         <div class="args">
@@ -347,7 +397,13 @@
             
                 <li class="arg">
                     
-                        <code>name</code>
+                        <code>vertexBuffers</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>indexBuffers</code>
                     
                 </li>
             
@@ -380,7 +436,124 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l144"><code>..&#x2F;src&#x2F;mesh.js:144</code></a>
+        <a href="../files/.._src_mesh.js.html#l109"><code>..&#x2F;src&#x2F;mesh.js:109</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Adds vertex and indices buffers to a mesh</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">vertexBuffers</code>
+                        <span class="type">Object</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>object with all the vertex streams</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">indexBuffers</code>
+                        <span class="type">Object</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>object with all the indices streams</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="method_addIndexBuffer" class="method item">
+    <h3 class="name"><code>addIndexBuffer</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>name</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>data</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>buffer_type</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_mesh.js.html#l213"><code>..&#x2F;src&#x2F;mesh.js:213</code></a>
         
         </p>
 
@@ -411,6 +584,37 @@
 
                     <div class="param-description">
                          
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">data</code>
+                        <span class="type">Typed array</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">buffer_type</code>
+                        <span class="type">Enum</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>gl.STATIC_DRAW, gl.DYNAMIC_DRAW, gl.STREAM_DRAW</p>
+
                     </div>
 
                     
@@ -474,7 +678,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l120"><code>..&#x2F;src&#x2F;mesh.js:120</code></a>
+        <a href="../files/.._src_mesh.js.html#l185"><code>..&#x2F;src&#x2F;mesh.js:185</code></a>
         
         </p>
 
@@ -578,7 +782,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l155"><code>..&#x2F;src&#x2F;mesh.js:155</code></a>
+        <a href="../files/.._src_mesh.js.html#l233"><code>..&#x2F;src&#x2F;mesh.js:233</code></a>
         
         </p>
 
@@ -589,7 +793,8 @@
     </div>
 
     <div class="description">
-        <p>Uploads data of buffers to VRAM</p>
+        <p>Uploads data of buffers to VRAM. Checks the buffers defined, and then search for a typed array with the same name in the mesh properties,
+    it that is the case, it uploads the data to the buffer.</p>
 
     </div>
 
@@ -667,7 +872,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l366"><code>..&#x2F;src&#x2F;mesh.js:366</code></a>
+        <a href="../files/.._src_mesh.js.html#l441"><code>..&#x2F;src&#x2F;mesh.js:441</code></a>
         
         </p>
 
@@ -746,7 +951,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l281"><code>..&#x2F;src&#x2F;mesh.js:281</code></a>
+        <a href="../files/.._src_mesh.js.html#l358"><code>..&#x2F;src&#x2F;mesh.js:358</code></a>
         
         </p>
 
@@ -801,7 +1006,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l245"><code>..&#x2F;src&#x2F;mesh.js:245</code></a>
+        <a href="../files/.._src_mesh.js.html#l324"><code>..&#x2F;src&#x2F;mesh.js:324</code></a>
         
         </p>
 
@@ -856,7 +1061,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l404"><code>..&#x2F;src&#x2F;mesh.js:404</code></a>
+        <a href="../files/.._src_mesh.js.html#l479"><code>..&#x2F;src&#x2F;mesh.js:479</code></a>
         
         </p>
 
@@ -911,7 +1116,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l174"><code>..&#x2F;src&#x2F;mesh.js:174</code></a>
+        <a href="../files/.._src_mesh.js.html#l253"><code>..&#x2F;src&#x2F;mesh.js:253</code></a>
         
         </p>
 
@@ -976,7 +1181,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l522"><code>..&#x2F;src&#x2F;mesh.js:522</code></a>
+        <a href="../files/.._src_mesh.js.html#l612"><code>..&#x2F;src&#x2F;mesh.js:612</code></a>
         
         </p>
 
@@ -1065,7 +1270,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l554"><code>..&#x2F;src&#x2F;mesh.js:554</code></a>
+        <a href="../files/.._src_mesh.js.html#l644"><code>..&#x2F;src&#x2F;mesh.js:644</code></a>
         
         </p>
 
@@ -1121,7 +1326,13 @@
             
                 <li class="arg">
                     
-                        <code>json</code>
+                        <code>buffers</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>options</code>
                     
                 </li>
             
@@ -1154,7 +1365,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l422"><code>..&#x2F;src&#x2F;mesh.js:422</code></a>
+        <a href="../files/.._src_mesh.js.html#l497"><code>..&#x2F;src&#x2F;mesh.js:497</code></a>
         
         </p>
 
@@ -1177,15 +1388,30 @@
             
                 <li class="param">
                     
-                        <code class="param-name">json</code>
+                        <code class="param-name">buffers</code>
                         <span class="type">Object</span>
                     
 
                     
 
                     <div class="param-description">
-                        <p>streams</p>
+                        <p>object will all the buffers</p>
 
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">options</code>
+                        <span class="type">Object</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
                     </div>
 
                     
@@ -1243,7 +1469,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l463"><code>..&#x2F;src&#x2F;mesh.js:463</code></a>
+        <a href="../files/.._src_mesh.js.html#l553"><code>..&#x2F;src&#x2F;mesh.js:553</code></a>
         
         </p>
 
@@ -1332,7 +1558,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l623"><code>..&#x2F;src&#x2F;mesh.js:623</code></a>
+        <a href="../files/.._src_mesh.js.html#l713"><code>..&#x2F;src&#x2F;mesh.js:713</code></a>
         
         </p>
 

@@ -124,11 +124,13 @@ Indexer.prototype = {
 * @param {String} target name of the attribute
 * @param {ArrayBufferView} array_type the array used to store it (Float32Array, Uint8Array ...)
 */
-function Buffer(target, array_type) {
-	this.buffer = null; //gl buffer
+function Buffer(target, data, spacing) {
+	this.buffer = null; //webgl buffer
 	this.target = target; //array_buffer
-	this.type = array_type; //Float32Array Uint16Array...
-	this.data = [];
+
+	//optional
+	this.data = data;
+	this.spacing = spacing || 3;
 }
 
 /**
@@ -137,83 +139,146 @@ function Buffer(target, array_type) {
 * @param {number} buffer_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW 
 */
 Buffer.prototype.compile = function(stream_type) { //default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW )
-	var data = null;
-	var is_typed = (this.data.constructor != Array);
-	var typed_array = null;
 	var spacing = this.spacing || 3; //default spacing	
 
-	if(is_typed) 
-	{
-		typed_array = this.data;
-		data = typed_array;
-	}
-	else //regular array (convert to typed array)
-	{
-		if( typeof(this.data[0]) == &#x27;number&#x27;) //linear array
-		{
-			data = this.data;
-			typed_array = new this.type(data);
-		}
-		else //arrays of arrays: [[0,1,0],[0,1,0],...] //flatten
-		{
-			data = [];
-			for (var i = 0, chunk = 10000; i &lt; this.data.length; i += chunk) {
-			  data = Array.prototype.concat.apply(data, this.data.slice(i, i + chunk));
-			}
-			spacing = this.data.length ? data.length / this.data.length : 0;
-			if (spacing != Math.round(spacing)) throw &#x27;buffer elements not of consistent size, average size is &#x27; + spacing;
-			typed_array = new this.type(data);
-		}
-		//this.data = typed_array;
-	}
+	if(!this.data)
+		throw(&quot;No data supplied&quot;);
+
+	var data = this.data;
+	if(!data.buffer)
+		throw(&quot;Buffers must be typed arrays&quot;);
 
 	this.buffer = this.buffer || gl.createBuffer();
 	this.buffer.length = data.length;
 	this.buffer.spacing = spacing;
-	gl.bindBuffer(this.target, this.buffer);
-	gl.bufferData(this.target, typed_array , stream_type || gl.STATIC_DRAW);
 
-	//this.data = null; //free memory once uploaded
-	this.data = typed_array; //replace non-typed data by the typed one
-	return typed_array; //maybe somebody needs the new clean buffer
+
+	gl.bindBuffer(this.target, this.buffer);
+	gl.bufferData(this.target, data , stream_type || gl.STATIC_DRAW);
 };
 
 
 /**
 * Mesh class to upload geometry to the GPU
 * @class Mesh
-* @param {Object} options which streams do you want to create
+* @param {Object} vertexBuffers object with all the vertex streams
+* @param {Object} indexBuffers object with all the indices streams
+* @param {Object} options
 * @constructor
 */
-function Mesh(options) {
-	options = options || {};
+function Mesh(vertexbuffers, indexbuffers, options) {
+
 	this.vertexBuffers = {};
 	this.indexBuffers = {};
-	this.addVertexBuffer(&#x27;vertices&#x27;, Mesh.common_buffers[&quot;vertices&quot;].attribute );
+
+	this.addBuffers(vertexbuffers, indexbuffers);
 
 	for(var i in options)
-		if( options[i] &amp;&amp; Mesh.common_buffers[i] )
-			this.addVertexBuffer( i, Mesh.common_buffers[i].attribute );
+		this[i] = options[i];
 
+	/*
+	this.addVertexBuffer(&#x27;vertices&#x27;, Mesh.common_buffers[&quot;vertices&quot;].attribute );
+	for(var i in options)
+		if( options[i] &amp;&amp; Mesh.common_buffers[i] &amp;&amp; i )
+			this.addVertexBuffer( i, Mesh.common_buffers[i].attribute );
 	//index buffers
 	if (options.triangles) this.addIndexBuffer(&#x27;triangles&#x27;);
 	if (options.lines) this.addIndexBuffer(&#x27;lines&#x27;);
+	*/
+
+
 };
 
 Mesh.common_buffers = {
-	&quot;vertices&quot;: {size:3, attribute: &quot;a_vertex&quot;},
-	&quot;normals&quot;: {size:3, attribute: &quot;a_normal&quot;},
-	&quot;coords&quot;: {size:2, attribute: &quot;a_coord&quot;},
-	&quot;coords2&quot;: {size:2, attribute: &quot;a_coord2&quot;},
-	&quot;colors&quot;: {size:4, attribute: &quot;a_color&quot;},
-	&quot;tangents&quot;: {size:3, attribute: &quot;a_tangent&quot;},
-	&quot;bones&quot;: {size:4, attribute: &quot;a_bones&quot;},
-	&quot;weights&quot;: {size:4, attribute: &quot;a_weights&quot;},
-	&quot;extra&quot;: {size:1, attribute: &quot;a_extra&quot;},
-	&quot;extra2&quot;: {size:2, attribute: &quot;a_extra2&quot;},
-	&quot;extra3&quot;: {size:3, attribute: &quot;a_extra3&quot;},
-	&quot;extra4&quot;: {size:4, attribute: &quot;a_extra4&quot;}
+	&quot;vertices&quot;: { spacing:3, attribute: &quot;a_vertex&quot;},
+	&quot;normals&quot;: { spacing:3, attribute: &quot;a_normal&quot;},
+	&quot;coords&quot;: { spacing:2, attribute: &quot;a_coord&quot;},
+	&quot;coords2&quot;: { spacing:2, attribute: &quot;a_coord2&quot;},
+	&quot;colors&quot;: { spacing:4, attribute: &quot;a_color&quot;},
+	&quot;tangents&quot;: { spacing:3, attribute: &quot;a_tangent&quot;},
+	&quot;bone_indices&quot;: { spacing:4, attribute: &quot;a_bone_indices&quot;, type: Uint8Array},
+	&quot;weights&quot;: { spacing:4, attribute: &quot;a_weights&quot;},
+	&quot;extra&quot;: { spacing:1, attribute: &quot;a_extra&quot;},
+	&quot;extra2&quot;: { spacing:2, attribute: &quot;a_extra2&quot;},
+	&quot;extra3&quot;: { spacing:3, attribute: &quot;a_extra3&quot;},
+	&quot;extra4&quot;: { spacing:4, attribute: &quot;a_extra4&quot;}
 };
+
+/**
+* Adds vertex and indices buffers to a mesh
+* @method addBuffers
+* @param {Object} vertexBuffers object with all the vertex streams
+* @param {Object} indexBuffers object with all the indices streams
+*/
+Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers)
+{
+	var num_vertices = 0;
+	if(this.vertices)
+		num_vertices = this.vertices.length / 3;
+
+	for(var i in vertexbuffers)
+	{
+		var data = vertexbuffers[i];
+		if(!data) continue;
+
+		if( typeof(data[0]) != &quot;number&quot;) //linearize
+		{
+			var newdata = [];
+			for (var j = 0, chunk = 10000; j &lt; data.length; j += chunk) {
+			  newdata = Array.prototype.concat.apply(newdata, data.slice(j, j + chunk));
+			}
+			data = newdata;
+		}
+
+		var stream_info = Mesh.common_buffers[i];
+
+		//cast to typed
+		if(data.constructor === Array)
+		{
+			var datatype = Float32Array;
+			if(stream_info &amp;&amp; stream_info.type)
+				datatype = stream_info.type;
+			data = new datatype( data );
+		}
+
+		//compute spacing
+		if(i == &quot;vertices&quot;)
+			num_vertices = data.length / 3;
+		var spacing = data.length / num_vertices;
+		if(stream_info &amp;&amp; stream_info.spacing)
+			spacing = stream_info.spacing;
+
+		//add and upload
+		var attribute = &quot;a_&quot; + i;
+		if(stream_info &amp;&amp; stream_info.attribute)
+			attribute = stream_info.attribute;
+		this.addVertexBuffer( i, attribute, spacing, data );
+	}
+
+	for(var i in indexbuffers)
+	{
+		var data = indexbuffers[i];
+		if(!data) continue;
+		if( typeof(data[0]) != &quot;number&quot;) //linearize
+		{
+			data = [];
+			for (var i = 0, chunk = 10000; i &lt; this.data.length; i += chunk) {
+			  data = Array.prototype.concat.apply(data, this.data.slice(i, i + chunk));
+			}
+		}
+
+		//cast to typed
+		if(data.constructor === Array)
+		{
+			var datatype = Uint16Array;
+			if(num_vertices &gt; 256*256)
+				datatype = Uint32Array;
+			data = new datatype( data );
+		}
+
+		this.addIndexBuffer( i, data );
+	}
+}
 
 /**
 * Creates a new empty buffer and attachs it to this mesh
@@ -223,12 +288,15 @@ Mesh.common_buffers = {
 */
 
 Mesh.prototype.addVertexBuffer = function(name, attribute, buffer_spacing, buffer_data, buffer_type ) {
-	var buffer = this.vertexBuffers[attribute] = new Buffer(gl.ARRAY_BUFFER, Float32Array);
+	var buffer = this.vertexBuffers[attribute] = new Buffer(gl.ARRAY_BUFFER, buffer_data);
 	buffer.name = name;
-	this[name] = []; //this created a regular array
 
-	if (!buffer_spacing &amp;&amp; Mesh.common_buffers[name])
-		buffer.spacing = Mesh.common_buffers[name].size;
+	if (buffer_spacing)
+		buffer.spacing = buffer_spacing;
+	else if( Mesh.common_buffers[name] )
+		buffer.spacing = Mesh.common_buffers[name].spacing;
+	else
+		buffer.spacing = 3;
 
 	if(buffer_data)
 	{
@@ -236,6 +304,7 @@ Mesh.prototype.addVertexBuffer = function(name, attribute, buffer_spacing, buffe
 		buffer.compile(buffer_type);
 	}
 
+	this[name] = buffer;
 	return buffer;
 }
 
@@ -243,15 +312,25 @@ Mesh.prototype.addVertexBuffer = function(name, attribute, buffer_spacing, buffe
 * Creates a new empty index buffer and attachs it to this mesh
 * @method addIndexBuffer
 * @param {String} name 
+* @param {Typed array} data 
+* @param {enum} buffer_type gl.STATIC_DRAW, gl.DYNAMIC_DRAW, gl.STREAM_DRAW
 */
 
-Mesh.prototype.addIndexBuffer = function(name) {
-	var buffer = this.indexBuffers[name] = new Buffer(gl.ELEMENT_ARRAY_BUFFER, Uint16Array);
-	this[name] = []; //this created a regular array
+Mesh.prototype.addIndexBuffer = function(name, data, buffer_type) {
+	var buffer = this.indexBuffers[name] = new Buffer(gl.ELEMENT_ARRAY_BUFFER, data);
+
+	if(data)
+	{
+		buffer.data = data;
+		buffer.compile(buffer_type, buffer_type );
+	}
+
+	return buffer;
 }
 
 /**
-* Uploads data of buffers to VRAM
+* Uploads data of buffers to VRAM. Checks the buffers defined, and then search for a typed array with the same name in the mesh properties,
+	it that is the case, it uploads the data to the buffer.
 * @method compile
 * @param {number} buffer_type gl.STATIC_DRAW, gl.DYNAMIC_DRAW, gl.STREAM_DRAW
 */
@@ -368,10 +447,8 @@ Mesh.prototype.computeWireframe = function() {
 		  }
 		}
 	}
-	if (!this.lines) this.addIndexBuffer(&#x27;lines&#x27;);
-	this.lines = indexer.unique;
+	this.addIndexBuffer(&#x27;lines&#x27;, indexer.unique.length &gt; 256*256 ? new Uint32Array( indexer.unique ) : new Uint16Array( indexer.unique ) );
 
-	this.compile();
 	return this;
 }
 
@@ -456,9 +533,7 @@ Mesh.prototype.computeTangents = function() {
 		tangents.set([temp[0], temp[1], temp[2], w],a);
 	}
 
-	var buffer = this.addVertexBuffer(&#x27;tangents&#x27;, Mesh.TANGENT_STREAM_NAME);
-	buffer.data = tangents;
-	buffer.compile();
+	this.addVertexBuffer(&#x27;tangents&#x27;, Mesh.common_buffers[&quot;tangents&quot;].attribute, 4, tangents );
 }
 
 /**
@@ -520,9 +595,28 @@ Mesh.prototype.freeData = function()
 /**
 * Static method for the class Mesh to create a mesh from a list of streams
 * @method Mesh.load
-* @param {Object} json streams
+* @param {Object} buffers object will all the buffers
+* @param {Object} options
 */
 Mesh.load = function(buffers, options) {
+	options = options || {};
+	var v = {};
+	var i = {};
+
+	for(var j in buffers)
+	{
+		if(j == &quot;indices&quot; || j == &quot;lines&quot; || j == &quot;triangles&quot;)
+			i[j] = buffers[j];
+		else if(Mesh.common_buffers[j])
+			v[j] = buffers[j];
+		else
+			options[j] = buffers[j];
+	}
+
+	var mesh = new GL.Mesh(v,i, options);
+	return mesh;
+
+	/*
 	options = options || {};
 	if (!(&#x27;coords&#x27; in options)) options.coords = !!buffers.coords;
 	if (!(&#x27;coords2&#x27; in options)) options.coords2 = !!buffers.coords2;
@@ -532,30 +626,26 @@ Mesh.load = function(buffers, options) {
 	if (!(&#x27;lines&#x27; in options)) options.lines = !!buffers.lines;
 
 	//create the mesh with the buffers empty
-	var mesh = new GL.Mesh(options);
+	var mesh = new GL.Mesh(buffers); //create the buffers
 
 	//attach the data to the mesh object
 	mesh.vertices = buffers.vertices;
 	if(!mesh.vertices.length) throw(&quot;Error: empty mesh vertices&quot;);
 
-	if (mesh.coords) mesh.coords = buffers.coords;
-	if (mesh.coords2) mesh.coords2 = buffers.coords2;
-	if (mesh.normals) mesh.normals = buffers.normals;
-	if (mesh.colors) mesh.colors = buffers.colors;
-	if (mesh.triangles) mesh.triangles = buffers.triangles;
-	if (mesh.lines) mesh.lines = buffers.lines;
+	for(var i in buffers)
+		if( buffers[i] &amp;&amp; Mesh.common_buffers[i] )
+		{
+			mesh.addVertexBuffer( i, Mesh.common_buffers[i].attribute );
+			mesh[i] = buffers[i];
+		}
 
 	//upload data to buffers in VRAM
 	mesh.compile( options.stream_type ); 
 
 	if(options.bounding) //bounding information provided
 		mesh.bounding = options.bounding;
-	/* 
-	else
-		mesh.computeBounding(); //forcing to build the bounding is silly when using direct rendering
-	*/
-
 	return mesh;
+	*/
 }
 
 /**
@@ -566,7 +656,7 @@ Mesh.load = function(buffers, options) {
 Mesh.plane = function(options) {
 	options = options || {};
 	options.triangles = [];
-	var mesh = new Mesh(options);
+	var mesh = {};
 	var detailX = options.detailX || options.detail || 1;
 	var detailY = options.detailY || options.detail || 1;
 	var width = options.width || options.size || 1;
@@ -575,10 +665,10 @@ Mesh.plane = function(options) {
 	width *= 0.5;
 	height *= 0.5;
 
-	var triangles = mesh.triangles;
-	var vertices = mesh.vertices;
-	var coords = mesh.coords;
-	var normals = mesh.normals;
+	var triangles = [];
+	var vertices = [];
+	var coords = [];
+	var normals = [];
 
 	for (var y = 0; y &lt;= detailY; y++) {
 	var t = y / detailY;
@@ -606,15 +696,15 @@ Mesh.plane = function(options) {
 	}
 	}
 
-	mesh.bounding = {
+	var bounding = {
 		aabb_center: [0,0,0],
 		aabb_half: xz ? [width,0,height] : [width,height,0],
 		aabb_min: xz ? [-width,0,-height] : [-width,-height,0],
 		aabb_max: xz ? [width,0,height] : [s,height,0],
 		radius: vec3.length([width,0,height])
 	};
-	mesh.compile();
-	return mesh;
+	
+	return GL.Mesh.load( {vertices:vertices, normals: normals, coords: coords, triangles: triangles }, { bounding: bounding });
 };
 
 /**
@@ -795,10 +885,10 @@ Mesh.getScreenQuad = function()
 		return this._screen_quad;
 	var vertices = new Float32Array(18);
 	var coords = new Float32Array([-1,-1, 1,1, -1,1,  -1,-1, 1,-1, 1,1 ]);
-	this.screen_quad = new GL.Mesh.load({
+	this._screen_quad = new GL.Mesh.load({
 		vertices: vertices,
 		coords: coords});
-	return this.screen_quad;
+	return this._screen_quad;
 }
     </pre>
 </div>

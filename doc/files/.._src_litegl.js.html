@@ -142,6 +142,7 @@ var GL = {
 		gl.half_float_ext = gl.getExtension(&quot;OES_texture_half_float&quot;);
 		gl.half_float_ext_linear = gl.getExtension(&quot;OES_texture_half_float_linear&quot;);
 		gl.HALF_FLOAT_OES = 0x8D61; 
+		gl.max_texture_units = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
 
 		//just some checks
 		if(typeof(glMatrix) == &quot;undefined&quot;)
@@ -206,7 +207,10 @@ var GL = {
 			else if(gl.onmousewheel &amp;&amp; (e.eventType == &quot;mousewheel&quot; || e.eventType == &quot;wheel&quot; || e.eventType == &quot;DOMMouseScroll&quot;))
 			{ 
 				e.eventType = &quot;mousewheel&quot;;
-				e.wheel = (e.wheelDeltaY != null ? e.wheelDeltaY : e.detail * -60);
+				if(e.type == &quot;wheel&quot;)
+					e.wheel = -e.deltaY;
+				else
+					e.wheel = (e.wheelDeltaY != null ? e.wheelDeltaY : e.detail * -60);
 				gl.onmousewheel(e);
 			}
 
