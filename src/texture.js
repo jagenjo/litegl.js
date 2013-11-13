@@ -183,7 +183,7 @@ Texture.prototype.drawTo = function(callback) {
 	{
 		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.handler, 0);
 		gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
-		callback();
+		callback(this);
 	}
 	else if(this.texture_type == gl.TEXTURE_CUBE_MAP)
 	{
@@ -191,7 +191,7 @@ Texture.prototype.drawTo = function(callback) {
 		{
 			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X+i, this.handler, 0);
 			gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
-			callback(i);
+			callback(this,i);
 		}
 	}
 

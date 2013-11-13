@@ -256,6 +256,28 @@ mat4.toRotationMat4 = function (out, mat) {
 	return out;
 };
 
+mat4.swapRows = function(out, mat, row, row2)
+{
+	if(out != mat)
+	{
+		mat4.copy(out, mat);
+		out[4*row] = mat[4*row2];
+		out[4*row+1] = mat[4*row2+1];
+		out[4*row+2] = mat[4*row2+2];
+		out[4*row+3] = mat[4*row2+3];
+		out[4*row2] = mat[4*row];
+		out[4*row2+1] = mat[4*row+1];
+		out[4*row2+2] = mat[4*row+2];
+		out[4*row2+3] = mat[4*row+3];
+		return out;
+	}
+
+	var temp = new Float32Array(matrix.subarray(row*4,row*5));
+	matrix.set( matrix.subarray(row2*4,row2*5), row*4 );
+	matrix.set( temp, row2*4 );
+	return out;
+}
+
 //not tested
 vec3.project = function(out, obj,  modelview, projection) {
 	//var point = projection.transformPoint(modelview.transformPoint(new Vector(objX, objY, objZ)));
@@ -326,9 +348,9 @@ quat.toEuler = function(out, quat) {
 }
 
 quat.fromEuler = function(out, vec) {
-	var heading = vec[0];
-	var attitude = vec[1];
-	var bank = vec[2];
+	var heading = vec[0]; //yaw
+	var attitude = vec[1]; //pitch
+	var bank = vec[2]; //roll
 
 	var C1 = Math.cos(heading);
 	var C2 = Math.cos(attitude);
@@ -341,8 +363,6 @@ quat.fromEuler = function(out, vec) {
 	var x = (C2 * S3 + C1 * S3 + S1 * S2 * C3) / (4.0 * w);
 	var y = (S1 * C2 + S1 * C3 + C1 * S2 * S3) / (4.0 * w);
 	var z = (-S1 * S3 + C1 * S2 * C3 + S2) /(4.0 * w);
-	if(!out)
-		out = quat.create();
 	return quat.set(out, x,y,z,w );
 };
 

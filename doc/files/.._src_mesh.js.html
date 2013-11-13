@@ -121,12 +121,13 @@ Indexer.prototype = {
 * A data buffer to be stored in the GPU
 * @class Buffer
 * @constructor
-* @param {String} target name of the attribute
-* @param {ArrayBufferView} array_type the array used to store it (Float32Array, Uint8Array ...)
+* @param {String} target gl.ARRAY_BUFFER, ELEMENT_ARRAY_BUFFER
+* @param {ArrayBufferView} data the data in typed-array format
+* @param {number} spacing number of numbers per component (3 per vertex, 2 per uvs...), default 3
 */
 function Buffer(target, data, spacing) {
 	this.buffer = null; //webgl buffer
-	this.target = target; //array_buffer
+	this.target = target;
 
 	//optional
 	this.data = data;
@@ -154,7 +155,7 @@ Buffer.prototype.compile = function(stream_type) { //default gl.STATIC_DRAW (oth
 
 
 	gl.bindBuffer(this.target, this.buffer);
-	gl.bufferData(this.target, data , stream_type || gl.STATIC_DRAW);
+	gl.bufferData(this.target, data , stream_type || this.stream_type || gl.STATIC_DRAW);
 };
 
 
@@ -283,11 +284,18 @@ Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers)
 /**
 * Creates a new empty buffer and attachs it to this mesh
 * @method addVertexBuffer
-* @param {String} name 
-* @param {String} attribute name of the stream in the shader
+* @param {String} name &quot;vertices&quot;,&quot;normals&quot;...
+* @param {String} attribute name of the stream in the shader &quot;a_vertex&quot;,&quot;a_normal&quot;,...
+* @param {number} spacing components per vertex
+* @param {ArrayBufferView} buffer_data the data in typed array format
+* @param {enum} buffer_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW )
 */
 
 Mesh.prototype.addVertexBuffer = function(name, attribute, buffer_spacing, buffer_data, buffer_type ) {
+
+	if(!buffer_data.buffer)
+		throw(&quot;no typed array in mesh buffer&quot;);
+
 	var buffer = this.vertexBuffers[attribute] = new Buffer(gl.ARRAY_BUFFER, buffer_data);
 	buffer.name = name;
 
@@ -301,10 +309,13 @@ Mesh.prototype.addVertexBuffer = function(name, attribute, buffer_spacing, buffe
 	if(buffer_data)
 	{
 		buffer.data = buffer_data;
+		buffer.stream_type = buffer_type || gl.STATIC_DRAW;
 		buffer.compile(buffer_type);
+
+		//save in mesh
+		this[name] = buffer_data;
 	}
 
-	this[name] = buffer;
 	return buffer;
 }
 
@@ -567,6 +578,23 @@ Mesh.prototype.computeBounding = function( vertices ) {
 	this.bounding.aabb_max = max;
 	this.bounding.radius = vec3.length( half_size );
 }
+
+/**
+* forces a bounding box to be set
+* @method setBounding
+* @param {vec3} center center of the bounding box
+* @param {vec3} half_size vector from the center to positive corner
+*/
+Mesh.prototype.setBounding = function(center, half_size) {
+	if(!this.bounding)
+		this.bounding = {};
+	this.bounding.aabb_center = vec3.clone(center);
+	this.bounding.aabb_half = vec3.clone(half_size);
+	this.bounding.aabb_min = vec3.sub(vec3.create(), center, half_size);
+	this.bounding.aabb_max = vec3.add(vec3.create(), center, half_size);
+	this.bounding.radius = vec3.length( half_size );
+}
+
 
 /*
 Mesh.prototype.toBinary = function() {

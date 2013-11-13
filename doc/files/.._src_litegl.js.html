@@ -170,6 +170,8 @@ var GL = {
 				canvas.addEventListener(&quot;wheel&quot;, onmouse, false);
 				//canvas.addEventListener(&quot;DOMMouseScroll&quot;, onmouse, false);
 			}
+			//prevent right click context menu
+			canvas.addEventListener(&quot;contextmenu&quot;, function(e) { e.preventDefault(); return false; });
 		}
 
 		function onmouse(e) {
@@ -307,6 +309,19 @@ var GL = {
 				}
 			this.gamepads = gamepads;
 			return gamepads;
+		}
+
+		gl.fullscreen = function()
+		{
+			var canvas = this.canvas;
+			if(canvas.requestFullScreen)
+				canvas.requestFullScreen();
+			else if(canvas.webkitRequestFullScreen)
+				canvas.webkitRequestFullScreen();
+			else if(canvas.mozRequestFullScreen)
+				canvas.mozRequestFullScreen();
+			else
+				console.error(&quot;Fullscreen not supported&quot;);
 		}
 
 		return gl;

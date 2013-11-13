@@ -134,7 +134,13 @@
             
                 <li class="arg">
                     
-                        <code>array_type</code>
+                        <code>data</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>spacing</code>
                     
                 </li>
             
@@ -196,7 +202,7 @@
                     
 
                     <div class="param-description">
-                        <p>name of the attribute</p>
+                        <p>gl.ARRAY_BUFFER, ELEMENT_ARRAY_BUFFER</p>
 
                     </div>
 
@@ -205,14 +211,30 @@
             
                 <li class="param">
                     
-                        <code class="param-name">array_type</code>
+                        <code class="param-name">data</code>
                         <span class="type">ArrayBufferView</span>
                     
 
                     
 
                     <div class="param-description">
-                        <p>the array used to store it (Float32Array, Uint8Array ...)</p>
+                        <p>the data in typed-array format</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">spacing</code>
+                        <span class="type">Number</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>number of numbers per component (3 per vertex, 2 per uvs...), default 3</p>
 
                     </div>
 
@@ -318,7 +340,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l38"><code>..&#x2F;src&#x2F;mesh.js:38</code></a>
+        <a href="../files/.._src_mesh.js.html#l39"><code>..&#x2F;src&#x2F;mesh.js:39</code></a>
         
         </p>
 

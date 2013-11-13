@@ -643,6 +643,28 @@ mat4.toRotationMat4 = function (out, mat) {
 	return out;
 };
 
+mat4.swapRows = function(out, mat, row, row2)
+{
+	if(out != mat)
+	{
+		mat4.copy(out, mat);
+		out[4*row] = mat[4*row2];
+		out[4*row+1] = mat[4*row2+1];
+		out[4*row+2] = mat[4*row2+2];
+		out[4*row+3] = mat[4*row2+3];
+		out[4*row2] = mat[4*row];
+		out[4*row2+1] = mat[4*row+1];
+		out[4*row2+2] = mat[4*row+2];
+		out[4*row2+3] = mat[4*row+3];
+		return out;
+	}
+
+	var temp = new Float32Array(matrix.subarray(row*4,row*5));
+	matrix.set( matrix.subarray(row2*4,row2*5), row*4 );
+	matrix.set( temp, row2*4 );
+	return out;
+}
+
 //not tested
 vec3.project = function(out, obj,  modelview, projection) {
 	//var point = projection.transformPoint(modelview.transformPoint(new Vector(objX, objY, objZ)));
@@ -713,9 +735,9 @@ quat.toEuler = function(out, quat) {
 }
 
 quat.fromEuler = function(out, vec) {
-	var heading = vec[0];
-	var attitude = vec[1];
-	var bank = vec[2];
+	var heading = vec[0]; //yaw
+	var attitude = vec[1]; //pitch
+	var bank = vec[2]; //roll
 
 	var C1 = Math.cos(heading);
 	var C2 = Math.cos(attitude);
@@ -728,8 +750,6 @@ quat.fromEuler = function(out, vec) {
 	var x = (C2 * S3 + C1 * S3 + S1 * S2 * C3) / (4.0 * w);
 	var y = (S1 * C2 + S1 * C3 + C1 * S2 * S3) / (4.0 * w);
 	var z = (-S1 * S3 + C1 * S2 * C3 + S2) /(4.0 * w);
-	if(!out)
-		out = quat.create();
 	return quat.set(out, x,y,z,w );
 };
 
@@ -811,12 +831,13 @@ Indexer.prototype = {
 * A data buffer to be stored in the GPU
 * @class Buffer
 * @constructor
-* @param {String} target name of the attribute
-* @param {ArrayBufferView} array_type the array used to store it (Float32Array, Uint8Array ...)
+* @param {String} target gl.ARRAY_BUFFER, ELEMENT_ARRAY_BUFFER
+* @param {ArrayBufferView} data the data in typed-array format
+* @param {number} spacing number of numbers per component (3 per vertex, 2 per uvs...), default 3
 */
 function Buffer(target, data, spacing) {
 	this.buffer = null; //webgl buffer
-	this.target = target; //array_buffer
+	this.target = target;
 
 	//optional
 	this.data = data;
@@ -844,14 +865,16 @@ Buffer.prototype.compile = function(stream_type) { //default gl.STATIC_DRAW (oth
 
 
 	gl.bindBuffer(this.target, this.buffer);
-	gl.bufferData(this.target, data , stream_type || gl.STATIC_DRAW);
+	gl.bufferData(this.target, data , stream_type || this.stream_type || gl.STATIC_DRAW);
 };
 
 
 /**
 * Mesh class to upload geometry to the GPU
 * @class Mesh
-* @param {Object} options which streams do you want to create
+* @param {Object} vertexBuffers object with all the vertex streams
+* @param {Object} indexBuffers object with all the indices streams
+* @param {Object} options
 * @constructor
 */
 function Mesh(vertexbuffers, indexbuffers, options) {
@@ -892,7 +915,12 @@ Mesh.common_buffers = {
 	"extra4": { spacing:4, attribute: "a_extra4"}
 };
 
-//add buffers, it also cast them to typed arrays
+/**
+* Adds vertex and indices buffers to a mesh
+* @method addBuffers
+* @param {Object} vertexBuffers object with all the vertex streams
+* @param {Object} indexBuffers object with all the indices streams
+*/
 Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers)
 {
 	var num_vertices = 0;
@@ -966,11 +994,18 @@ Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers)
 /**
 * Creates a new empty buffer and attachs it to this mesh
 * @method addVertexBuffer
-* @param {String} name 
-* @param {String} attribute name of the stream in the shader
+* @param {String} name "vertices","normals"...
+* @param {String} attribute name of the stream in the shader "a_vertex","a_normal",...
+* @param {number} spacing components per vertex
+* @param {ArrayBufferView} buffer_data the data in typed array format
+* @param {enum} buffer_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW )
 */
 
 Mesh.prototype.addVertexBuffer = function(name, attribute, buffer_spacing, buffer_data, buffer_type ) {
+
+	if(!buffer_data.buffer)
+		throw("no typed array in mesh buffer");
+
 	var buffer = this.vertexBuffers[attribute] = new Buffer(gl.ARRAY_BUFFER, buffer_data);
 	buffer.name = name;
 
@@ -984,10 +1019,13 @@ Mesh.prototype.addVertexBuffer = function(name, attribute, buffer_spacing, buffe
 	if(buffer_data)
 	{
 		buffer.data = buffer_data;
+		buffer.stream_type = buffer_type || gl.STATIC_DRAW;
 		buffer.compile(buffer_type);
+
+		//save in mesh
+		this[name] = buffer_data;
 	}
 
-	this[name] = buffer;
 	return buffer;
 }
 
@@ -1251,6 +1289,23 @@ Mesh.prototype.computeBounding = function( vertices ) {
 	this.bounding.radius = vec3.length( half_size );
 }
 
+/**
+* forces a bounding box to be set
+* @method setBounding
+* @param {vec3} center center of the bounding box
+* @param {vec3} half_size vector from the center to positive corner
+*/
+Mesh.prototype.setBounding = function(center, half_size) {
+	if(!this.bounding)
+		this.bounding = {};
+	this.bounding.aabb_center = vec3.clone(center);
+	this.bounding.aabb_half = vec3.clone(half_size);
+	this.bounding.aabb_min = vec3.sub(vec3.create(), center, half_size);
+	this.bounding.aabb_max = vec3.add(vec3.create(), center, half_size);
+	this.bounding.radius = vec3.length( half_size );
+}
+
+
 /*
 Mesh.prototype.toBinary = function() {
 
@@ -1278,7 +1333,8 @@ Mesh.prototype.freeData = function()
 /**
 * Static method for the class Mesh to create a mesh from a list of streams
 * @method Mesh.load
-* @param {Object} json streams
+* @param {Object} buffers object will all the buffers
+* @param {Object} options
 */
 Mesh.load = function(buffers, options) {
 	options = options || {};
@@ -1757,7 +1813,7 @@ Texture.prototype.drawTo = function(callback) {
 	{
 		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.handler, 0);
 		gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
-		callback();
+		callback(this);
 	}
 	else if(this.texture_type == gl.TEXTURE_CUBE_MAP)
 	{
@@ -1765,7 +1821,7 @@ Texture.prototype.drawTo = function(callback) {
 		{
 			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X+i, this.handler, 0);
 			gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
-			callback(i);
+			callback(this,i);
 		}
 	}
 
@@ -2492,6 +2548,8 @@ var GL = {
 				canvas.addEventListener("wheel", onmouse, false);
 				//canvas.addEventListener("DOMMouseScroll", onmouse, false);
 			}
+			//prevent right click context menu
+			canvas.addEventListener("contextmenu", function(e) { e.preventDefault(); return false; });
 		}
 
 		function onmouse(e) {
@@ -2629,6 +2687,19 @@ var GL = {
 				}
 			this.gamepads = gamepads;
 			return gamepads;
+		}
+
+		gl.fullscreen = function()
+		{
+			var canvas = this.canvas;
+			if(canvas.requestFullScreen)
+				canvas.requestFullScreen();
+			else if(canvas.webkitRequestFullScreen)
+				canvas.webkitRequestFullScreen();
+			else if(canvas.mozRequestFullScreen)
+				canvas.mozRequestFullScreen();
+			else
+				console.error("Fullscreen not supported");
 		}
 
 		return gl;
