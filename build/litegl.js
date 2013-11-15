@@ -834,20 +834,24 @@ Indexer.prototype = {
 * @param {String} target gl.ARRAY_BUFFER, ELEMENT_ARRAY_BUFFER
 * @param {ArrayBufferView} data the data in typed-array format
 * @param {number} spacing number of numbers per component (3 per vertex, 2 per uvs...), default 3
+* @param {enum} stream_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW 
 */
-function Buffer(target, data, spacing) {
+function Buffer(target, data, spacing, stream_type) {
 	this.buffer = null; //webgl buffer
 	this.target = target;
 
 	//optional
 	this.data = data;
 	this.spacing = spacing || 3;
+
+	if(this.data)
+		this.compile(stream_type);
 }
 
 /**
 * Uploads the buffer data (stored in this.data) to the GPU
 * @method compile
-* @param {number} buffer_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW 
+* @param {number} stream_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW 
 */
 Buffer.prototype.compile = function(stream_type) { //default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW )
 	var spacing = this.spacing || 3; //default spacing	
@@ -998,33 +1002,27 @@ Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers)
 * @param {String} attribute name of the stream in the shader "a_vertex","a_normal",...
 * @param {number} spacing components per vertex
 * @param {ArrayBufferView} buffer_data the data in typed array format
-* @param {enum} buffer_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW )
+* @param {enum} stream_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW )
 */
 
-Mesh.prototype.addVertexBuffer = function(name, attribute, buffer_spacing, buffer_data, buffer_type ) {
+Mesh.prototype.addVertexBuffer = function(name, attribute, buffer_spacing, buffer_data, stream_type ) {
 
 	if(!buffer_data.buffer)
 		throw("no typed array in mesh buffer");
 
-	var buffer = this.vertexBuffers[attribute] = new Buffer(gl.ARRAY_BUFFER, buffer_data);
+	if (!buffer_spacing)
+	{
+		if(Mesh.common_buffers[name] && Mesh.common_buffers[name].spacing)
+			buffer_spacing = Mesh.common_buffers[name].spacing;
+		else
+			buffer_spacing = 3;
+	}
+
+	var buffer = this.vertexBuffers[attribute] = new Buffer(gl.ARRAY_BUFFER, buffer_data, buffer_spacing, stream_type);
 	buffer.name = name;
 
-	if (buffer_spacing)
-		buffer.spacing = buffer_spacing;
-	else if( Mesh.common_buffers[name] )
-		buffer.spacing = Mesh.common_buffers[name].spacing;
-	else
-		buffer.spacing = 3;
-
 	if(buffer_data)
-	{
-		buffer.data = buffer_data;
-		buffer.stream_type = buffer_type || gl.STATIC_DRAW;
-		buffer.compile(buffer_type);
-
-		//save in mesh
 		this[name] = buffer_data;
-	}
 
 	return buffer;
 }
@@ -1034,17 +1032,14 @@ Mesh.prototype.addVertexBuffer = function(name, attribute, buffer_spacing, buffe
 * @method addIndexBuffer
 * @param {String} name 
 * @param {Typed array} data 
-* @param {enum} buffer_type gl.STATIC_DRAW, gl.DYNAMIC_DRAW, gl.STREAM_DRAW
+* @param {enum} stream_type gl.STATIC_DRAW, gl.DYNAMIC_DRAW, gl.STREAM_DRAW
 */
 
-Mesh.prototype.addIndexBuffer = function(name, data, buffer_type) {
-	var buffer = this.indexBuffers[name] = new Buffer(gl.ELEMENT_ARRAY_BUFFER, data);
+Mesh.prototype.addIndexBuffer = function(name, buffer_data, stream_type) {
+	var buffer = this.indexBuffers[name] = new Buffer(gl.ELEMENT_ARRAY_BUFFER, buffer_data, stream_type);
 
-	if(data)
-	{
-		buffer.data = data;
-		buffer.compile(buffer_type, buffer_type );
-	}
+	if(buffer_data)
+		this[name] = buffer_data;
 
 	return buffer;
 }
@@ -1343,6 +1338,8 @@ Mesh.load = function(buffers, options) {
 
 	for(var j in buffers)
 	{
+		if(!buffers[j]) continue;
+
 		if(j == "indices" || j == "lines" || j == "triangles")
 			i[j] = buffers[j];
 		else if(Mesh.common_buffers[j])

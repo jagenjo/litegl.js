@@ -43,7 +43,7 @@
 
 		//set the camera perspective
 		mat4.perspective(persp, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 0.1, 1000);
-		//mat4.ortho(persp, -50,50,-50,50,0,500);
+		//mat4.ortho(persp, -50,50,-50,50,0,500); //ray doesnt work in perspective
 
 		function getClosestObject(x,y)
 		{
