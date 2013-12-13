@@ -326,10 +326,10 @@ var DDS = (function () {
                 break;
 
             default:
-				//blockBytes = 24;
-				//internalFormat = gl.RGB;
-                console.error("Unsupported FourCC code:", int32ToFourCC(fourCC), fourCC);
-                return null;
+				blockBytes = 4;
+				internalFormat = gl.RGBA;
+                //console.error("Unsupported FourCC code:", int32ToFourCC(fourCC), fourCC);
+                //return null;
         }
 
         mipmapCount = 1;
@@ -352,12 +352,25 @@ var DDS = (function () {
 				width = header[off_width];
 				height = header[off_height];
 				for(i = 0; i < mipmapCount; ++i) {
-					dataLength = Math.max( 4, width )/4 * Math.max( 4, height )/4 * blockBytes;
-					byteArray = new Uint8Array(arrayBuffer, dataOffset, dataLength);
 					if(fourCC)
+					{
+						dataLength = Math.max( 4, width )/4 * Math.max( 4, height )/4 * blockBytes;
+						byteArray = new Uint8Array(arrayBuffer, dataOffset, dataLength);
 						gl.compressedTexImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face, i, internalFormat, width, height, 0, byteArray);
-					//else
-					//	gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face, i, internalFormat, width, height, 0, gl.RGB, gl.UNSIGNED_BYTE, byteArray);
+					}
+					else
+					{
+						dataLength = width * height * blockBytes;
+						byteArray = new Uint8Array(arrayBuffer, dataOffset, dataLength);
+						for(var j = 0, l = byteArray.length, tmp = 0; j < l; j+=4) //BGR fix
+						{
+							tmp = byteArray[j];
+							byteArray[j] = byteArray[j+2];
+							byteArray[j+2] = tmp;
+						}
+
+						gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face, i, internalFormat, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, byteArray);
+					}
 					dataOffset += dataLength;
 					width *= 0.5;
 					height *= 0.5;
@@ -392,6 +405,132 @@ var DDS = (function () {
 		}
 
         return mipmapCount;
+    }
+
+    /**
+     * Parses a DDS file from the given arrayBuffer and uploads it into the currently bound texture
+     *
+     * @param {WebGLRenderingContext} gl WebGL rendering context
+     * @param {WebGLCompressedTextureS3TC} ext WEBGL_compressed_texture_s3tc extension object
+     * @param {TypedArray} arrayBuffer Array Buffer containing the DDS files data
+     * @param {boolean} [loadMipmaps] If false only the top mipmap level will be loaded, otherwise all available mipmaps will be uploaded
+     *
+     * @returns {number} Number of mipmaps uploaded, 0 if there was an error
+     */
+    function getDDSLevels( arrayBuffer, compressed_not_supported )
+	{
+        var header = new Int32Array(arrayBuffer, 0, headerLengthInt),
+            fourCC, blockBytes, internalFormat,
+            width, height, dataLength, dataOffset, is_cubemap,
+            rgb565Data, byteArray, mipmapCount, i, face;
+
+        if(header[off_magic] != DDS_MAGIC) {
+            console.error("Invalid magic number in DDS header");
+            return 0;
+        }
+        
+        if(!header[off_pfFlags] & DDPF_FOURCC) {
+            console.error("Unsupported format, must contain a FourCC code");
+            return 0;
+        }
+
+        fourCC = header[off_pfFourCC];
+        switch(fourCC) {
+            case FOURCC_DXT1:
+                blockBytes = 8;
+                internalFormat = "COMPRESSED_RGB_S3TC_DXT1_EXT";
+                break;
+
+            case FOURCC_DXT3:
+                blockBytes = 16;
+                internalFormat = "COMPRESSED_RGBA_S3TC_DXT3_EXT";
+                break;
+
+            case FOURCC_DXT5:
+                blockBytes = 16;
+                internalFormat = "COMPRESSED_RGBA_S3TC_DXT5_EXT";
+                break;
+
+            default:
+				blockBytes = 4;
+				internalFormat = "RGBA";
+                //console.error("Unsupported FourCC code:", int32ToFourCC(fourCC), fourCC);
+                //return null;
+        }
+
+        mipmapCount = 1;
+        if(header[off_flags] & DDSD_MIPMAPCOUNT && loadMipmaps !== false) {
+            mipmapCount = Math.max(1, header[off_mipmapCount]);
+        }
+
+        width = header[off_width];
+        height = header[off_height];
+        dataOffset = header[off_size] + 4;
+		is_cubemap = !!(header[off_caps+1] & DDSCAPS2_CUBEMAP);
+
+		var buffers = [];
+
+		if(is_cubemap)
+		{
+			for(face = 0; face < 6; ++face)
+			{
+				width = header[off_width];
+				height = header[off_height];
+				for(i = 0; i < mipmapCount; ++i)
+				{
+					if(fourCC)
+					{
+						dataLength = Math.max( 4, width )/4 * Math.max( 4, height )/4 * blockBytes;
+						byteArray = new Uint8Array(arrayBuffer, dataOffset, dataLength);
+						buffers.push({ tex: "TEXTURE_CUBE_MAP", face: face, mipmap: i, internalFormat: internalFormat, width: width, height: height, offset: 0, dataOffset: dataOffset, dataLength: dataLength });
+					}
+					else
+					{
+						dataLength = width * height * blockBytes;
+						byteArray = new Uint8Array(arrayBuffer, dataOffset, dataLength);
+						for(var j = 0, l = byteArray.length, tmp = 0; j < l; j+=4) //BGR fix
+						{
+							tmp = byteArray[j];
+							byteArray[j] = byteArray[j+2];
+							byteArray[j+2] = tmp;
+						}
+						buffers.push({ tex: "TEXTURE_CUBE_MAP", face: face, mipmap: i, internalFormat: internalFormat, width: width, height: height, offset: 0, type: "UNSIGNED_BYTE", dataOffset: dataOffset, dataLength: dataLength });
+					}
+					dataOffset += dataLength;
+					width *= 0.5;
+					height *= 0.5;
+				}
+			}
+		}
+		else //2d texture
+		{
+			if(!compressed_not_supported)
+			{
+				for(i = 0; i < mipmapCount; ++i) {
+					dataLength = Math.max( 4, width )/4 * Math.max( 4, height )/4 * blockBytes;
+					byteArray = new Uint8Array(arrayBuffer, dataOffset, dataLength);
+					//gl.compressedTexImage2D(gl.TEXTURE_2D, i, internalFormat, width, height, 0, byteArray);
+					buffers.push({ tex: "TEXTURE_2D", mipmap: i, internalFormat: internalFormat, width: width, height: height, offset: 0, type: "UNSIGNED_BYTE", dataOffset: dataOffset, dataLength: dataLength });
+					dataOffset += dataLength;
+					width *= 0.5;
+					height *= 0.5;
+				}
+			} else {
+				if(fourCC == FOURCC_DXT1)
+				{
+					dataLength = Math.max( 4, width )/4 * Math.max( 4, height )/4 * blockBytes;
+					byteArray = new Uint16Array(arrayBuffer);
+					rgb565Data = dxtToRgb565(byteArray, dataOffset / 2, width, height);
+					//gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, width, height, 0, gl.RGB, gl.UNSIGNED_SHORT_5_6_5, rgb565Data);
+					buffers.push({ tex: "TEXTURE_2D", mipmap: 0, internalFormat: "RGB", width: width, height: height, offset: 0, format:"RGB", type: "UNSIGNED_SHORT_5_6_5", data: rgb565Data });
+				} else {
+					console.error("No manual decoder for", int32ToFourCC(fourCC), "and no native support");
+					return 0;
+				}
+			}
+		}
+
+        return buffers;
     }
 
     /**
@@ -459,6 +598,30 @@ var DDS = (function () {
     }
 
     /**
+     * Extracts the texture info from a DDS file at the given ArrayBuffer.
+     *
+     * @param {ArrayBuffer} data containing the DDS file
+     *
+     * @returns {Object} contains mipmaps and properties
+     */
+    function getDDSTextureFromMemoryEx(data) {
+		var header = new Int32Array(data, 0, headerLengthInt)
+		var is_cubemap = !!(header[off_caps+1] & DDSCAPS2_CUBEMAP);
+		var tex_type = is_cubemap ? "TEXTURE_CUBE_MAP" : "TEXTURE_2D";
+		var buffers = getDDSLevels(data);
+
+		var texture = {
+			type: tex_type,
+			buffers: buffers,
+			data: data,
+			width: header[off_width],
+			height: header[off_height]
+		};
+
+        return texture;
+    }
+
+    /**
      * Creates a texture from the DDS file at the given URL. Simple shortcut for the most common use case
      *
      * @param {WebGLRenderingContext} gl WebGL rendering context
@@ -479,13 +642,17 @@ var DDS = (function () {
         uploadDDSLevels: uploadDDSLevels,
         loadDDSTextureEx: loadDDSTextureEx,
         loadDDSTexture: loadDDSTexture,
-		loadDDSTextureFromMemoryEx: loadDDSTextureFromMemoryEx
+		loadDDSTextureFromMemoryEx: loadDDSTextureFromMemoryEx,
+		getDDSTextureFromMemoryEx: getDDSTextureFromMemoryEx
     };
 
 })();
 /* this file adds some extra functions to gl-matrix library */
 if(typeof(glMatrix) == "undefined")
 	throw("You must include glMatrix on your project");
+
+var V3 = vec3.create;
+var M4 = vec3.create;
 
 vec3.zero = function(a)
 {
@@ -590,6 +757,15 @@ mat4.multiplyVec3 = function(out, m, a) {
 };
 
 mat4.projectVec3 = function(out, m, a) {
+	mat4.multiplyVec3( out, m, a );
+	out[0] /= out[2];
+	out[1] /= out[2];
+	return out;
+};
+
+
+/*
+mat4.projectVec3 = function(out, m, a) {
    var x = a[0], y = a[1], z = a[2];
    var v = vec3.fromValues(
       m[0] * x + m[1] * y + m[2] * z + m[3],
@@ -599,6 +775,7 @@ mat4.projectVec3 = function(out, m, a) {
    
    return vec3.scale(v,v,1.0 / (m[12] * v[0] + m[13] * v[1] + m[14] * v[2] + m[15]) );
 };
+*/
 
 //without translation
 mat4.rotateVec3 = function(out, m, a) {
@@ -608,6 +785,15 @@ mat4.rotateVec3 = function(out, m, a) {
     out[2] = m[2] * x + m[6] * y + m[10] * z;
     return out;
 };
+
+mat4.fromTranslationFrontTop = function (out, pos, front, top)
+{
+	vec3.cross(out.subarray(0,3), front, top);
+	out.set(top,4);
+	out.set(front,8);
+	out.set(pos,12);
+	return out;
+}
 
 
 mat4.translationMatrix = function (v)
@@ -805,6 +991,10 @@ quat.lookAt = function(target, up, quat) {
 	return quat;
 }
 */
+
+
+
+
 
 /**
 * Indexer used to reuse vertices among a mesh
@@ -1140,21 +1330,31 @@ Mesh.prototype.draw = function(shader, mode, range_start, range_length)
 * @method computeWireframe
 */
 Mesh.prototype.computeWireframe = function() {
-	var data = this.triangles || this.vertices;
+	var index_buffer = this.indexBuffers["triangles"];
 
-	var indexer = new Indexer();
-	if( data.constructor == Array )
+	var vertices = this.vertexBuffers["a_vertex"].data;
+	var num_vertices = (vertices.length/3);
+
+	if(!index_buffer) //unindexed
 	{
-		for (var i = 0; i < data.length; i++) {
-		  var t = data[i];
-		  for (var j = 0; j < t.length; j++) {
-			var a = t[j], b = t[(j + 1) % t.length];
-			indexer.add([Math.min(a, b), Math.max(a, b)]);
-		  }
+		var num_triangles = num_vertices / 3;
+		var buffer = num_vertices > 256*256 ? new Uint32Array( num_triangles * 6 ) : new Uint16Array( num_triangles * 6 );
+		for(var i = 0; i < num_vertices; i += 3)
+		{
+			buffer[i*2] = i;
+			buffer[i*2+1] = i+1;
+			buffer[i*2+2] = i+1;
+			buffer[i*2+3] = i+2;
+			buffer[i*2+4] = i+2;
+			buffer[i*2+5] = i;
 		}
+
 	}
-	else
+	else //indexed
 	{
+		var data = index_buffer.data;
+
+		var indexer = new Indexer();
 		for (var i = 0; i < data.length; i+=3) {
 		  var t = data.subarray(i,i+3);
 		  for (var j = 0; j < t.length; j++) {
@@ -1162,9 +1362,16 @@ Mesh.prototype.computeWireframe = function() {
 			indexer.add([Math.min(a, b), Math.max(a, b)]);
 		  }
 		}
-	}
-	this.addIndexBuffer('lines', indexer.unique.length > 256*256 ? new Uint32Array( indexer.unique ) : new Uint16Array( indexer.unique ) );
 
+		//linearize
+		var unique = indexer.unique;
+		var buffer = num_vertices > 256*256 ? new Uint32Array( unique.length * 2 ) : new Uint16Array( unique.length * 2 );
+		for(var i = 0, l = unique.length; i < l; ++i)
+			buffer.set(unique[i],i*2);
+	}
+
+	//create stream
+	this.addIndexBuffer('lines', buffer);
 	return this;
 }
 
@@ -1278,7 +1485,7 @@ Mesh.prototype.computeBounding = function( vertices ) {
 	if(!this.bounding)
 		this.bounding = {};
 	this.bounding.aabb_center = center;
-	this.bounding.aabb_half = half_size;
+	this.bounding.aabb_halfsize = half_size;
 	this.bounding.aabb_min = min;
 	this.bounding.aabb_max = max;
 	this.bounding.radius = vec3.length( half_size );
@@ -1294,7 +1501,7 @@ Mesh.prototype.setBounding = function(center, half_size) {
 	if(!this.bounding)
 		this.bounding = {};
 	this.bounding.aabb_center = vec3.clone(center);
-	this.bounding.aabb_half = vec3.clone(half_size);
+	this.bounding.aabb_halfsize = vec3.clone(half_size);
 	this.bounding.aabb_min = vec3.sub(vec3.create(), center, half_size);
 	this.bounding.aabb_max = vec3.add(vec3.create(), center, half_size);
 	this.bounding.radius = vec3.length( half_size );
@@ -1324,6 +1531,46 @@ Mesh.prototype.freeData = function()
 		delete this[ this.indexBuffers[name].name ]; //delete from the mesh itself
 	}
 }
+
+/*
+Mesh.prototype.configure = function(o)
+{
+	if(o.vertexBuffers)
+		for(var i in o.vertexBuffers)
+		{
+			var buff = o.vertexBuffers[i];
+
+		}
+}
+
+Mesh.prototype.serialize = function()
+{
+	var o = {};
+	o.vertexBuffers = {};
+	o.indexBuffers = {};
+
+	for(var i in this.vertexBuffers)
+	{
+		var buffer = {};
+		buffer.name = i;
+		buffer.data = buffer.data;
+		o.vertexBuffers[i] = buffer;
+	}
+
+	for(var i in this.indexBuffers)
+	{
+		var buffer = {};
+		buffer.name = i;
+		buffer.data = buffer.data;
+		o.indexBuffers[i] = buffer;
+	}
+
+	//o.morph_targets = 
+	o.bounding = this.bounding;
+	return o;
+}
+*/
+
 
 /**
 * Static method for the class Mesh to create a mesh from a list of streams
@@ -1433,7 +1680,7 @@ Mesh.plane = function(options) {
 
 	var bounding = {
 		aabb_center: [0,0,0],
-		aabb_half: xz ? [width,0,height] : [width,height,0],
+		aabb_halfsize: xz ? [width,0,height] : [width,height,0],
 		aabb_min: xz ? [-width,0,-height] : [-width,-height,0],
 		aabb_max: xz ? [width,0,height] : [s,height,0],
 		radius: vec3.length([width,0,height])
@@ -1465,7 +1712,7 @@ Mesh.cube = function(options) {
 
 	options.bounding = {
 		aabb_center: [0,0,0],
-		aabb_half: [size,size,size],
+		aabb_halfsize: [size,size,size],
 		aabb_min: [-size,-size,-size],
 		aabb_max: [size,size,size],
 		radius: vec3.length([size,size,size])
@@ -1481,8 +1728,8 @@ Mesh.cube = function(options) {
 */
 Mesh.cylinder = function(options) {
 	options = options || {};
-	var radius = options.radius || 1;
-	var height = options.height || 2;
+	var radius = options.radius || options.size || 1;
+	var height = options.height || options.size || 2;
 	var subdivisions = options.subdivisions || 64;
 
 	var vertices = new Float32Array(subdivisions * 6 * 3);
@@ -1534,7 +1781,7 @@ Mesh.cylinder = function(options) {
 
 	options.bounding = {
 		aabb_center: [0,0,0],
-		aabb_half: [radius,height*0.5,radius],
+		aabb_halfsize: [radius,height*0.5,radius],
 		aabb_min: [-radius,height*-0.5,-radius],
 		aabb_max: [radius,height*0.5,radius],
 		radius: vec3.length([radius,height,radius])
@@ -1550,7 +1797,7 @@ Mesh.cylinder = function(options) {
 */
 Mesh.sphere = function(options) {
 	options = options || {};
-	var radius = options.radius || 1;
+	var radius = options.radius || options.size || 1;
 	var latitudeBands = options.lat || 16;
 	var longitudeBands = options["long"] || 16;
 
@@ -1605,12 +1852,89 @@ Mesh.sphere = function(options) {
 
 	options.bounding = {
 		aabb_center: [0,0,0],
-		aabb_half: [radius,radius,radius],
+		aabb_halfsize: [radius,radius,radius],
 		aabb_min: [-radius,-radius,-radius],
 		aabb_max: [radius,radius,radius],
 		radius: radius //vec3.length([radius,radius,radius]) //this should work but the radius doesnt match the AABB, dangerous
 	};
 	return Mesh.load(buffers, options);
+}
+
+/**
+* Returns a mesh with all the meshes merged
+* @method Mesh.mergeMeshes
+* @param {Array} meshes array containing all the meshes
+*/
+Mesh.mergeMeshes = function(meshes)
+{
+	var vertex_buffers = {};
+	var index_buffers = {};
+
+	var main_mesh = meshes[0];
+	var offsets = [];
+
+	//vertex buffers
+	for(var i in main_mesh.vertexBuffers)
+	{
+		var buffer = main_mesh.vertexBuffers[i];
+
+		//compute size
+		var total_size = buffer.data.length;
+		for(var j = 1; j < meshes.length; ++j)
+		{
+			if(!meshes[j].vertexBuffers[i])
+				throw("cannot merge with different amount of buffers");
+			total_size += meshes[j].vertexBuffers[i].data.length;
+		}
+
+		//compact
+		var data = new Float32Array(total_size);
+		var pos = 0;
+		for(var j = 0; j < meshes.length; ++j)
+		{
+			offsets[j] = pos;
+			data.set( meshes[j].vertexBuffers[i].data, pos );
+			pos += meshes[j].vertexBuffers[i].data.length;
+		}
+
+		vertex_buffers[i] = data;
+	}
+
+	//index buffers
+	for(var i in main_mesh.indexBuffers)
+	{
+		var buffer = main_mesh.indexBuffers[i];
+
+		//compute size
+		var total_size = buffer.data.length;
+		for(var j = 1; j < meshes.length; ++j)
+		{
+			if(!meshes[j].indexBuffers[i])
+				throw("cannot merge with different amount of buffers");
+			total_size += meshes[j].indexBuffers[i].data.length;
+		}
+
+		//remap
+		var data = new buffer.constructor(total_size);
+		var pos = 0;
+		for(var j = 0; j < meshes.length; ++j)
+		{
+			var b = meshes[j].indexBuffers[i].data;
+			if(j == 0)
+				data.set( b, pos );
+			else
+			{
+				var offset = offsets[j];
+				for(var k = 0, l = b.length; k < l; k++)
+					data[k + pos] = b[k] + offset;
+			}
+			pos += meshes[j].indexBuffers[i].data.length;
+		}
+
+		index_buffers[i] = data;
+	}
+
+	return new Mesh(vertex_buffers,index_buffers);
 }
 
 
@@ -2372,10 +2696,10 @@ Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_
 
 	//range rendering
 	var offset = 0;
-	if(arguments.length > 3) //render a polygon range
+	if(range_start > 0) //render a polygon range
 		offset = range_start * (indexBuffer ? indexBuffer.constructor.BYTES_PER_ELEMENT : 1); //in bytes (Uint16 == 2 bytes)
 
-	if(arguments.length > 4)
+	if(range_length > 0)
 		length = range_length;
 	else if (indexBuffer)
 		length = indexBuffer.buffer.length - offset;
@@ -2547,11 +2871,16 @@ var GL = {
 			}
 			//prevent right click context menu
 			canvas.addEventListener("contextmenu", function(e) { e.preventDefault(); return false; });
+
+			canvas.addEventListener("touchstart", ontouch, true);
+			canvas.addEventListener("touchmove", ontouch, true);
+			canvas.addEventListener("touchend", ontouch, true);
+			canvas.addEventListener("touchcancel", ontouch, true);   
 		}
 
 		function onmouse(e) {
 			GL.augmentEvent(e, canvas);
-			e.eventType = e.type; //type cannot be overwritten, so I make a clone to allow me to overwrite
+			e.eventType = e.eventType || e.type; //type cannot be overwritten, so I make a clone to allow me to overwrite
 
 			if(e.eventType == "mousedown")
 			{
@@ -2594,6 +2923,30 @@ var GL = {
 			e.stopPropagation();
 			e.preventDefault();
 			return false;
+		}
+
+		//translates touch events in mouseevents
+		function ontouch(e)
+		{
+			var touches = event.changedTouches,
+				first = touches[0],
+				type = "";
+
+			 switch(event.type)
+			{
+				case "touchstart": type = "mousedown"; break;
+				case "touchmove":  type = "mousemove"; break;        
+				case "touchend":   type = "mouseup"; break;
+				default: return;
+			}
+
+			var simulatedEvent = document.createEvent("MouseEvent");
+			simulatedEvent.initMouseEvent(type, true, true, window, 1,
+									  first.screenX, first.screenY,
+									  first.clientX, first.clientY, false,
+									  false, false, false, 0/*left*/, null);
+			first.target.dispatchEvent(simulatedEvent);
+			event.preventDefault();
 		}
 
 		/**
@@ -3193,6 +3546,52 @@ var geo = {
 		return vec3.length(dP);   // return the closest distance
 	}
 };
+
+//[center,half,min,max]
+
+//  NOT TESTED YET!!!!!!!
+
+var boundingbox = {
+	center:0,
+	halfsize:3,
+	min:6,
+	max:9,
+
+	create: function()
+	{
+		return new Float32Array(12);
+	},
+
+	fromPoint: function(point)
+	{
+		var bb = this.create();
+		bb.set(point, 0); //center
+		bb.set(point, 6); //min
+		bb.set(point, 9); //max
+	},
+
+	fromMinMax: function(min,max)
+	{
+		var bb = this.create();
+		bb.set(min, 6); //min
+		bb.set(max, 9); //max
+		var center = bb.subarray(0,3);
+		vec3.sub( center, max, min );
+		vec3.scale( center, center, 0.5 );
+		bb.set( [max[0]-center[0],max[1]-center[1],max[2]-center[2]], 3);
+		vec3.sub( bb.subarray(3,6), max, center );
+	},
+
+	fromCenterHalfsize: function(center, halfsize)
+	{
+		var bb = this.create();
+		bb.set(center, 0); //min
+		bb.set(halfsize, 3); //max
+		vec3.sub(bb.subarray(6,9), bb.subarray(0,3), bb.subarray(3,6) );
+		vec3.add(bb.subarray(9,12), bb.subarray(0,3), bb.subarray(3,6) );
+	}
+}
+
 // Provides a convenient raytracing interface.
 
 // ### new GL.HitTest([t, hit, normal])

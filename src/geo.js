@@ -250,3 +250,48 @@ var geo = {
 		return vec3.length(dP);   // return the closest distance
 	}
 };
+
+//[center,half,min,max]
+
+//  NOT TESTED YET!!!!!!!
+
+var boundingbox = {
+	center:0,
+	halfsize:3,
+	min:6,
+	max:9,
+
+	create: function()
+	{
+		return new Float32Array(12);
+	},
+
+	fromPoint: function(point)
+	{
+		var bb = this.create();
+		bb.set(point, 0); //center
+		bb.set(point, 6); //min
+		bb.set(point, 9); //max
+	},
+
+	fromMinMax: function(min,max)
+	{
+		var bb = this.create();
+		bb.set(min, 6); //min
+		bb.set(max, 9); //max
+		var center = bb.subarray(0,3);
+		vec3.sub( center, max, min );
+		vec3.scale( center, center, 0.5 );
+		bb.set( [max[0]-center[0],max[1]-center[1],max[2]-center[2]], 3);
+		vec3.sub( bb.subarray(3,6), max, center );
+	},
+
+	fromCenterHalfsize: function(center, halfsize)
+	{
+		var bb = this.create();
+		bb.set(center, 0); //min
+		bb.set(halfsize, 3); //max
+		vec3.sub(bb.subarray(6,9), bb.subarray(0,3), bb.subarray(3,6) );
+		vec3.add(bb.subarray(9,12), bb.subarray(0,3), bb.subarray(3,6) );
+	}
+}

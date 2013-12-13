@@ -2,6 +2,9 @@
 if(typeof(glMatrix) == "undefined")
 	throw("You must include glMatrix on your project");
 
+var V3 = vec3.create;
+var M4 = vec3.create;
+
 vec3.zero = function(a)
 {
 	a[0] = a[1] = a[2] = 0.0;
@@ -105,6 +108,15 @@ mat4.multiplyVec3 = function(out, m, a) {
 };
 
 mat4.projectVec3 = function(out, m, a) {
+	mat4.multiplyVec3( out, m, a );
+	out[0] /= out[2];
+	out[1] /= out[2];
+	return out;
+};
+
+
+/*
+mat4.projectVec3 = function(out, m, a) {
    var x = a[0], y = a[1], z = a[2];
    var v = vec3.fromValues(
       m[0] * x + m[1] * y + m[2] * z + m[3],
@@ -114,6 +126,7 @@ mat4.projectVec3 = function(out, m, a) {
    
    return vec3.scale(v,v,1.0 / (m[12] * v[0] + m[13] * v[1] + m[14] * v[2] + m[15]) );
 };
+*/
 
 //without translation
 mat4.rotateVec3 = function(out, m, a) {
@@ -123,6 +136,15 @@ mat4.rotateVec3 = function(out, m, a) {
     out[2] = m[2] * x + m[6] * y + m[10] * z;
     return out;
 };
+
+mat4.fromTranslationFrontTop = function (out, pos, front, top)
+{
+	vec3.cross(out.subarray(0,3), front, top);
+	out.set(top,4);
+	out.set(front,8);
+	out.set(pos,12);
+	return out;
+}
 
 
 mat4.translationMatrix = function (v)
@@ -320,3 +342,7 @@ quat.lookAt = function(target, up, quat) {
 	return quat;
 }
 */
+
+
+
+

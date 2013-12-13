@@ -332,21 +332,31 @@ Mesh.prototype.draw = function(shader, mode, range_start, range_length)
 * @method computeWireframe
 */
 Mesh.prototype.computeWireframe = function() {
-	var data = this.triangles || this.vertices;
+	var index_buffer = this.indexBuffers["triangles"];
 
-	var indexer = new Indexer();
-	if( data.constructor == Array )
+	var vertices = this.vertexBuffers["a_vertex"].data;
+	var num_vertices = (vertices.length/3);
+
+	if(!index_buffer) //unindexed
 	{
-		for (var i = 0; i < data.length; i++) {
-		  var t = data[i];
-		  for (var j = 0; j < t.length; j++) {
-			var a = t[j], b = t[(j + 1) % t.length];
-			indexer.add([Math.min(a, b), Math.max(a, b)]);
-		  }
+		var num_triangles = num_vertices / 3;
+		var buffer = num_vertices > 256*256 ? new Uint32Array( num_triangles * 6 ) : new Uint16Array( num_triangles * 6 );
+		for(var i = 0; i < num_vertices; i += 3)
+		{
+			buffer[i*2] = i;
+			buffer[i*2+1] = i+1;
+			buffer[i*2+2] = i+1;
+			buffer[i*2+3] = i+2;
+			buffer[i*2+4] = i+2;
+			buffer[i*2+5] = i;
 		}
+
 	}
-	else
+	else //indexed
 	{
+		var data = index_buffer.data;
+
+		var indexer = new Indexer();
 		for (var i = 0; i < data.length; i+=3) {
 		  var t = data.subarray(i,i+3);
 		  for (var j = 0; j < t.length; j++) {
@@ -354,9 +364,16 @@ Mesh.prototype.computeWireframe = function() {
 			indexer.add([Math.min(a, b), Math.max(a, b)]);
 		  }
 		}
-	}
-	this.addIndexBuffer('lines', indexer.unique.length > 256*256 ? new Uint32Array( indexer.unique ) : new Uint16Array( indexer.unique ) );
 
+		//linearize
+		var unique = indexer.unique;
+		var buffer = num_vertices > 256*256 ? new Uint32Array( unique.length * 2 ) : new Uint16Array( unique.length * 2 );
+		for(var i = 0, l = unique.length; i < l; ++i)
+			buffer.set(unique[i],i*2);
+	}
+
+	//create stream
+	this.addIndexBuffer('lines', buffer);
 	return this;
 }
 
@@ -470,7 +487,7 @@ Mesh.prototype.computeBounding = function( vertices ) {
 	if(!this.bounding)
 		this.bounding = {};
 	this.bounding.aabb_center = center;
-	this.bounding.aabb_half = half_size;
+	this.bounding.aabb_halfsize = half_size;
 	this.bounding.aabb_min = min;
 	this.bounding.aabb_max = max;
 	this.bounding.radius = vec3.length( half_size );
@@ -486,7 +503,7 @@ Mesh.prototype.setBounding = function(center, half_size) {
 	if(!this.bounding)
 		this.bounding = {};
 	this.bounding.aabb_center = vec3.clone(center);
-	this.bounding.aabb_half = vec3.clone(half_size);
+	this.bounding.aabb_halfsize = vec3.clone(half_size);
 	this.bounding.aabb_min = vec3.sub(vec3.create(), center, half_size);
 	this.bounding.aabb_max = vec3.add(vec3.create(), center, half_size);
 	this.bounding.radius = vec3.length( half_size );
@@ -516,6 +533,46 @@ Mesh.prototype.freeData = function()
 		delete this[ this.indexBuffers[name].name ]; //delete from the mesh itself
 	}
 }
+
+/*
+Mesh.prototype.configure = function(o)
+{
+	if(o.vertexBuffers)
+		for(var i in o.vertexBuffers)
+		{
+			var buff = o.vertexBuffers[i];
+
+		}
+}
+
+Mesh.prototype.serialize = function()
+{
+	var o = {};
+	o.vertexBuffers = {};
+	o.indexBuffers = {};
+
+	for(var i in this.vertexBuffers)
+	{
+		var buffer = {};
+		buffer.name = i;
+		buffer.data = buffer.data;
+		o.vertexBuffers[i] = buffer;
+	}
+
+	for(var i in this.indexBuffers)
+	{
+		var buffer = {};
+		buffer.name = i;
+		buffer.data = buffer.data;
+		o.indexBuffers[i] = buffer;
+	}
+
+	//o.morph_targets = 
+	o.bounding = this.bounding;
+	return o;
+}
+*/
+
 
 /**
 * Static method for the class Mesh to create a mesh from a list of streams
@@ -625,7 +682,7 @@ Mesh.plane = function(options) {
 
 	var bounding = {
 		aabb_center: [0,0,0],
-		aabb_half: xz ? [width,0,height] : [width,height,0],
+		aabb_halfsize: xz ? [width,0,height] : [width,height,0],
 		aabb_min: xz ? [-width,0,-height] : [-width,-height,0],
 		aabb_max: xz ? [width,0,height] : [s,height,0],
 		radius: vec3.length([width,0,height])
@@ -657,7 +714,7 @@ Mesh.cube = function(options) {
 
 	options.bounding = {
 		aabb_center: [0,0,0],
-		aabb_half: [size,size,size],
+		aabb_halfsize: [size,size,size],
 		aabb_min: [-size,-size,-size],
 		aabb_max: [size,size,size],
 		radius: vec3.length([size,size,size])
@@ -673,8 +730,8 @@ Mesh.cube = function(options) {
 */
 Mesh.cylinder = function(options) {
 	options = options || {};
-	var radius = options.radius || 1;
-	var height = options.height || 2;
+	var radius = options.radius || options.size || 1;
+	var height = options.height || options.size || 2;
 	var subdivisions = options.subdivisions || 64;
 
 	var vertices = new Float32Array(subdivisions * 6 * 3);
@@ -726,7 +783,7 @@ Mesh.cylinder = function(options) {
 
 	options.bounding = {
 		aabb_center: [0,0,0],
-		aabb_half: [radius,height*0.5,radius],
+		aabb_halfsize: [radius,height*0.5,radius],
 		aabb_min: [-radius,height*-0.5,-radius],
 		aabb_max: [radius,height*0.5,radius],
 		radius: vec3.length([radius,height,radius])
@@ -742,7 +799,7 @@ Mesh.cylinder = function(options) {
 */
 Mesh.sphere = function(options) {
 	options = options || {};
-	var radius = options.radius || 1;
+	var radius = options.radius || options.size || 1;
 	var latitudeBands = options.lat || 16;
 	var longitudeBands = options["long"] || 16;
 
@@ -797,12 +854,89 @@ Mesh.sphere = function(options) {
 
 	options.bounding = {
 		aabb_center: [0,0,0],
-		aabb_half: [radius,radius,radius],
+		aabb_halfsize: [radius,radius,radius],
 		aabb_min: [-radius,-radius,-radius],
 		aabb_max: [radius,radius,radius],
 		radius: radius //vec3.length([radius,radius,radius]) //this should work but the radius doesnt match the AABB, dangerous
 	};
 	return Mesh.load(buffers, options);
+}
+
+/**
+* Returns a mesh with all the meshes merged
+* @method Mesh.mergeMeshes
+* @param {Array} meshes array containing all the meshes
+*/
+Mesh.mergeMeshes = function(meshes)
+{
+	var vertex_buffers = {};
+	var index_buffers = {};
+
+	var main_mesh = meshes[0];
+	var offsets = [];
+
+	//vertex buffers
+	for(var i in main_mesh.vertexBuffers)
+	{
+		var buffer = main_mesh.vertexBuffers[i];
+
+		//compute size
+		var total_size = buffer.data.length;
+		for(var j = 1; j < meshes.length; ++j)
+		{
+			if(!meshes[j].vertexBuffers[i])
+				throw("cannot merge with different amount of buffers");
+			total_size += meshes[j].vertexBuffers[i].data.length;
+		}
+
+		//compact
+		var data = new Float32Array(total_size);
+		var pos = 0;
+		for(var j = 0; j < meshes.length; ++j)
+		{
+			offsets[j] = pos;
+			data.set( meshes[j].vertexBuffers[i].data, pos );
+			pos += meshes[j].vertexBuffers[i].data.length;
+		}
+
+		vertex_buffers[i] = data;
+	}
+
+	//index buffers
+	for(var i in main_mesh.indexBuffers)
+	{
+		var buffer = main_mesh.indexBuffers[i];
+
+		//compute size
+		var total_size = buffer.data.length;
+		for(var j = 1; j < meshes.length; ++j)
+		{
+			if(!meshes[j].indexBuffers[i])
+				throw("cannot merge with different amount of buffers");
+			total_size += meshes[j].indexBuffers[i].data.length;
+		}
+
+		//remap
+		var data = new buffer.constructor(total_size);
+		var pos = 0;
+		for(var j = 0; j < meshes.length; ++j)
+		{
+			var b = meshes[j].indexBuffers[i].data;
+			if(j == 0)
+				data.set( b, pos );
+			else
+			{
+				var offset = offsets[j];
+				for(var k = 0, l = b.length; k < l; k++)
+					data[k + pos] = b[k] + offset;
+			}
+			pos += meshes[j].indexBuffers[i].data.length;
+		}
+
+		index_buffers[i] = data;
+	}
+
+	return new Mesh(vertex_buffers,index_buffers);
 }
 
 

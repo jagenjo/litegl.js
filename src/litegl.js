@@ -74,11 +74,16 @@ var GL = {
 			}
 			//prevent right click context menu
 			canvas.addEventListener("contextmenu", function(e) { e.preventDefault(); return false; });
+
+			canvas.addEventListener("touchstart", ontouch, true);
+			canvas.addEventListener("touchmove", ontouch, true);
+			canvas.addEventListener("touchend", ontouch, true);
+			canvas.addEventListener("touchcancel", ontouch, true);   
 		}
 
 		function onmouse(e) {
 			GL.augmentEvent(e, canvas);
-			e.eventType = e.type; //type cannot be overwritten, so I make a clone to allow me to overwrite
+			e.eventType = e.eventType || e.type; //type cannot be overwritten, so I make a clone to allow me to overwrite
 
 			if(e.eventType == "mousedown")
 			{
@@ -121,6 +126,30 @@ var GL = {
 			e.stopPropagation();
 			e.preventDefault();
 			return false;
+		}
+
+		//translates touch events in mouseevents
+		function ontouch(e)
+		{
+			var touches = event.changedTouches,
+				first = touches[0],
+				type = "";
+
+			 switch(event.type)
+			{
+				case "touchstart": type = "mousedown"; break;
+				case "touchmove":  type = "mousemove"; break;        
+				case "touchend":   type = "mouseup"; break;
+				default: return;
+			}
+
+			var simulatedEvent = document.createEvent("MouseEvent");
+			simulatedEvent.initMouseEvent(type, true, true, window, 1,
+									  first.screenX, first.screenY,
+									  first.clientX, first.clientY, false,
+									  false, false, false, 0/*left*/, null);
+			first.target.dispatchEvent(simulatedEvent);
+			event.preventDefault();
 		}
 
 		/**

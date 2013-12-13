@@ -24,6 +24,7 @@
 		var gl = GL.create({width:1000,height:500});
 		var container = document.querySelector("#content");
 		container.appendChild(gl.canvas);
+		gl.captureMouse();
 
 		//build the mesh
 		var texture = GL.Texture.fromURL("texture.png",{temp_color:[80,120,40,255], minFilter: gl.LINEAR_MIPMAP_LINEAR});
@@ -43,17 +44,21 @@
 			precision highp float;\n\
 			uniform sampler2D texture;\n\
 			uniform float u_time;\n\
+			uniform vec2 u_mousepos;\n\
 			varying vec2 coord;\n\
 			void main() {\n\
-			    vec2 offset = vec2( 0.05 * sin(coord.y*10.0 + u_time), 0.0);\n\
-				gl_FragColor.r = texture2D(texture, coord + offset + vec2(0.001,0.0)).r;\n\
-				gl_FragColor.g = texture2D(texture, coord + offset).g;\n\
-				gl_FragColor.b = texture2D(texture, coord + offset + vec2(-0.001,0.0)).b;\n\
+				vec2 n = (coord - u_mousepos);\n\
+				float l = length(n);\n\
+				n /= l;\n\
+				vec2 uv = coord - n * 0.1;\n\
+				gl_FragColor = texture2D(texture, uv);\n\
 			}\n\
 		");
 
 		//generic gl flags and settings
 		gl.disable( gl.DEPTH_TEST );
+
+		var pos = [0,0];
 
 		//rendering loop
 		gl.ondraw = function()
@@ -61,9 +66,16 @@
 			//render mesh using the shader
 			texture.toViewport( shader, {
 				u_texture: 0,
-				u_time: (getTime() - start_time ) * 0.001 
+				u_time: (getTime() - start_time ) * 0.001,
+				u_mousepos: [pos[0]/gl.canvas.width,pos[1]/gl.canvas.height]
 			});
 		};
+
+		gl.onmousemove = function(e)
+		{
+			pos[0] = e.canvasx;
+			pos[1] = e.canvasy;
+		}
 	}	
 	
 	</script>
