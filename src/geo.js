@@ -255,15 +255,22 @@ var geo = {
 
 //  NOT TESTED YET!!!!!!!
 
-var boundingbox = {
+var BBox = {
 	center:0,
 	halfsize:3,
 	min:6,
 	max:9,
 
+	corners: new Float32Array([1,1,1,  1,1,-1,  1,-1,1,  1,-1,-1,  -1,1,1,  -1,1,-1,  -1,-1,1,  -1,-1,-1 ]),
+
 	create: function()
 	{
 		return new Float32Array(12);
+	},
+
+	clone: function(bb)
+	{
+		return new Float32Array(bb);
 	},
 
 	fromPoint: function(point)
@@ -272,11 +279,53 @@ var boundingbox = {
 		bb.set(point, 0); //center
 		bb.set(point, 6); //min
 		bb.set(point, 9); //max
+		return bb;
 	},
 
 	fromMinMax: function(min,max)
 	{
 		var bb = this.create();
+		this.setMinMax(bb, min, max);
+		return bb;
+	},
+
+	fromCenterHalfsize: function(center, halfsize)
+	{
+		var bb = this.create();
+		this.setCenterHalfsize(bb, center, halfsize);
+		return bb;
+	},
+
+	fromPoints: function(points)
+	{
+		var bb = this.create();
+		this.setFromPoints(bb, points);
+		return bb;	
+	},
+
+	setFromPoints: function(bb, points)
+	{
+		var min = bb.subarray(6,9);
+		var max = bb.subarray(9,12);
+
+		min.set( points.subarray(0,3) );
+		min.set( points.subarray(0,3) );
+
+		var v = 0;
+		for(var i = 3; i < points.length; i+=3)
+		{
+			v = points.subarray(i,i+3);
+			vec3.min( min, v, min);
+			vec3.max( max, v, max);
+		}
+
+		var center = vec3.add( bb.subarray(0,3), min, max );
+		vec3.scale( center, center, 0.5);
+		vec3.subtract( bb.subarray(3,6), max, center );	
+	},
+
+	setMinMax: function(bb, min, max)
+	{
 		bb.set(min, 6); //min
 		bb.set(max, 9); //max
 		var center = bb.subarray(0,3);
@@ -286,12 +335,153 @@ var boundingbox = {
 		vec3.sub( bb.subarray(3,6), max, center );
 	},
 
-	fromCenterHalfsize: function(center, halfsize)
+	setCenterHalfsize: function(bb, center, halfsize)
 	{
-		var bb = this.create();
 		bb.set(center, 0); //min
 		bb.set(halfsize, 3); //max
 		vec3.sub(bb.subarray(6,9), bb.subarray(0,3), bb.subarray(3,6) );
 		vec3.add(bb.subarray(9,12), bb.subarray(0,3), bb.subarray(3,6) );
+	},
+
+	transformMat4: function(out, bb, mat)
+	{
+		var center = bb.subarray(0,3);
+		var halfsize = bb.subarray(3,6);
+		var corners = new Float32Array( this.corners );
+
+		for(var i = 0; i < 8; ++i)		
+		{
+			var corner = corners.subarray(i*3, i*3+3);
+			vec3.multiply( corner, halfsize, corner );
+			vec3.add( corner, corner, center );
+			mat4.multiplyVec3(corner, mat, corner);
+		}
+
+		return this.setFromPoints(out, corners);
+	},
+
+	getCenter: function(bb) { return bb.subarray(0,3); },
+	getHalfsize: function(bb) { return bb.subarray(3,6); },
+	getMin: function(bb) { return bb.subarray(6,9); },
+	getMax: function(bb) { return bb.subarray(9,12); }
+}
+
+//extract the frustrum planes from viewprojection matrix
+geo.extractPlanes = function(vp)
+{
+	var planes = new Float32Array(4*6);
+
+	//right
+	planes.set( [vp[3] - vp[0], vp[7] - vp[4], vp[11] - vp[8], vp[15] - vp[12] ], 0); 
+	normalize(0);
+
+	//left
+	planes.set( [vp[3] + vp[0], vp[ 7] + vp[ 4], vp[11] + vp[ 8], vp[15] + vp[12] ], 4);
+	normalize(4);
+
+	//bottom
+	planes.set( [ vp[ 3] + vp[ 1], vp[ 7] + vp[ 5], vp[11] + vp[ 9], vp[15] + vp[13] ], 8);
+	normalize(8);
+
+	//top
+	planes.set( [ vp[ 3] - vp[ 1], vp[ 7] - vp[ 5], vp[11] - vp[ 9], vp[15] - vp[13] ],12);
+	normalize(12);
+
+	//back
+	planes.set( [ vp[ 3] - vp[ 2], vp[ 7] - vp[ 6], vp[11] - vp[10], vp[15] - vp[14] ],16);
+	normalize(16);
+
+	//front
+	planes.set( [ vp[ 3] + vp[ 2], vp[ 7] + vp[ 6], vp[11] + vp[10], vp[15] + vp[14] ],20);
+	normalize(20);
+
+	return planes;
+
+	function normalize(pos)
+	{
+		var N = planes.subarray(pos,pos+3);
+		var l = vec3.length(N);
+		if(l) return;
+		l = 1.0 / l;
+		planes[pos] *= l;
+		planes[pos+1] *= l;
+		planes[pos+2] *= l;
+		planes[pos+3] *= l;
 	}
+}
+
+var CLIP_INSIDE = 0;
+var CLIP_OUTSIDE = 1;
+var CLIP_OVERLAP = 2;
+
+geo.frustrumTestBox = function(planes, box)
+{
+	var flag = 0, o = 0;
+
+	flag = planeBoxOverlap(planes.subarray(0,4),box);
+	if (flag == CLIP_OUTSIDE) return CLIP_OUTSIDE; o+= flag;
+	flag =  planeBoxOverlap(planes.subarray(4,8),box);
+	if (flag == CLIP_OUTSIDE) return CLIP_OUTSIDE; o+= flag;
+	flag =  planeBoxOverlap(planes.subarray(8,12),box);
+	if (flag == CLIP_OUTSIDE) return CLIP_OUTSIDE; o+= flag;
+	flag =  planeBoxOverlap(planes.subarray(12,16),box);
+	if (flag == CLIP_OUTSIDE) return CLIP_OUTSIDE; o+= flag;
+	flag =  planeBoxOverlap(planes.subarray(16,20),box);
+	if (flag == CLIP_OUTSIDE) return CLIP_OUTSIDE; o+= flag;
+	flag =  planeBoxOverlap(planes.subarray(20,24),box);
+	if (flag == CLIP_OUTSIDE) return CLIP_OUTSIDE; o+= flag;
+
+	if (o==0) return CLIP_INSIDE;
+	else return CLIP_OVERLAP;
+}
+
+geo.frustrumTestSphere = function(planes, center, radius)
+{
+	var dist;
+	var overlap = false;
+
+	dist = distanceToPlane( planes.subarray(0,4), center );
+	if( dist < -radius ) return CLIP_OUTSIDE;
+	else if(dist >= -radius && dist <= radius)	overlap = true;
+	dist = distanceToPlane( planes.subarray(4,8), center );
+	if( dist < -radius ) return CLIP_OUTSIDE;
+	else if(dist >= -radius && dist <= radius)	overlap = true;
+	dist = distanceToPlane( planes.subarray(8,12), center );
+	if( dist < -radius ) return CLIP_OUTSIDE;
+	else if(dist >= -radius && dist <= radius)	overlap = true;
+	dist = distanceToPlane( planes.subarray(12,16), center );
+	if( dist < -radius ) return CLIP_OUTSIDE;
+	else if(dist >= -radius && dist <= radius)	overlap = true;
+	dist = distanceToPlane( planes.subarray(16,20), center );
+	if( dist < -radius ) return CLIP_OUTSIDE;
+	else if(dist >= -radius && dist <= radius)	overlap = true;
+	dist = distanceToPlane( planes.subarray(20,24), center );
+	if( dist < -radius ) return CLIP_OUTSIDE;
+	else if(dist >= -radius && dist <= radius)	overlap = true;
+}
+
+function distanceToPlane(plane, point)
+{
+	return vec3.dot(plane,point) + plane[3];
+}
+
+function planeBoxOverlap(plane, box)
+{
+	var n = plane.subarray(0,3);
+	var d = plane[3];
+	var center = box.subarray(0,3);
+	var halfsize = box.subarray(3,6);
+
+	var tmp = vec3.fromValues(
+		Math.abs( halfsize[0] * n[0]),
+		Math.abs( halfsize[1] * n[1]),
+		Math.abs( halfsize[2] * n[2])
+	);
+
+	var radius = tmp[0]+tmp[1]+tmp[2];
+	var distance = vec3.dot(n,center) + d;
+
+	if (distance <= - radius) return CLIP_OUTSIDE;
+	else if (distance <= radius) return CLIP_OVERLAP;
+	else return CLIP_INSIDE;
 }
