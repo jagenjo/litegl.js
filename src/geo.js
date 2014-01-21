@@ -309,7 +309,7 @@ var BBox = {
 		var max = bb.subarray(9,12);
 
 		min.set( points.subarray(0,3) );
-		min.set( points.subarray(0,3) );
+		max.set( points.subarray(0,3) );
 
 		var v = 0;
 		for(var i = 3; i < points.length; i+=3)

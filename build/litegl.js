@@ -56,12 +56,26 @@ function createCanvas(width, height) {
     return canvas;
 }
 
+function cloneCanvas(c) {
+    var canvas = document.createElement('canvas');
+    canvas.width = c.width;
+    canvas.height = c.height;
+    var ctx = canvas.getContext("2d");
+    ctx.drawImage(c,0,0);
+    return canvas;
+}
+
+
 String.prototype.replaceAll = function(words){
 	var str = this;
 	for(var i in words)
 		str = str.split(i).join(words[i]);
     return str;
 };
+
+//avoid errors when Typed array is expected and regular array is found
+//Array.prototype.subarray = Array.prototype.slice;
+Object.defineProperty(Array.prototype, "subarray", { value: Array.prototype.slice, enumerable: false });
 /**
  * @fileoverview dds - Utilities for loading DDS texture files
  * @author Brandon Jones
@@ -3605,7 +3619,7 @@ var BBox = {
 		var max = bb.subarray(9,12);
 
 		min.set( points.subarray(0,3) );
-		min.set( points.subarray(0,3) );
+		max.set( points.subarray(0,3) );
 
 		var v = 0;
 		for(var i = 3; i < points.length; i+=3)
