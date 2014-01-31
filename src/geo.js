@@ -218,6 +218,23 @@ var geo = {
 		return true;
 	},
 
+	testRayBBox: function(start, direction, box, model, result)
+	{
+		if(model)
+		{
+			var inv = mat4.invert( mat4.create(), model );
+			var end = vec3.add( vec3.create(), start, direction );
+			start = vec3.transformMat4(vec3.create(), start, inv);
+			vec3.transformMat4(end, end, inv);
+			vec3.sub(end, end, start);
+			direction = vec3.normalize(end, end);
+		}
+		var r = this.testRayBox(start,direction, box.subarray(6,9), box.subarray(9,12), result );
+		if(model)
+			vec3.transformMat4(result, result, model);
+		return r;
+	},
+
 	closestPointBetweenLines: function(a0,a1, b0,b1, p_a, p_b)
 	{
 		var u = vec3.subtract( vec3.create(), a1, a0 );
@@ -252,9 +269,6 @@ var geo = {
 };
 
 //[center,half,min,max]
-
-//  NOT TESTED YET!!!!!!!
-
 var BBox = {
 	center:0,
 	halfsize:3,

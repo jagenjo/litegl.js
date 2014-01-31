@@ -463,11 +463,11 @@ Mesh.prototype.computeTangents = function() {
 
 /**
 * Computes bounding information
-* @method computeBounding
-* @param {Array} vertices array containing all the vertices
+* @method Mesh.computeBounding
+* @param {typed Array} vertices array containing all the vertices
 */
-Mesh.prototype.computeBounding = function( vertices ) {
-	vertices = vertices || this.vertexBuffers["a_vertex"].data;
+Mesh.computeBounding = function( vertices ) {
+	//vertices = vertices || this.vertexBuffers["a_vertex"].data;
 	if(!vertices) return;
 
 	var min = vec3.clone( vertices.subarray(0,3) );
@@ -484,14 +484,27 @@ Mesh.prototype.computeBounding = function( vertices ) {
 	vec3.scale( center, center, 0.5);
 	var half_size = vec3.subtract( vec3.create(), max, center );
 
-	if(!this.bounding)
-		this.bounding = {};
-	this.bounding.aabb_center = center;
-	this.bounding.aabb_halfsize = half_size;
-	this.bounding.aabb_min = min;
-	this.bounding.aabb_max = max;
-	this.bounding.radius = vec3.length( half_size );
+	var bounding = {};
+
+	bounding.aabb_center = center;
+	bounding.aabb_halfsize = half_size;
+	bounding.aabb_min = min;
+	bounding.aabb_max = max;
+	bounding.radius = vec3.length( half_size );
+
+	return bounding;
 }
+
+/**
+* Update bounding information of this mesh
+* @method updateBounding
+*/
+Mesh.prototype.updateBounding = function() {
+	var vertices = this.vertexBuffers["a_vertex"].data;
+	if(!vertices) return;
+	this.bounding = Mesh.computeBounding(vertices);
+}
+
 
 /**
 * forces a bounding box to be set
