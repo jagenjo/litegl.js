@@ -229,7 +229,7 @@ var geo = {
 			vec3.sub(end, end, start);
 			direction = vec3.normalize(end, end);
 		}
-		var r = this.testRayBox(start,direction, box.subarray(6,9), box.subarray(9,12), result );
+		var r = this.testRayBox(start, direction, box.subarray(6,9), box.subarray(9,12), result );
 		if(model)
 			vec3.transformMat4(result, result, model);
 		return r;
@@ -281,6 +281,11 @@ var BBox = {
 	{
 		return new Float32Array(12);
 	},
+
+	identity: function(bb)
+	{
+		bb.set([0,0,0, 1,1,1, -1,-1,-1, 1,1,1]);
+	},	
 
 	clone: function(bb)
 	{

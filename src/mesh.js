@@ -100,6 +100,7 @@ Mesh.common_buffers = {
 	"vertices": { spacing:3, attribute: "a_vertex"},
 	"normals": { spacing:3, attribute: "a_normal"},
 	"coords": { spacing:2, attribute: "a_coord"},
+	"coords1": { spacing:2, attribute: "a_coord1"},
 	"coords2": { spacing:2, attribute: "a_coord2"},
 	"colors": { spacing:4, attribute: "a_color"},
 	"tangents": { spacing:3, attribute: "a_tangent"},
