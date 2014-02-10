@@ -4385,10 +4385,10 @@ GL.Raytracer = Raytracer;
 //***** OBJ parser adapted from SpiderGL implementation *****************
 /**
 * A data buffer to be stored in the GPU
-* @class Buffer
-* @constructor
-* @param {String} target name of the attribute
-* @param {ArrayBufferView} array_type the array used to store it (Float32Array, Uint8Array ...)
+* @class Mesh
+* @method Mesh.parseOBJ
+* @param {String} data all the OBJ info to be parsed
+* @param {Object} options
 */
 
 Mesh.parseOBJ = function(text, options)
@@ -4656,7 +4656,7 @@ Mesh.parseOBJ = function(text, options)
 	mesh.info = info;
 
 	var final_mesh = Mesh.load(mesh);
-	final_mesh.computeBounding();
+	final_mesh.updateBounding();
 	return final_mesh;
 }
 

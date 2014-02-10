@@ -1,0 +1,130 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!--
+<meta property="og:title" content="GameEditor" />
+<meta property="og:description" content="GameEditor for simple games" />
+<meta property="og:image" content="" />
+-->
+
+<title>litegl.js: obj mesh example</title>
+	<link rel="stylesheet" type="text/css" href="style.css" />
+	<style type='text/css'>
+		body { background-color: #DDD;}
+		h1 { color: #777; background-color: #CCC; }
+	</style>
+	<script type="text/javascript" src="../external/gl-matrix.js"></script>
+	<script type="text/javascript" src="../build/litegl.js"></script>
+	<script type="text/javascript">
+	
+	function init()
+	{
+		//create the rendering context
+		var gl = GL.create({width:1000,height:500});
+		var container = document.querySelector("#content");
+		container.appendChild(gl.canvas);
+
+		var mesh = null;
+
+		//build the mesh
+		var request = new XMLHttpRequest;
+		request.open('GET', "man.obj", true);
+		request.send();
+		request.onload = function() {
+			mesh = GL.Mesh.parseOBJ(this.response);
+		}
+
+		//create basic matrices for cameras and transformation
+		var persp = mat4.create();
+		var view = mat4.create();
+		var model = mat4.create();
+		var mvp = mat4.create();
+		var temp = mat4.create();
+
+		//get mouse actions
+		gl.captureMouse();
+		gl.onmousemove = function(e)
+		{
+			if(e.dragging)
+				mat4.rotateY(model,model,e.deltax * 0.01);
+		}
+
+		//set the camera position
+		mat4.perspective(persp, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 0.1, 1000);
+		mat4.lookAt(view, [0,100,250],[0,100,0], [0,1,0]);
+
+		//basic phong shader
+		var shader = new Shader('\
+				precision highp float;\
+				attribute vec3 a_vertex;\
+				attribute vec3 a_normal;\
+				varying vec3 v_normal;\
+				uniform mat4 u_mvp;\
+				uniform mat4 u_modelt;\
+				void main() {\
+					v_normal = (u_modelt * vec4(a_normal,1.0)).xyz;\
+					gl_Position = u_mvp * vec4(a_vertex,1.0);\
+				}\
+				', '\
+				precision highp float;\
+				varying vec3 v_normal;\
+				uniform vec3 u_lightvector;\
+				uniform vec4 u_color;\
+				void main() {\
+				  vec3 N = normalize(v_normal);\
+				  gl_FragColor = u_color * max(0.0, dot(u_lightvector,N));\
+				}\
+			');
+
+
+		//generic gl flags and settings
+		gl.clearColor(0.1,0.1,0.1,1);
+		gl.enable( gl.DEPTH_TEST );
+
+		//rendering loop
+		gl.ondraw = function()
+		{
+			gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
+
+			//create modelview and projection matrices
+			mat4.multiply(temp,view,model);
+			mat4.multiply(mvp,persp,temp);
+
+			//compute rotation matrix for normals
+			var modelt = mat4.toRotationMat4(mat4.create(), model);
+
+			//render mesh using the shader
+			if(mesh)
+				shader.uniforms({
+					u_color: [1,1,1,1],
+					u_lightvector: vec3.normalize(vec3.create(),[1,1,1]),
+					u_modelt: modelt,
+					u_mvp: mvp
+				}).draw(mesh);
+		};
+
+		//update loop
+		gl.onforceupdate = function(dt)
+		{
+			//rotate world
+			mat4.rotateY(model,model,dt*0.2);
+		};
+	}	
+	
+	</script>
+</head>
+<body>
+
+<div id="wrap">
+	<div id="main">
+		<h1>Mesh DEMO</h1>
+		<div id="content"></div>
+	</div>
+</div>
+
+<script>init();</script>
+</body>
+</html>
+
+
