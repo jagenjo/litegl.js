@@ -149,16 +149,21 @@ Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_
 
 	// Create and enable attribute pointers as necessary.
 	var length = 0;
-	for (var attribute in vertexBuffers) {
-	  var buffer = vertexBuffers[attribute];
-	  var location = this.attributes[attribute] ||
-		gl.getAttribLocation(this.program, attribute);
-	  if (location == -1 || !buffer.buffer) continue;
-	  this.attributes[attribute] = location;
-	  gl.bindBuffer(gl.ARRAY_BUFFER, buffer.buffer);
-	  gl.enableVertexAttribArray(location);
-	  gl.vertexAttribPointer(location, buffer.buffer.spacing, gl.FLOAT, false, 0, 0);
-	  length = buffer.buffer.length / buffer.buffer.spacing;
+	for (var name in vertexBuffers)
+	{
+		var buffer = vertexBuffers[name];
+		var attribute = buffer.attribute || name;
+		//precompute attribute locations in shader
+		var location = this.attributes[attribute] || gl.getAttribLocation(this.program, attribute);
+
+		if (location == -1 || !buffer.buffer) 
+			continue; //ignore this buffer
+
+		this.attributes[attribute] = location;
+		gl.bindBuffer(gl.ARRAY_BUFFER, buffer.buffer);
+		gl.enableVertexAttribArray(location);
+		gl.vertexAttribPointer(location, buffer.buffer.spacing, gl.FLOAT, false, 0, 0);
+		length = buffer.buffer.length / buffer.buffer.spacing;
 	}
 
 	//range rendering
@@ -172,11 +177,13 @@ Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_
 		length = indexBuffer.buffer.length - offset;
 
 	// Disable unused attribute pointers.
+	/*
 	for (var attribute in this.attributes) {
 	  if (!(attribute in vertexBuffers)) {
 		gl.disableVertexAttribArray(this.attributes[attribute]);
 	  }
 	}
+	*/
 
 	// Draw the geometry.
 	if (length && (!indexBuffer || indexBuffer.buffer)) {

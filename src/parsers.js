@@ -224,6 +224,12 @@ Mesh.parseOBJ = function(text, options)
 		*/
 	}
 
+	if(!positions.length)
+	{
+		console.error("OBJ doesnt have vertices, maybe the file is not a OBJ");
+		return null;
+	}
+
 	if(group && (indicesArray.length - group.start) > 1)
 	{
 		group.length = indicesArray.length - group.start;
