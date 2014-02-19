@@ -49,6 +49,8 @@
             
                 <li><a href="../classes/Mesh.html">Mesh</a></li>
             
+                <li><a href="../classes/Octree.html">Octree</a></li>
+            
                 <li><a href="../classes/Shader.html">Shader</a></li>
             
                 <li><a href="../classes/Texture.html">Texture</a></li>
@@ -247,34 +249,41 @@ Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_
 
 	// Create and enable attribute pointers as necessary.
 	var length = 0;
-	for (var attribute in vertexBuffers) {
-	  var buffer = vertexBuffers[attribute];
-	  var location = this.attributes[attribute] ||
-		gl.getAttribLocation(this.program, attribute);
-	  if (location == -1 || !buffer.buffer) continue;
-	  this.attributes[attribute] = location;
-	  gl.bindBuffer(gl.ARRAY_BUFFER, buffer.buffer);
-	  gl.enableVertexAttribArray(location);
-	  gl.vertexAttribPointer(location, buffer.buffer.spacing, gl.FLOAT, false, 0, 0);
-	  length = buffer.buffer.length / buffer.buffer.spacing;
+	for (var name in vertexBuffers)
+	{
+		var buffer = vertexBuffers[name];
+		var attribute = buffer.attribute || name;
+		//precompute attribute locations in shader
+		var location = this.attributes[attribute] || gl.getAttribLocation(this.program, attribute);
+
+		if (location == -1 || !buffer.buffer) 
+			continue; //ignore this buffer
+
+		this.attributes[attribute] = location;
+		gl.bindBuffer(gl.ARRAY_BUFFER, buffer.buffer);
+		gl.enableVertexAttribArray(location);
+		gl.vertexAttribPointer(location, buffer.buffer.spacing, gl.FLOAT, false, 0, 0);
+		length = buffer.buffer.length / buffer.buffer.spacing;
 	}
 
 	//range rendering
 	var offset = 0;
-	if(arguments.length &gt; 3) //render a polygon range
+	if(range_start &gt; 0) //render a polygon range
 		offset = range_start * (indexBuffer ? indexBuffer.constructor.BYTES_PER_ELEMENT : 1); //in bytes (Uint16 == 2 bytes)
 
-	if(arguments.length &gt; 4)
+	if(range_length &gt; 0)
 		length = range_length;
 	else if (indexBuffer)
 		length = indexBuffer.buffer.length - offset;
 
 	// Disable unused attribute pointers.
+	/*
 	for (var attribute in this.attributes) {
 	  if (!(attribute in vertexBuffers)) {
 		gl.disableVertexAttribArray(this.attributes[attribute]);
 	  }
 	}
+	*/
 
 	// Draw the geometry.
 	if (length &amp;&amp; (!indexBuffer || indexBuffer.buffer)) {

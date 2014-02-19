@@ -22,7 +22,16 @@
             "modules": {},
             "classes": {
                 "Indexer": 1,
-                "Mesh": 1
+                "Buffer": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
+        "../src/octree.js": {
+            "name": "../src/octree.js",
+            "modules": {},
+            "classes": {
+                "Octree": 1
             },
             "fors": {},
             "namespaces": {}
@@ -31,7 +40,7 @@
             "name": "../src/parsers.js",
             "modules": {},
             "classes": {
-                "Buffer": 1
+                "Mesh": 1
             },
             "fors": {},
             "namespaces": {}
@@ -97,8 +106,8 @@
             "extensions": [],
             "plugin_for": [],
             "extension_for": [],
-            "file": "../src/parsers.js",
-            "line": 2,
+            "file": "../src/mesh.js",
+            "line": 22,
             "description": "A data buffer to be stored in the GPU",
             "is_constructor": 1,
             "params": [
@@ -116,6 +125,11 @@
                     "name": "spacing",
                     "description": "number of numbers per component (3 per vertex, 2 per uvs...), default 3",
                     "type": "Number"
+                },
+                {
+                    "name": "stream_type",
+                    "description": "default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW",
+                    "type": "Enum"
                 }
             ]
         },
@@ -127,9 +141,9 @@
             "extensions": [],
             "plugin_for": [],
             "extension_for": [],
-            "file": "../src/mesh.js",
-            "line": 64,
-            "description": "Mesh class to upload geometry to the GPU",
+            "file": "../src/parsers.js",
+            "line": 2,
+            "description": "A data buffer to be stored in the GPU",
             "params": [
                 {
                     "name": "vertexBuffers",
@@ -147,7 +161,28 @@
                     "type": "Object"
                 }
             ],
-            "is_constructor": 1
+            "is_constructor": 1,
+            "itemtype": "method"
+        },
+        "Octree": {
+            "name": "Octree",
+            "shortname": "Octree",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "../src/octree.js",
+            "line": 1,
+            "description": "Octree generator for fast ray triangle collision with meshes\n\tDependencies: glmatrix.js (for vector and matrix operations)",
+            "is_constructor": 1,
+            "params": [
+                {
+                    "name": "mesh",
+                    "description": "object containing vertices buffer (indices buffer optional)",
+                    "type": "Mesh"
+                }
+            ]
         },
         "Shader": {
             "name": "Shader",
@@ -213,7 +248,7 @@
     "classitems": [
         {
             "file": "../src/gl-matrix-extra.js",
-            "line": 97,
+            "line": 100,
             "class": "GL"
         },
         {
@@ -252,7 +287,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 126,
+            "line": 155,
             "description": "Tells the system to capture key events on the canvas. This will trigger onkey",
             "itemtype": "method",
             "name": "gl.captureKeys",
@@ -267,7 +302,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 170,
+            "line": 199,
             "description": "Tells the system to capture gamepad events on the canvas.",
             "itemtype": "method",
             "name": "gl.captureGamepads",
@@ -275,7 +310,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 189,
+            "line": 218,
             "description": "returns the detected gamepads on the system",
             "itemtype": "method",
             "name": "gl.getGamepads",
@@ -283,13 +318,13 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 39,
+            "line": 43,
             "description": "Uploads the buffer data (stored in this.data) to the GPU",
             "itemtype": "method",
             "name": "compile",
             "params": [
                 {
-                    "name": "buffer_type",
+                    "name": "stream_type",
                     "description": "default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW",
                     "type": "Number"
                 }
@@ -298,7 +333,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 110,
+            "line": 115,
             "description": "Adds vertex and indices buffers to a mesh",
             "itemtype": "method",
             "name": "addBuffers",
@@ -318,7 +353,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 186,
+            "line": 194,
             "description": "Creates a new empty buffer and attachs it to this mesh",
             "itemtype": "method",
             "name": "addVertexBuffer",
@@ -344,7 +379,7 @@
                     "type": "ArrayBufferView"
                 },
                 {
-                    "name": "buffer_type",
+                    "name": "stream_type",
                     "description": "default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW )",
                     "type": "Enum"
                 }
@@ -353,7 +388,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 224,
+            "line": 226,
             "description": "Creates a new empty index buffer and attachs it to this mesh",
             "itemtype": "method",
             "name": "addIndexBuffer",
@@ -369,7 +404,7 @@
                     "type": "Typed array"
                 },
                 {
-                    "name": "buffer_type",
+                    "name": "stream_type",
                     "description": "gl.STATIC_DRAW, gl.DYNAMIC_DRAW, gl.STREAM_DRAW",
                     "type": "Enum"
                 }
@@ -378,7 +413,45 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 244,
+            "line": 241,
+            "description": "Returns a vertex buffer",
+            "itemtype": "method",
+            "name": "getBuffer",
+            "params": [
+                {
+                    "name": "name",
+                    "description": "of vertex buffer",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "the buffer",
+                "type": "Buffer"
+            },
+            "class": "Mesh"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 252,
+            "description": "Returns a index buffer",
+            "itemtype": "method",
+            "name": "getIndexBuffer",
+            "params": [
+                {
+                    "name": "name",
+                    "description": "of index buffer",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "the buffer",
+                "type": "Buffer"
+            },
+            "class": "Mesh"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 263,
             "description": "Uploads data of buffers to VRAM. Checks the buffers defined, and then search for a typed array with the same name in the mesh properties,\n\tit that is the case, it uploads the data to the buffer.",
             "itemtype": "method",
             "name": "compile",
@@ -393,7 +466,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 264,
+            "line": 283,
             "description": "Computes some data about the mesh",
             "itemtype": "method",
             "name": "generateMetadata",
@@ -401,7 +474,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 335,
+            "line": 355,
             "description": "Creates a new index stream with wireframe",
             "itemtype": "method",
             "name": "computeWireframe",
@@ -409,7 +482,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 369,
+            "line": 406,
             "description": "Creates a new stream with the tangents",
             "itemtype": "method",
             "name": "computeTangents",
@@ -417,22 +490,30 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 452,
+            "line": 489,
             "description": "Computes bounding information",
             "itemtype": "method",
-            "name": "computeBounding",
+            "name": "Mesh.computeBounding",
             "params": [
                 {
                     "name": "vertices",
                     "description": "array containing all the vertices",
-                    "type": "Array"
+                    "type": "Typed Array"
                 }
             ],
             "class": "Mesh"
         },
         {
             "file": "../src/mesh.js",
-            "line": 484,
+            "line": 523,
+            "description": "Update bounding information of this mesh",
+            "itemtype": "method",
+            "name": "updateBounding",
+            "class": "Mesh"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 534,
             "description": "forces a bounding box to be set",
             "itemtype": "method",
             "name": "setBounding",
@@ -452,7 +533,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 507,
+            "line": 557,
             "description": "Remove all local memory from the streams (leaving it only in the VRAM) to save RAM",
             "itemtype": "method",
             "name": "freeData",
@@ -460,8 +541,8 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 525,
-            "description": "Static method for the class Mesh to create a mesh from a list of streams",
+            "line": 615,
+            "description": "Static method for the class Mesh to create a mesh from a list of common streams",
             "itemtype": "method",
             "name": "Mesh.load",
             "params": [
@@ -480,7 +561,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 581,
+            "line": 642,
             "description": "Returns a planar mesh (you can choose how many subdivisions)",
             "itemtype": "method",
             "name": "Mesh.plane",
@@ -495,7 +576,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 640,
+            "line": 701,
             "description": "Returns a cube mesh",
             "itemtype": "method",
             "name": "Mesh.cube",
@@ -510,7 +591,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 672,
+            "line": 733,
             "description": "Returns a cube mesh",
             "itemtype": "method",
             "name": "Mesh.cylinder",
@@ -525,7 +606,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 741,
+            "line": 802,
             "description": "Returns a sphere mesh",
             "itemtype": "method",
             "name": "Mesh.sphere",
@@ -537,6 +618,55 @@
                 }
             ],
             "class": "Mesh"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 872,
+            "description": "Returns a mesh with all the meshes merged",
+            "itemtype": "method",
+            "name": "Mesh.mergeMeshes",
+            "params": [
+                {
+                    "name": "meshes",
+                    "description": "array containing all the meshes",
+                    "type": "Array"
+                }
+            ],
+            "class": "Mesh"
+        },
+        {
+            "file": "../src/octree.js",
+            "line": 226,
+            "description": "Uploads a set of uniforms to the Shader",
+            "itemtype": "method",
+            "name": "testRay",
+            "params": [
+                {
+                    "name": "origin",
+                    "description": "ray origin position",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "direction",
+                    "description": "ray direction position",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "dist_min",
+                    "description": "",
+                    "type": "Number"
+                },
+                {
+                    "name": "dist_max",
+                    "description": "",
+                    "type": "Number"
+                }
+            ],
+            "return": {
+                "description": "object containing pos and normal",
+                "type": "HitTest"
+            },
+            "class": "Octree"
         },
         {
             "file": "../src/shader.js",
@@ -1058,7 +1188,7 @@
     "warnings": [
         {
             "message": "Missing item type",
-            "line": " ../src/gl-matrix-extra.js:97"
+            "line": " ../src/gl-matrix-extra.js:100"
         }
     ]
 }

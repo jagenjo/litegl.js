@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Buffer</title>
+    <title>Octree</title>
     <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -94,7 +94,7 @@
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-                        <h1>Buffer Class</h1>
+                        <h1>Octree Class</h1>
 <div class="box meta">
     
 
@@ -102,7 +102,7 @@
 
     
         <div class="foundat">
-            Defined in: <a href="../files/.._src_mesh.js.html#l22"><code>..&#x2F;src&#x2F;mesh.js:22</code></a>
+            Defined in: <a href="../files/.._src_octree.js.html#l1"><code>..&#x2F;src&#x2F;octree.js:1</code></a>
         </div>
     
 
@@ -114,15 +114,16 @@
 
 
 <div class="box intro">
-    <p>A data buffer to be stored in the GPU</p>
+    <p>Octree generator for fast ray triangle collision with meshes
+    Dependencies: glmatrix.js (for vector and matrix operations)</p>
 
 </div>
 
 
     <div class="constructor">
         <h2>Constructor</h2>
-        <div id="method_Buffer" class="method item">
-    <h3 class="name"><code>Buffer</code></h3>
+        <div id="method_Octree" class="method item">
+    <h3 class="name"><code>Octree</code></h3>
 
     
         <div class="args">
@@ -130,25 +131,7 @@
             
                 <li class="arg">
                     
-                        <code>target</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>data</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>spacing</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>stream_type</code>
+                        <code>mesh</code>
                     
                 </li>
             
@@ -181,7 +164,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l22"><code>..&#x2F;src&#x2F;mesh.js:22</code></a>
+        <a href="../files/.._src_octree.js.html#l1"><code>..&#x2F;src&#x2F;octree.js:1</code></a>
         
         </p>
 
@@ -203,62 +186,14 @@
             
                 <li class="param">
                     
-                        <code class="param-name">target</code>
-                        <span class="type">String</span>
+                        <code class="param-name">mesh</code>
+                        <span class="type"><a href="../classes/Mesh.html" class="crosslink">Mesh</a></span>
                     
 
                     
 
                     <div class="param-description">
-                        <p>gl.ARRAY_BUFFER, ELEMENT_ARRAY_BUFFER</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">data</code>
-                        <span class="type">ArrayBufferView</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>the data in typed-array format</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">spacing</code>
-                        <span class="type">Number</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>number of numbers per component (3 per vertex, 2 per uvs...), default 3</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">stream_type</code>
-                        <span class="type">Enum</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW</p>
+                        <p>object containing vertices buffer (indices buffer optional)</p>
 
                     </div>
 
@@ -300,7 +235,7 @@
                     <ul class="index-list methods">
                         
                             <li class="index-item method">
-                                <a href="#method_compile">compile</a>
+                                <a href="#method_testRay">testRay</a>
 
                                 
                                 
@@ -322,8 +257,8 @@
                 <h2 class="off-left">Methods</h2>
 
                 
-                    <div id="method_compile" class="method item">
-    <h3 class="name"><code>compile</code></h3>
+                    <div id="method_testRay" class="method item">
+    <h3 class="name"><code>testRay</code></h3>
 
     
         <div class="args">
@@ -331,7 +266,25 @@
             
                 <li class="arg">
                     
-                        <code>stream_type</code>
+                        <code>origin</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>direction</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>dist_min</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>dist_max</code>
                     
                 </li>
             
@@ -339,6 +292,10 @@
         </div>
     
 
+    
+        <span class="returns-inline">
+            <span class="type">HitTest</span>
+        </span>
     
 
     
@@ -364,7 +321,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l43"><code>..&#x2F;src&#x2F;mesh.js:43</code></a>
+        <a href="../files/.._src_octree.js.html#l226"><code>..&#x2F;src&#x2F;octree.js:226</code></a>
         
         </p>
 
@@ -375,7 +332,7 @@
     </div>
 
     <div class="description">
-        <p>Uploads the buffer data (stored in this.data) to the GPU</p>
+        <p>Uploads a set of uniforms to the Shader</p>
 
     </div>
 
@@ -387,15 +344,61 @@
             
                 <li class="param">
                     
-                        <code class="param-name">stream_type</code>
+                        <code class="param-name">origin</code>
+                        <span class="type">Vec3</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>ray origin position</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">direction</code>
+                        <span class="type">Vec3</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>ray direction position</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">dist_min</code>
                         <span class="type">Number</span>
                     
 
                     
 
                     <div class="param-description">
-                        <p>default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW</p>
+                         
+                    </div>
 
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">dist_max</code>
+                        <span class="type">Number</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
                     </div>
 
                     
@@ -405,6 +408,20 @@
         </div>
     
 
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">HitTest</span>:
+                    
+                    <p>object containing pos and normal</p>
+
+                
+            </div>
+        </div>
     
 
     

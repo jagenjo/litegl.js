@@ -1427,13 +1427,22 @@ Mesh.prototype.computeTangents = function() {
 
 	if(!vertices || !normals || !uvs) return;
 
-	var tangents = new Float32Array(vertices.length);
-	//temporary
-	var tan1 = new Float32Array(vertices.length);
-	var tan2 = new Float32Array(vertices.length);
+	var num_vertices = vertices.length / 3;
 
-	var a;
-	for (a = 0; a < triangles.length; a+=3)
+	var tangents = new Float32Array(num_vertices * 4);
+	
+	//temporary (shared)
+	var tan1 = new Float32Array(num_vertices*3*2);
+	var tan2 = tan1.subarray(num_vertices*3);
+
+	var a,l;
+	var sdir = vec3.create();
+	var tdir = vec3.create();
+	var temp = vec3.create();
+	var temp2 = vec3.create();
+
+
+	for (a = 0, l = triangles.length; a < l; a+=3)
 	{
 		var i1 = triangles[a];
 		var i2 = triangles[a+1];
@@ -1466,33 +1475,30 @@ Mesh.prototype.computeTangents = function() {
 		else
 		  r = 1.0 / den;
 
-		var sdir = vec3.fromValues( (t2 * x1 - t1 * x2) * r, (t2 * y1 - t1 * y2) * r,
-		  (t2 * z1 - t1 * z2) * r);
-		var tdir = vec3.fromValues( (s1 * x2 - s2 * x1) * r, (s1 * y2 - s2 * y1) * r,
-		  (s1 * z2 - s2 * z1) * r);
+		vec3.copy(sdir, [(t2 * x1 - t1 * x2) * r, (t2 * y1 - t1 * y2) * r, (t2 * z1 - t1 * z2) * r] );
+		vec3.copy(tdir, [(s1 * x2 - s2 * x1) * r, (s1 * y2 - s2 * y1) * r, (s1 * z2 - s2 * z1) * r] );
 
-		vec3.add( vertices.subarray(i1*3,i1*3+3), sdir);
-		vec3.add( vertices.subarray(i2*3,i2*3+3), sdir);
-		vec3.add( vertices.subarray(i3*3,i3*3+3), sdir);
+		vec3.add( tan1.subarray( i1*3, i1*3+3), tan1.subarray( i1*3, i1*3+3), sdir);
+		vec3.add( tan1.subarray( i2*3, i2*3+3), tan1.subarray( i2*3, i2*3+3), sdir);
+		vec3.add( tan1.subarray( i3*3, i3*3+3), tan1.subarray( i3*3, i3*3+3), sdir);
 
-		vec3.add( vertices.subarray(i1*3,i1*3+3), tdir);
-		vec3.add( vertices.subarray(i2*3,i2*3+3), tdir);
-		vec3.add( vertices.subarray(i3*3,i3*3+3), tdir);
+		vec3.add( tan2.subarray( i1*3, i1*3+3), tan2.subarray( i1*3, i1*3+3), tdir);
+		vec3.add( tan2.subarray( i2*3, i2*3+3), tan2.subarray( i2*3, i2*3+3), tdir);
+		vec3.add( tan2.subarray( i3*3, i3*3+3), tan2.subarray( i3*3, i3*3+3), tdir);
 	}
 
-	var temp = vec3.create();
-	for (a = 0; a < positions.length; a+=3)
+	for (a = 0, l = vertices.length; a < l; a+=3)
 	{
 		var n = normals.subarray(a,a+3);
 		var t = tan1.subarray(a,a+3);
 
 		// Gram-Schmidt orthogonalize
-		vec3.subtract(t, vec3.scale(n, vec3.dot(n, t, temp), temp), temp);
-		vec3.normalize(temp);
+		vec3.subtract(temp, t, vec3.scale(temp, n, vec3.dot(n, t) ) );
+		vec3.normalize(temp,temp);
 
 		// Calculate handedness
-		var w = ( vec3.dot( vec3.cross(n, t, vec3.create()), tan2.subarray(a,a+3)) < 0.0) ? -1.0 : 1.0;
-		tangents.set([temp[0], temp[1], temp[2], w],a);
+		var w = ( vec3.dot( vec3.cross(temp2, n, t), tan2.subarray(a,a+3) ) < 0.0) ? -1.0 : 1.0;
+		tangents.set([temp[0], temp[1], temp[2], w],(a/3)*4);
 	}
 
 	this.addVertexBuffer('tangents', Mesh.common_buffers["tangents"].attribute, 4, tangents );

@@ -49,6 +49,8 @@
             
                 <li><a href="../classes/Mesh.html">Mesh</a></li>
             
+                <li><a href="../classes/Octree.html">Octree</a></li>
+            
                 <li><a href="../classes/Shader.html">Shader</a></li>
             
                 <li><a href="../classes/Texture.html">Texture</a></li>
@@ -172,11 +174,16 @@ var GL = {
 			}
 			//prevent right click context menu
 			canvas.addEventListener(&quot;contextmenu&quot;, function(e) { e.preventDefault(); return false; });
+
+			canvas.addEventListener(&quot;touchstart&quot;, ontouch, true);
+			canvas.addEventListener(&quot;touchmove&quot;, ontouch, true);
+			canvas.addEventListener(&quot;touchend&quot;, ontouch, true);
+			canvas.addEventListener(&quot;touchcancel&quot;, ontouch, true);   
 		}
 
 		function onmouse(e) {
 			GL.augmentEvent(e, canvas);
-			e.eventType = e.type; //type cannot be overwritten, so I make a clone to allow me to overwrite
+			e.eventType = e.eventType || e.type; //type cannot be overwritten, so I make a clone to allow me to overwrite
 
 			if(e.eventType == &quot;mousedown&quot;)
 			{
@@ -219,6 +226,30 @@ var GL = {
 			e.stopPropagation();
 			e.preventDefault();
 			return false;
+		}
+
+		//translates touch events in mouseevents
+		function ontouch(e)
+		{
+			var touches = event.changedTouches,
+				first = touches[0],
+				type = &quot;&quot;;
+
+			 switch(event.type)
+			{
+				case &quot;touchstart&quot;: type = &quot;mousedown&quot;; break;
+				case &quot;touchmove&quot;:  type = &quot;mousemove&quot;; break;        
+				case &quot;touchend&quot;:   type = &quot;mouseup&quot;; break;
+				default: return;
+			}
+
+			var simulatedEvent = document.createEvent(&quot;MouseEvent&quot;);
+			simulatedEvent.initMouseEvent(type, true, true, window, 1,
+									  first.screenX, first.screenY,
+									  first.clientX, first.clientY, false,
+									  false, false, false, 0/*left*/, null);
+			first.target.dispatchEvent(simulatedEvent);
+			event.preventDefault();
 		}
 
 		/**

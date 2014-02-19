@@ -49,6 +49,8 @@
             
                 <li><a href="../classes/Mesh.html">Mesh</a></li>
             
+                <li><a href="../classes/Octree.html">Octree</a></li>
+            
                 <li><a href="../classes/Shader.html">Shader</a></li>
             
                 <li><a href="../classes/Texture.html">Texture</a></li>
@@ -99,10 +101,10 @@
 //***** OBJ parser adapted from SpiderGL implementation *****************
 /**
 * A data buffer to be stored in the GPU
-* @class Buffer
-* @constructor
-* @param {String} target name of the attribute
-* @param {ArrayBufferView} array_type the array used to store it (Float32Array, Uint8Array ...)
+* @class Mesh
+* @method Mesh.parseOBJ
+* @param {String} data all the OBJ info to be parsed
+* @param {Object} options
 */
 
 Mesh.parseOBJ = function(text, options)
@@ -322,6 +324,12 @@ Mesh.parseOBJ = function(text, options)
 		*/
 	}
 
+	if(!positions.length)
+	{
+		console.error(&quot;OBJ doesnt have vertices, maybe the file is not a OBJ&quot;);
+		return null;
+	}
+
 	if(group &amp;&amp; (indicesArray.length - group.start) &gt; 1)
 	{
 		group.length = indicesArray.length - group.start;
@@ -370,7 +378,7 @@ Mesh.parseOBJ = function(text, options)
 	mesh.info = info;
 
 	var final_mesh = Mesh.load(mesh);
-	final_mesh.computeBounding();
+	final_mesh.updateBounding();
 	return final_mesh;
 }
 

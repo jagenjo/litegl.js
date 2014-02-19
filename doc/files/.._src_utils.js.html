@@ -49,6 +49,8 @@
             
                 <li><a href="../classes/Mesh.html">Mesh</a></li>
             
+                <li><a href="../classes/Octree.html">Octree</a></li>
+            
                 <li><a href="../classes/Shader.html">Shader</a></li>
             
                 <li><a href="../classes/Texture.html">Texture</a></li>
@@ -153,12 +155,26 @@ function createCanvas(width, height) {
     return canvas;
 }
 
+function cloneCanvas(c) {
+    var canvas = document.createElement(&#x27;canvas&#x27;);
+    canvas.width = c.width;
+    canvas.height = c.height;
+    var ctx = canvas.getContext(&quot;2d&quot;);
+    ctx.drawImage(c,0,0);
+    return canvas;
+}
+
+
 String.prototype.replaceAll = function(words){
 	var str = this;
 	for(var i in words)
 		str = str.split(i).join(words[i]);
     return str;
 };
+
+//avoid errors when Typed array is expected and regular array is found
+//Array.prototype.subarray = Array.prototype.slice;
+Object.defineProperty(Array.prototype, &quot;subarray&quot;, { value: Array.prototype.slice, enumerable: false });
     </pre>
 </div>
 
