@@ -1,6 +1,16 @@
 {
     "project": {},
     "files": {
+        "../src/geo.js": {
+            "name": "../src/geo.js",
+            "modules": {},
+            "classes": {
+                "geo": 1,
+                "BBox": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
         "../src/gl-matrix-extra.js": {
             "name": "../src/gl-matrix-extra.js",
             "modules": {},
@@ -73,6 +83,30 @@
     },
     "modules": {},
     "classes": {
+        "geo": {
+            "name": "geo",
+            "shortname": "geo",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "../src/geo.js",
+            "line": 6,
+            "description": "Computational geometry algorithms, is a static calss"
+        },
+        "BBox": {
+            "name": "BBox",
+            "shortname": "BBox",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "../src/geo.js",
+            "line": 494,
+            "description": "BBox is a class to create BoundingBoxes but it works as glMatrix, creating Float32Array with the info inside instead of objects\nThe bounding box is stored as center,halfsize,min,max,radius (total of 13 floats)"
+        },
         "GL": {
             "name": "GL",
             "shortname": "GL",
@@ -247,6 +281,678 @@
     },
     "classitems": [
         {
+            "file": "../src/geo.js",
+            "line": 13,
+            "description": "Returns a float4 containing the info about a plane with normal N and that passes through point P",
+            "itemtype": "method",
+            "name": "createPlane",
+            "params": [
+                {
+                    "name": "P",
+                    "description": "",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "N",
+                    "description": "",
+                    "type": "Vec3"
+                }
+            ],
+            "return": {
+                "description": "plane values",
+                "type": "Vec4"
+            },
+            "class": "geo"
+        },
+        {
+            "file": "../src/geo.js",
+            "line": 25,
+            "description": "Computes the distance between the point and the plane",
+            "itemtype": "method",
+            "name": "distancePointToPlane",
+            "params": [
+                {
+                    "name": "point",
+                    "description": "",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "plane",
+                    "description": "",
+                    "type": "Vec4"
+                }
+            ],
+            "return": {
+                "description": "distance",
+                "type": "Number"
+            },
+            "class": "geo"
+        },
+        {
+            "file": "../src/geo.js",
+            "line": 37,
+            "description": "Computes the square distance between the point and the plane",
+            "itemtype": "method",
+            "name": "distance2PointToPlane",
+            "params": [
+                {
+                    "name": "point",
+                    "description": "",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "plane",
+                    "description": "",
+                    "type": "Vec4"
+                }
+            ],
+            "return": {
+                "description": "distance*distance",
+                "type": "Number"
+            },
+            "class": "geo"
+        },
+        {
+            "file": "../src/geo.js",
+            "line": 49,
+            "description": "Projects point on plane",
+            "itemtype": "method",
+            "name": "projectPointOnPlane",
+            "params": [
+                {
+                    "name": "point",
+                    "description": "",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "P",
+                    "description": "plane point",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "N",
+                    "description": "plane normal",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "result",
+                    "description": "to store result (optional)",
+                    "type": "Vec3"
+                }
+            ],
+            "return": {
+                "description": "projectec point",
+                "type": "Vec3"
+            },
+            "class": "geo"
+        },
+        {
+            "file": "../src/geo.js",
+            "line": 66,
+            "description": "Finds the reflected point over a plane (useful for reflecting camera position when rendering reflections)",
+            "itemtype": "method",
+            "name": "reflectPointInPlane",
+            "params": [
+                {
+                    "name": "point",
+                    "description": "point to reflect",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "P",
+                    "description": "point where the plane passes",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "N",
+                    "description": "normal of the plane",
+                    "type": "Vec3"
+                }
+            ],
+            "return": {
+                "description": "reflected point",
+                "type": "Vec3"
+            },
+            "class": "geo"
+        },
+        {
+            "file": "../src/geo.js",
+            "line": 84,
+            "description": "test a ray plane collision and retrieves the collision point",
+            "itemtype": "method",
+            "name": "testRayPlane",
+            "params": [
+                {
+                    "name": "start",
+                    "description": "ray start",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "direction",
+                    "description": "ray direction",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "P",
+                    "description": "point where the plane passes",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "N",
+                    "description": "normal of the plane",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "result",
+                    "description": "collision position",
+                    "type": "Vec3"
+                }
+            ],
+            "return": {
+                "description": "returns if the ray collides the plane or the ray is parallel to the plane",
+                "type": "Boolean"
+            },
+            "class": "geo"
+        },
+        {
+            "file": "../src/geo.js",
+            "line": 108,
+            "description": "test a ray sphere collision and retrieves the collision point",
+            "itemtype": "method",
+            "name": "testRaySphere",
+            "params": [
+                {
+                    "name": "start",
+                    "description": "ray start",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "direction",
+                    "description": "ray direction",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "center",
+                    "description": "center of the sphere",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "radius",
+                    "description": "radius of the sphere",
+                    "type": "Number"
+                },
+                {
+                    "name": "result",
+                    "description": "collision position",
+                    "type": "Vec3"
+                }
+            ],
+            "return": {
+                "description": "returns if the ray collides the sphere",
+                "type": "Boolean"
+            },
+            "class": "geo"
+        },
+        {
+            "file": "../src/geo.js",
+            "line": 149,
+            "description": "test a ray cylinder collision and retrieves the collision point",
+            "itemtype": "method",
+            "name": "testRaySphere",
+            "params": [
+                {
+                    "name": "start",
+                    "description": "ray start",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "direction",
+                    "description": "ray direction",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "p",
+                    "description": "center of the cylinder",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "q",
+                    "description": "height of the cylinder",
+                    "type": "Number"
+                },
+                {
+                    "name": "r",
+                    "description": "radius of the cylinder",
+                    "type": "Number"
+                },
+                {
+                    "name": "result",
+                    "description": "collision position",
+                    "type": "Vec3"
+                }
+            ],
+            "return": {
+                "description": "returns if the ray collides the cylinder",
+                "type": "Boolean"
+            },
+            "class": "geo"
+        },
+        {
+            "file": "../src/geo.js",
+            "line": 235,
+            "description": "test a ray bounding-box collision and retrieves the collision point, the BB must be Axis Aligned",
+            "itemtype": "method",
+            "name": "testRayBox",
+            "params": [
+                {
+                    "name": "start",
+                    "description": "ray start",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "direction",
+                    "description": "ray direction",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "minB",
+                    "description": "minimum position of the bounding box",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "maxB",
+                    "description": "maximim position of the bounding box",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "result",
+                    "description": "collision position",
+                    "type": "Vec3"
+                }
+            ],
+            "return": {
+                "description": "returns if the ray collides the box",
+                "type": "Boolean"
+            },
+            "class": "geo"
+        },
+        {
+            "file": "../src/geo.js",
+            "line": 309,
+            "description": "test a ray bounding-box collision, it uses the  BBox class and allows to use non-axis aligned bbox",
+            "itemtype": "method",
+            "name": "testRayBBox",
+            "params": [
+                {
+                    "name": "start",
+                    "description": "ray start",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "direction",
+                    "description": "ray direction",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "box",
+                    "description": "in BBox format",
+                    "type": "BBox"
+                },
+                {
+                    "name": "model",
+                    "description": "transformation of the BBox",
+                    "type": "Mat4"
+                },
+                {
+                    "name": "result",
+                    "description": "collision position",
+                    "type": "Vec3"
+                }
+            ],
+            "return": {
+                "description": "returns if the ray collides the box",
+                "type": "Boolean"
+            },
+            "class": "geo"
+        },
+        {
+            "file": "../src/geo.js",
+            "line": 368,
+            "description": "extract frustum planes given a view-projection matrix",
+            "itemtype": "method",
+            "name": "extractPlanes",
+            "params": [
+                {
+                    "name": "viewprojection",
+                    "description": "matrix",
+                    "type": "Mat4"
+                }
+            ],
+            "return": {
+                "description": "returns all 6 planes in a float32array[24]",
+                "type": "Float32Array"
+            },
+            "class": "geo"
+        },
+        {
+            "file": "../src/geo.js",
+            "line": 417,
+            "description": "test a BBox against the frustum",
+            "itemtype": "method",
+            "name": "frustumTestBox",
+            "params": [
+                {
+                    "name": "planes",
+                    "description": "frustum planes",
+                    "type": "Float32Array"
+                },
+                {
+                    "name": "boundindbox",
+                    "description": "in BBox format",
+                    "type": "BBox"
+                }
+            ],
+            "return": {
+                "description": "CLIP_INSIDE, CLIP_OVERLAP, CLIP_OUTSIDE",
+                "type": "Number"
+            },
+            "class": "geo"
+        },
+        {
+            "file": "../src/geo.js",
+            "line": 444,
+            "description": "test a Sphere against the frustum",
+            "itemtype": "method",
+            "name": "frustumTestSphere",
+            "params": [
+                {
+                    "name": "center",
+                    "description": "sphere center",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "radius",
+                    "description": "sphere radius",
+                    "type": "Number"
+                }
+            ],
+            "return": {
+                "description": "CLIP_INSIDE, CLIP_OVERLAP, CLIP_OUTSIDE",
+                "type": "Number"
+            },
+            "class": "geo"
+        },
+        {
+            "file": "../src/geo.js",
+            "line": 478,
+            "description": "test if a 2d point is inside a 2d polygon",
+            "itemtype": "method",
+            "name": "testPoint2DInPolygon",
+            "params": [
+                {
+                    "name": "poly",
+                    "description": "array of 2d points",
+                    "type": "Array"
+                }
+            ],
+            "pt": "{vec2} point",
+            "return": {
+                "description": "true if it is inside",
+                "type": "Boolean"
+            },
+            "class": "geo"
+        },
+        {
+            "file": "../src/geo.js",
+            "line": 508,
+            "description": "create an empty bbox",
+            "itemtype": "method",
+            "name": "create",
+            "return": {
+                "description": "returns a float32array with the bbox",
+                "type": "BBox"
+            },
+            "class": "BBox"
+        },
+        {
+            "file": "../src/geo.js",
+            "line": 518,
+            "description": "create an bbox copy from another one",
+            "itemtype": "method",
+            "name": "clone",
+            "return": {
+                "description": "returns a float32array with the bbox",
+                "type": "BBox"
+            },
+            "class": "BBox"
+        },
+        {
+            "file": "../src/geo.js",
+            "line": 528,
+            "description": "copy one bbox into another",
+            "itemtype": "method",
+            "name": "copy",
+            "params": [
+                {
+                    "name": "out",
+                    "description": "where to store the result",
+                    "type": "BBox"
+                },
+                {
+                    "name": "where",
+                    "description": "to read the bbox",
+                    "type": "BBox"
+                }
+            ],
+            "return": {
+                "description": "returns out",
+                "type": "BBox"
+            },
+            "class": "BBox"
+        },
+        {
+            "file": "../src/geo.js",
+            "line": 541,
+            "description": "create a bbox from one point",
+            "itemtype": "method",
+            "name": "fromPoint",
+            "params": [
+                {
+                    "name": "point",
+                    "description": "",
+                    "type": "Vec3"
+                }
+            ],
+            "return": {
+                "description": "returns a float32array with the bbox",
+                "type": "BBox"
+            },
+            "class": "BBox"
+        },
+        {
+            "file": "../src/geo.js",
+            "line": 556,
+            "description": "create a bbox from min and max points",
+            "itemtype": "method",
+            "name": "fromMinMax",
+            "params": [
+                {
+                    "name": "min",
+                    "description": "",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "max",
+                    "description": "",
+                    "type": "Vec3"
+                }
+            ],
+            "return": {
+                "description": "returns a float32array with the bbox",
+                "type": "BBox"
+            },
+            "class": "BBox"
+        },
+        {
+            "file": "../src/geo.js",
+            "line": 570,
+            "description": "create a bbox from center and halfsize",
+            "itemtype": "method",
+            "name": "fromCenterHalfsize",
+            "params": [
+                {
+                    "name": "center",
+                    "description": "",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "halfsize",
+                    "description": "",
+                    "type": "Vec3"
+                }
+            ],
+            "return": {
+                "description": "returns a float32array with the bbox",
+                "type": "BBox"
+            },
+            "class": "BBox"
+        },
+        {
+            "file": "../src/geo.js",
+            "line": 584,
+            "description": "create a bbox from a typed-array containing points",
+            "itemtype": "method",
+            "name": "fromPoints",
+            "params": [
+                {
+                    "name": "points",
+                    "description": "",
+                    "type": "Float32Array"
+                }
+            ],
+            "return": {
+                "description": "returns a float32array with the bbox",
+                "type": "BBox"
+            },
+            "class": "BBox"
+        },
+        {
+            "file": "../src/geo.js",
+            "line": 597,
+            "description": "set the values to a BB from a set of points",
+            "itemtype": "method",
+            "name": "setFromPoints",
+            "params": [
+                {
+                    "name": "out",
+                    "description": "where to store the result",
+                    "type": "BBox"
+                },
+                {
+                    "name": "points",
+                    "description": "",
+                    "type": "Float32Array"
+                }
+            ],
+            "return": {
+                "description": "returns a float32array with the bbox",
+                "type": "BBox"
+            },
+            "class": "BBox"
+        },
+        {
+            "file": "../src/geo.js",
+            "line": 627,
+            "description": "set the values to a BB from min and max",
+            "itemtype": "method",
+            "name": "setMinMax",
+            "params": [
+                {
+                    "name": "out",
+                    "description": "where to store the result",
+                    "type": "BBox"
+                },
+                {
+                    "name": "min",
+                    "description": "",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "max",
+                    "description": "",
+                    "type": "Vec3"
+                }
+            ],
+            "return": {
+                "description": "returns out",
+                "type": "BBox"
+            },
+            "class": "BBox"
+        },
+        {
+            "file": "../src/geo.js",
+            "line": 653,
+            "description": "set the values to a BB from center and halfsize",
+            "itemtype": "method",
+            "name": "setCenterHalfsize",
+            "params": [
+                {
+                    "name": "out",
+                    "description": "where to store the result",
+                    "type": "BBox"
+                },
+                {
+                    "name": "min",
+                    "description": "",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "max",
+                    "description": "",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "radius",
+                    "description": "[optional] (the minimum distance from the center to the further point)",
+                    "type": "Number"
+                }
+            ],
+            "return": {
+                "description": "returns out",
+                "type": "BBox"
+            },
+            "class": "BBox"
+        },
+        {
+            "file": "../src/geo.js",
+            "line": 680,
+            "description": "Apply a matrix transformation to the BBox (applies to every corner and recomputes the BB)",
+            "itemtype": "method",
+            "name": "setCenterHalfsize",
+            "params": [
+                {
+                    "name": "out",
+                    "description": "where to store the result",
+                    "type": "BBox"
+                },
+                {
+                    "name": "bb",
+                    "description": "bbox you want to transform",
+                    "type": "BBox"
+                },
+                {
+                    "name": "mat",
+                    "description": "transformation",
+                    "type": "Mat4"
+                }
+            ],
+            "return": {
+                "description": "returns out",
+                "type": "BBox"
+            },
+            "class": "BBox"
+        },
+        {
             "file": "../src/gl-matrix-extra.js",
             "line": 100,
             "class": "GL"
@@ -333,7 +1039,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 115,
+            "line": 105,
             "description": "Adds vertex and indices buffers to a mesh",
             "itemtype": "method",
             "name": "addBuffers",
@@ -353,7 +1059,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 194,
+            "line": 184,
             "description": "Creates a new empty buffer and attachs it to this mesh",
             "itemtype": "method",
             "name": "addVertexBuffer",
@@ -388,7 +1094,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 226,
+            "line": 216,
             "description": "Creates a new empty index buffer and attachs it to this mesh",
             "itemtype": "method",
             "name": "addIndexBuffer",
@@ -413,7 +1119,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 241,
+            "line": 231,
             "description": "Returns a vertex buffer",
             "itemtype": "method",
             "name": "getBuffer",
@@ -432,7 +1138,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 252,
+            "line": 242,
             "description": "Returns a index buffer",
             "itemtype": "method",
             "name": "getIndexBuffer",
@@ -451,7 +1157,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 263,
+            "line": 253,
             "description": "Uploads data of buffers to VRAM. Checks the buffers defined, and then search for a typed array with the same name in the mesh properties,\n\tit that is the case, it uploads the data to the buffer.",
             "itemtype": "method",
             "name": "compile",
@@ -466,7 +1172,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 283,
+            "line": 273,
             "description": "Computes some data about the mesh",
             "itemtype": "method",
             "name": "generateMetadata",
@@ -474,7 +1180,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 355,
+            "line": 345,
             "description": "Creates a new index stream with wireframe",
             "itemtype": "method",
             "name": "computeWireframe",
@@ -482,7 +1188,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 406,
+            "line": 396,
             "description": "Creates a new stream with the tangents",
             "itemtype": "method",
             "name": "computeTangents",
@@ -490,7 +1196,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 489,
+            "line": 485,
             "description": "Computes bounding information",
             "itemtype": "method",
             "name": "Mesh.computeBounding",
@@ -505,7 +1211,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 523,
+            "line": 511,
             "description": "Update bounding information of this mesh",
             "itemtype": "method",
             "name": "updateBounding",
@@ -513,7 +1219,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 534,
+            "line": 522,
             "description": "forces a bounding box to be set",
             "itemtype": "method",
             "name": "setBounding",
@@ -533,7 +1239,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 557,
+            "line": 533,
             "description": "Remove all local memory from the streams (leaving it only in the VRAM) to save RAM",
             "itemtype": "method",
             "name": "freeData",
@@ -541,7 +1247,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 615,
+            "line": 575,
             "description": "Static method for the class Mesh to create a mesh from a list of common streams",
             "itemtype": "method",
             "name": "Mesh.load",
@@ -555,13 +1261,18 @@
                     "name": "options",
                     "description": "",
                     "type": "Object"
+                },
+                {
+                    "name": "output_mesh",
+                    "description": "optional mesh to store the mesh, otherwise is created",
+                    "type": "Mesh"
                 }
             ],
             "class": "Mesh"
         },
         {
             "file": "../src/mesh.js",
-            "line": 642,
+            "line": 590,
             "description": "Returns a planar mesh (you can choose how many subdivisions)",
             "itemtype": "method",
             "name": "Mesh.plane",
@@ -576,7 +1287,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 701,
+            "line": 642,
             "description": "Returns a cube mesh",
             "itemtype": "method",
             "name": "Mesh.cube",
@@ -591,7 +1302,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 733,
+            "line": 668,
             "description": "Returns a cube mesh",
             "itemtype": "method",
             "name": "Mesh.cylinder",
@@ -606,7 +1317,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 802,
+            "line": 730,
             "description": "Returns a sphere mesh",
             "itemtype": "method",
             "name": "Mesh.sphere",
@@ -621,7 +1332,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 872,
+            "line": 794,
             "description": "Returns a mesh with all the meshes merged",
             "itemtype": "method",
             "name": "Mesh.mergeMeshes",
@@ -1186,6 +1897,10 @@
         }
     ],
     "warnings": [
+        {
+            "message": "unknown tag: pt",
+            "line": " ../src/geo.js:478"
+        },
         {
             "message": "Missing item type",
             "line": " ../src/gl-matrix-extra.js:100"

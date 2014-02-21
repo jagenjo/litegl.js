@@ -78,22 +78,12 @@ function Mesh(vertexbuffers, indexbuffers, options) {
 	this.vertexBuffers = {};
 	this.indexBuffers = {};
 
-	this.addBuffers(vertexbuffers, indexbuffers);
+	if(vertexbuffers || indexbuffers)
+		this.addBuffers(vertexbuffers, indexbuffers);
 
-	for(var i in options)
-		this[i] = options[i];
-
-	/*
-	this.addVertexBuffer('vertices', Mesh.common_buffers["vertices"].attribute );
-	for(var i in options)
-		if( options[i] && Mesh.common_buffers[i] && i )
-			this.addVertexBuffer( i, Mesh.common_buffers[i].attribute );
-	//index buffers
-	if (options.triangles) this.addIndexBuffer('triangles');
-	if (options.lines) this.addIndexBuffer('lines');
-	*/
-
-
+	if(options)
+		for(var i in options)
+			this[i] = options[i];
 };
 
 Mesh.common_buffers = {
@@ -497,7 +487,7 @@ Mesh.prototype.computeTangents = function() {
 * @method Mesh.computeBounding
 * @param {typed Array} vertices array containing all the vertices
 */
-Mesh.computeBounding = function( vertices ) {
+Mesh.computeBounding = function( vertices, bb ) {
 
 	if(!vertices) return;
 
@@ -515,15 +505,7 @@ Mesh.computeBounding = function( vertices ) {
 	vec3.scale( center, center, 0.5);
 	var half_size = vec3.subtract( vec3.create(), max, center );
 
-	var bounding = {};
-
-	bounding.aabb_center = center;
-	bounding.aabb_halfsize = half_size;
-	bounding.aabb_min = min;
-	bounding.aabb_max = max;
-	bounding.radius = vec3.length( half_size );
-
-	return bounding;
+	return BBox.setCenterHalfsize( bb || BBox.create(), center, half_size );
 }
 
 /**
@@ -533,7 +515,7 @@ Mesh.computeBounding = function( vertices ) {
 Mesh.prototype.updateBounding = function() {
 	var vertices = this.vertexBuffers["vertices"].data;
 	if(!vertices) return;
-	this.bounding = Mesh.computeBounding(vertices);
+	this.bounding = Mesh.computeBounding(vertices, this.bounding);
 }
 
 
@@ -544,21 +526,9 @@ Mesh.prototype.updateBounding = function() {
 * @param {vec3} half_size vector from the center to positive corner
 */
 Mesh.prototype.setBounding = function(center, half_size) {
-	if(!this.bounding)
-		this.bounding = {};
-	this.bounding.aabb_center = vec3.clone(center);
-	this.bounding.aabb_halfsize = vec3.clone(half_size);
-	this.bounding.aabb_min = vec3.sub(vec3.create(), center, half_size);
-	this.bounding.aabb_max = vec3.add(vec3.create(), center, half_size);
-	this.bounding.radius = vec3.length( half_size );
+	this.bounding = BBox.fromCenterHalfsize( this.bounding || BBox.create(), center, half_size );	
 }
 
-
-/*
-Mesh.prototype.toBinary = function() {
-
-}
-*/
 
 /**
 * Remove all local memory from the streams (leaving it only in the VRAM) to save RAM
@@ -578,70 +548,42 @@ Mesh.prototype.freeData = function()
 	}
 }
 
-/*
-Mesh.prototype.configure = function(o)
+Mesh.prototype.configure = function(o, options)
 {
-	if(o.vertexBuffers)
-		for(var i in o.vertexBuffers)
-		{
-			var buff = o.vertexBuffers[i];
+	var v = {};
+	var i = {};
+	options = options || {};
 
-		}
-}
-
-Mesh.prototype.serialize = function()
-{
-	var o = {};
-	o.vertexBuffers = {};
-	o.indexBuffers = {};
-
-	for(var i in this.vertexBuffers)
+	for(var j in o)
 	{
-		var buffer = {};
-		buffer.name = i;
-		buffer.data = buffer.data;
-		o.vertexBuffers[i] = buffer;
+		if(!o[j]) continue;
+
+		if(j == "indices" || j == "lines" || j == "triangles")
+			i[j] = o[j];
+		else if(Mesh.common_buffers[j])
+			v[j] = o[j];
+		else
+			options[j] = o[j];
 	}
 
-	for(var i in this.indexBuffers)
-	{
-		var buffer = {};
-		buffer.name = i;
-		buffer.data = buffer.data;
-		o.indexBuffers[i] = buffer;
-	}
+	this.addBuffers(v, i);
 
-	//o.morph_targets = 
-	o.bounding = this.bounding;
-	return o;
+	for(var i in options)
+		this[i] = options[i];		
 }
-*/
-
 
 /**
 * Static method for the class Mesh to create a mesh from a list of common streams
 * @method Mesh.load
 * @param {Object} buffers object will all the buffers
 * @param {Object} options
+* @param {Mesh} output_mesh optional mesh to store the mesh, otherwise is created
 */
-Mesh.load = function(buffers, options) {
+Mesh.load = function(buffers, options, output_mesh) {
 	options = options || {};
-	var v = {};
-	var i = {};
 
-	for(var j in buffers)
-	{
-		if(!buffers[j]) continue;
-
-		if(j == "indices" || j == "lines" || j == "triangles")
-			i[j] = buffers[j];
-		else if(Mesh.common_buffers[j])
-			v[j] = buffers[j];
-		else
-			options[j] = buffers[j];
-	}
-
-	var mesh = new GL.Mesh(v,i, options);
+	var mesh = output_mesh || new GL.Mesh();
+	mesh.configure(buffers, options);
 	return mesh;
 }
 
@@ -693,14 +635,7 @@ Mesh.plane = function(options) {
 	}
 	}
 
-	var bounding = {
-		aabb_center: [0,0,0],
-		aabb_halfsize: xz ? [width,0,height] : [width,height,0],
-		aabb_min: xz ? [-width,0,-height] : [-width,-height,0],
-		aabb_max: xz ? [width,0,height] : [s,height,0],
-		radius: vec3.length([width,0,height])
-	};
-	
+	var bounding = BBox.fromCenterHalfsize( [0,0,0], xz ? [width,0,height] : [width,height,0] );
 	return GL.Mesh.load( {vertices:vertices, normals: normals, coords: coords, triangles: triangles }, { bounding: bounding });
 };
 
@@ -725,13 +660,7 @@ Mesh.cube = function(options) {
 	buffers.normals = new Float32Array([-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0]);
 	buffers.coords = new Float32Array([0,1,1,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,0,1,1,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,0,1,1,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0]);
 
-	options.bounding = {
-		aabb_center: [0,0,0],
-		aabb_halfsize: [size,size,size],
-		aabb_min: [-size,-size,-size],
-		aabb_max: [size,size,size],
-		radius: vec3.length([size,size,size])
-	};
+	options.bounding = BBox.fromCenterHalfsize( [0,0,0], [size,size,size] );
 
 	return Mesh.load(buffers, options);
 }
@@ -793,14 +722,7 @@ Mesh.cylinder = function(options) {
 		normals: normals,
 		coords: coords
 	}
-
-	options.bounding = {
-		aabb_center: [0,0,0],
-		aabb_halfsize: [radius,height*0.5,radius],
-		aabb_min: [-radius,height*-0.5,-radius],
-		aabb_max: [radius,height*0.5,radius],
-		radius: vec3.length([radius,height,radius])
-	};
+	options.bounding = BBox.fromCenterHalfsize( [0,0,0], [radius,height*0.5,radius] );
 
 	return Mesh.load(buffers, options);
 }
@@ -865,13 +787,7 @@ Mesh.sphere = function(options) {
 		triangles: indexData
 	};
 
-	options.bounding = {
-		aabb_center: [0,0,0],
-		aabb_halfsize: [radius,radius,radius],
-		aabb_min: [-radius,-radius,-radius],
-		aabb_max: [radius,radius,radius],
-		radius: radius //vec3.length([radius,radius,radius]) //this should work but the radius doesnt match the AABB, dangerous
-	};
+	options.bounding = BBox.fromCenterHalfsize( [0,0,0], [radius,radius,radius], radius );
 	return Mesh.load(buffers, options);
 }
 

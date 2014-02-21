@@ -1090,22 +1090,12 @@ function Mesh(vertexbuffers, indexbuffers, options) {
 	this.vertexBuffers = {};
 	this.indexBuffers = {};
 
-	this.addBuffers(vertexbuffers, indexbuffers);
+	if(vertexbuffers || indexbuffers)
+		this.addBuffers(vertexbuffers, indexbuffers);
 
-	for(var i in options)
-		this[i] = options[i];
-
-	/*
-	this.addVertexBuffer('vertices', Mesh.common_buffers["vertices"].attribute );
-	for(var i in options)
-		if( options[i] && Mesh.common_buffers[i] && i )
-			this.addVertexBuffer( i, Mesh.common_buffers[i].attribute );
-	//index buffers
-	if (options.triangles) this.addIndexBuffer('triangles');
-	if (options.lines) this.addIndexBuffer('lines');
-	*/
-
-
+	if(options)
+		for(var i in options)
+			this[i] = options[i];
 };
 
 Mesh.common_buffers = {
@@ -1509,7 +1499,7 @@ Mesh.prototype.computeTangents = function() {
 * @method Mesh.computeBounding
 * @param {typed Array} vertices array containing all the vertices
 */
-Mesh.computeBounding = function( vertices ) {
+Mesh.computeBounding = function( vertices, bb ) {
 
 	if(!vertices) return;
 
@@ -1527,15 +1517,7 @@ Mesh.computeBounding = function( vertices ) {
 	vec3.scale( center, center, 0.5);
 	var half_size = vec3.subtract( vec3.create(), max, center );
 
-	var bounding = {};
-
-	bounding.aabb_center = center;
-	bounding.aabb_halfsize = half_size;
-	bounding.aabb_min = min;
-	bounding.aabb_max = max;
-	bounding.radius = vec3.length( half_size );
-
-	return bounding;
+	return BBox.setCenterHalfsize( bb || BBox.create(), center, half_size );
 }
 
 /**
@@ -1545,7 +1527,7 @@ Mesh.computeBounding = function( vertices ) {
 Mesh.prototype.updateBounding = function() {
 	var vertices = this.vertexBuffers["vertices"].data;
 	if(!vertices) return;
-	this.bounding = Mesh.computeBounding(vertices);
+	this.bounding = Mesh.computeBounding(vertices, this.bounding);
 }
 
 
@@ -1556,21 +1538,9 @@ Mesh.prototype.updateBounding = function() {
 * @param {vec3} half_size vector from the center to positive corner
 */
 Mesh.prototype.setBounding = function(center, half_size) {
-	if(!this.bounding)
-		this.bounding = {};
-	this.bounding.aabb_center = vec3.clone(center);
-	this.bounding.aabb_halfsize = vec3.clone(half_size);
-	this.bounding.aabb_min = vec3.sub(vec3.create(), center, half_size);
-	this.bounding.aabb_max = vec3.add(vec3.create(), center, half_size);
-	this.bounding.radius = vec3.length( half_size );
+	this.bounding = BBox.fromCenterHalfsize( this.bounding || BBox.create(), center, half_size );	
 }
 
-
-/*
-Mesh.prototype.toBinary = function() {
-
-}
-*/
 
 /**
 * Remove all local memory from the streams (leaving it only in the VRAM) to save RAM
@@ -1590,70 +1560,42 @@ Mesh.prototype.freeData = function()
 	}
 }
 
-/*
-Mesh.prototype.configure = function(o)
+Mesh.prototype.configure = function(o, options)
 {
-	if(o.vertexBuffers)
-		for(var i in o.vertexBuffers)
-		{
-			var buff = o.vertexBuffers[i];
+	var v = {};
+	var i = {};
+	options = options || {};
 
-		}
-}
-
-Mesh.prototype.serialize = function()
-{
-	var o = {};
-	o.vertexBuffers = {};
-	o.indexBuffers = {};
-
-	for(var i in this.vertexBuffers)
+	for(var j in o)
 	{
-		var buffer = {};
-		buffer.name = i;
-		buffer.data = buffer.data;
-		o.vertexBuffers[i] = buffer;
+		if(!o[j]) continue;
+
+		if(j == "indices" || j == "lines" || j == "triangles")
+			i[j] = o[j];
+		else if(Mesh.common_buffers[j])
+			v[j] = o[j];
+		else
+			options[j] = o[j];
 	}
 
-	for(var i in this.indexBuffers)
-	{
-		var buffer = {};
-		buffer.name = i;
-		buffer.data = buffer.data;
-		o.indexBuffers[i] = buffer;
-	}
+	this.addBuffers(v, i);
 
-	//o.morph_targets = 
-	o.bounding = this.bounding;
-	return o;
+	for(var i in options)
+		this[i] = options[i];		
 }
-*/
-
 
 /**
 * Static method for the class Mesh to create a mesh from a list of common streams
 * @method Mesh.load
 * @param {Object} buffers object will all the buffers
 * @param {Object} options
+* @param {Mesh} output_mesh optional mesh to store the mesh, otherwise is created
 */
-Mesh.load = function(buffers, options) {
+Mesh.load = function(buffers, options, output_mesh) {
 	options = options || {};
-	var v = {};
-	var i = {};
 
-	for(var j in buffers)
-	{
-		if(!buffers[j]) continue;
-
-		if(j == "indices" || j == "lines" || j == "triangles")
-			i[j] = buffers[j];
-		else if(Mesh.common_buffers[j])
-			v[j] = buffers[j];
-		else
-			options[j] = buffers[j];
-	}
-
-	var mesh = new GL.Mesh(v,i, options);
+	var mesh = output_mesh || new GL.Mesh();
+	mesh.configure(buffers, options);
 	return mesh;
 }
 
@@ -1705,14 +1647,7 @@ Mesh.plane = function(options) {
 	}
 	}
 
-	var bounding = {
-		aabb_center: [0,0,0],
-		aabb_halfsize: xz ? [width,0,height] : [width,height,0],
-		aabb_min: xz ? [-width,0,-height] : [-width,-height,0],
-		aabb_max: xz ? [width,0,height] : [s,height,0],
-		radius: vec3.length([width,0,height])
-	};
-	
+	var bounding = BBox.fromCenterHalfsize( [0,0,0], xz ? [width,0,height] : [width,height,0] );
 	return GL.Mesh.load( {vertices:vertices, normals: normals, coords: coords, triangles: triangles }, { bounding: bounding });
 };
 
@@ -1737,13 +1672,7 @@ Mesh.cube = function(options) {
 	buffers.normals = new Float32Array([-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0]);
 	buffers.coords = new Float32Array([0,1,1,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,0,1,1,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,0,1,1,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0]);
 
-	options.bounding = {
-		aabb_center: [0,0,0],
-		aabb_halfsize: [size,size,size],
-		aabb_min: [-size,-size,-size],
-		aabb_max: [size,size,size],
-		radius: vec3.length([size,size,size])
-	};
+	options.bounding = BBox.fromCenterHalfsize( [0,0,0], [size,size,size] );
 
 	return Mesh.load(buffers, options);
 }
@@ -1805,14 +1734,7 @@ Mesh.cylinder = function(options) {
 		normals: normals,
 		coords: coords
 	}
-
-	options.bounding = {
-		aabb_center: [0,0,0],
-		aabb_halfsize: [radius,height*0.5,radius],
-		aabb_min: [-radius,height*-0.5,-radius],
-		aabb_max: [radius,height*0.5,radius],
-		radius: vec3.length([radius,height,radius])
-	};
+	options.bounding = BBox.fromCenterHalfsize( [0,0,0], [radius,height*0.5,radius] );
 
 	return Mesh.load(buffers, options);
 }
@@ -1877,13 +1799,7 @@ Mesh.sphere = function(options) {
 		triangles: indexData
 	};
 
-	options.bounding = {
-		aabb_center: [0,0,0],
-		aabb_halfsize: [radius,radius,radius],
-		aabb_min: [-radius,-radius,-radius],
-		aabb_max: [radius,radius,radius],
-		radius: radius //vec3.length([radius,radius,radius]) //this should work but the radius doesnt match the AABB, dangerous
-	};
+	options.bounding = BBox.fromCenterHalfsize( [0,0,0], [radius,radius,radius], radius );
 	return Mesh.load(buffers, options);
 }
 
@@ -3329,24 +3245,62 @@ var LEvent = {
 	_stopPropagation: function() { this.stop = true; }
 };
 /* geometric utilities */
+var CLIP_INSIDE = 0;
+var CLIP_OUTSIDE = 1;
+var CLIP_OVERLAP = 2;
+
+/**
+* Computational geometry algorithms, is a static calss
+* @class geo
+*/
+
 var geo = {
 
+	/**
+	* Returns a float4 containing the info about a plane with normal N and that passes through point P
+	* @method createPlane
+	* @param {vec3} P
+	* @param {vec3} N
+	* @return {vec4} plane values
+	*/
 	createPlane: function(P,N)
 	{
 		return new Float32Array([N[0],N[1],N[2],-vec3.dot(P,N)]);
 	},
 
+	/**
+	* Computes the distance between the point and the plane
+	* @method distancePointToPlane
+	* @param {vec3} point
+	* @param {vec4} plane
+	* @return {Number} distance
+	*/
 	distancePointToPlane: function(point, plane)
 	{
 		return (vec3.dot(point,plane) + plane[3])/Math.sqrt(plane[0]*plane[0] + plane[1]*plane[1] + plane[2]*plane[2]);
 	},
 
-	//for sorting
+	/**
+	* Computes the square distance between the point and the plane
+	* @method distance2PointToPlane
+	* @param {vec3} point
+	* @param {vec4} plane
+	* @return {Number} distance*distance
+	*/
 	distance2PointToPlane: function(point, plane)
 	{
 		return (vec3.dot(point,plane) + plane[3])/(plane[0]*plane[0] + plane[1]*plane[1] + plane[2]*plane[2]);
 	},
 
+	/**
+	* Projects point on plane
+	* @method projectPointOnPlane
+	* @param {vec3} point
+	* @param {vec3} P plane point
+	* @param {vec3} N plane normal
+	* @param {vec3} result to store result (optional)
+	* @return {vec3} projectec point
+	*/
 	projectPointOnPlane: function(point, P, N, result)
 	{
 		result = result || vec3.create();
@@ -3355,6 +3309,14 @@ var geo = {
 		return vec3.subtract( result, point , vec3.scale( vec3.create(), N, dist ) );
 	},
 
+	/**
+	* Finds the reflected point over a plane (useful for reflecting camera position when rendering reflections)
+	* @method reflectPointInPlane
+	* @param {vec3} point point to reflect
+	* @param {vec3} P point where the plane passes
+	* @param {vec3} N normal of the plane
+	* @return {vec3} reflected point
+	*/
 	reflectPointInPlane: function(point, P, N)
 	{
 		var d = -1 * (P[0] * N[0] + P[1] * N[1] + P[2] * N[2]);
@@ -3365,6 +3327,16 @@ var geo = {
 		return vec3.fromValues( point[0]+t*N[0]*2, point[1]+t*N[1]*2, point[2]+t*N[2]*2 );
 	},
 
+	/**
+	* test a ray plane collision and retrieves the collision point
+	* @method testRayPlane
+	* @param {vec3} start ray start
+	* @param {vec3} direction ray direction
+	* @param {vec3} P point where the plane passes	
+	* @param {vec3} N normal of the plane
+	* @param {vec3} result collision position
+	* @return {boolean} returns if the ray collides the plane or the ray is parallel to the plane
+	*/
 	testRayPlane: function(start, direction, P, N, result)
 	{
 		var D = vec3.dot( P, N );
@@ -3379,70 +3351,16 @@ var geo = {
 		return true;
 	},
 
-	testRayBox: function(start, direction, minB, maxB, result)
-	{
-	//#define NUMDIM	3
-	//#define RIGHT	0
-	//#define LEFT	1
-	//#define MIDDLE	2
-
-		result = result || vec3.create();
-
-		var inside = true;
-		var quadrant = new Float32Array(3);
-		var i;
-		var whichPlane;
-		var maxT = new Float32Array(3);
-		var candidatePlane = new Float32Array(3);
-
-		/* Find candidate planes; this loop can be avoided if
-		rays cast all from the eye(assume perpsective view) */
-		for (i=0; i < 3; i++)
-			if(start[i] < minB[i]) {
-				quadrant[i] = 1;
-				candidatePlane[i] = minB[i];
-				inside = false;
-			}else if (start[i] > maxB[i]) {
-				quadrant[i] = 0;
-				candidatePlane[i] = maxB[i];
-				inside = false;
-			}else	{
-				quadrant[i] = 2;
-			}
-
-		/* Ray origin inside bounding box */
-		if(inside)	{
-			vec3.copy(result, start);
-			return true;
-		}
-
-
-		/* Calculate T distances to candidate planes */
-		for (i = 0; i < 3; i++)
-			if (quadrant[i] != 2 && direction[i] != 0.)
-				maxT[i] = (candidatePlane[i] - start[i]) / direction[i];
-			else
-				maxT[i] = -1.;
-
-		/* Get largest of the maxT's for final choice of intersection */
-		whichPlane = 0;
-		for (i = 1; i < 3; i++)
-			if (maxT[whichPlane] < maxT[i])
-				whichPlane = i;
-
-		/* Check final candidate actually inside box */
-		if (maxT[whichPlane] < 0.) return false;
-		for (i = 0; i < 3; i++)
-			if (whichPlane != i) {
-				result[i] = start[i] + maxT[whichPlane] * direction[i];
-				if (result[i] < minB[i] || result[i] > maxB[i])
-					return false;
-			} else {
-				result[i] = candidatePlane[i];
-			}
-		return true;				/* ray hits box */
-	},
-
+	/**
+	* test a ray sphere collision and retrieves the collision point
+	* @method testRaySphere
+	* @param {vec3} start ray start
+	* @param {vec3} direction ray direction
+	* @param {vec3} center center of the sphere
+	* @param {number} radius radius of the sphere
+	* @param {vec3} result collision position
+	* @return {boolean} returns if the ray collides the sphere
+	*/
 	testRaySphere: function(start, direction, center, radius, result)
 	{
 		// sphere equation (centered at origin) x2+y2+z2=r2
@@ -3474,6 +3392,17 @@ var geo = {
 		return true;//real roots
 	},
 
+	/**
+	* test a ray cylinder collision and retrieves the collision point
+	* @method testRaySphere
+	* @param {vec3} start ray start
+	* @param {vec3} direction ray direction
+	* @param {vec3} p center of the cylinder
+	* @param {number} q height of the cylinder
+	* @param {number} r radius of the cylinder
+	* @param {vec3} result collision position
+	* @return {boolean} returns if the ray collides the cylinder
+	*/
 	testRayCylinder: function(start, direction, p, q, r, result)
 	{
 		var sa = vec3.clone(start);
@@ -3548,6 +3477,91 @@ var geo = {
 		return true;
 	},
 
+
+	/**
+	* test a ray bounding-box collision and retrieves the collision point, the BB must be Axis Aligned
+	* @method testRayBox
+	* @param {vec3} start ray start
+	* @param {vec3} direction ray direction
+	* @param {vec3} minB minimum position of the bounding box
+	* @param {vec3} maxB maximim position of the bounding box
+	* @param {vec3} result collision position
+	* @return {boolean} returns if the ray collides the box
+	*/
+	testRayBox: function(start, direction, minB, maxB, result)
+	{
+	//#define NUMDIM	3
+	//#define RIGHT	0
+	//#define LEFT	1
+	//#define MIDDLE	2
+
+		result = result || vec3.create();
+
+		var inside = true;
+		var quadrant = new Float32Array(3);
+		var i;
+		var whichPlane;
+		var maxT = new Float32Array(3);
+		var candidatePlane = new Float32Array(3);
+
+		/* Find candidate planes; this loop can be avoided if
+		rays cast all from the eye(assume perpsective view) */
+		for (i=0; i < 3; i++)
+			if(start[i] < minB[i]) {
+				quadrant[i] = 1;
+				candidatePlane[i] = minB[i];
+				inside = false;
+			}else if (start[i] > maxB[i]) {
+				quadrant[i] = 0;
+				candidatePlane[i] = maxB[i];
+				inside = false;
+			}else	{
+				quadrant[i] = 2;
+			}
+
+		/* Ray origin inside bounding box */
+		if(inside)	{
+			vec3.copy(result, start);
+			return true;
+		}
+
+
+		/* Calculate T distances to candidate planes */
+		for (i = 0; i < 3; i++)
+			if (quadrant[i] != 2 && direction[i] != 0.)
+				maxT[i] = (candidatePlane[i] - start[i]) / direction[i];
+			else
+				maxT[i] = -1.;
+
+		/* Get largest of the maxT's for final choice of intersection */
+		whichPlane = 0;
+		for (i = 1; i < 3; i++)
+			if (maxT[whichPlane] < maxT[i])
+				whichPlane = i;
+
+		/* Check final candidate actually inside box */
+		if (maxT[whichPlane] < 0.) return false;
+		for (i = 0; i < 3; i++)
+			if (whichPlane != i) {
+				result[i] = start[i] + maxT[whichPlane] * direction[i];
+				if (result[i] < minB[i] || result[i] > maxB[i])
+					return false;
+			} else {
+				result[i] = candidatePlane[i];
+			}
+		return true;				/* ray hits box */
+	},	
+
+	/**
+	* test a ray bounding-box collision, it uses the  BBox class and allows to use non-axis aligned bbox
+	* @method testRayBBox
+	* @param {vec3} start ray start
+	* @param {vec3} direction ray direction
+	* @param {BBox} box in BBox format
+	* @param {mat4} model transformation of the BBox
+	* @param {vec3} result collision position
+	* @return {boolean} returns if the ray collides the box
+	*/
 	testRayBBox: function(start, direction, box, model, result)
 	{
 		if(model)
@@ -3595,33 +3609,187 @@ var geo = {
 
 		var dP = vec3.add( vec3.create(), w, vec3.subtract( vec3.create(), vec3.scale(vec3.create(),u,sc) , vec3.scale(vec3.create(),v,tc)) );  // =  L1(sc) - L2(tc)
 		return vec3.length(dP);   // return the closest distance
+	},
+
+	/**
+	* extract frustum planes given a view-projection matrix
+	* @method extractPlanes
+	* @param {mat4} viewprojection matrix
+	* @return {Float32Array} returns all 6 planes in a float32array[24]
+	*/
+	extractPlanes: function(vp)
+	{
+		var planes = new Float32Array(4*6);
+
+		//right
+		planes.set( [vp[3] - vp[0], vp[7] - vp[4], vp[11] - vp[8], vp[15] - vp[12] ], 0); 
+		normalize(0);
+
+		//left
+		planes.set( [vp[3] + vp[0], vp[ 7] + vp[ 4], vp[11] + vp[ 8], vp[15] + vp[12] ], 4);
+		normalize(4);
+
+		//bottom
+		planes.set( [ vp[ 3] + vp[ 1], vp[ 7] + vp[ 5], vp[11] + vp[ 9], vp[15] + vp[13] ], 8);
+		normalize(8);
+
+		//top
+		planes.set( [ vp[ 3] - vp[ 1], vp[ 7] - vp[ 5], vp[11] - vp[ 9], vp[15] - vp[13] ],12);
+		normalize(12);
+
+		//back
+		planes.set( [ vp[ 3] - vp[ 2], vp[ 7] - vp[ 6], vp[11] - vp[10], vp[15] - vp[14] ],16);
+		normalize(16);
+
+		//front
+		planes.set( [ vp[ 3] + vp[ 2], vp[ 7] + vp[ 6], vp[11] + vp[10], vp[15] + vp[14] ],20);
+		normalize(20);
+
+		return planes;
+
+		function normalize(pos)
+		{
+			var N = planes.subarray(pos,pos+3);
+			var l = vec3.length(N);
+			if(l) return;
+			l = 1.0 / l;
+			planes[pos] *= l;
+			planes[pos+1] *= l;
+			planes[pos+2] *= l;
+			planes[pos+3] *= l;
+		}
+	},
+
+	/**
+	* test a BBox against the frustum
+	* @method frustumTestBox
+	* @param {Float32Array} planes frustum planes
+	* @param {BBox} boundindbox in BBox format
+	* @return {Number} CLIP_INSIDE, CLIP_OVERLAP, CLIP_OUTSIDE
+	*/
+	frustumTestBox: function(planes, box)
+	{
+		var flag = 0, o = 0;
+
+		flag = planeBoxOverlap(planes.subarray(0,4),box);
+		if (flag == CLIP_OUTSIDE) return CLIP_OUTSIDE; o+= flag;
+		flag =  planeBoxOverlap(planes.subarray(4,8),box);
+		if (flag == CLIP_OUTSIDE) return CLIP_OUTSIDE; o+= flag;
+		flag =  planeBoxOverlap(planes.subarray(8,12),box);
+		if (flag == CLIP_OUTSIDE) return CLIP_OUTSIDE; o+= flag;
+		flag =  planeBoxOverlap(planes.subarray(12,16),box);
+		if (flag == CLIP_OUTSIDE) return CLIP_OUTSIDE; o+= flag;
+		flag =  planeBoxOverlap(planes.subarray(16,20),box);
+		if (flag == CLIP_OUTSIDE) return CLIP_OUTSIDE; o+= flag;
+		flag =  planeBoxOverlap(planes.subarray(20,24),box);
+		if (flag == CLIP_OUTSIDE) return CLIP_OUTSIDE; o+= flag;
+
+		return o == 0 ? CLIP_INSIDE : CLIP_OVERLAP;
+	},
+
+	/**
+	* test a Sphere against the frustum
+	* @method frustumTestSphere
+	* @param {vec3} center sphere center
+	* @param {number} radius sphere radius
+	* @return {Number} CLIP_INSIDE, CLIP_OVERLAP, CLIP_OUTSIDE
+	*/
+
+	frustumTestSphere: function(planes, center, radius)
+	{
+		var dist;
+		var overlap = false;
+
+		dist = distanceToPlane( planes.subarray(0,4), center );
+		if( dist < -radius ) return CLIP_OUTSIDE;
+		else if(dist >= -radius && dist <= radius)	overlap = true;
+		dist = distanceToPlane( planes.subarray(4,8), center );
+		if( dist < -radius ) return CLIP_OUTSIDE;
+		else if(dist >= -radius && dist <= radius)	overlap = true;
+		dist = distanceToPlane( planes.subarray(8,12), center );
+		if( dist < -radius ) return CLIP_OUTSIDE;
+		else if(dist >= -radius && dist <= radius)	overlap = true;
+		dist = distanceToPlane( planes.subarray(12,16), center );
+		if( dist < -radius ) return CLIP_OUTSIDE;
+		else if(dist >= -radius && dist <= radius)	overlap = true;
+		dist = distanceToPlane( planes.subarray(16,20), center );
+		if( dist < -radius ) return CLIP_OUTSIDE;
+		else if(dist >= -radius && dist <= radius)	overlap = true;
+		dist = distanceToPlane( planes.subarray(20,24), center );
+		if( dist < -radius ) return CLIP_OUTSIDE;
+		else if(dist >= -radius && dist <= radius)	overlap = true;
+		return overlap ? CLIP_OVERLAP : CLIP_INSIDE;
+	},
+
+	/**
+	* test if a 2d point is inside a 2d polygon
+	* @method testPoint2DInPolygon
+	* @param {Array} poly array of 2d points
+	* @pt {vec2} point
+	* @return {boolean} true if it is inside
+	*/
+	testPoint2DInPolygon: function(poly, pt) {
+    for(var c = false, i = -1, l = poly.length, j = l - 1; ++i < l; j = i)
+        ((poly[i][1] <= pt[1] && pt[1] < poly[j][1]) || (poly[j][1] <= pt[1] && pt[1] < poly[i][1]))
+        && (pt[0] < (poly[j][0] - poly[i][0]) * (pt[1] - poly[i][1]) / (poly[j][1] - poly[i][1]) + poly[i][0])
+        && (c = !c);
+    return c;
 	}
 };
 
-//[center,half,min,max]
+/**
+* BBox is a class to create BoundingBoxes but it works as glMatrix, creating Float32Array with the info inside instead of objects
+* The bounding box is stored as center,halfsize,min,max,radius (total of 13 floats)
+* @class BBox
+*/
 var BBox = {
 	center:0,
 	halfsize:3,
 	min:6,
 	max:9,
+	radius:12,
 
 	corners: new Float32Array([1,1,1,  1,1,-1,  1,-1,1,  1,-1,-1,  -1,1,1,  -1,1,-1,  -1,-1,1,  -1,-1,-1 ]),
 
+	/**
+	* create an empty bbox
+	* @method create
+	* @return {BBox} returns a float32array with the bbox
+	*/
 	create: function()
 	{
-		return new Float32Array(12);
+		return new Float32Array(13);
 	},
 
-	identity: function(bb)
-	{
-		bb.set([0,0,0, 1,1,1, -1,-1,-1, 1,1,1]);
-	},	
-
+	/**
+	* create an bbox copy from another one
+	* @method clone
+	* @return {BBox} returns a float32array with the bbox
+	*/
 	clone: function(bb)
 	{
 		return new Float32Array(bb);
 	},
 
+	/**
+	* copy one bbox into another
+	* @method copy
+	* @param {BBox} out where to store the result
+	* @param {BBox} where to read the bbox
+	* @return {BBox} returns out
+	*/
+	copy: function(out,bb)
+	{
+		out.set(bb);
+		return out;
+	},	
+
+	/**
+	* create a bbox from one point
+	* @method fromPoint
+	* @param {vec3} point
+	* @return {BBox} returns a float32array with the bbox
+	*/
 	fromPoint: function(point)
 	{
 		var bb = this.create();
@@ -3631,6 +3799,13 @@ var BBox = {
 		return bb;
 	},
 
+	/**
+	* create a bbox from min and max points
+	* @method fromMinMax
+	* @param {vec3} min
+	* @param {vec3} max
+	* @return {BBox} returns a float32array with the bbox
+	*/
 	fromMinMax: function(min,max)
 	{
 		var bb = this.create();
@@ -3638,6 +3813,13 @@ var BBox = {
 		return bb;
 	},
 
+	/**
+	* create a bbox from center and halfsize
+	* @method fromCenterHalfsize
+	* @param {vec3} center
+	* @param {vec3} halfsize
+	* @return {BBox} returns a float32array with the bbox
+	*/
 	fromCenterHalfsize: function(center, halfsize)
 	{
 		var bb = this.create();
@@ -3645,6 +3827,12 @@ var BBox = {
 		return bb;
 	},
 
+	/**
+	* create a bbox from a typed-array containing points
+	* @method fromPoints
+	* @param {Float32Array} points
+	* @return {BBox} returns a float32array with the bbox
+	*/
 	fromPoints: function(points)
 	{
 		var bb = this.create();
@@ -3652,6 +3840,13 @@ var BBox = {
 		return bb;	
 	},
 
+	/**
+	* set the values to a BB from a set of points
+	* @method setFromPoints
+	* @param {BBox} out where to store the result
+	* @param {Float32Array} points
+	* @return {BBox} returns a float32array with the bbox
+	*/
 	setFromPoints: function(bb, points)
 	{
 		var min = bb.subarray(6,9);
@@ -3670,28 +3865,72 @@ var BBox = {
 
 		var center = vec3.add( bb.subarray(0,3), min, max );
 		vec3.scale( center, center, 0.5);
-		vec3.subtract( bb.subarray(3,6), max, center );	
+		vec3.subtract( bb.subarray(3,6), max, center );
+		bb[12] = vec3.length(bb.subarray(3,6)); //radius		
+		return bb;
 	},
 
+	/**
+	* set the values to a BB from min and max
+	* @method setMinMax
+	* @param {BBox} out where to store the result
+	* @param {vec3} min
+	* @param {vec3} max
+	* @return {BBox} returns out
+	*/
 	setMinMax: function(bb, min, max)
 	{
-		bb.set(min, 6); //min
-		bb.set(max, 9); //max
+		bb[6] = min[0];
+		bb[7] = min[1];
+		bb[8] = min[2];
+		bb[9] = max[0];
+		bb[10] = max[1];
+		bb[11] = max[2];
+
 		var center = bb.subarray(0,3);
 		vec3.sub( center, max, min );
 		vec3.scale( center, center, 0.5 );
 		bb.set( [max[0]-center[0],max[1]-center[1],max[2]-center[2]], 3);
 		vec3.sub( bb.subarray(3,6), max, center );
+		bb[12] = vec3.length(bb.subarray(3,6)); //radius
+		return bb;
 	},
 
-	setCenterHalfsize: function(bb, center, halfsize)
+	/**
+	* set the values to a BB from center and halfsize
+	* @method setCenterHalfsize
+	* @param {BBox} out where to store the result
+	* @param {vec3} min
+	* @param {vec3} max
+	* @param {number} radius [optional] (the minimum distance from the center to the further point)
+	* @return {BBox} returns out
+	*/
+	setCenterHalfsize: function(bb, center, halfsize, radius)
 	{
-		bb.set(center, 0); //min
-		bb.set(halfsize, 3); //max
+		bb[0] = center[0];
+		bb[1] = center[1];
+		bb[2] = center[2];
+		bb[3] = halfsize[0];
+		bb[4] = halfsize[1];
+		bb[5] = halfsize[2];
+
 		vec3.sub(bb.subarray(6,9), bb.subarray(0,3), bb.subarray(3,6) );
 		vec3.add(bb.subarray(9,12), bb.subarray(0,3), bb.subarray(3,6) );
+		if(radius)
+			bb[12] = radius;
+		else
+			bb[12] = vec3.length(halfsize);
+		return bb;
 	},
 
+	/**
+	* Apply a matrix transformation to the BBox (applies to every corner and recomputes the BB)
+	* @method setCenterHalfsize
+	* @param {BBox} out where to store the result
+	* @param {BBox} bb bbox you want to transform
+	* @param {mat4} mat transformation
+	* @return {BBox} returns out
+	*/
 	transformMat4: function(out, bb, mat)
 	{
 		var center = bb.subarray(0,3);
@@ -3712,101 +3951,8 @@ var BBox = {
 	getCenter: function(bb) { return bb.subarray(0,3); },
 	getHalfsize: function(bb) { return bb.subarray(3,6); },
 	getMin: function(bb) { return bb.subarray(6,9); },
-	getMax: function(bb) { return bb.subarray(9,12); }
-}
-
-//extract the frustrum planes from viewprojection matrix
-geo.extractPlanes = function(vp)
-{
-	var planes = new Float32Array(4*6);
-
-	//right
-	planes.set( [vp[3] - vp[0], vp[7] - vp[4], vp[11] - vp[8], vp[15] - vp[12] ], 0); 
-	normalize(0);
-
-	//left
-	planes.set( [vp[3] + vp[0], vp[ 7] + vp[ 4], vp[11] + vp[ 8], vp[15] + vp[12] ], 4);
-	normalize(4);
-
-	//bottom
-	planes.set( [ vp[ 3] + vp[ 1], vp[ 7] + vp[ 5], vp[11] + vp[ 9], vp[15] + vp[13] ], 8);
-	normalize(8);
-
-	//top
-	planes.set( [ vp[ 3] - vp[ 1], vp[ 7] - vp[ 5], vp[11] - vp[ 9], vp[15] - vp[13] ],12);
-	normalize(12);
-
-	//back
-	planes.set( [ vp[ 3] - vp[ 2], vp[ 7] - vp[ 6], vp[11] - vp[10], vp[15] - vp[14] ],16);
-	normalize(16);
-
-	//front
-	planes.set( [ vp[ 3] + vp[ 2], vp[ 7] + vp[ 6], vp[11] + vp[10], vp[15] + vp[14] ],20);
-	normalize(20);
-
-	return planes;
-
-	function normalize(pos)
-	{
-		var N = planes.subarray(pos,pos+3);
-		var l = vec3.length(N);
-		if(l) return;
-		l = 1.0 / l;
-		planes[pos] *= l;
-		planes[pos+1] *= l;
-		planes[pos+2] *= l;
-		planes[pos+3] *= l;
-	}
-}
-
-var CLIP_INSIDE = 0;
-var CLIP_OUTSIDE = 1;
-var CLIP_OVERLAP = 2;
-
-geo.frustrumTestBox = function(planes, box)
-{
-	var flag = 0, o = 0;
-
-	flag = planeBoxOverlap(planes.subarray(0,4),box);
-	if (flag == CLIP_OUTSIDE) return CLIP_OUTSIDE; o+= flag;
-	flag =  planeBoxOverlap(planes.subarray(4,8),box);
-	if (flag == CLIP_OUTSIDE) return CLIP_OUTSIDE; o+= flag;
-	flag =  planeBoxOverlap(planes.subarray(8,12),box);
-	if (flag == CLIP_OUTSIDE) return CLIP_OUTSIDE; o+= flag;
-	flag =  planeBoxOverlap(planes.subarray(12,16),box);
-	if (flag == CLIP_OUTSIDE) return CLIP_OUTSIDE; o+= flag;
-	flag =  planeBoxOverlap(planes.subarray(16,20),box);
-	if (flag == CLIP_OUTSIDE) return CLIP_OUTSIDE; o+= flag;
-	flag =  planeBoxOverlap(planes.subarray(20,24),box);
-	if (flag == CLIP_OUTSIDE) return CLIP_OUTSIDE; o+= flag;
-
-	if (o==0) return CLIP_INSIDE;
-	else return CLIP_OVERLAP;
-}
-
-geo.frustrumTestSphere = function(planes, center, radius)
-{
-	var dist;
-	var overlap = false;
-
-	dist = distanceToPlane( planes.subarray(0,4), center );
-	if( dist < -radius ) return CLIP_OUTSIDE;
-	else if(dist >= -radius && dist <= radius)	overlap = true;
-	dist = distanceToPlane( planes.subarray(4,8), center );
-	if( dist < -radius ) return CLIP_OUTSIDE;
-	else if(dist >= -radius && dist <= radius)	overlap = true;
-	dist = distanceToPlane( planes.subarray(8,12), center );
-	if( dist < -radius ) return CLIP_OUTSIDE;
-	else if(dist >= -radius && dist <= radius)	overlap = true;
-	dist = distanceToPlane( planes.subarray(12,16), center );
-	if( dist < -radius ) return CLIP_OUTSIDE;
-	else if(dist >= -radius && dist <= radius)	overlap = true;
-	dist = distanceToPlane( planes.subarray(16,20), center );
-	if( dist < -radius ) return CLIP_OUTSIDE;
-	else if(dist >= -radius && dist <= radius)	overlap = true;
-	dist = distanceToPlane( planes.subarray(20,24), center );
-	if( dist < -radius ) return CLIP_OUTSIDE;
-	else if(dist >= -radius && dist <= radius)	overlap = true;
+	getMax: function(bb) { return bb.subarray(9,12); },
+	getRadius: function(bb) { return bb[12]; }	
 }
 
 function distanceToPlane(plane, point)
@@ -4253,6 +4399,7 @@ HitTest.prototype = {
 //       gl.canvas.height / 2);
 //       var result = GL.Raytracer.hitTestSphere(
 //       tracer.eye, ray, new GL.Vector(0, 0, 0), 1);
+
 function Raytracer(viewmatrix, projectionmatrix, viewport) {
   viewport = viewport || gl.getParameter(gl.VIEWPORT);
   var m = viewmatrix;
