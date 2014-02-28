@@ -40,7 +40,7 @@ HitTest.prototype = {
 //       tracer.eye, ray, new GL.Vector(0, 0, 0), 1);
 
 function Raytracer(viewmatrix, projectionmatrix, viewport) {
-  viewport = viewport || gl.getParameter(gl.VIEWPORT);
+  viewport = viewport || gl.getViewport(); //gl.getParameter(gl.VIEWPORT);
   var m = viewmatrix;
   this.viewport = viewport;
 

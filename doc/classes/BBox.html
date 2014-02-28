@@ -197,6 +197,13 @@ The bounding box is stored as center,halfsize,min,max,radius (total of 13 floats
                             </li>
                         
                             <li class="index-item method">
+                                <a href="#method_getCorners">getCorners</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
                                 <a href="#method_setCenterHalfsize">setCenterHalfsize</a>
 
                                 
@@ -276,7 +283,7 @@ The bounding box is stored as center,halfsize,min,max,radius (total of 13 floats
             
         
         
-        <a href="../files/.._src_geo.js.html#l518"><code>..&#x2F;src&#x2F;geo.js:518</code></a>
+        <a href="../files/.._src_geo.js.html#l519"><code>..&#x2F;src&#x2F;geo.js:519</code></a>
         
         </p>
 
@@ -365,7 +372,7 @@ The bounding box is stored as center,halfsize,min,max,radius (total of 13 floats
             
         
         
-        <a href="../files/.._src_geo.js.html#l528"><code>..&#x2F;src&#x2F;geo.js:528</code></a>
+        <a href="../files/.._src_geo.js.html#l529"><code>..&#x2F;src&#x2F;geo.js:529</code></a>
         
         </p>
 
@@ -478,7 +485,7 @@ The bounding box is stored as center,halfsize,min,max,radius (total of 13 floats
             
         
         
-        <a href="../files/.._src_geo.js.html#l508"><code>..&#x2F;src&#x2F;geo.js:508</code></a>
+        <a href="../files/.._src_geo.js.html#l509"><code>..&#x2F;src&#x2F;geo.js:509</code></a>
         
         </p>
 
@@ -567,7 +574,7 @@ The bounding box is stored as center,halfsize,min,max,radius (total of 13 floats
             
         
         
-        <a href="../files/.._src_geo.js.html#l570"><code>..&#x2F;src&#x2F;geo.js:570</code></a>
+        <a href="../files/.._src_geo.js.html#l571"><code>..&#x2F;src&#x2F;geo.js:571</code></a>
         
         </p>
 
@@ -694,7 +701,7 @@ The bounding box is stored as center,halfsize,min,max,radius (total of 13 floats
             
         
         
-        <a href="../files/.._src_geo.js.html#l556"><code>..&#x2F;src&#x2F;geo.js:556</code></a>
+        <a href="../files/.._src_geo.js.html#l557"><code>..&#x2F;src&#x2F;geo.js:557</code></a>
         
         </p>
 
@@ -815,7 +822,7 @@ The bounding box is stored as center,halfsize,min,max,radius (total of 13 floats
             
         
         
-        <a href="../files/.._src_geo.js.html#l541"><code>..&#x2F;src&#x2F;geo.js:541</code></a>
+        <a href="../files/.._src_geo.js.html#l542"><code>..&#x2F;src&#x2F;geo.js:542</code></a>
         
         </p>
 
@@ -921,7 +928,7 @@ The bounding box is stored as center,halfsize,min,max,radius (total of 13 floats
             
         
         
-        <a href="../files/.._src_geo.js.html#l584"><code>..&#x2F;src&#x2F;geo.js:584</code></a>
+        <a href="../files/.._src_geo.js.html#l585"><code>..&#x2F;src&#x2F;geo.js:585</code></a>
         
         </p>
 
@@ -971,6 +978,135 @@ The bounding box is stored as center,halfsize,min,max,radius (total of 13 floats
                         <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>:
                     
                     <p>returns a float32array with the bbox</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_getCorners" class="method item">
+    <h3 class="name"><code>getCorners</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>bb</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>result</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type">Float32Array</span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_geo.js.html#l707"><code>..&#x2F;src&#x2F;geo.js:707</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Computes the eight corners of the BBox and returns it</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">bb</code>
+                        <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>the bounding box</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">result</code>
+                        <span class="type">Float32Array</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>optional, should be 8 * 3</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">Float32Array</span>:
+                    
+                    <p>returns the 8 corners</p>
 
                 
             </div>
@@ -1045,7 +1181,7 @@ The bounding box is stored as center,halfsize,min,max,radius (total of 13 floats
             
         
         
-        <a href="../files/.._src_geo.js.html#l653"><code>..&#x2F;src&#x2F;geo.js:653</code></a>
+        <a href="../files/.._src_geo.js.html#l654"><code>..&#x2F;src&#x2F;geo.js:654</code></a>
         
         </p>
 
@@ -1210,7 +1346,7 @@ The bounding box is stored as center,halfsize,min,max,radius (total of 13 floats
             
         
         
-        <a href="../files/.._src_geo.js.html#l680"><code>..&#x2F;src&#x2F;geo.js:680</code></a>
+        <a href="../files/.._src_geo.js.html#l681"><code>..&#x2F;src&#x2F;geo.js:681</code></a>
         
         </p>
 
@@ -1355,7 +1491,7 @@ The bounding box is stored as center,halfsize,min,max,radius (total of 13 floats
             
         
         
-        <a href="../files/.._src_geo.js.html#l597"><code>..&#x2F;src&#x2F;geo.js:597</code></a>
+        <a href="../files/.._src_geo.js.html#l598"><code>..&#x2F;src&#x2F;geo.js:598</code></a>
         
         </p>
 
@@ -1489,7 +1625,7 @@ The bounding box is stored as center,halfsize,min,max,radius (total of 13 floats
             
         
         
-        <a href="../files/.._src_geo.js.html#l627"><code>..&#x2F;src&#x2F;geo.js:627</code></a>
+        <a href="../files/.._src_geo.js.html#l628"><code>..&#x2F;src&#x2F;geo.js:628</code></a>
         
         </p>
 

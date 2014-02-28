@@ -419,7 +419,7 @@ var geo = {
 	* @method frustumTestBox
 	* @param {Float32Array} planes frustum planes
 	* @param {BBox} boundindbox in BBox format
-	* @return {Number} CLIP_INSIDE, CLIP_OVERLAP, CLIP_OUTSIDE
+	* @return {enum} CLIP_INSIDE, CLIP_OVERLAP, CLIP_OUTSIDE
 	*/
 	frustumTestBox: function(planes, box)
 	{
@@ -446,7 +446,7 @@ var geo = {
 	* @method frustumTestSphere
 	* @param {vec3} center sphere center
 	* @param {number} radius sphere radius
-	* @return {Number} CLIP_INSIDE, CLIP_OVERLAP, CLIP_OUTSIDE
+	* @return {enum} CLIP_INSIDE, CLIP_OVERLAP, CLIP_OUTSIDE
 	*/
 
 	frustumTestSphere: function(planes, center, radius)
@@ -502,7 +502,8 @@ var BBox = {
 	min:6,
 	max:9,
 	radius:12,
-
+	data_length: 13,
+	
 	corners: new Float32Array([1,1,1,  1,1,-1,  1,-1,1,  1,-1,-1,  -1,1,1,  -1,1,-1,  -1,-1,1,  -1,-1,-1 ]),
 
 	/**
@@ -701,6 +702,38 @@ var BBox = {
 
 		return this.setFromPoints(out, corners);
 	},
+
+
+	/**
+	* Computes the eight corners of the BBox and returns it
+	* @method getCorners
+	* @param {BBox} bb the bounding box
+	* @param {Float32Array} result optional, should be 8 * 3
+	* @return {Float32Array} returns the 8 corners
+	*/
+	getCorners: function(bb, result)
+	{
+		var center = bb.subarray(0,3);
+		var halfsize = bb.subarray(3,6);
+
+		var corners = null;
+		if(result)
+		{
+			result.set(this.corners);
+			corners = result;
+		}
+		else
+			corners = new Float32Array( this.corners );
+
+		for(var i = 0; i < 8; ++i)		
+		{
+			var corner = corners.subarray(i*3, i*3+3);
+			vec3.multiply( corner, halfsize, corner );
+			vec3.add( corner, corner, center );
+		}
+
+		return corners;
+	},	
 
 	getCenter: function(bb) { return bb.subarray(0,3); },
 	getHalfsize: function(bb) { return bb.subarray(3,6); },

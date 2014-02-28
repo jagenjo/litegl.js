@@ -392,6 +392,76 @@ Mesh.prototype.computeWireframe = function() {
 	return this;
 }
 
+/**
+* Creates a stream with the normals
+* @method computeNormals
+*/
+Mesh.prototype.computeNormals = function() {
+	var vertices = this.vertexBuffers["vertices"].data;
+	var num_vertices = vertices.length / 3;
+
+	var normals = new Float32Array( vertices.length );
+
+	var triangles = null;
+	if(this.indexBuffers["triangles"])
+		triangles = this.indexBuffers["triangles"].data;
+
+	var temp = vec3.create();
+	var temp2 = vec3.create();
+
+	var i1,i2,i3,v1,v2,v3,n1,n2,n3;
+
+	//compute the plane normal
+	var l = triangles ? triangles.length : vertices.length;
+	for (var a = 0; a < l; a+=3)
+	{
+		if(triangles)
+		{
+			i1 = triangles[a];
+			i2 = triangles[a+1];
+			i3 = triangles[a+2];
+
+			v1 = vertices.subarray(i1*3,i1*3+3);
+			v2 = vertices.subarray(i2*3,i2*3+3);
+			v3 = vertices.subarray(i3*3,i3*3+3);
+
+			n1 = normals.subarray(i1*3,i1*3+3);
+			n2 = normals.subarray(i2*3,i2*3+3);
+			n3 = normals.subarray(i3*3,i3*3+3);
+		}
+		else
+		{
+			v1 = vertices.subarray(a*3,a*3+3);
+			v2 = vertices.subarray(a*3+3,a*3+6);
+			v3 = vertices.subarray(a*3+6,a*3+9);
+
+			n1 = normals.subarray(a*3,a*3+3);
+			n2 = normals.subarray(a*3+3,a*3+6);
+			n3 = normals.subarray(a*3+6,a*3+9);
+		}
+
+		vec3.sub( temp, v2, v1 );
+		vec3.sub( temp2, v3, v1 );
+		vec3.cross( temp, temp, temp2 );
+		vec3.normalize(temp,temp);
+
+		//save
+		vec3.add( n1, n1, temp );
+		vec3.add( n2, n2, temp );
+		vec3.add( n3, n3, temp );
+	}
+
+	//normalize if vertices are shared
+	if(triangles)
+	for (var a = 0, l = normals.length; a < l; a+=3)
+	{
+		var n = normals.subarray(a,a+3);
+		vec3.normalize(n,n);
+	}
+
+	this.addVertexBuffer('normals', Mesh.common_buffers["normals"].attribute, 3, normals );
+}
+
 
 /**
 * Creates a new stream with the tangents
@@ -418,7 +488,6 @@ Mesh.prototype.computeTangents = function() {
 	var tdir = vec3.create();
 	var temp = vec3.create();
 	var temp2 = vec3.create();
-
 
 	for (a = 0, l = triangles.length; a < l; a+=3)
 	{

@@ -166,7 +166,8 @@ Texture.prototype.uploadData = function(data)
 * @param {Function} callback function that does all the rendering inside this texture
 */
 Texture.prototype.drawTo = function(callback) {
-	var v = gl.getParameter(gl.VIEWPORT);
+	//var v = gl.getParameter(gl.VIEWPORT);
+	var v = gl.getViewport();
 	framebuffer = framebuffer || gl.createFramebuffer();
 	renderbuffer = renderbuffer || gl.createRenderbuffer();
 	gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);

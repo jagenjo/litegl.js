@@ -1404,6 +1404,76 @@ Mesh.prototype.computeWireframe = function() {
 	return this;
 }
 
+/**
+* Creates a stream with the normals
+* @method computeNormals
+*/
+Mesh.prototype.computeNormals = function() {
+	var vertices = this.vertexBuffers["vertices"].data;
+	var num_vertices = vertices.length / 3;
+
+	var normals = new Float32Array( vertices.length );
+
+	var triangles = null;
+	if(this.indexBuffers["triangles"])
+		triangles = this.indexBuffers["triangles"].data;
+
+	var temp = vec3.create();
+	var temp2 = vec3.create();
+
+	var i1,i2,i3,v1,v2,v3,n1,n2,n3;
+
+	//compute the plane normal
+	var l = triangles ? triangles.length : vertices.length;
+	for (var a = 0; a < l; a+=3)
+	{
+		if(triangles)
+		{
+			i1 = triangles[a];
+			i2 = triangles[a+1];
+			i3 = triangles[a+2];
+
+			v1 = vertices.subarray(i1*3,i1*3+3);
+			v2 = vertices.subarray(i2*3,i2*3+3);
+			v3 = vertices.subarray(i3*3,i3*3+3);
+
+			n1 = normals.subarray(i1*3,i1*3+3);
+			n2 = normals.subarray(i2*3,i2*3+3);
+			n3 = normals.subarray(i3*3,i3*3+3);
+		}
+		else
+		{
+			v1 = vertices.subarray(a*3,a*3+3);
+			v2 = vertices.subarray(a*3+3,a*3+6);
+			v3 = vertices.subarray(a*3+6,a*3+9);
+
+			n1 = normals.subarray(a*3,a*3+3);
+			n2 = normals.subarray(a*3+3,a*3+6);
+			n3 = normals.subarray(a*3+6,a*3+9);
+		}
+
+		vec3.sub( temp, v2, v1 );
+		vec3.sub( temp2, v3, v1 );
+		vec3.cross( temp, temp, temp2 );
+		vec3.normalize(temp,temp);
+
+		//save
+		vec3.add( n1, n1, temp );
+		vec3.add( n2, n2, temp );
+		vec3.add( n3, n3, temp );
+	}
+
+	//normalize if vertices are shared
+	if(triangles)
+	for (var a = 0, l = normals.length; a < l; a+=3)
+	{
+		var n = normals.subarray(a,a+3);
+		vec3.normalize(n,n);
+	}
+
+	this.addVertexBuffer('normals', Mesh.common_buffers["normals"].attribute, 3, normals );
+}
+
 
 /**
 * Creates a new stream with the tangents
@@ -1430,7 +1500,6 @@ Mesh.prototype.computeTangents = function() {
 	var tdir = vec3.create();
 	var temp = vec3.create();
 	var temp2 = vec3.create();
-
 
 	for (a = 0, l = triangles.length; a < l; a+=3)
 	{
@@ -2060,7 +2129,8 @@ Texture.prototype.uploadData = function(data)
 * @param {Function} callback function that does all the rendering inside this texture
 */
 Texture.prototype.drawTo = function(callback) {
-	var v = gl.getParameter(gl.VIEWPORT);
+	//var v = gl.getParameter(gl.VIEWPORT);
+	var v = gl.getViewport();
 	framebuffer = framebuffer || gl.createFramebuffer();
 	renderbuffer = renderbuffer || gl.createRenderbuffer();
 	gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
@@ -2515,6 +2585,25 @@ function Shader(vertexSource, fragmentSource, macros)
 		isSampler[groups[2]] = 1;
 	});
 	this.isSampler = isSampler;
+
+	//extract uniform and attribs locations to speed up 
+	//*
+	for(var i = 0, l = gl.getProgramParameter(this.program, gl.ACTIVE_UNIFORMS); i < l; ++i)
+	{
+		var data = gl.getActiveUniform( this.program, i);
+		if(!data) break;
+		this.uniformLocations[ data.name ] = gl.getUniformLocation(this.program, data.name);
+	}
+
+	for(var i = 0, l = gl.getProgramParameter(this.program, gl.ACTIVE_ATTRIBUTES); i < l; ++i)
+	{
+		var data = gl.getActiveAttrib( this.program, i);
+		if(!data) break;
+		this.uniformLocations[ data.name ] = gl.getUniformLocation(this.program, data.name);
+		this.attributes[ data.name ] = gl.getAttribLocation(this.program, data.name );	
+	}
+
+	//*/
 }
 
 /**
@@ -2528,7 +2617,7 @@ Shader.prototype.uniforms = function(uniforms) {
 	//var last_slot = 0;
 
 	for (var name in uniforms) {
-		var location = this.uniformLocations[name] || gl.getUniformLocation(this.program, name);
+		var location = this.uniformLocations[name];// || gl.getUniformLocation(this.program, name);
 		if (!location) continue;
 		this.uniformLocations[name] = location;
 
@@ -2630,9 +2719,9 @@ Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_
 		var buffer = vertexBuffers[name];
 		var attribute = buffer.attribute || name;
 		//precompute attribute locations in shader
-		var location = this.attributes[attribute] || gl.getAttribLocation(this.program, attribute);
+		var location = this.attributes[attribute];// || gl.getAttribLocation(this.program, attribute);
 
-		if (location == -1 || !buffer.buffer) 
+		if (location == null || !buffer.buffer) //-1 changed for null
 			continue; //ignore this buffer
 
 		this.attributes[attribute] = location;
@@ -2755,6 +2844,11 @@ var GL = {
 	contexts: [], //Index with all the WEBGL canvas created, so the update message is sent to all of them instead of independently
 	blockable_keys: {"Up":true,"Down":true,"Left":true,"Right":true},
 
+	//some consts
+	LEFT_MOUSE_BUTTON: 1,
+	RIGHT_MOUSE_BUTTON: 3,
+	MIDDLE_MOUSE_BUTTON: 2,
+
 	/**
 	* creates a new WebGL canvas
 	* @method create
@@ -2793,6 +2887,12 @@ var GL = {
 		gl.HALF_FLOAT_OES = 0x8D61; 
 		gl.max_texture_units = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
 
+		//viewport hack to retrieve it without using getParameter (which is superslow)
+		gl._viewport_func = gl.viewport;
+		gl.viewport_data = new Float32Array(4);
+		gl.viewport = function(a,b,c,d) { this.viewport_data.set([a,b,c,d]); this._viewport_func(a,b,c,d); }
+		gl.getViewport = function() { return new Float32Array( gl.viewport_data ); };
+		
 		//just some checks
 		if(typeof(glMatrix) == "undefined")
 			throw("glMatrix not found, LiteGL requires glMatrix to be included");
@@ -2804,6 +2904,8 @@ var GL = {
 		this.contexts.push(gl);
 
 		var last_click_time = 0;
+		
+		gl.mouse_buttons = 0;		
 
 		/**
 		* Tells the system to capture mouse events on the canvas. This will trigger onmousedown, onmousemove, onmouseup, onmousewheel callbacks in the canvas.
@@ -2811,6 +2913,7 @@ var GL = {
 		* @param {boolean} capture_wheel capture also the mouse wheel
 		*/
 		gl.captureMouse = function(capture_wheel) {
+
 			canvas.addEventListener("mousedown", onmouse);
 			canvas.addEventListener("mousemove", onmouse);
 			if(capture_wheel)
@@ -2829,14 +2932,18 @@ var GL = {
 		}
 
 		function onmouse(e) {
+			var old_mouse_mask = gl.mouse_buttons;
 			GL.augmentEvent(e, canvas);
 			e.eventType = e.eventType || e.type; //type cannot be overwritten, so I make a clone to allow me to overwrite
 
 			if(e.eventType == "mousedown")
 			{
-				canvas.removeEventListener("mousemove", onmouse);
-				document.addEventListener("mousemove", onmouse);
-				document.addEventListener("mouseup", onmouse);
+				if(old_mouse_mask == 0) //no mouse button was pressed till now
+				{
+					canvas.removeEventListener("mousemove", onmouse);
+					document.addEventListener("mousemove", onmouse);
+					document.addEventListener("mouseup", onmouse);
+				}
 				last_click_time = new Date().getTime();
 
 				if(gl.onmousedown) gl.onmousedown(e);
@@ -2851,9 +2958,12 @@ var GL = {
 			} 
 			else if(e.eventType == "mouseup")
 			{
-				canvas.addEventListener("mousemove", onmouse);
-				document.removeEventListener("mousemove", onmouse);
-				document.removeEventListener("mouseup", onmouse);
+				if(gl.mouse_buttons == 0) //no more buttons pressed
+				{
+					canvas.addEventListener("mousemove", onmouse);
+					document.removeEventListener("mousemove", onmouse);
+					document.removeEventListener("mouseup", onmouse);
+				}
 				var now = new Date().getTime();
 				e.click_time = now - last_click_time;
 				last_click_time = now;
@@ -3040,15 +3150,25 @@ var GL = {
 		e.canvasy = b.height - e.mousey;
 		e.deltax = 0;
 		e.deltay = 0;
+		
+		//console.log("WHICH: ",e.which," BUTTON: ",e.button, e.type);
 
 		if(e.type == "mousedown")
+		{
 			this.dragging = true;
+			gl.mouse_buttons |= (1 << e.which); //enable
+		}
 		else if (e.type == "mousemove")
 		{
 			//trace(e.mousex + " " + e.mousey);
 		}
 		else if (e.type == "mouseup")
-			this.dragging = false;
+		{
+			gl.mouse_buttons = gl.mouse_buttons & ~(1 << e.which);
+			//console.log("BUT:", e.button, "MASK:", gl.mouse_buttons);
+			if(gl.mouse_buttons == 0)
+				this.dragging = false;
+		}
 
 		if(this.last_pos)
 		{
@@ -3058,8 +3178,10 @@ var GL = {
 
 		this.last_pos = [e.mousex, e.mousey];
 		e.dragging = this.dragging;
-		var left_button = e.buttons != null ? e.buttons : e.which;
-		e.leftButton = left_button == 1;
+		e.buttons_mask = gl.mouse_buttons;			
+
+		e.leftButton = gl.mouse_buttons & (1<<GL.LEFT_MOUSE_BUTTON);
+		e.isButtonPressed = function(num) { return this.buttons_mask & (1<<num); }
 	},
 
 	animate: function() {
@@ -3665,7 +3787,7 @@ var geo = {
 	* @method frustumTestBox
 	* @param {Float32Array} planes frustum planes
 	* @param {BBox} boundindbox in BBox format
-	* @return {Number} CLIP_INSIDE, CLIP_OVERLAP, CLIP_OUTSIDE
+	* @return {enum} CLIP_INSIDE, CLIP_OVERLAP, CLIP_OUTSIDE
 	*/
 	frustumTestBox: function(planes, box)
 	{
@@ -3692,7 +3814,7 @@ var geo = {
 	* @method frustumTestSphere
 	* @param {vec3} center sphere center
 	* @param {number} radius sphere radius
-	* @return {Number} CLIP_INSIDE, CLIP_OVERLAP, CLIP_OUTSIDE
+	* @return {enum} CLIP_INSIDE, CLIP_OVERLAP, CLIP_OUTSIDE
 	*/
 
 	frustumTestSphere: function(planes, center, radius)
@@ -3748,7 +3870,8 @@ var BBox = {
 	min:6,
 	max:9,
 	radius:12,
-
+	data_length: 13,
+	
 	corners: new Float32Array([1,1,1,  1,1,-1,  1,-1,1,  1,-1,-1,  -1,1,1,  -1,1,-1,  -1,-1,1,  -1,-1,-1 ]),
 
 	/**
@@ -3947,6 +4070,38 @@ var BBox = {
 
 		return this.setFromPoints(out, corners);
 	},
+
+
+	/**
+	* Computes the eight corners of the BBox and returns it
+	* @method getCorners
+	* @param {BBox} bb the bounding box
+	* @param {Float32Array} result optional, should be 8 * 3
+	* @return {Float32Array} returns the 8 corners
+	*/
+	getCorners: function(bb, result)
+	{
+		var center = bb.subarray(0,3);
+		var halfsize = bb.subarray(3,6);
+
+		var corners = null;
+		if(result)
+		{
+			result.set(this.corners);
+			corners = result;
+		}
+		else
+			corners = new Float32Array( this.corners );
+
+		for(var i = 0; i < 8; ++i)		
+		{
+			var corner = corners.subarray(i*3, i*3+3);
+			vec3.multiply( corner, halfsize, corner );
+			vec3.add( corner, corner, center );
+		}
+
+		return corners;
+	},	
 
 	getCenter: function(bb) { return bb.subarray(0,3); },
 	getHalfsize: function(bb) { return bb.subarray(3,6); },
@@ -4401,7 +4556,7 @@ HitTest.prototype = {
 //       tracer.eye, ray, new GL.Vector(0, 0, 0), 1);
 
 function Raytracer(viewmatrix, projectionmatrix, viewport) {
-  viewport = viewport || gl.getParameter(gl.VIEWPORT);
+  viewport = viewport || gl.getViewport(); //gl.getParameter(gl.VIEWPORT);
   var m = viewmatrix;
   this.viewport = viewport;
 

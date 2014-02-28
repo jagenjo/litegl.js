@@ -143,6 +143,25 @@ function Shader(vertexSource, fragmentSource, macros)
 		isSampler[groups[2]] = 1;
 	});
 	this.isSampler = isSampler;
+
+	//extract uniform and attribs locations to speed up 
+	//*
+	for(var i = 0, l = gl.getProgramParameter(this.program, gl.ACTIVE_UNIFORMS); i &lt; l; ++i)
+	{
+		var data = gl.getActiveUniform( this.program, i);
+		if(!data) break;
+		this.uniformLocations[ data.name ] = gl.getUniformLocation(this.program, data.name);
+	}
+
+	for(var i = 0, l = gl.getProgramParameter(this.program, gl.ACTIVE_ATTRIBUTES); i &lt; l; ++i)
+	{
+		var data = gl.getActiveAttrib( this.program, i);
+		if(!data) break;
+		this.uniformLocations[ data.name ] = gl.getUniformLocation(this.program, data.name);
+		this.attributes[ data.name ] = gl.getAttribLocation(this.program, data.name );	
+	}
+
+	//*/
 }
 
 /**
@@ -156,7 +175,7 @@ Shader.prototype.uniforms = function(uniforms) {
 	//var last_slot = 0;
 
 	for (var name in uniforms) {
-		var location = this.uniformLocations[name] || gl.getUniformLocation(this.program, name);
+		var location = this.uniformLocations[name];// || gl.getUniformLocation(this.program, name);
 		if (!location) continue;
 		this.uniformLocations[name] = location;
 
@@ -258,9 +277,9 @@ Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_
 		var buffer = vertexBuffers[name];
 		var attribute = buffer.attribute || name;
 		//precompute attribute locations in shader
-		var location = this.attributes[attribute] || gl.getAttribLocation(this.program, attribute);
+		var location = this.attributes[attribute];// || gl.getAttribLocation(this.program, attribute);
 
-		if (location == -1 || !buffer.buffer) 
+		if (location == null || !buffer.buffer) //-1 changed for null
 			continue; //ignore this buffer
 
 		this.attributes[attribute] = location;

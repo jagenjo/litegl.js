@@ -8,6 +8,11 @@ var GL = {
 	contexts: [], //Index with all the WEBGL canvas created, so the update message is sent to all of them instead of independently
 	blockable_keys: {"Up":true,"Down":true,"Left":true,"Right":true},
 
+	//some consts
+	LEFT_MOUSE_BUTTON: 1,
+	RIGHT_MOUSE_BUTTON: 3,
+	MIDDLE_MOUSE_BUTTON: 2,
+
 	/**
 	* creates a new WebGL canvas
 	* @method create
@@ -46,6 +51,12 @@ var GL = {
 		gl.HALF_FLOAT_OES = 0x8D61; 
 		gl.max_texture_units = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
 
+		//viewport hack to retrieve it without using getParameter (which is superslow)
+		gl._viewport_func = gl.viewport;
+		gl.viewport_data = new Float32Array(4);
+		gl.viewport = function(a,b,c,d) { this.viewport_data.set([a,b,c,d]); this._viewport_func(a,b,c,d); }
+		gl.getViewport = function() { return new Float32Array( gl.viewport_data ); };
+		
 		//just some checks
 		if(typeof(glMatrix) == "undefined")
 			throw("glMatrix not found, LiteGL requires glMatrix to be included");
@@ -57,6 +68,8 @@ var GL = {
 		this.contexts.push(gl);
 
 		var last_click_time = 0;
+		
+		gl.mouse_buttons = 0;		
 
 		/**
 		* Tells the system to capture mouse events on the canvas. This will trigger onmousedown, onmousemove, onmouseup, onmousewheel callbacks in the canvas.
@@ -64,6 +77,7 @@ var GL = {
 		* @param {boolean} capture_wheel capture also the mouse wheel
 		*/
 		gl.captureMouse = function(capture_wheel) {
+
 			canvas.addEventListener("mousedown", onmouse);
 			canvas.addEventListener("mousemove", onmouse);
 			if(capture_wheel)
@@ -82,14 +96,18 @@ var GL = {
 		}
 
 		function onmouse(e) {
+			var old_mouse_mask = gl.mouse_buttons;
 			GL.augmentEvent(e, canvas);
 			e.eventType = e.eventType || e.type; //type cannot be overwritten, so I make a clone to allow me to overwrite
 
 			if(e.eventType == "mousedown")
 			{
-				canvas.removeEventListener("mousemove", onmouse);
-				document.addEventListener("mousemove", onmouse);
-				document.addEventListener("mouseup", onmouse);
+				if(old_mouse_mask == 0) //no mouse button was pressed till now
+				{
+					canvas.removeEventListener("mousemove", onmouse);
+					document.addEventListener("mousemove", onmouse);
+					document.addEventListener("mouseup", onmouse);
+				}
 				last_click_time = new Date().getTime();
 
 				if(gl.onmousedown) gl.onmousedown(e);
@@ -104,9 +122,12 @@ var GL = {
 			} 
 			else if(e.eventType == "mouseup")
 			{
-				canvas.addEventListener("mousemove", onmouse);
-				document.removeEventListener("mousemove", onmouse);
-				document.removeEventListener("mouseup", onmouse);
+				if(gl.mouse_buttons == 0) //no more buttons pressed
+				{
+					canvas.addEventListener("mousemove", onmouse);
+					document.removeEventListener("mousemove", onmouse);
+					document.removeEventListener("mouseup", onmouse);
+				}
 				var now = new Date().getTime();
 				e.click_time = now - last_click_time;
 				last_click_time = now;
@@ -293,15 +314,25 @@ var GL = {
 		e.canvasy = b.height - e.mousey;
 		e.deltax = 0;
 		e.deltay = 0;
+		
+		//console.log("WHICH: ",e.which," BUTTON: ",e.button, e.type);
 
 		if(e.type == "mousedown")
+		{
 			this.dragging = true;
+			gl.mouse_buttons |= (1 << e.which); //enable
+		}
 		else if (e.type == "mousemove")
 		{
 			//trace(e.mousex + " " + e.mousey);
 		}
 		else if (e.type == "mouseup")
-			this.dragging = false;
+		{
+			gl.mouse_buttons = gl.mouse_buttons & ~(1 << e.which);
+			//console.log("BUT:", e.button, "MASK:", gl.mouse_buttons);
+			if(gl.mouse_buttons == 0)
+				this.dragging = false;
+		}
 
 		if(this.last_pos)
 		{
@@ -311,8 +342,10 @@ var GL = {
 
 		this.last_pos = [e.mousex, e.mousey];
 		e.dragging = this.dragging;
-		var left_button = e.buttons != null ? e.buttons : e.which;
-		e.leftButton = left_button == 1;
+		e.buttons_mask = gl.mouse_buttons;			
+
+		e.leftButton = gl.mouse_buttons & (1<<GL.LEFT_MOUSE_BUTTON);
+		e.isButtonPressed = function(num) { return this.buttons_mask & (1<<num); }
 	},
 
 	animate: function() {
