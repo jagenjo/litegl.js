@@ -34,6 +34,7 @@
 		var model = mat4.create();
 		var mvp = mat4.create();
 		var temp = mat4.create();
+		var modelt = mat4.create();
 
 		//get mouse actions
 		gl.captureMouse();
@@ -75,6 +76,13 @@
 		gl.clearColor(0.1,0.1,0.1,1);
 		gl.enable( gl.DEPTH_TEST );
 
+		var uniforms = {
+			u_color: [1,1,1,1],
+			u_lightvector: vec3.normalize(vec3.create(),[1,1,1]),
+			u_modelt: modelt,
+			u_mvp: mvp
+		};
+
 		//rendering loop
 		gl.ondraw = function()
 		{
@@ -85,15 +93,10 @@
 			mat4.multiply(mvp,persp,temp);
 
 			//compute rotation matrix for normals
-			var modelt = mat4.toRotationMat4(mat4.create(), model);
+			mat4.toRotationMat4(modelt, model);
 
 			//render mesh using the shader
-			shader.uniforms({
-				u_color: [1,1,1,1],
-				u_lightvector: vec3.normalize(vec3.create(),[1,1,1]),
-				u_modelt: modelt,
-				u_mvp: mvp
-			}).draw(mesh);
+			shader.uniforms(uniforms).draw(mesh);
 		};
 
 		//update loop

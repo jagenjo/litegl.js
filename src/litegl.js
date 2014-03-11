@@ -346,6 +346,7 @@ var GL = {
 		e.buttons_mask = gl.mouse_buttons;			
 
 		e.leftButton = gl.mouse_buttons & (1<<GL.LEFT_MOUSE_BUTTON);
+		e.rightButton = gl.mouse_buttons & (1<<GL.RIGHT_MOUSE_BUTTON);
 		e.isButtonPressed = function(num) { return this.buttons_mask & (1<<num); }
 	},
 
