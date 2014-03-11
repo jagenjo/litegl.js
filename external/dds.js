@@ -569,7 +569,8 @@ var DDS = (function () {
      */
     function loadDDSTexture(gl, ext, src, callback) {
         var texture = gl.createTexture();
-        loadDDSTextureEx(gl, src, texture, true, callback);
+        var ext = gl.getExtension("WEBGL_compressed_texture_s3tc");
+        loadDDSTextureEx(gl, ext, src, texture, true, callback);
         return texture;
     }
 

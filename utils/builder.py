@@ -5,6 +5,7 @@ import argparse
 from datetime import date
 
 compiler_path = "/usr/local/bin/compiler.jar"
+compiler_flags = "--language_in=ECMASCRIPT5_STRICT"
 root_path = "./"
 
 #arguments
@@ -55,7 +56,7 @@ def packJSCode(files):
             continue
         data += open(src_file).read() + "\n"
         if check_files_individually:
-              os.system("java -jar %s --js %s --js_output_file %s" % (compiler_path, src_file, "temp.js") )
+              os.system("java -jar %s %s --js %s --js_output_file %s" % (compiler_path, compiler_flags, src_file, "temp.js") )
         sys.stderr.write('\033[92m' + "OK\n" + '\033[0m')
     
     os.write(f1,data)
@@ -69,7 +70,7 @@ def packJSCode(files):
 def compileAndMinify(input_path, output_path):
     print " + Compiling and minifying..."
     if output_path != None:
-        os.system("java -jar %s --js %s --js_output_file %s" % (compiler_path, input_path, output_path) )
+        os.system("java -jar %s %s --js %s --js_output_file %s" % (compiler_path, compiler_flags, input_path, output_path) )
         sys.stderr.write(" * Stored in " + output_path + "\n");
     else:
         os.system("java -jar %s --js %s" % (compiler_path, input_path) )

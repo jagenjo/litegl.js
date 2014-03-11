@@ -102,6 +102,7 @@ Mesh.common_buffers = {
 	"extra4": { spacing:4, attribute: "a_extra4"}
 };
 
+
 /**
 * Adds vertex and indices buffers to a mesh
 * @method addBuffers
@@ -208,10 +209,20 @@ Mesh.prototype.addVertexBuffer = function(name, attribute, buffer_spacing, buffe
 	buffer.name = name;
 	buffer.attribute = attribute;
 
-	//if(buffer_data)	this[name] = buffer_data;
-
 	return buffer;
 }
+
+/**
+* Removes a vertex buffer from the mesh
+* @method removeVertexBuffer
+* @param {String} name "vertices","normals"...
+*/
+Mesh.prototype.removeVertexBuffer = function(name) {
+	var buffer = this.vertexBuffers[name];
+	if(!buffer) return;
+	delete this.vertexBuffers[name];
+}
+
 
 /**
 * Creates a new empty index buffer and attachs it to this mesh
@@ -222,9 +233,6 @@ Mesh.prototype.addVertexBuffer = function(name, attribute, buffer_spacing, buffe
 */
 Mesh.prototype.addIndexBuffer = function(name, buffer_data, stream_type) {
 	var buffer = this.indexBuffers[name] = new Buffer(gl.ELEMENT_ARRAY_BUFFER, buffer_data, stream_type);
-
-	//if(buffer_data)	this[name] = buffer_data;
-
 	return buffer;
 }
 

@@ -23,7 +23,8 @@ function isPowerOfTwo(v)
 * @return {number}
 */
 function getTime() {
-	return new Date().getTime();
+	//return new Date().getTime();
+  return performance.now();
 }
 
 function isFunction(obj) {
@@ -31,15 +32,22 @@ function isFunction(obj) {
 }
 
 function isArray(obj) {
-  return !!(obj && obj.constructor && (obj.constructor == Array || obj.constructor == Float32Array));
+  return (obj && obj.constructor === Array );
   //var str = Object.prototype.toString.call(obj);
   //return str == '[object Array]' || str == '[object Float32Array]';
 }
 
 function isNumber(obj) {
+  return (obj != null && obj.constructor === Number );
+}
+
+
+/* SLOW because accepts booleans
+function isNumber(obj) {
   var str = Object.prototype.toString.call(obj);
   return str == '[object Number]' || str == '[object Boolean]';
 }
+*/
 
 function regexMap(regex, text, callback) {
   var result;
@@ -75,3 +83,14 @@ String.prototype.replaceAll = function(words){
 //avoid errors when Typed array is expected and regular array is found
 //Array.prototype.subarray = Array.prototype.slice;
 Object.defineProperty(Array.prototype, "subarray", { value: Array.prototype.slice, enumerable: false });
+
+
+// remove all properties on obj, effectively reverting it to a new object (to reduce garbage)
+function wipeObject(obj)
+{
+  for (var p in obj)
+  {
+    if (obj.hasOwnProperty(p))
+      delete obj[p];
+  }
+};

@@ -110,7 +110,7 @@
 			var temp = vec3.create();
 			vec3.zero(center);
 
-			var buffer = mesh.vertexBuffers["a_vertex"];
+			var buffer = mesh.getBuffer("vertices");
 			var vertices = buffer.data;
 
 			for(var i = 0; i < vertices.length; i+=3)

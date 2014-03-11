@@ -1,4 +1,4 @@
-
+"use strict";
 
 /**
 * The static module that contains all the features
@@ -43,6 +43,7 @@ var GL = {
 		//get some useful extensions
 		gl.derivatives_supported = gl.getExtension('OES_standard_derivatives') || false ;
 		gl.depth_ext = gl.getExtension("WEBGL_depth_texture") || gl.getExtension("WEBKIT_WEBGL_depth_texture") || gl.getExtension("MOZ_WEBGL_depth_texture");
+
 		//for float textures
 		gl.float_ext = gl.getExtension("OES_texture_float");
 		gl.float_ext_linear = gl.getExtension("OES_texture_float_linear");
@@ -50,10 +51,11 @@ var GL = {
 		gl.half_float_ext_linear = gl.getExtension("OES_texture_half_float_linear");
 		gl.HALF_FLOAT_OES = 0x8D61; 
 		gl.max_texture_units = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
+		gl.HIGH_PRECISION_FORMAT = gl.half_float_ext ? gl.HALF_FLOAT_OES : (gl.float_ext ? gl.FLOAT : gl.UNSIGNED_BYTE); //because Firefox dont support half float
 
 		//viewport hack to retrieve it without using getParameter (which is superslow)
 		gl._viewport_func = gl.viewport;
-		gl.viewport_data = new Float32Array(4);
+		gl.viewport_data = new Float32Array([0,0,gl.canvas.width,gl.canvas.height]);
 		gl.viewport = function(a,b,c,d) { this.viewport_data.set([a,b,c,d]); this._viewport_func(a,b,c,d); }
 		gl.getViewport = function() { return new Float32Array( gl.viewport_data ); };
 		
@@ -99,6 +101,7 @@ var GL = {
 			var old_mouse_mask = gl.mouse_buttons;
 			GL.augmentEvent(e, canvas);
 			e.eventType = e.eventType || e.type; //type cannot be overwritten, so I make a clone to allow me to overwrite
+			var now = window.performance.now();
 
 			if(e.eventType == "mousedown")
 			{
@@ -108,14 +111,13 @@ var GL = {
 					document.addEventListener("mousemove", onmouse);
 					document.addEventListener("mouseup", onmouse);
 				}
-				last_click_time = new Date().getTime();
+				last_click_time = now;
 
 				if(gl.onmousedown) gl.onmousedown(e);
 			}
 			else if(e.eventType == "mousemove" && gl.onmousemove)
 			{ 
 				//move should be propagated (otherwise other components may fail)
-				var now = new Date().getTime();
 				e.click_time = now - last_click_time;
 				gl.onmousemove(e); 
 				return; 
@@ -128,7 +130,6 @@ var GL = {
 					document.removeEventListener("mousemove", onmouse);
 					document.removeEventListener("mouseup", onmouse);
 				}
-				var now = new Date().getTime();
 				e.click_time = now - last_click_time;
 				last_click_time = now;
 
@@ -204,7 +205,7 @@ var GL = {
 			if(e.type == "keydown" && gl.onkeydown) gl.onkeydown(e);
 			else if(e.type == "keyup" && gl.onkeyup) gl.onkeyup(e);
 
-			if(prevent_default && (e.isChar || GL.blockable_keys[e.keyIdentifier]) )
+			if(prevent_default && (e.isChar || GL.blockable_keys[e.keyIdentifier || e.key ]) )
 				e.preventDefault();
 		}
 
@@ -354,11 +355,11 @@ var GL = {
 		window.mozRequestAnimationFrame ||
 		window.webkitRequestAnimationFrame ||
 		function(callback) { setTimeout(callback, 1000 / 60); };
-		var time = new Date().getTime();
+		var time = window.performance.now();
 
-		//update only if browser tab visible
-		function update() {
-			var now = new Date().getTime();
+		//loop only if browser tab visible
+		function loop() {
+			var now = window.performance.now();
 			//launch the event to every WEBGL context
 			for(var i in GL.contexts)
 			{
@@ -367,14 +368,14 @@ var GL = {
 				if (gl.onupdate) gl.onupdate(dt);
 				if (gl.ondraw) gl.ondraw();
 			}
-			post(update);
+			post(loop);
 			time = now;
 		}
 
 		//updated always
-		var time_forced = new Date().getTime();
+		var time_forced = window.performance.now();
 		function forceUpdate() {
-			var now = new Date().getTime();
+			var now = window.performance.now();
 			//launch the event to every WEBGL context
 			for(var i in GL.contexts)
 			{
@@ -385,9 +386,9 @@ var GL = {
 			time_forced = now;
 		}
 
-		gl.relaunch = function() { post(update); }
+		gl.relaunch = function() { post(loop); }
 
-		update(); //only if the tab is in focus
+		loop(); //only if the tab is in focus
 		forceUpdate(); //always
 	},
 

@@ -57,7 +57,7 @@
 			{
 				var object = objects[i];
 
-				var result = Raytracer.hitTestBox( cam_pos, ray, object.mesh.bounding.aabb_min, object.mesh.bounding.aabb_max, object.model );
+				var result = Raytracer.hitTestBox( cam_pos, ray, BBox.getMin(object.mesh.bounding), BBox.getMax(object.mesh.bounding), object.model );
 				if(result && closest_t > result.t)
 				{
 					closest_object = object;

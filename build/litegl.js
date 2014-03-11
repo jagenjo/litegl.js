@@ -24,7 +24,8 @@ function isPowerOfTwo(v)
 * @return {number}
 */
 function getTime() {
-	return new Date().getTime();
+	//return new Date().getTime();
+  return performance.now();
 }
 
 function isFunction(obj) {
@@ -32,15 +33,22 @@ function isFunction(obj) {
 }
 
 function isArray(obj) {
-  return !!(obj && obj.constructor && (obj.constructor == Array || obj.constructor == Float32Array));
+  return (obj && obj.constructor === Array );
   //var str = Object.prototype.toString.call(obj);
   //return str == '[object Array]' || str == '[object Float32Array]';
 }
 
 function isNumber(obj) {
+  return (obj != null && obj.constructor === Number );
+}
+
+
+/* SLOW because accepts booleans
+function isNumber(obj) {
   var str = Object.prototype.toString.call(obj);
   return str == '[object Number]' || str == '[object Boolean]';
 }
+*/
 
 function regexMap(regex, text, callback) {
   var result;
@@ -76,6 +84,17 @@ String.prototype.replaceAll = function(words){
 //avoid errors when Typed array is expected and regular array is found
 //Array.prototype.subarray = Array.prototype.slice;
 Object.defineProperty(Array.prototype, "subarray", { value: Array.prototype.slice, enumerable: false });
+
+
+// remove all properties on obj, effectively reverting it to a new object (to reduce garbage)
+function wipeObject(obj)
+{
+  for (var p in obj)
+  {
+    if (obj.hasOwnProperty(p))
+      delete obj[p];
+  }
+};
 /**
  * @fileoverview dds - Utilities for loading DDS texture files
  * @author Brandon Jones
@@ -647,7 +666,8 @@ var DDS = (function () {
      */
     function loadDDSTexture(gl, ext, src, callback) {
         var texture = gl.createTexture();
-        loadDDSTextureEx(gl, src, texture, true, callback);
+        var ext = gl.getExtension("WEBGL_compressed_texture_s3tc");
+        loadDDSTextureEx(gl, ext, src, texture, true, callback);
         return texture;
     }
 
@@ -1114,6 +1134,7 @@ Mesh.common_buffers = {
 	"extra4": { spacing:4, attribute: "a_extra4"}
 };
 
+
 /**
 * Adds vertex and indices buffers to a mesh
 * @method addBuffers
@@ -1220,10 +1241,20 @@ Mesh.prototype.addVertexBuffer = function(name, attribute, buffer_spacing, buffe
 	buffer.name = name;
 	buffer.attribute = attribute;
 
-	//if(buffer_data)	this[name] = buffer_data;
-
 	return buffer;
 }
+
+/**
+* Removes a vertex buffer from the mesh
+* @method removeVertexBuffer
+* @param {String} name "vertices","normals"...
+*/
+Mesh.prototype.removeVertexBuffer = function(name) {
+	var buffer = this.vertexBuffers[name];
+	if(!buffer) return;
+	delete this.vertexBuffers[name];
+}
+
 
 /**
 * Creates a new empty index buffer and attachs it to this mesh
@@ -1234,9 +1265,6 @@ Mesh.prototype.addVertexBuffer = function(name, attribute, buffer_spacing, buffe
 */
 Mesh.prototype.addIndexBuffer = function(name, buffer_data, stream_type) {
 	var buffer = this.indexBuffers[name] = new Buffer(gl.ELEMENT_ARRAY_BUFFER, buffer_data, stream_type);
-
-	//if(buffer_data)	this[name] = buffer_data;
-
 	return buffer;
 }
 
@@ -2611,15 +2639,17 @@ function Shader(vertexSource, fragmentSource, macros)
 * @method uniforms
 * @param {Object} uniforms
 */
+
+Shader._temp_uniform = new Float32Array(16);
+
 Shader.prototype.uniforms = function(uniforms) {
 
 	gl.useProgram(this.program);
 	//var last_slot = 0;
 
 	for (var name in uniforms) {
-		var location = this.uniformLocations[name];// || gl.getUniformLocation(this.program, name);
+		var location = this.uniformLocations[name];
 		if (!location) continue;
-		this.uniformLocations[name] = location;
 
 		var value = uniforms[name];
 		if(value == null) continue;
@@ -2634,31 +2664,16 @@ Shader.prototype.uniforms = function(uniforms) {
 				case 16: gl.uniformMatrix4fv(location, false, value); break; //matrix4
 				default: throw 'don\'t know how to load uniform "' + name + '" of length ' + value.length;
 			}
-		/*
-		} else if ((value.constructor == Texture) //for textures, warning, if mixed with manual bind it will overwrite
-		{
-			gl.uniform1i(location, last_slot);
-			value.bind(last_slot);
-			++last_slot;
-		*/
-		} else if (isArray(value))
+		} 
+		else if (isArray(value)) //non-typed arrays
 		{
 			switch (value.length) {
-			case 1: gl.uniform1fv(location, new Float32Array(value)); break; //float
-			case 2: gl.uniform2fv(location, new Float32Array(value)); break; //vec2
-			case 3: gl.uniform3fv(location, new Float32Array(value)); break; //vec3
-			case 4: gl.uniform4fv(location, new Float32Array(value)); break; //vec4
-			case 9: gl.uniformMatrix3fv(location, false, new Float32Array([  //matrix3
-							value[0], value[3], value[6],
-							value[1], value[4], value[7],
-							value[2], value[5], value[8]
-						  ])); break;
-			case 16: gl.uniformMatrix4fv(location, false, new Float32Array([ //matrix4
-							value[0], value[4], value[8], value[12],
-							value[1], value[5], value[9], value[13],
-							value[2], value[6], value[10], value[14],
-							value[3], value[7], value[11], value[15]
-						  ])); break;
+			case 1: gl.uniform1f(location, value); break; //float
+			case 2: gl.uniform2f(location, value[0], value[1] ); break; //vec2
+			case 3: gl.uniform3f(location, value[0], value[1], value[2] ); break; //vec3
+			case 4: gl.uniform4f(location, value[0], value[1], value[2], value[3] ); break; //vec4
+			case 9: Shader._temp_uniform.set( value ); gl.uniformMatrix3fv(location, false, value ); break; //mat3
+			case 16: Shader._temp_uniform.set( value ); gl.uniformMatrix4fv(location, false, value ); break; //mat4
 			default: throw 'don\'t know how to load uniform "' + name + '" of length ' + value.length;
 			}
 		}
@@ -2708,12 +2723,20 @@ Shader.prototype.drawRange = function(mesh, mode, start, length)
 * @param {number} range_start first primitive to render
 * @param {number} range_length number of primitives to render
 */
+
+//this two variables are a hack to avoid memory allocation on drawCalls
+Shader._temp_attribs_array = new Uint8Array(16);
+Shader._temp_attribs_array_zero = new Uint8Array(16); //should be filled with zeros always
+
 Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_start, range_length)
 {
 	if(range_length == 0) return;
 
-	// Create and enable attribute pointers as necessary.
+	// enable attributes as necessary.
 	var length = 0;
+	var attribs_in_use = Shader._temp_attribs_array; //hack to avoid garbage
+	attribs_in_use.set( Shader._temp_attribs_array_zero ); //reset
+
 	for (var name in vertexBuffers)
 	{
 		var buffer = vertexBuffers[name];
@@ -2724,7 +2747,9 @@ Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_
 		if (location == null || !buffer.buffer) //-1 changed for null
 			continue; //ignore this buffer
 
-		this.attributes[attribute] = location;
+		attribs_in_use[location] = 1; //mark it as used
+
+		//this.attributes[attribute] = location;
 		gl.bindBuffer(gl.ARRAY_BUFFER, buffer.buffer);
 		gl.enableVertexAttribArray(location);
 		gl.vertexAttribPointer(location, buffer.buffer.spacing, gl.FLOAT, false, 0, 0);
@@ -2741,14 +2766,14 @@ Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_
 	else if (indexBuffer)
 		length = indexBuffer.buffer.length - offset;
 
-	// Disable unused attribute pointers.
-	/*
-	for (var attribute in this.attributes) {
-	  if (!(attribute in vertexBuffers)) {
-		gl.disableVertexAttribArray(this.attributes[attribute]);
-	  }
+	// Force to disable buffers in this shader that are not in this mesh
+	for (var attribute in this.attributes)
+	{
+		var location = this.attributes[attribute];
+		if (!(attribs_in_use[location])) {
+			gl.disableVertexAttribArray(this.attributes[attribute]);
+		}
 	}
-	*/
 
 	// Draw the geometry.
 	if (length && (!indexBuffer || indexBuffer.buffer)) {
@@ -2763,9 +2788,6 @@ Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_
 
 	return this;
 }
-
-
-
 
 
 //Now some common shaders everybody needs
@@ -2834,7 +2856,7 @@ Shader.getBlurShader = function()
 	this._blur_shader = shader;
 	return this._blur_shader;
 }
-
+"use strict";
 
 /**
 * The static module that contains all the features
@@ -2879,6 +2901,7 @@ var GL = {
 		//get some useful extensions
 		gl.derivatives_supported = gl.getExtension('OES_standard_derivatives') || false ;
 		gl.depth_ext = gl.getExtension("WEBGL_depth_texture") || gl.getExtension("WEBKIT_WEBGL_depth_texture") || gl.getExtension("MOZ_WEBGL_depth_texture");
+
 		//for float textures
 		gl.float_ext = gl.getExtension("OES_texture_float");
 		gl.float_ext_linear = gl.getExtension("OES_texture_float_linear");
@@ -2886,10 +2909,11 @@ var GL = {
 		gl.half_float_ext_linear = gl.getExtension("OES_texture_half_float_linear");
 		gl.HALF_FLOAT_OES = 0x8D61; 
 		gl.max_texture_units = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
+		gl.HIGH_PRECISION_FORMAT = gl.half_float_ext ? gl.HALF_FLOAT_OES : (gl.float_ext ? gl.FLOAT : gl.UNSIGNED_BYTE); //because Firefox dont support half float
 
 		//viewport hack to retrieve it without using getParameter (which is superslow)
 		gl._viewport_func = gl.viewport;
-		gl.viewport_data = new Float32Array(4);
+		gl.viewport_data = new Float32Array([0,0,gl.canvas.width,gl.canvas.height]);
 		gl.viewport = function(a,b,c,d) { this.viewport_data.set([a,b,c,d]); this._viewport_func(a,b,c,d); }
 		gl.getViewport = function() { return new Float32Array( gl.viewport_data ); };
 		
@@ -2935,6 +2959,7 @@ var GL = {
 			var old_mouse_mask = gl.mouse_buttons;
 			GL.augmentEvent(e, canvas);
 			e.eventType = e.eventType || e.type; //type cannot be overwritten, so I make a clone to allow me to overwrite
+			var now = window.performance.now();
 
 			if(e.eventType == "mousedown")
 			{
@@ -2944,14 +2969,13 @@ var GL = {
 					document.addEventListener("mousemove", onmouse);
 					document.addEventListener("mouseup", onmouse);
 				}
-				last_click_time = new Date().getTime();
+				last_click_time = now;
 
 				if(gl.onmousedown) gl.onmousedown(e);
 			}
 			else if(e.eventType == "mousemove" && gl.onmousemove)
 			{ 
 				//move should be propagated (otherwise other components may fail)
-				var now = new Date().getTime();
 				e.click_time = now - last_click_time;
 				gl.onmousemove(e); 
 				return; 
@@ -2964,7 +2988,6 @@ var GL = {
 					document.removeEventListener("mousemove", onmouse);
 					document.removeEventListener("mouseup", onmouse);
 				}
-				var now = new Date().getTime();
 				e.click_time = now - last_click_time;
 				last_click_time = now;
 
@@ -3040,7 +3063,7 @@ var GL = {
 			if(e.type == "keydown" && gl.onkeydown) gl.onkeydown(e);
 			else if(e.type == "keyup" && gl.onkeyup) gl.onkeyup(e);
 
-			if(prevent_default && (e.isChar || GL.blockable_keys[e.keyIdentifier]) )
+			if(prevent_default && (e.isChar || GL.blockable_keys[e.keyIdentifier || e.key ]) )
 				e.preventDefault();
 		}
 
@@ -3190,11 +3213,11 @@ var GL = {
 		window.mozRequestAnimationFrame ||
 		window.webkitRequestAnimationFrame ||
 		function(callback) { setTimeout(callback, 1000 / 60); };
-		var time = new Date().getTime();
+		var time = window.performance.now();
 
-		//update only if browser tab visible
-		function update() {
-			var now = new Date().getTime();
+		//loop only if browser tab visible
+		function loop() {
+			var now = window.performance.now();
 			//launch the event to every WEBGL context
 			for(var i in GL.contexts)
 			{
@@ -3203,14 +3226,14 @@ var GL = {
 				if (gl.onupdate) gl.onupdate(dt);
 				if (gl.ondraw) gl.ondraw();
 			}
-			post(update);
+			post(loop);
 			time = now;
 		}
 
 		//updated always
-		var time_forced = new Date().getTime();
+		var time_forced = window.performance.now();
 		function forceUpdate() {
-			var now = new Date().getTime();
+			var now = window.performance.now();
 			//launch the event to every WEBGL context
 			for(var i in GL.contexts)
 			{
@@ -3221,9 +3244,9 @@ var GL = {
 			time_forced = now;
 		}
 
-		gl.relaunch = function() { post(update); }
+		gl.relaunch = function() { post(loop); }
 
-		update(); //only if the tab is in focus
+		loop(); //only if the tab is in focus
 		forceUpdate(); //always
 	},
 
