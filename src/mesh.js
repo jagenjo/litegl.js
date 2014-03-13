@@ -88,6 +88,7 @@ function Mesh(vertexbuffers, indexbuffers, options) {
 
 Mesh.common_buffers = {
 	"vertices": { spacing:3, attribute: "a_vertex"},
+	"vertices2D": { spacing:2, attribute: "a_vertex2D"},
 	"normals": { spacing:3, attribute: "a_normal"},
 	"coords": { spacing:2, attribute: "a_coord"},
 	"coords1": { spacing:2, attribute: "a_coord1"},
@@ -108,6 +109,7 @@ Mesh.common_buffers = {
 * @method addBuffers
 * @param {Object} vertexBuffers object with all the vertex streams
 * @param {Object} indexBuffers object with all the indices streams
+* @param {enum} stream_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW )
 */
 Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers, stream_type)
 {
@@ -259,21 +261,20 @@ Mesh.prototype.getIndexBuffer = function(name)
 }
 
 /**
-* Uploads data of buffers to VRAM. Checks the buffers defined, and then search for a typed array with the same name in the mesh properties,
-	it that is the case, it uploads the data to the buffer.
+* Uploads data inside buffers to VRAM.
 * @method compile
 * @param {number} buffer_type gl.STATIC_DRAW, gl.DYNAMIC_DRAW, gl.STREAM_DRAW
 */
 Mesh.prototype.compile = function(buffer_type) {
 	for (var attribute in this.vertexBuffers) {
 		var buffer = this.vertexBuffers[attribute];
-		buffer.data = this[buffer.name];
+		//buffer.data = this[buffer.name];
 		buffer.compile(buffer_type);
 	}
 
 	for (var name in this.indexBuffers) {
 		var buffer = this.indexBuffers[name];
-		buffer.data = this[name];
+		//buffer.data = this[name];
 		buffer.compile();
 	}
 }
@@ -717,6 +718,23 @@ Mesh.plane = function(options) {
 };
 
 /**
+* Returns a 2D Mesh (be careful, stream is vertices2D )
+* @method Mesh.plane2D
+*/
+Mesh.plane2D = function(options) {
+	var vertices = new Float32Array([-1,1, 1,-1, 1,1, -1,1, -1,-1, 1,-1]);
+	var coords = new Float32Array([0,1, 1,0, 1,1, 0,1, 0,0, 1,0]);
+
+	if(options && options.size)
+	{
+		var s = options.size * 0.5;
+		for(var i = 0; i < vertices.length; ++i)
+			vertices[i] *= s;
+	}
+	return new GL.Mesh( {vertices2D:vertices, coords: coords } );
+};
+
+/**
 * Returns a cube mesh 
 * @method Mesh.cube
 * @param {Object} options valid options: size 
@@ -952,7 +970,7 @@ Mesh.getScreenQuad = function()
 		return this._screen_quad;
 	var vertices = new Float32Array(18);
 	var coords = new Float32Array([-1,-1, 1,1, -1,1,  -1,-1, 1,-1, 1,1 ]);
-	this._screen_quad = new GL.Mesh.load({
+	this._screen_quad = new GL.Mesh({
 		vertices: vertices,
 		coords: coords});
 	return this._screen_quad;

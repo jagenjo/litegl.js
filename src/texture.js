@@ -199,6 +199,8 @@ Texture.prototype.drawTo = function(callback) {
 	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 	gl.bindRenderbuffer(gl.RENDERBUFFER, null);
 	gl.viewport(v[0], v[1], v[2], v[3]);
+
+	return this;
 }
 
 /**
@@ -223,6 +225,8 @@ Texture.prototype.copyTo = function(target_texture) {
 		target_texture.has_mipmaps = true;
 	}
 	gl.bindTexture(target_texture.texture_type, null); //disable
+
+	return this;
 }
 
 /**

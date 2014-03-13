@@ -1120,6 +1120,7 @@ function Mesh(vertexbuffers, indexbuffers, options) {
 
 Mesh.common_buffers = {
 	"vertices": { spacing:3, attribute: "a_vertex"},
+	"vertices2D": { spacing:2, attribute: "a_vertex2D"},
 	"normals": { spacing:3, attribute: "a_normal"},
 	"coords": { spacing:2, attribute: "a_coord"},
 	"coords1": { spacing:2, attribute: "a_coord1"},
@@ -1140,6 +1141,7 @@ Mesh.common_buffers = {
 * @method addBuffers
 * @param {Object} vertexBuffers object with all the vertex streams
 * @param {Object} indexBuffers object with all the indices streams
+* @param {enum} stream_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW )
 */
 Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers, stream_type)
 {
@@ -1291,21 +1293,20 @@ Mesh.prototype.getIndexBuffer = function(name)
 }
 
 /**
-* Uploads data of buffers to VRAM. Checks the buffers defined, and then search for a typed array with the same name in the mesh properties,
-	it that is the case, it uploads the data to the buffer.
+* Uploads data inside buffers to VRAM.
 * @method compile
 * @param {number} buffer_type gl.STATIC_DRAW, gl.DYNAMIC_DRAW, gl.STREAM_DRAW
 */
 Mesh.prototype.compile = function(buffer_type) {
 	for (var attribute in this.vertexBuffers) {
 		var buffer = this.vertexBuffers[attribute];
-		buffer.data = this[buffer.name];
+		//buffer.data = this[buffer.name];
 		buffer.compile(buffer_type);
 	}
 
 	for (var name in this.indexBuffers) {
 		var buffer = this.indexBuffers[name];
-		buffer.data = this[name];
+		//buffer.data = this[name];
 		buffer.compile();
 	}
 }
@@ -1749,6 +1750,23 @@ Mesh.plane = function(options) {
 };
 
 /**
+* Returns a 2D Mesh (be careful, stream is vertices2D )
+* @method Mesh.plane2D
+*/
+Mesh.plane2D = function(options) {
+	var vertices = new Float32Array([-1,1, 1,-1, 1,1, -1,1, -1,-1, 1,-1]);
+	var coords = new Float32Array([0,1, 1,0, 1,1, 0,1, 0,0, 1,0]);
+
+	if(options && options.size)
+	{
+		var s = options.size * 0.5;
+		for(var i = 0; i < vertices.length; ++i)
+			vertices[i] *= s;
+	}
+	return new GL.Mesh( {vertices2D:vertices, coords: coords } );
+};
+
+/**
 * Returns a cube mesh 
 * @method Mesh.cube
 * @param {Object} options valid options: size 
@@ -1984,7 +2002,7 @@ Mesh.getScreenQuad = function()
 		return this._screen_quad;
 	var vertices = new Float32Array(18);
 	var coords = new Float32Array([-1,-1, 1,1, -1,1,  -1,-1, 1,-1, 1,1 ]);
-	this._screen_quad = new GL.Mesh.load({
+	this._screen_quad = new GL.Mesh({
 		vertices: vertices,
 		coords: coords});
 	return this._screen_quad;
@@ -2190,6 +2208,8 @@ Texture.prototype.drawTo = function(callback) {
 	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 	gl.bindRenderbuffer(gl.RENDERBUFFER, null);
 	gl.viewport(v[0], v[1], v[2], v[3]);
+
+	return this;
 }
 
 /**
@@ -2214,6 +2234,8 @@ Texture.prototype.copyTo = function(target_texture) {
 		target_texture.has_mipmaps = true;
 	}
 	gl.bindTexture(target_texture.texture_type, null); //disable
+
+	return this;
 }
 
 /**
@@ -2858,12 +2880,15 @@ Shader.getBlurShader = function()
 }
 "use strict";
 
+//polyfill
+window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || function(callback) { setTimeout(callback, 1000 / 60); };
+
+
 /**
 * The static module that contains all the features
 * @class GL
 */
 var GL = {
-	contexts: [], //Index with all the WEBGL canvas created, so the update message is sent to all of them instead of independently
 	blockable_keys: {"Up":true,"Down":true,"Left":true,"Right":true},
 
 	//some consts
@@ -2921,15 +2946,32 @@ var GL = {
 		if(typeof(glMatrix) == "undefined")
 			throw("glMatrix not found, LiteGL requires glMatrix to be included");
 
-		//trigger the mainLoop if no other context has been created before
-		if (this.contexts.length == 0) GL.animate();
-
-		//add this canvas to the context that may need update(dt) events
-		this.contexts.push(gl);
-
 		var last_click_time = 0;
-		
 		gl.mouse_buttons = 0;		
+
+
+		/**
+		* Launch animation loop (calls gl.onupdate and gl.ondraw every frame)
+		* @method gl.animate
+		*/
+		gl.animate = function() {
+			var post = window.requestAnimationFrame;
+			var time = window.performance.now();
+			var context = this;
+
+			//loop only if browser tab visible
+			function loop() {
+				post(loop); //do it first, in case it crashes
+
+				var now = window.performance.now();
+				var dt = (now - time) / 1000;
+
+				if (context.onupdate) context.onupdate(dt);
+				if (context.ondraw) context.ondraw();
+				time = now;
+			}
+			post(loop); //launch main loop
+		}	
 
 		/**
 		* Tells the system to capture mouse events on the canvas. This will trigger onmousedown, onmousemove, onmouseup, onmousewheel callbacks in the canvas.
@@ -3206,49 +3248,6 @@ var GL = {
 		e.leftButton = gl.mouse_buttons & (1<<GL.LEFT_MOUSE_BUTTON);
 		e.rightButton = gl.mouse_buttons & (1<<GL.RIGHT_MOUSE_BUTTON);
 		e.isButtonPressed = function(num) { return this.buttons_mask & (1<<num); }
-	},
-
-	animate: function() {
-		var post =
-		window.requestAnimationFrame ||
-		window.mozRequestAnimationFrame ||
-		window.webkitRequestAnimationFrame ||
-		function(callback) { setTimeout(callback, 1000 / 60); };
-		var time = window.performance.now();
-
-		//loop only if browser tab visible
-		function loop() {
-			var now = window.performance.now();
-			//launch the event to every WEBGL context
-			for(var i in GL.contexts)
-			{
-				var gl = GL.contexts[i];
-				var dt = (now - time) / 1000;
-				if (gl.onupdate) gl.onupdate(dt);
-				if (gl.ondraw) gl.ondraw();
-			}
-			post(loop);
-			time = now;
-		}
-
-		//updated always
-		var time_forced = window.performance.now();
-		function forceUpdate() {
-			var now = window.performance.now();
-			//launch the event to every WEBGL context
-			for(var i in GL.contexts)
-			{
-				var gl = GL.contexts[i];
-				if (gl.onforceupdate) gl.onforceupdate((now - time_forced) / 1000);
-			}
-			setTimeout(forceUpdate, 1000 / 60);
-			time_forced = now;
-		}
-
-		gl.relaunch = function() { post(loop); }
-
-		loop(); //only if the tab is in focus
-		forceUpdate(); //always
 	},
 
 	Buffer: Buffer,

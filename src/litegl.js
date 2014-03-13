@@ -1,11 +1,14 @@
 "use strict";
 
+//polyfill
+window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || function(callback) { setTimeout(callback, 1000 / 60); };
+
+
 /**
 * The static module that contains all the features
 * @class GL
 */
 var GL = {
-	contexts: [], //Index with all the WEBGL canvas created, so the update message is sent to all of them instead of independently
 	blockable_keys: {"Up":true,"Down":true,"Left":true,"Right":true},
 
 	//some consts
@@ -63,15 +66,32 @@ var GL = {
 		if(typeof(glMatrix) == "undefined")
 			throw("glMatrix not found, LiteGL requires glMatrix to be included");
 
-		//trigger the mainLoop if no other context has been created before
-		if (this.contexts.length == 0) GL.animate();
-
-		//add this canvas to the context that may need update(dt) events
-		this.contexts.push(gl);
-
 		var last_click_time = 0;
-		
 		gl.mouse_buttons = 0;		
+
+
+		/**
+		* Launch animation loop (calls gl.onupdate and gl.ondraw every frame)
+		* @method gl.animate
+		*/
+		gl.animate = function() {
+			var post = window.requestAnimationFrame;
+			var time = window.performance.now();
+			var context = this;
+
+			//loop only if browser tab visible
+			function loop() {
+				post(loop); //do it first, in case it crashes
+
+				var now = window.performance.now();
+				var dt = (now - time) / 1000;
+
+				if (context.onupdate) context.onupdate(dt);
+				if (context.ondraw) context.ondraw();
+				time = now;
+			}
+			post(loop); //launch main loop
+		}	
 
 		/**
 		* Tells the system to capture mouse events on the canvas. This will trigger onmousedown, onmousemove, onmouseup, onmousewheel callbacks in the canvas.
@@ -348,49 +368,6 @@ var GL = {
 		e.leftButton = gl.mouse_buttons & (1<<GL.LEFT_MOUSE_BUTTON);
 		e.rightButton = gl.mouse_buttons & (1<<GL.RIGHT_MOUSE_BUTTON);
 		e.isButtonPressed = function(num) { return this.buttons_mask & (1<<num); }
-	},
-
-	animate: function() {
-		var post =
-		window.requestAnimationFrame ||
-		window.mozRequestAnimationFrame ||
-		window.webkitRequestAnimationFrame ||
-		function(callback) { setTimeout(callback, 1000 / 60); };
-		var time = window.performance.now();
-
-		//loop only if browser tab visible
-		function loop() {
-			var now = window.performance.now();
-			//launch the event to every WEBGL context
-			for(var i in GL.contexts)
-			{
-				var gl = GL.contexts[i];
-				var dt = (now - time) / 1000;
-				if (gl.onupdate) gl.onupdate(dt);
-				if (gl.ondraw) gl.ondraw();
-			}
-			post(loop);
-			time = now;
-		}
-
-		//updated always
-		var time_forced = window.performance.now();
-		function forceUpdate() {
-			var now = window.performance.now();
-			//launch the event to every WEBGL context
-			for(var i in GL.contexts)
-			{
-				var gl = GL.contexts[i];
-				if (gl.onforceupdate) gl.onforceupdate((now - time_forced) / 1000);
-			}
-			setTimeout(forceUpdate, 1000 / 60);
-			time_forced = now;
-		}
-
-		gl.relaunch = function() { post(loop); }
-
-		loop(); //only if the tab is in focus
-		forceUpdate(); //always
 	},
 
 	Buffer: Buffer,
