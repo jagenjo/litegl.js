@@ -1268,8 +1268,8 @@ Mesh.prototype.addVertexBuffer = function(name, attribute, buffer_spacing, buffe
 
 	if (!buffer_spacing && common)
 	{
-		if(common && common[name].spacing)
-			buffer_spacing = common[name].spacing;
+		if(common && common.spacing)
+			buffer_spacing = common.spacing;
 		else
 			buffer_spacing = 3;
 	}
@@ -2076,6 +2076,7 @@ Mesh.getScreenQuad = function()
 		coords: coords});
 	return this._screen_quad;
 }
+
 /**
 * Texture class to upload images to the GPU, default is gl.TEXTURE_2D, gl.RGBAof gl.UNSIGNED_BYTE with filter gl.LINEAR, and gl.CLAMP_TO_EDGE
 	There is a list of options

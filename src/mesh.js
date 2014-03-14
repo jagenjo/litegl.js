@@ -221,8 +221,8 @@ Mesh.prototype.addVertexBuffer = function(name, attribute, buffer_spacing, buffe
 
 	if (!buffer_spacing && common)
 	{
-		if(common && common[name].spacing)
-			buffer_spacing = common[name].spacing;
+		if(common && common.spacing)
+			buffer_spacing = common.spacing;
 		else
 			buffer_spacing = 3;
 	}
