@@ -169,15 +169,17 @@ function Shader(vertexSource, fragmentSource, macros)
 * @method uniforms
 * @param {Object} uniforms
 */
+
+Shader._temp_uniform = new Float32Array(16);
+
 Shader.prototype.uniforms = function(uniforms) {
 
 	gl.useProgram(this.program);
 	//var last_slot = 0;
 
 	for (var name in uniforms) {
-		var location = this.uniformLocations[name];// || gl.getUniformLocation(this.program, name);
+		var location = this.uniformLocations[name];
 		if (!location) continue;
-		this.uniformLocations[name] = location;
 
 		var value = uniforms[name];
 		if(value == null) continue;
@@ -192,31 +194,16 @@ Shader.prototype.uniforms = function(uniforms) {
 				case 16: gl.uniformMatrix4fv(location, false, value); break; //matrix4
 				default: throw &#x27;don\&#x27;t know how to load uniform &quot;&#x27; + name + &#x27;&quot; of length &#x27; + value.length;
 			}
-		/*
-		} else if ((value.constructor == Texture) //for textures, warning, if mixed with manual bind it will overwrite
-		{
-			gl.uniform1i(location, last_slot);
-			value.bind(last_slot);
-			++last_slot;
-		*/
-		} else if (isArray(value))
+		} 
+		else if (isArray(value)) //non-typed arrays
 		{
 			switch (value.length) {
-			case 1: gl.uniform1fv(location, new Float32Array(value)); break; //float
-			case 2: gl.uniform2fv(location, new Float32Array(value)); break; //vec2
-			case 3: gl.uniform3fv(location, new Float32Array(value)); break; //vec3
-			case 4: gl.uniform4fv(location, new Float32Array(value)); break; //vec4
-			case 9: gl.uniformMatrix3fv(location, false, new Float32Array([  //matrix3
-							value[0], value[3], value[6],
-							value[1], value[4], value[7],
-							value[2], value[5], value[8]
-						  ])); break;
-			case 16: gl.uniformMatrix4fv(location, false, new Float32Array([ //matrix4
-							value[0], value[4], value[8], value[12],
-							value[1], value[5], value[9], value[13],
-							value[2], value[6], value[10], value[14],
-							value[3], value[7], value[11], value[15]
-						  ])); break;
+			case 1: gl.uniform1f(location, value); break; //float
+			case 2: gl.uniform2f(location, value[0], value[1] ); break; //vec2
+			case 3: gl.uniform3f(location, value[0], value[1], value[2] ); break; //vec3
+			case 4: gl.uniform4f(location, value[0], value[1], value[2], value[3] ); break; //vec4
+			case 9: Shader._temp_uniform.set( value ); gl.uniformMatrix3fv(location, false, value ); break; //mat3
+			case 16: Shader._temp_uniform.set( value ); gl.uniformMatrix4fv(location, false, value ); break; //mat4
 			default: throw &#x27;don\&#x27;t know how to load uniform &quot;&#x27; + name + &#x27;&quot; of length &#x27; + value.length;
 			}
 		}
@@ -266,12 +253,20 @@ Shader.prototype.drawRange = function(mesh, mode, start, length)
 * @param {number} range_start first primitive to render
 * @param {number} range_length number of primitives to render
 */
+
+//this two variables are a hack to avoid memory allocation on drawCalls
+Shader._temp_attribs_array = new Uint8Array(16);
+Shader._temp_attribs_array_zero = new Uint8Array(16); //should be filled with zeros always
+
 Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_start, range_length)
 {
 	if(range_length == 0) return;
 
-	// Create and enable attribute pointers as necessary.
+	// enable attributes as necessary.
 	var length = 0;
+	var attribs_in_use = Shader._temp_attribs_array; //hack to avoid garbage
+	attribs_in_use.set( Shader._temp_attribs_array_zero ); //reset
+
 	for (var name in vertexBuffers)
 	{
 		var buffer = vertexBuffers[name];
@@ -282,7 +277,9 @@ Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_
 		if (location == null || !buffer.buffer) //-1 changed for null
 			continue; //ignore this buffer
 
-		this.attributes[attribute] = location;
+		attribs_in_use[location] = 1; //mark it as used
+
+		//this.attributes[attribute] = location;
 		gl.bindBuffer(gl.ARRAY_BUFFER, buffer.buffer);
 		gl.enableVertexAttribArray(location);
 		gl.vertexAttribPointer(location, buffer.buffer.spacing, gl.FLOAT, false, 0, 0);
@@ -299,14 +296,14 @@ Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_
 	else if (indexBuffer)
 		length = indexBuffer.buffer.length - offset;
 
-	// Disable unused attribute pointers.
-	/*
-	for (var attribute in this.attributes) {
-	  if (!(attribute in vertexBuffers)) {
-		gl.disableVertexAttribArray(this.attributes[attribute]);
-	  }
+	// Force to disable buffers in this shader that are not in this mesh
+	for (var attribute in this.attributes)
+	{
+		var location = this.attributes[attribute];
+		if (!(attribs_in_use[location])) {
+			gl.disableVertexAttribArray(this.attributes[attribute]);
+		}
 	}
-	*/
 
 	// Draw the geometry.
 	if (length &amp;&amp; (!indexBuffer || indexBuffer.buffer)) {
@@ -321,9 +318,6 @@ Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_
 
 	return this;
 }
-
-
-
 
 
 //Now some common shaders everybody needs

@@ -41,6 +41,21 @@ function Buffer(target, data, spacing, stream_type) {
 }
 
 /**
+* Applies an action to every vertex in this buffer
+* @method forEach
+* @param {function} callback to be called for every vertex (or whatever is contained in the buffer)
+*/
+Buffer.prototype.forEach = function(callback)
+{
+	var d = this.data;
+	for (var i = 0, s = this.spacing, l = d.length; i < l; i += s)
+	{
+		callback(d.subarray(i,i+s));
+	}
+	return this; //to concatenate
+}
+
+/**
 * Uploads the buffer data (stored in this.data) to the GPU
 * @method compile
 * @param {number} stream_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW 
@@ -188,24 +203,40 @@ Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers, stream_type)
 * Creates a new empty buffer and attachs it to this mesh
 * @method addVertexBuffer
 * @param {String} name "vertices","normals"...
-* @param {String} attribute name of the stream in the shader "a_vertex","a_normal",...
-* @param {number} spacing components per vertex
-* @param {ArrayBufferView} buffer_data the data in typed array format
-* @param {enum} stream_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW )
+* @param {String} attribute name of the stream in the shader "a_vertex","a_normal",... [optional, if omitted is used the common_buffers]
+* @param {number} spacing components per vertex [optioanl, if ommited is used the common_buffers, otherwise 3]
+* @param {ArrayBufferView} buffer_data the data in typed array format [optional, if ommited it created an empty array of getNumVertices() * spacing]
+* @param {enum} stream_type [optional, default = gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW ) ]
 */
 
 Mesh.prototype.addVertexBuffer = function(name, attribute, buffer_spacing, buffer_data, stream_type ) {
 
-	if(!buffer_data.buffer)
-		throw("no typed array in mesh buffer");
+	var common = Mesh.common_buffers[name]; //generinc info about buffers with this name
 
-	if (!buffer_spacing)
+	if (!attribute && common)
+		attribute = common.attribute;
+
+	if (!attribute)
+		throw("Buffer added to mesh without attribute name");
+
+	if (!buffer_spacing && common)
 	{
-		if(Mesh.common_buffers[name] && Mesh.common_buffers[name].spacing)
-			buffer_spacing = Mesh.common_buffers[name].spacing;
+		if(common && common[name].spacing)
+			buffer_spacing = common[name].spacing;
 		else
 			buffer_spacing = 3;
 	}
+
+	if(!buffer_data)
+	{
+		var num = this.getNumVertices();
+		if(!num)
+			throw("Cannot create an empty buffer in a mesh without vertices (vertices are needed to now the size)");
+		buffer_data = new Float32Array(num * buffer_spacing);
+	}
+
+	if(!buffer_data.buffer)
+		throw("Buffer data MUST be typed array");
 
 	var buffer = this.vertexBuffers[name] = new Buffer(gl.ARRAY_BUFFER, buffer_data, buffer_spacing, stream_type);
 	buffer.name = name;
@@ -223,6 +254,17 @@ Mesh.prototype.removeVertexBuffer = function(name) {
 	var buffer = this.vertexBuffers[name];
 	if(!buffer) return;
 	delete this.vertexBuffers[name];
+}
+
+/**
+* Returns a vertex buffer
+* @method getVertexBuffer
+* @param {String} name of vertex buffer
+* @return {Buffer} the buffer
+*/
+Mesh.prototype.getVertexBuffer = function(name)
+{
+	return this.vertexBuffers[name];
 }
 
 
@@ -559,6 +601,18 @@ Mesh.prototype.computeTangents = function() {
 
 	this.addVertexBuffer('tangents', Mesh.common_buffers["tangents"].attribute, 4, tangents );
 }
+
+/**
+* Computes bounding information
+* @method Mesh.getVertexNumber
+* @param {typed Array} vertices array containing all the vertices
+*/
+Mesh.prototype.getNumVertices = function() {
+	var b = this.vertexBuffers["vertices"];
+	if(!b) return 0;
+	return b.data.length / b.spacing;
+}
+
 
 /**
 * Computes bounding information

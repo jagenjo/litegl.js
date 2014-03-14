@@ -102,6 +102,10 @@
 
 <div class="file">
     <pre class="code prettyprint linenums">
+&quot;use strict&quot;;
+
+//polyfill
+window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || function(callback) { setTimeout(callback, 1000 / 60); };
 
 
 /**
@@ -109,7 +113,6 @@
 * @class GL
 */
 var GL = {
-	contexts: [], //Index with all the WEBGL canvas created, so the update message is sent to all of them instead of independently
 	blockable_keys: {&quot;Up&quot;:true,&quot;Down&quot;:true,&quot;Left&quot;:true,&quot;Right&quot;:true},
 
 	//some consts
@@ -147,6 +150,7 @@ var GL = {
 		//get some useful extensions
 		gl.derivatives_supported = gl.getExtension(&#x27;OES_standard_derivatives&#x27;) || false ;
 		gl.depth_ext = gl.getExtension(&quot;WEBGL_depth_texture&quot;) || gl.getExtension(&quot;WEBKIT_WEBGL_depth_texture&quot;) || gl.getExtension(&quot;MOZ_WEBGL_depth_texture&quot;);
+
 		//for float textures
 		gl.float_ext = gl.getExtension(&quot;OES_texture_float&quot;);
 		gl.float_ext_linear = gl.getExtension(&quot;OES_texture_float_linear&quot;);
@@ -154,10 +158,11 @@ var GL = {
 		gl.half_float_ext_linear = gl.getExtension(&quot;OES_texture_half_float_linear&quot;);
 		gl.HALF_FLOAT_OES = 0x8D61; 
 		gl.max_texture_units = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
+		gl.HIGH_PRECISION_FORMAT = gl.half_float_ext ? gl.HALF_FLOAT_OES : (gl.float_ext ? gl.FLOAT : gl.UNSIGNED_BYTE); //because Firefox dont support half float
 
 		//viewport hack to retrieve it without using getParameter (which is superslow)
 		gl._viewport_func = gl.viewport;
-		gl.viewport_data = new Float32Array(4);
+		gl.viewport_data = new Float32Array([0,0,gl.canvas.width,gl.canvas.height]);
 		gl.viewport = function(a,b,c,d) { this.viewport_data.set([a,b,c,d]); this._viewport_func(a,b,c,d); }
 		gl.getViewport = function() { return new Float32Array( gl.viewport_data ); };
 		
@@ -165,15 +170,32 @@ var GL = {
 		if(typeof(glMatrix) == &quot;undefined&quot;)
 			throw(&quot;glMatrix not found, LiteGL requires glMatrix to be included&quot;);
 
-		//trigger the mainLoop if no other context has been created before
-		if (this.contexts.length == 0) GL.animate();
-
-		//add this canvas to the context that may need update(dt) events
-		this.contexts.push(gl);
-
 		var last_click_time = 0;
-		
 		gl.mouse_buttons = 0;		
+
+
+		/**
+		* Launch animation loop (calls gl.onupdate and gl.ondraw every frame)
+		* @method gl.animate
+		*/
+		gl.animate = function() {
+			var post = window.requestAnimationFrame;
+			var time = window.performance.now();
+			var context = this;
+
+			//loop only if browser tab visible
+			function loop() {
+				post(loop); //do it first, in case it crashes
+
+				var now = window.performance.now();
+				var dt = (now - time) / 1000;
+
+				if (context.onupdate) context.onupdate(dt);
+				if (context.ondraw) context.ondraw();
+				time = now;
+			}
+			post(loop); //launch main loop
+		}	
 
 		/**
 		* Tells the system to capture mouse events on the canvas. This will trigger onmousedown, onmousemove, onmouseup, onmousewheel callbacks in the canvas.
@@ -203,6 +225,7 @@ var GL = {
 			var old_mouse_mask = gl.mouse_buttons;
 			GL.augmentEvent(e, canvas);
 			e.eventType = e.eventType || e.type; //type cannot be overwritten, so I make a clone to allow me to overwrite
+			var now = window.performance.now();
 
 			if(e.eventType == &quot;mousedown&quot;)
 			{
@@ -212,14 +235,13 @@ var GL = {
 					document.addEventListener(&quot;mousemove&quot;, onmouse);
 					document.addEventListener(&quot;mouseup&quot;, onmouse);
 				}
-				last_click_time = new Date().getTime();
+				last_click_time = now;
 
 				if(gl.onmousedown) gl.onmousedown(e);
 			}
 			else if(e.eventType == &quot;mousemove&quot; &amp;&amp; gl.onmousemove)
 			{ 
 				//move should be propagated (otherwise other components may fail)
-				var now = new Date().getTime();
 				e.click_time = now - last_click_time;
 				gl.onmousemove(e); 
 				return; 
@@ -232,7 +254,6 @@ var GL = {
 					document.removeEventListener(&quot;mousemove&quot;, onmouse);
 					document.removeEventListener(&quot;mouseup&quot;, onmouse);
 				}
-				var now = new Date().getTime();
 				e.click_time = now - last_click_time;
 				last_click_time = now;
 
@@ -308,7 +329,7 @@ var GL = {
 			if(e.type == &quot;keydown&quot; &amp;&amp; gl.onkeydown) gl.onkeydown(e);
 			else if(e.type == &quot;keyup&quot; &amp;&amp; gl.onkeyup) gl.onkeyup(e);
 
-			if(prevent_default &amp;&amp; (e.isChar || GL.blockable_keys[e.keyIdentifier]) )
+			if(prevent_default &amp;&amp; (e.isChar || GL.blockable_keys[e.keyIdentifier || e.key ]) )
 				e.preventDefault();
 		}
 
@@ -449,50 +470,8 @@ var GL = {
 		e.buttons_mask = gl.mouse_buttons;			
 
 		e.leftButton = gl.mouse_buttons &amp; (1&lt;&lt;GL.LEFT_MOUSE_BUTTON);
+		e.rightButton = gl.mouse_buttons &amp; (1&lt;&lt;GL.RIGHT_MOUSE_BUTTON);
 		e.isButtonPressed = function(num) { return this.buttons_mask &amp; (1&lt;&lt;num); }
-	},
-
-	animate: function() {
-		var post =
-		window.requestAnimationFrame ||
-		window.mozRequestAnimationFrame ||
-		window.webkitRequestAnimationFrame ||
-		function(callback) { setTimeout(callback, 1000 / 60); };
-		var time = new Date().getTime();
-
-		//update only if browser tab visible
-		function update() {
-			var now = new Date().getTime();
-			//launch the event to every WEBGL context
-			for(var i in GL.contexts)
-			{
-				var gl = GL.contexts[i];
-				var dt = (now - time) / 1000;
-				if (gl.onupdate) gl.onupdate(dt);
-				if (gl.ondraw) gl.ondraw();
-			}
-			post(update);
-			time = now;
-		}
-
-		//updated always
-		var time_forced = new Date().getTime();
-		function forceUpdate() {
-			var now = new Date().getTime();
-			//launch the event to every WEBGL context
-			for(var i in GL.contexts)
-			{
-				var gl = GL.contexts[i];
-				if (gl.onforceupdate) gl.onforceupdate((now - time_forced) / 1000);
-			}
-			setTimeout(forceUpdate, 1000 / 60);
-			time_forced = now;
-		}
-
-		gl.relaunch = function() { post(update); }
-
-		update(); //only if the tab is in focus
-		forceUpdate(); //always
 	},
 
 	Buffer: Buffer,

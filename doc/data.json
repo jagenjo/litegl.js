@@ -116,7 +116,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "../src/litegl.js",
-            "line": 3,
+            "line": 7,
             "description": "The static module that contains all the features"
         },
         "Indexer": {
@@ -978,12 +978,12 @@
         },
         {
             "file": "../src/gl-matrix-extra.js",
-            "line": 100,
+            "line": 115,
             "class": "GL"
         },
         {
             "file": "../src/litegl.js",
-            "line": 16,
+            "line": 19,
             "description": "creates a new WebGL canvas",
             "itemtype": "method",
             "name": "create",
@@ -1002,7 +1002,15 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 74,
+            "line": 73,
+            "description": "Launch animation loop (calls gl.onupdate and gl.ondraw every frame)",
+            "itemtype": "method",
+            "name": "gl.animate",
+            "class": "GL"
+        },
+        {
+            "file": "../src/litegl.js",
+            "line": 96,
             "description": "Tells the system to capture mouse events on the canvas. This will trigger onmousedown, onmousemove, onmouseup, onmousewheel callbacks in the canvas.",
             "itemtype": "method",
             "name": "gl.captureMouse",
@@ -1017,7 +1025,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 176,
+            "line": 197,
             "description": "Tells the system to capture key events on the canvas. This will trigger onkey",
             "itemtype": "method",
             "name": "gl.captureKeys",
@@ -1032,7 +1040,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 220,
+            "line": 241,
             "description": "Tells the system to capture gamepad events on the canvas.",
             "itemtype": "method",
             "name": "gl.captureGamepads",
@@ -1040,7 +1048,7 @@
         },
         {
             "file": "../src/litegl.js",
-            "line": 239,
+            "line": 260,
             "description": "returns the detected gamepads on the system",
             "itemtype": "method",
             "name": "gl.getGamepads",
@@ -1049,6 +1057,21 @@
         {
             "file": "../src/mesh.js",
             "line": 43,
+            "description": "Applies an action to every vertex in this buffer",
+            "itemtype": "method",
+            "name": "forEach",
+            "params": [
+                {
+                    "name": "callback",
+                    "description": "to be called for every vertex (or whatever is contained in the buffer)",
+                    "type": "Function"
+                }
+            ],
+            "class": "Buffer"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 58,
             "description": "Uploads the buffer data (stored in this.data) to the GPU",
             "itemtype": "method",
             "name": "compile",
@@ -1063,7 +1086,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 105,
+            "line": 122,
             "description": "Adds vertex and indices buffers to a mesh",
             "itemtype": "method",
             "name": "addBuffers",
@@ -1077,36 +1100,6 @@
                     "name": "indexBuffers",
                     "description": "object with all the indices streams",
                     "type": "Object"
-                }
-            ],
-            "class": "Mesh"
-        },
-        {
-            "file": "../src/mesh.js",
-            "line": 184,
-            "description": "Creates a new empty buffer and attachs it to this mesh",
-            "itemtype": "method",
-            "name": "addVertexBuffer",
-            "params": [
-                {
-                    "name": "name",
-                    "description": "\"vertices\",\"normals\"...",
-                    "type": "String"
-                },
-                {
-                    "name": "attribute",
-                    "description": "name of the stream in the shader \"a_vertex\",\"a_normal\",...",
-                    "type": "String"
-                },
-                {
-                    "name": "spacing",
-                    "description": "components per vertex",
-                    "type": "Number"
-                },
-                {
-                    "name": "buffer_data",
-                    "description": "the data in typed array format",
-                    "type": "ArrayBufferView"
                 },
                 {
                     "name": "stream_type",
@@ -1118,7 +1111,76 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 216,
+            "line": 202,
+            "description": "Creates a new empty buffer and attachs it to this mesh",
+            "itemtype": "method",
+            "name": "addVertexBuffer",
+            "params": [
+                {
+                    "name": "name",
+                    "description": "\"vertices\",\"normals\"...",
+                    "type": "String"
+                },
+                {
+                    "name": "attribute",
+                    "description": "name of the stream in the shader \"a_vertex\",\"a_normal\",... [optional, if omitted is used the common_buffers]",
+                    "type": "String"
+                },
+                {
+                    "name": "spacing",
+                    "description": "components per vertex [optioanl, if ommited is used the common_buffers, otherwise 3]",
+                    "type": "Number"
+                },
+                {
+                    "name": "buffer_data",
+                    "description": "the data in typed array format [optional, if ommited it created an empty array of getNumVertices() * spacing]",
+                    "type": "ArrayBufferView"
+                },
+                {
+                    "name": "stream_type",
+                    "description": "[optional, default = gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW ) ]",
+                    "type": "Enum"
+                }
+            ],
+            "class": "Mesh"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 248,
+            "description": "Removes a vertex buffer from the mesh",
+            "itemtype": "method",
+            "name": "removeVertexBuffer",
+            "params": [
+                {
+                    "name": "name",
+                    "description": "\"vertices\",\"normals\"...",
+                    "type": "String"
+                }
+            ],
+            "class": "Mesh"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 259,
+            "description": "Returns a vertex buffer",
+            "itemtype": "method",
+            "name": "getVertexBuffer",
+            "params": [
+                {
+                    "name": "name",
+                    "description": "of vertex buffer",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "the buffer",
+                "type": "Buffer"
+            },
+            "class": "Mesh"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 271,
             "description": "Creates a new empty index buffer and attachs it to this mesh",
             "itemtype": "method",
             "name": "addIndexBuffer",
@@ -1143,7 +1205,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 231,
+            "line": 283,
             "description": "Returns a vertex buffer",
             "itemtype": "method",
             "name": "getBuffer",
@@ -1162,7 +1224,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 242,
+            "line": 294,
             "description": "Returns a index buffer",
             "itemtype": "method",
             "name": "getIndexBuffer",
@@ -1181,8 +1243,8 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 253,
-            "description": "Uploads data of buffers to VRAM. Checks the buffers defined, and then search for a typed array with the same name in the mesh properties,\n\tit that is the case, it uploads the data to the buffer.",
+            "line": 305,
+            "description": "Uploads data inside buffers to VRAM.",
             "itemtype": "method",
             "name": "compile",
             "params": [
@@ -1196,7 +1258,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 273,
+            "line": 324,
             "description": "Computes some data about the mesh",
             "itemtype": "method",
             "name": "generateMetadata",
@@ -1204,7 +1266,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 345,
+            "line": 396,
             "description": "Creates a new index stream with wireframe",
             "itemtype": "method",
             "name": "computeWireframe",
@@ -1212,7 +1274,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 395,
+            "line": 446,
             "description": "Creates a stream with the normals",
             "itemtype": "method",
             "name": "computeNormals",
@@ -1220,7 +1282,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 466,
+            "line": 517,
             "description": "Creates a new stream with the tangents",
             "itemtype": "method",
             "name": "computeTangents",
@@ -1228,7 +1290,22 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 554,
+            "line": 605,
+            "description": "Computes bounding information",
+            "itemtype": "method",
+            "name": "Mesh.getVertexNumber",
+            "params": [
+                {
+                    "name": "vertices",
+                    "description": "array containing all the vertices",
+                    "type": "Typed Array"
+                }
+            ],
+            "class": "Mesh"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 617,
             "description": "Computes bounding information",
             "itemtype": "method",
             "name": "Mesh.computeBounding",
@@ -1243,7 +1320,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 580,
+            "line": 643,
             "description": "Update bounding information of this mesh",
             "itemtype": "method",
             "name": "updateBounding",
@@ -1251,7 +1328,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 591,
+            "line": 654,
             "description": "forces a bounding box to be set",
             "itemtype": "method",
             "name": "setBounding",
@@ -1271,7 +1348,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 602,
+            "line": 665,
             "description": "Remove all local memory from the streams (leaving it only in the VRAM) to save RAM",
             "itemtype": "method",
             "name": "freeData",
@@ -1279,7 +1356,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 644,
+            "line": 707,
             "description": "Static method for the class Mesh to create a mesh from a list of common streams",
             "itemtype": "method",
             "name": "Mesh.load",
@@ -1304,7 +1381,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 659,
+            "line": 722,
             "description": "Returns a planar mesh (you can choose how many subdivisions)",
             "itemtype": "method",
             "name": "Mesh.plane",
@@ -1319,7 +1396,15 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 711,
+            "line": 774,
+            "description": "Returns a 2D Mesh (be careful, stream is vertices2D )",
+            "itemtype": "method",
+            "name": "Mesh.plane2D",
+            "class": "Mesh"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 791,
             "description": "Returns a cube mesh",
             "itemtype": "method",
             "name": "Mesh.cube",
@@ -1334,7 +1419,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 737,
+            "line": 817,
             "description": "Returns a cube mesh",
             "itemtype": "method",
             "name": "Mesh.cylinder",
@@ -1349,7 +1434,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 799,
+            "line": 879,
             "description": "Returns a sphere mesh",
             "itemtype": "method",
             "name": "Mesh.sphere",
@@ -1364,7 +1449,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 863,
+            "line": 943,
             "description": "Returns a mesh with all the meshes merged",
             "itemtype": "method",
             "name": "Mesh.mergeMeshes",
@@ -1428,7 +1513,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 129,
+            "line": 116,
             "description": "Renders a mesh using this shader, remember to use the function uniforms before to enable the shader",
             "itemtype": "method",
             "name": "draw",
@@ -1448,7 +1533,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 141,
+            "line": 128,
             "description": "Renders a range of a mesh using this shader",
             "itemtype": "method",
             "name": "drawRange",
@@ -1478,7 +1563,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 156,
+            "line": 143,
             "description": "Renders a range of a mesh using this shader",
             "itemtype": "method",
             "name": "drawBuffers",
@@ -1604,7 +1689,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 204,
+            "line": 206,
             "description": "Copy content of one texture into another",
             "itemtype": "method",
             "name": "copyTo",
@@ -1619,7 +1704,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 228,
+            "line": 232,
             "description": "Render texture in a quad to full viewport size",
             "itemtype": "method",
             "name": "toViewport",
@@ -1639,7 +1724,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 244,
+            "line": 248,
             "description": "Copy texture content to a canvas",
             "itemtype": "method",
             "name": "toCanvas",
@@ -1654,7 +1739,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 270,
+            "line": 274,
             "description": "Similar to drawTo but it also stores the depth in a depth texture",
             "itemtype": "method",
             "name": "drawToColorAndDepth",
@@ -1679,7 +1764,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 299,
+            "line": 303,
             "description": "Loads and uploads a texture from a url",
             "itemtype": "method",
             "name": "Texture.fromURL",
@@ -1708,7 +1793,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 345,
+            "line": 349,
             "description": "Create a texture from an Image",
             "itemtype": "method",
             "name": "Texture.fromImage",
@@ -1732,7 +1817,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 368,
+            "line": 372,
             "description": "Create a texture from a Video",
             "itemtype": "method",
             "name": "Texture.fromVideo",
@@ -1756,7 +1841,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 391,
+            "line": 395,
             "description": "Create a clone of a texture",
             "itemtype": "method",
             "name": "Texture.fromTexture",
@@ -1780,7 +1865,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 405,
+            "line": 409,
             "description": "Create a texture from an ArrayBuffer containing the pixels",
             "itemtype": "method",
             "name": "Texture.fromTexture",
@@ -1814,7 +1899,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 442,
+            "line": 446,
             "description": "Create a cubemap texture from a set of 6 images",
             "itemtype": "method",
             "name": "Texture.cubemapFromImages",
@@ -1838,7 +1923,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 478,
+            "line": 482,
             "description": "Create a cubemap texture from a single image that contains all six images arranged vertically",
             "itemtype": "method",
             "name": "Texture.cubemapFromImage",
@@ -1862,7 +1947,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 508,
+            "line": 512,
             "description": "returns a Blob containing all the data from the texture",
             "itemtype": "method",
             "name": "Texture.toBlob",
@@ -1874,7 +1959,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 544,
+            "line": 548,
             "description": "returns a base64 String containing all the data from the texture",
             "itemtype": "method",
             "name": "Texture.toBase64",
@@ -1886,7 +1971,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 572,
+            "line": 576,
             "description": "generates some basic metadata about the image",
             "itemtype": "method",
             "name": "generateMetadata",
@@ -1935,7 +2020,7 @@
         },
         {
             "message": "Missing item type",
-            "line": " ../src/gl-matrix-extra.js:100"
+            "line": " ../src/gl-matrix-extra.js:115"
         }
     ]
 }

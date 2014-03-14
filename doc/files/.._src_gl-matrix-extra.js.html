@@ -192,14 +192,29 @@ vec3.rotateZ = function(out,vec,angle_in_rad)
 	return out;
 }
 
-//color
+//random value
+vec2.random = function(vec)
+{
+	vec[0] = Math.random();
+	vec[1] = Math.random();
+}
+
 vec3.random = function(vec)
 {
-	vec = vec || vec3.create();
 	vec[0] = Math.random();
 	vec[1] = Math.random();
 	vec[2] = Math.random();
 }
+
+//random value
+vec4.random = function(vec)
+{
+	vec[0] = Math.random();
+	vec[1] = Math.random();
+	vec[2] = Math.random();
+	vec[3] = Math.random();	
+}
+
 
 /** MATRIX ********************/
 
@@ -352,13 +367,13 @@ quat.toEuler = function(out, quat) {
 
 	if( (q[0]*q[1] + q[2]*q[3]) == 0.5 )
 	{
-		heading = 2 * atan2(q[0],q[3]);
+		heading = 2 * Math.atan2(q[0],q[3]);
 		bank = 0;
 		attitude = 0; //�?
 	}
 	else if( (q[0]*q[1] + q[2]*q[3]) == 0.5 )
 	{
-		heading = -2 * atan2(q[0],q[3]);
+		heading = -2 * Math.atan2(q[0],q[3]);
 		bank = 0;
 		attitude = 0; //�?
 	}

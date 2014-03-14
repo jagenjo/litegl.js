@@ -358,6 +358,13 @@
                             </li>
                         
                             <li class="index-item method">
+                                <a href="#method_getVertexBuffer">getVertexBuffer</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
                                 <a href="#method_Mesh.computeBounding">Mesh.computeBounding</a>
 
                                 
@@ -373,6 +380,13 @@
                         
                             <li class="index-item method">
                                 <a href="#method_Mesh.cylinder">Mesh.cylinder</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
+                                <a href="#method_Mesh.getVertexNumber">Mesh.getVertexNumber</a>
 
                                 
                                 
@@ -400,7 +414,21 @@
                             </li>
                         
                             <li class="index-item method">
+                                <a href="#method_Mesh.plane2D">Mesh.plane2D</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
                                 <a href="#method_Mesh.sphere">Mesh.sphere</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
+                                <a href="#method_removeVertexBuffer">removeVertexBuffer</a>
 
                                 
                                 
@@ -455,6 +483,12 @@
                     
                 </li>
             
+                <li class="arg">
+                    
+                        <code>stream_type</code>
+                    
+                </li>
+            
             </ul><span class="paren">)</span>
         </div>
     
@@ -484,7 +518,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l105"><code>..&#x2F;src&#x2F;mesh.js:105</code></a>
+        <a href="../files/.._src_mesh.js.html#l122"><code>..&#x2F;src&#x2F;mesh.js:122</code></a>
         
         </p>
 
@@ -531,6 +565,22 @@
 
                     <div class="param-description">
                         <p>object with all the indices streams</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">stream_type</code>
+                        <span class="type">Enum</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW )</p>
 
                     </div>
 
@@ -601,7 +651,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l216"><code>..&#x2F;src&#x2F;mesh.js:216</code></a>
+        <a href="../files/.._src_mesh.js.html#l271"><code>..&#x2F;src&#x2F;mesh.js:271</code></a>
         
         </p>
 
@@ -744,7 +794,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l184"><code>..&#x2F;src&#x2F;mesh.js:184</code></a>
+        <a href="../files/.._src_mesh.js.html#l202"><code>..&#x2F;src&#x2F;mesh.js:202</code></a>
         
         </p>
 
@@ -790,7 +840,7 @@
                     
 
                     <div class="param-description">
-                        <p>name of the stream in the shader &quot;a_vertex&quot;,&quot;a_normal&quot;,...</p>
+                        <p>name of the stream in the shader &quot;a_vertex&quot;,&quot;a_normal&quot;,... [optional, if omitted is used the common_buffers]</p>
 
                     </div>
 
@@ -806,7 +856,7 @@
                     
 
                     <div class="param-description">
-                        <p>components per vertex</p>
+                        <p>components per vertex [optioanl, if ommited is used the common_buffers, otherwise 3]</p>
 
                     </div>
 
@@ -822,7 +872,7 @@
                     
 
                     <div class="param-description">
-                        <p>the data in typed array format</p>
+                        <p>the data in typed array format [optional, if ommited it created an empty array of getNumVertices() * spacing]</p>
 
                     </div>
 
@@ -838,7 +888,7 @@
                     
 
                     <div class="param-description">
-                        <p>default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW )</p>
+                        <p>[optional, default = gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW ) ]</p>
 
                     </div>
 
@@ -897,7 +947,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l253"><code>..&#x2F;src&#x2F;mesh.js:253</code></a>
+        <a href="../files/.._src_mesh.js.html#l305"><code>..&#x2F;src&#x2F;mesh.js:305</code></a>
         
         </p>
 
@@ -908,8 +958,7 @@
     </div>
 
     <div class="description">
-        <p>Uploads data of buffers to VRAM. Checks the buffers defined, and then search for a typed array with the same name in the mesh properties,
-    it that is the case, it uploads the data to the buffer.</p>
+        <p>Uploads data inside buffers to VRAM.</p>
 
     </div>
 
@@ -977,7 +1026,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l395"><code>..&#x2F;src&#x2F;mesh.js:395</code></a>
+        <a href="../files/.._src_mesh.js.html#l446"><code>..&#x2F;src&#x2F;mesh.js:446</code></a>
         
         </p>
 
@@ -1032,7 +1081,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l466"><code>..&#x2F;src&#x2F;mesh.js:466</code></a>
+        <a href="../files/.._src_mesh.js.html#l517"><code>..&#x2F;src&#x2F;mesh.js:517</code></a>
         
         </p>
 
@@ -1087,7 +1136,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l345"><code>..&#x2F;src&#x2F;mesh.js:345</code></a>
+        <a href="../files/.._src_mesh.js.html#l396"><code>..&#x2F;src&#x2F;mesh.js:396</code></a>
         
         </p>
 
@@ -1142,7 +1191,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l602"><code>..&#x2F;src&#x2F;mesh.js:602</code></a>
+        <a href="../files/.._src_mesh.js.html#l665"><code>..&#x2F;src&#x2F;mesh.js:665</code></a>
         
         </p>
 
@@ -1197,7 +1246,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l273"><code>..&#x2F;src&#x2F;mesh.js:273</code></a>
+        <a href="../files/.._src_mesh.js.html#l324"><code>..&#x2F;src&#x2F;mesh.js:324</code></a>
         
         </p>
 
@@ -1266,7 +1315,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l231"><code>..&#x2F;src&#x2F;mesh.js:231</code></a>
+        <a href="../files/.._src_mesh.js.html#l283"><code>..&#x2F;src&#x2F;mesh.js:283</code></a>
         
         </p>
 
@@ -1373,7 +1422,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l242"><code>..&#x2F;src&#x2F;mesh.js:242</code></a>
+        <a href="../files/.._src_mesh.js.html#l294"><code>..&#x2F;src&#x2F;mesh.js:294</code></a>
         
         </p>
 
@@ -1404,6 +1453,113 @@
 
                     <div class="param-description">
                         <p>of index buffer</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="../classes/Buffer.html" class="crosslink">Buffer</a></span>:
+                    
+                    <p>the buffer</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_getVertexBuffer" class="method item">
+    <h3 class="name"><code>getVertexBuffer</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>name</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type"><a href="../classes/Buffer.html" class="crosslink">Buffer</a></span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_mesh.js.html#l259"><code>..&#x2F;src&#x2F;mesh.js:259</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Returns a vertex buffer</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">name</code>
+                        <span class="type">String</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>of vertex buffer</p>
 
                     </div>
 
@@ -1476,7 +1632,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l554"><code>..&#x2F;src&#x2F;mesh.js:554</code></a>
+        <a href="../files/.._src_mesh.js.html#l617"><code>..&#x2F;src&#x2F;mesh.js:617</code></a>
         
         </p>
 
@@ -1565,7 +1721,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l711"><code>..&#x2F;src&#x2F;mesh.js:711</code></a>
+        <a href="../files/.._src_mesh.js.html#l791"><code>..&#x2F;src&#x2F;mesh.js:791</code></a>
         
         </p>
 
@@ -1654,7 +1810,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l737"><code>..&#x2F;src&#x2F;mesh.js:737</code></a>
+        <a href="../files/.._src_mesh.js.html#l817"><code>..&#x2F;src&#x2F;mesh.js:817</code></a>
         
         </p>
 
@@ -1685,6 +1841,95 @@
 
                     <div class="param-description">
                         <p>valid options: radius, height, subdivisions</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="method_Mesh.getVertexNumber" class="method item">
+    <h3 class="name"><code>Mesh.getVertexNumber</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>vertices</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_mesh.js.html#l605"><code>..&#x2F;src&#x2F;mesh.js:605</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Computes bounding information</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">vertices</code>
+                        <span class="type">Typed Array</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>array containing all the vertices</p>
 
                     </div>
 
@@ -1755,7 +2000,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l644"><code>..&#x2F;src&#x2F;mesh.js:644</code></a>
+        <a href="../files/.._src_mesh.js.html#l707"><code>..&#x2F;src&#x2F;mesh.js:707</code></a>
         
         </p>
 
@@ -1875,7 +2120,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l863"><code>..&#x2F;src&#x2F;mesh.js:863</code></a>
+        <a href="../files/.._src_mesh.js.html#l943"><code>..&#x2F;src&#x2F;mesh.js:943</code></a>
         
         </p>
 
@@ -1964,7 +2209,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l659"><code>..&#x2F;src&#x2F;mesh.js:659</code></a>
+        <a href="../files/.._src_mesh.js.html#l722"><code>..&#x2F;src&#x2F;mesh.js:722</code></a>
         
         </p>
 
@@ -2003,6 +2248,61 @@
             
             </ul>
         </div>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="method_Mesh.plane2D" class="method item">
+    <h3 class="name"><code>Mesh.plane2D</code></h3>
+
+    
+        <span class="paren">()</span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_mesh.js.html#l774"><code>..&#x2F;src&#x2F;mesh.js:774</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Returns a 2D Mesh (be careful, stream is vertices2D )</p>
+
+    </div>
+
     
 
     
@@ -2053,7 +2353,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l799"><code>..&#x2F;src&#x2F;mesh.js:799</code></a>
+        <a href="../files/.._src_mesh.js.html#l879"><code>..&#x2F;src&#x2F;mesh.js:879</code></a>
         
         </p>
 
@@ -2084,6 +2384,95 @@
 
                     <div class="param-description">
                         <p>valid options: radius, lat, long</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="method_removeVertexBuffer" class="method item">
+    <h3 class="name"><code>removeVertexBuffer</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>name</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_mesh.js.html#l248"><code>..&#x2F;src&#x2F;mesh.js:248</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Removes a vertex buffer from the mesh</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">name</code>
+                        <span class="type">String</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>&quot;vertices&quot;,&quot;normals&quot;...</p>
 
                     </div>
 
@@ -2148,7 +2537,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l591"><code>..&#x2F;src&#x2F;mesh.js:591</code></a>
+        <a href="../files/.._src_mesh.js.html#l654"><code>..&#x2F;src&#x2F;mesh.js:654</code></a>
         
         </p>
 
@@ -2243,7 +2632,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l580"><code>..&#x2F;src&#x2F;mesh.js:580</code></a>
+        <a href="../files/.._src_mesh.js.html#l643"><code>..&#x2F;src&#x2F;mesh.js:643</code></a>
         
         </p>
 
