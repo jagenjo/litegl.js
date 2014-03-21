@@ -51,6 +51,8 @@
             
                 <li><a href="../classes/Indexer.html">Indexer</a></li>
             
+                <li><a href="../classes/LEvent.html">LEvent</a></li>
+            
                 <li><a href="../classes/Mesh.html">Mesh</a></li>
             
                 <li><a href="../classes/Octree.html">Octree</a></li>
@@ -325,8 +327,8 @@ Mesh.prototype.addVertexBuffer = function(name, attribute, buffer_spacing, buffe
 
 	if (!buffer_spacing &amp;&amp; common)
 	{
-		if(common &amp;&amp; common[name].spacing)
-			buffer_spacing = common[name].spacing;
+		if(common &amp;&amp; common.spacing)
+			buffer_spacing = common.spacing;
 		else
 			buffer_spacing = 3;
 	}
@@ -1133,6 +1135,7 @@ Mesh.getScreenQuad = function()
 		coords: coords});
 	return this._screen_quad;
 }
+
     </pre>
 </div>
 

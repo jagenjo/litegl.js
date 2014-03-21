@@ -17,6 +17,7 @@
 * @param {Object} options Check the list in the description
 * @constructor
 */
+
 function Texture(width, height, options) {
 	options = options || {};
 	width = parseInt(width); 
@@ -75,6 +76,27 @@ function Texture(width, height, options) {
 	}
 }
 
+//used for render to FBOs
+Texture.framebuffer = null;
+Texture.renderbuffer = null;
+
+
+Texture.prototype.getProperties = function()
+{
+	return {
+		width: this.width,
+		height: this.height,
+		type: this.type,
+		format: this.format,
+		texture_type: this.texture_type,
+		magFilter: this.magFilter,
+		minFilter: this.minFilter,
+		wrapS: this.wrapS,
+		wrapT: this.wrapT
+	};
+}
+
+
 /**
 * Returns if depth texture is supported by the GPU
 * @method isDepthSupported
@@ -83,9 +105,6 @@ Texture.isDepthSupported = function()
 {
 	return (gl.getExtension("WEBGL_depth_texture") || gl.getExtension("WEBKIT_WEBGL_depth_texture") || gl.getExtension("MOZ_WEBGL_depth_texture")) != null;
 }
-
-var framebuffer;
-var renderbuffer;
 
 /**
 * Binds the texture to one texture unit
@@ -165,13 +184,21 @@ Texture.prototype.uploadData = function(data)
 * @method drawTo
 * @param {Function} callback function that does all the rendering inside this texture
 */
-Texture.prototype.drawTo = function(callback) {
+Texture.prototype.drawTo = function(callback, params) {
 	//var v = gl.getParameter(gl.VIEWPORT);
 	var v = gl.getViewport();
-	framebuffer = framebuffer || gl.createFramebuffer();
-	renderbuffer = renderbuffer || gl.createRenderbuffer();
+	if(!Texture.framebuffer) //create static one
+	{
+		Texture.framebuffer = gl.createFramebuffer();
+		Texture.renderbuffer = gl.createRenderbuffer();
+	}
+
+	var framebuffer = Texture.framebuffer;
+	var renderbuffer = Texture.renderbuffer;
+
 	gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
 	gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer);
+
 	if (this.width != renderbuffer.width || this.height != renderbuffer.height) {
 	  renderbuffer.width = this.width;
 	  renderbuffer.height = this.height;
@@ -184,7 +211,7 @@ Texture.prototype.drawTo = function(callback) {
 	{
 		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.handler, 0);
 		gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
-		callback(this);
+		callback(this, params);
 	}
 	else if(this.texture_type == gl.TEXTURE_CUBE_MAP)
 	{
@@ -192,7 +219,7 @@ Texture.prototype.drawTo = function(callback) {
 		{
 			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X+i, this.handler, 0);
 			gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
-			callback(this,i);
+			callback(this,i, params);
 		}
 	}
 
@@ -272,6 +299,38 @@ Texture.prototype.toCanvas = function(canvas)
 }
 
 /**
+* Applies a blur filter of one pixel to the texture (be careful using it, it is slow)
+* @method applyBlur
+* @param {Number} offsetx scalar that multiplies the offset when fetching pixels horizontally (default 1)
+* @param {Number} offsety scalar that multiplies the offset when fetching pixels vertically (default 1)
+* @param {Number} intensity scalar that multiplies the result (default 1)
+* @param {Texture} temp_texture blur needs a temp texture, if not supplied it will create a new one each time!
+* @return {Texture} returns the temp_texture in case you want to reuse it
+*/
+Texture.prototype.applyBlur = function(offsetx, offsety, intensity, temp_texture)
+{
+	var self = this;
+	var shader = Shader.getBlurShader();
+	if(!temp_texture)
+		temp_texture = new GL.Texture(this.width, this.height, this.getProperties() );
+
+	offsetx = offsetx / this.width;
+	offsety = offsety / this.height;
+	gl.disable( gl.DEPTH_TEST );
+	gl.disable( gl.BLEND );
+
+	temp_texture.drawTo( function() {
+		self.toViewport(shader, {u_intensity: intensity, u_offset: [0, offsety ] });
+	});	
+
+	this.drawTo( function() {
+		temp_texture.toViewport(shader, {u_intensity: intensity, u_offset: [offsetx, 0] });
+	});	
+	return temp_texture;
+}
+
+
+/**
 * Similar to drawTo but it also stores the depth in a depth texture
 * @method drawToColorAndDepth
 * @param {Texture} color_texture
@@ -283,10 +342,12 @@ Texture.drawToColorAndDepth = function(color_texture, depth_texture, callback) {
 	if(depth_texture.width != color_texture.width || depth_texture.height != color_texture.height)
 		throw("Different size between color texture and depth texture");
 
-	var v = gl.getParameter(gl.VIEWPORT);
-	framebuffer = framebuffer || gl.createFramebuffer();
-	renderbuffer = renderbuffer || gl.createRenderbuffer();
-	gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+	var v = gl.getViewport();
+
+	if(Texture.framebuffer)
+		Texture.framebuffer = gl.createFramebuffer();
+
+	gl.bindFramebuffer(gl.FRAMEBUFFER, Texture.framebuffer);
 
 	gl.viewport(0, 0, color_texture.width, color_texture.height);
 
@@ -311,6 +372,7 @@ Texture.drawToColorAndDepth = function(color_texture, depth_texture, callback) {
 Texture.fromURL = function(url, options, on_complete) {
 	options = options || {};
 	var texture = options.texture || new GL.Texture(1, 1, options);
+
 	texture.bind();
 	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, (options.flipY != true ? 1 : 0) );
 	var temp_color = new Uint8Array(options.temp_color || [0,0,0,255]);
@@ -355,6 +417,7 @@ Texture.fromURL = function(url, options, on_complete) {
 */
 Texture.fromImage = function(image, options) {
 	options = options || {};
+
 	var texture = options.texture || new GL.Texture(image.width, image.height, options);
 	texture.bind();
 	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, (options.flipY != true ? 1 : 0) );
@@ -378,6 +441,7 @@ Texture.fromImage = function(image, options) {
 */
 Texture.fromVideo = function(video, options) {
 	options = options || {};
+
 	var texture = options.texture || new GL.Texture(video.videoWidth, video.videoHeight, options);
 	texture.bind();
 	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, (options.flipY != true ? 1 : 0) );
@@ -418,6 +482,7 @@ Texture.fromTexture = function(old_texture, options) {
 Texture.fromMemory = function(width, height, pixels, options) //format in options as format
 {
 	options = options || {};
+
 	var texture = options.texture || new GL.Texture(width, height, options);
 	gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
 	//the standard is to flip, so noflip means flip
@@ -584,4 +649,13 @@ Texture.prototype.generateMetadata = function()
 	metadata.width = this.width;
 	metadata.height = this.height;
 	this.metadata = metadata;
+}
+
+Texture.compareFormats = function(a,b)
+{
+	if(!a || !b) return false;
+	if(a == b) return true;
+	if(a.width != b.width || a.height != b.height || a.type != b.type || a.texture_type != b.texture_type) 
+		return false;
+	return true;
 }

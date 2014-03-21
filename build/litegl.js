@@ -1,5 +1,6 @@
 //packer version
-//litegl.js (Javi Agenjo) forked from lightgl.js by Evan Wallace (madebyevan.com)
+//litegl.js (Javi Agenjo 2014 @tamat)
+//forked from lightgl.js by Evan Wallace (madebyevan.com)
 "use strict"
 
 var gl;
@@ -50,6 +51,7 @@ function isNumber(obj) {
 }
 */
 
+//given a regular expression, a text and a callback, it calls the function every time it finds it
 function regexMap(regex, text, callback) {
   var result;
   while ((result = regex.exec(text)) != null) {
@@ -95,6 +97,40 @@ function wipeObject(obj)
       delete obj[p];
   }
 };
+
+function HttpRequest(url,data)
+{
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', url, true);
+  xhr.onload = function()
+  {
+    var response = this.response;
+    if(this.status != 200)
+    {
+      LEvent.trigger(xhr,"fail",this.status);
+      return;
+    }
+  }
+  xhr.onerror = function(err)
+  {
+    LEvent.trigger(xhr,"fail",err);
+  }
+
+  return xhr;
+}
+
+//cheap simple promises
+Object.defineProperty( XMLHttpRequest.prototype, "done", { enumerable: false, value: function(callback)
+{
+  LEvent.bind(this,"done", function(e,err) { callback(err); } );
+  return this;
+}});
+
+Object.defineProperty( XMLHttpRequest.prototype, "fail", { enumerable: false, value: function(callback)
+{
+  LEvent.bind(this,"fail", function(e,err) { callback(err); } );
+  return this;
+}});
 /**
  * @fileoverview dds - Utilities for loading DDS texture files
  * @author Brandon Jones
@@ -2096,6 +2132,7 @@ Mesh.getScreenQuad = function()
 * @param {Object} options Check the list in the description
 * @constructor
 */
+
 function Texture(width, height, options) {
 	options = options || {};
 	width = parseInt(width); 
@@ -2154,6 +2191,27 @@ function Texture(width, height, options) {
 	}
 }
 
+//used for render to FBOs
+Texture.framebuffer = null;
+Texture.renderbuffer = null;
+
+
+Texture.prototype.getProperties = function()
+{
+	return {
+		width: this.width,
+		height: this.height,
+		type: this.type,
+		format: this.format,
+		texture_type: this.texture_type,
+		magFilter: this.magFilter,
+		minFilter: this.minFilter,
+		wrapS: this.wrapS,
+		wrapT: this.wrapT
+	};
+}
+
+
 /**
 * Returns if depth texture is supported by the GPU
 * @method isDepthSupported
@@ -2162,9 +2220,6 @@ Texture.isDepthSupported = function()
 {
 	return (gl.getExtension("WEBGL_depth_texture") || gl.getExtension("WEBKIT_WEBGL_depth_texture") || gl.getExtension("MOZ_WEBGL_depth_texture")) != null;
 }
-
-var framebuffer;
-var renderbuffer;
 
 /**
 * Binds the texture to one texture unit
@@ -2244,13 +2299,21 @@ Texture.prototype.uploadData = function(data)
 * @method drawTo
 * @param {Function} callback function that does all the rendering inside this texture
 */
-Texture.prototype.drawTo = function(callback) {
+Texture.prototype.drawTo = function(callback, params) {
 	//var v = gl.getParameter(gl.VIEWPORT);
 	var v = gl.getViewport();
-	framebuffer = framebuffer || gl.createFramebuffer();
-	renderbuffer = renderbuffer || gl.createRenderbuffer();
+	if(!Texture.framebuffer) //create static one
+	{
+		Texture.framebuffer = gl.createFramebuffer();
+		Texture.renderbuffer = gl.createRenderbuffer();
+	}
+
+	var framebuffer = Texture.framebuffer;
+	var renderbuffer = Texture.renderbuffer;
+
 	gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
 	gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer);
+
 	if (this.width != renderbuffer.width || this.height != renderbuffer.height) {
 	  renderbuffer.width = this.width;
 	  renderbuffer.height = this.height;
@@ -2263,7 +2326,7 @@ Texture.prototype.drawTo = function(callback) {
 	{
 		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.handler, 0);
 		gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
-		callback(this);
+		callback(this, params);
 	}
 	else if(this.texture_type == gl.TEXTURE_CUBE_MAP)
 	{
@@ -2271,7 +2334,7 @@ Texture.prototype.drawTo = function(callback) {
 		{
 			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X+i, this.handler, 0);
 			gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
-			callback(this,i);
+			callback(this,i, params);
 		}
 	}
 
@@ -2351,6 +2414,38 @@ Texture.prototype.toCanvas = function(canvas)
 }
 
 /**
+* Applies a blur filter of one pixel to the texture (be careful using it, it is slow)
+* @method applyBlur
+* @param {Number} offsetx scalar that multiplies the offset when fetching pixels horizontally (default 1)
+* @param {Number} offsety scalar that multiplies the offset when fetching pixels vertically (default 1)
+* @param {Number} intensity scalar that multiplies the result (default 1)
+* @param {Texture} temp_texture blur needs a temp texture, if not supplied it will create a new one each time!
+* @return {Texture} returns the temp_texture in case you want to reuse it
+*/
+Texture.prototype.applyBlur = function(offsetx, offsety, intensity, temp_texture)
+{
+	var self = this;
+	var shader = Shader.getBlurShader();
+	if(!temp_texture)
+		temp_texture = new GL.Texture(this.width, this.height, this.getProperties() );
+
+	offsetx = offsetx / this.width;
+	offsety = offsety / this.height;
+	gl.disable( gl.DEPTH_TEST );
+	gl.disable( gl.BLEND );
+
+	temp_texture.drawTo( function() {
+		self.toViewport(shader, {u_intensity: intensity, u_offset: [0, offsety ] });
+	});	
+
+	this.drawTo( function() {
+		temp_texture.toViewport(shader, {u_intensity: intensity, u_offset: [offsetx, 0] });
+	});	
+	return temp_texture;
+}
+
+
+/**
 * Similar to drawTo but it also stores the depth in a depth texture
 * @method drawToColorAndDepth
 * @param {Texture} color_texture
@@ -2362,10 +2457,12 @@ Texture.drawToColorAndDepth = function(color_texture, depth_texture, callback) {
 	if(depth_texture.width != color_texture.width || depth_texture.height != color_texture.height)
 		throw("Different size between color texture and depth texture");
 
-	var v = gl.getParameter(gl.VIEWPORT);
-	framebuffer = framebuffer || gl.createFramebuffer();
-	renderbuffer = renderbuffer || gl.createRenderbuffer();
-	gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+	var v = gl.getViewport();
+
+	if(Texture.framebuffer)
+		Texture.framebuffer = gl.createFramebuffer();
+
+	gl.bindFramebuffer(gl.FRAMEBUFFER, Texture.framebuffer);
 
 	gl.viewport(0, 0, color_texture.width, color_texture.height);
 
@@ -2390,6 +2487,7 @@ Texture.drawToColorAndDepth = function(color_texture, depth_texture, callback) {
 Texture.fromURL = function(url, options, on_complete) {
 	options = options || {};
 	var texture = options.texture || new GL.Texture(1, 1, options);
+
 	texture.bind();
 	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, (options.flipY != true ? 1 : 0) );
 	var temp_color = new Uint8Array(options.temp_color || [0,0,0,255]);
@@ -2434,6 +2532,7 @@ Texture.fromURL = function(url, options, on_complete) {
 */
 Texture.fromImage = function(image, options) {
 	options = options || {};
+
 	var texture = options.texture || new GL.Texture(image.width, image.height, options);
 	texture.bind();
 	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, (options.flipY != true ? 1 : 0) );
@@ -2457,6 +2556,7 @@ Texture.fromImage = function(image, options) {
 */
 Texture.fromVideo = function(video, options) {
 	options = options || {};
+
 	var texture = options.texture || new GL.Texture(video.videoWidth, video.videoHeight, options);
 	texture.bind();
 	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, (options.flipY != true ? 1 : 0) );
@@ -2497,6 +2597,7 @@ Texture.fromTexture = function(old_texture, options) {
 Texture.fromMemory = function(width, height, pixels, options) //format in options as format
 {
 	options = options || {};
+
 	var texture = options.texture || new GL.Texture(width, height, options);
 	gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
 	//the standard is to flip, so noflip means flip
@@ -2664,6 +2765,15 @@ Texture.prototype.generateMetadata = function()
 	metadata.height = this.height;
 	this.metadata = metadata;
 }
+
+Texture.compareFormats = function(a,b)
+{
+	if(!a || !b) return false;
+	if(a == b) return true;
+	if(a.width != b.width || a.height != b.height || a.type != b.type || a.texture_type != b.texture_type) 
+		return false;
+	return true;
+}
 /**
 * Shader class to upload programs to the GPU
 * @class Shader
@@ -2675,6 +2785,7 @@ Texture.prototype.generateMetadata = function()
 function Shader(vertexSource, fragmentSource, macros)
 {
 	var extra_code = "";
+	//expand macros
 	if(macros)
 		for(var i in macros)
 			extra_code += "#define " + i + " " + (macros[i] ? macros[i] : "") + "\n";
@@ -2689,6 +2800,7 @@ function Shader(vertexSource, fragmentSource, macros)
 		}
 		return shader;
 	}
+
 	this.program = gl.createProgram();
 	gl.attachShader(this.program, compileSource(gl.VERTEX_SHADER, extra_code + vertexSource));
 	gl.attachShader(this.program, compileSource(gl.FRAGMENT_SHADER, extra_code + fragmentSource));
@@ -2697,7 +2809,7 @@ function Shader(vertexSource, fragmentSource, macros)
 		throw 'link error: ' + gl.getProgramInfoLog(this.program);
 	}
 
-	//Extract info
+	//Extract info from the shader
 	this.attributes = {};
 	this.uniformLocations = {};
 	var isSampler = {};
@@ -2706,8 +2818,7 @@ function Shader(vertexSource, fragmentSource, macros)
 	});
 	this.isSampler = isSampler;
 
-	//extract uniform and attribs locations to speed up 
-	//*
+	//extract uniform and attribs locations to speed up future processes
 	for(var i = 0, l = gl.getProgramParameter(this.program, gl.ACTIVE_UNIFORMS); i < l; ++i)
 	{
 		var data = gl.getActiveUniform( this.program, i);
@@ -2722,9 +2833,16 @@ function Shader(vertexSource, fragmentSource, macros)
 		this.uniformLocations[ data.name ] = gl.getUniformLocation(this.program, data.name);
 		this.attributes[ data.name ] = gl.getAttribLocation(this.program, data.name );	
 	}
-
-	//*/
 }
+
+/* TODO, I dont like the idea of creating a shader which is not complete till files are retrieved
+Shader.fromFiles = function( vs_path, ps_path )
+{
+	var vs_code = null;
+	var fs_code = null;
+	
+}
+*/
 
 /**
 * Uploads a set of uniforms to the Shader
@@ -3006,7 +3124,7 @@ var GL = {
 		gl.max_texture_units = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
 		gl.HIGH_PRECISION_FORMAT = gl.half_float_ext ? gl.HALF_FLOAT_OES : (gl.float_ext ? gl.FLOAT : gl.UNSIGNED_BYTE); //because Firefox dont support half float
 
-		//viewport hack to retrieve it without using getParameter (which is superslow)
+		//viewport hack to retrieve it without using getParameter (which is slow)
 		gl._viewport_func = gl.viewport;
 		gl.viewport_data = new Float32Array([0,0,gl.canvas.width,gl.canvas.height]);
 		gl.viewport = function(a,b,c,d) { this.viewport_data.set([a,b,c,d]); this._viewport_func(a,b,c,d); }
@@ -3354,23 +3472,44 @@ var GL = {
 
 
 
-/* Lite Events system (similar to jQuery) but lightweight, to use to hook rendering stages */
+/**
+* LEvent is a lightweight events library focused in low memory footprint
+* @class LEvent
+* @constructor
+*/
+
 var LEvent = {
 	jQuery: false, //dispatch as jQuery events (enable this if you want to hook regular jQuery events to instances, they are dispatches as ":eventname" to avoid collisions)
 	//map: new Weakmap(),
 
-	bind: function( instance, event_name, callback, instance2 )
+	/**
+	* Binds an event to an instance
+	* @method LEvent.bind
+	* @param {Object} instance where to attach the event
+	* @param {String} event_name string defining the event name
+	* @param {function} callback function to call when the event is triggered
+	* @param {Object} target_instance [Optional] instance to call the function (use this instead of .bind method to help removing events)
+	**/
+	bind: function( instance, event_name, callback, target_instance )
 	{
 		if(!instance) throw("cannot bind event to null");
 		if(!callback) throw("cannot bind to null callback");
 		if(instance.constructor === String ) throw("cannot bind event to a string");
 		if(instance.hasOwnProperty("__on_" + event_name))
-			instance["__on_" + event_name].push([callback,instance2]);
+			instance["__on_" + event_name].push([callback,target_instance]);
 		else
-			instance["__on_" + event_name] = [[callback,instance2]];
+			instance["__on_" + event_name] = [[callback,target_instance]];
 	},
 
-	unbind: function( instance, event_name, callback, instance2 )
+	/**
+	* Unbinds an event from an instance
+	* @method LEvent.unbind
+	* @param {Object} instance where the event is binded
+	* @param {String} event_name string defining the event name
+	* @param {function} callback function that was binded
+	* @param {Object} target_instance [Optional] target_instance that was binded
+	**/
+	unbind: function( instance, event_name, callback, target_instance )
 	{
 		if(!instance) throw("cannot unbind event to null");
 		if(!callback) throw("cannot unbind from null callback");
@@ -3380,7 +3519,7 @@ var LEvent = {
 		for(var i in instance["__on_" + event_name])
 		{
 			var v = instance["__on_" + event_name][i];
-			if(v[0] === callback && v[1] === instance2)
+			if(v[0] === callback && v[1] === target_instance)
 			{
 				instance["__on_" + event_name].splice( i, 1);
 				break;
@@ -3391,73 +3530,102 @@ var LEvent = {
 			delete instance["__on_" + event_name];
 	},
 
-	unbindAll: function(instance, instance2)
+	/**
+	* Unbinds all events from an instance (or the ones that match certain target_instance)
+	* @method LEvent.unbindAll
+	* @param {Object} instance where the events are binded
+	* @param {Object} target_instance [Optional] target_instance of the events to remove
+	**/
+	unbindAll: function(instance, target_instance)
 	{
-		if(!instance) throw("cannot unbind event to null");
-		if(!instance2) //remove all
+		if(!instance) throw("cannot unbind events in null");
+		if(!target_instance) //remove all
 		{
-			var remove = [];
+			//two passes, to avoid deleting and reading at the same time
+			var to_remove = [];
 			for(var i in instance)
 			{
-				if(i.substring(0,5) != "__on_") continue;
-				remove.push(i);
+				if(i.substring(0,5) != "__on_") 
+					continue;//skip non-LEvent properties
+				to_remove.push(i);
 			}
-			for(var i in remove)
+			for(var i in to_remove)
 				delete instance[remove[i]];
 			return;
 		}
 
-		//remove only the instance2
+		//remove only the target_instance
 		//for every property in the instance
 		for(var i in instance)
 		{
-			if(i.substring(0,5) != "__on_") continue; //skip non-LEvent properties
+			if(i.substring(0,5) != "__on_") 
+				continue; //skip non-LEvent properties
 			var array = instance[i];
 			for(var j=0; j < array.length; ++j)
 			{
-				if( array[j][1] != instance2 ) continue;
+				if( array[j][1] != target_instance ) 
+					continue;
 				array.splice(j,1);//remove
 				--j;//iterate from the gap
 			}
+
 			if(array.length == 0)
 				delete instance[i];
 		}
 	},
 
-	isbind: function( instance, event_name, callback, instance2 )
+	/**
+	* Tells if there is a binded callback that matches the criteria
+	* @method LEvent.isBind
+	* @param {Object} instance where the are the events binded
+	* @param {String} event_name string defining the event name
+	* @param {function} callback the callback
+	* @param {Object} target_instance [Optional] instance binded to callback
+	**/
+	isBind: function( instance, event_name, callback, target_instance )
 	{
 		if(!instance || !instance.hasOwnProperty("__on_" + event_name)) return false;
 		for(var i in instance["__on_" + event_name])
 		{
 			var v = instance["__on_" + event_name][i];
-			if(v[0] === callback && v[1] === instance2)
+			if(v[0] === callback && v[1] === target_instance)
 				return true;
 		}
 		return false;
 	},
 
-	trigger: function( instance, event, params, skip_jquery )
+	/**
+	* Triggers and event in an instance
+	* @method LEvent.trigger
+	* @param {Object} instance that triggers the event
+	* @param {String} event_name string defining the event name
+	* @param {*} parameters that will be received by the binded function
+	* @param {boolean} skip_jquery [optional] force to skip jquery triggering
+	**/
+	trigger: function( instance, event_type, params, skip_jquery )
 	{
 		if(!instance) throw("cannot trigger event from null");
 		if(instance.constructor === String ) throw("cannot bind event to a string");
+
+		//if(typeof(event) == "string")
+		//	event = { type: event, target: instance, stopPropagation: LEvent._stopPropagation };
+		//var event_type = event.type;
+
 		//you can resend the events as jQuery events, but to avoid collisions with system events, we use ":" at the begining
-		if(typeof(event) == "string")
-			event = { type: event, target: instance, stopPropagation: LEvent._stopPropagation };
+		if(LEvent.jQuery && !skip_jquery) $(instance).trigger( ":" + event_type, params );
 
-		if(LEvent.jQuery && !skip_jquery) $(instance).trigger( ":" + event.type, params );
-
-		if(!instance.hasOwnProperty("__on_" + event.type)) return;
-		for(var i in instance["__on_" + event.type])
+		if(!instance.hasOwnProperty("__on_" + event_type)) return;
+		for(var i in instance["__on_" + event_type])
 		{
-			var v = instance["__on_" + event.type][i];
-			if( v[0].call(v[1], event, params) == false || event.stop)
+			var v = instance["__on_" + event_type][i];
+			if( v[0].call(v[1], event_type, params) == false)// || event.stop)
 				break; //stopPropagation
 		}
 
 		return event;
 	},
 
-	_stopPropagation: function() { this.stop = true; }
+	//_stopPropagation: function() { this.stop = true; }
 };
 /* geometric utilities */
 var CLIP_INSIDE = 0;
@@ -3832,9 +4000,9 @@ var geo = {
 	* @param {mat4} viewprojection matrix
 	* @return {Float32Array} returns all 6 planes in a float32array[24]
 	*/
-	extractPlanes: function(vp)
+	extractPlanes: function(vp, planes)
 	{
-		var planes = new Float32Array(4*6);
+		var planes = planes || new Float32Array(4*6);
 
 		//right
 		planes.set( [vp[3] - vp[0], vp[7] - vp[4], vp[11] - vp[8], vp[15] - vp[12] ], 0); 

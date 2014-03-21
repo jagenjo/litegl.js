@@ -1,4 +1,5 @@
-//litegl.js (Javi Agenjo) forked from lightgl.js by Evan Wallace (madebyevan.com)
+//litegl.js (Javi Agenjo 2014 @tamat)
+//forked from lightgl.js by Evan Wallace (madebyevan.com)
 "use strict"
 
 var gl;
@@ -49,6 +50,7 @@ function isNumber(obj) {
 }
 */
 
+//given a regular expression, a text and a callback, it calls the function every time it finds it
 function regexMap(regex, text, callback) {
   var result;
   while ((result = regex.exec(text)) != null) {
@@ -94,3 +96,37 @@ function wipeObject(obj)
       delete obj[p];
   }
 };
+
+function HttpRequest(url,data)
+{
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', url, true);
+  xhr.onload = function()
+  {
+    var response = this.response;
+    if(this.status != 200)
+    {
+      LEvent.trigger(xhr,"fail",this.status);
+      return;
+    }
+  }
+  xhr.onerror = function(err)
+  {
+    LEvent.trigger(xhr,"fail",err);
+  }
+
+  return xhr;
+}
+
+//cheap simple promises
+Object.defineProperty( XMLHttpRequest.prototype, "done", { enumerable: false, value: function(callback)
+{
+  LEvent.bind(this,"done", function(e,err) { callback(err); } );
+  return this;
+}});
+
+Object.defineProperty( XMLHttpRequest.prototype, "fail", { enumerable: false, value: function(callback)
+{
+  LEvent.bind(this,"fail", function(e,err) { callback(err); } );
+  return this;
+}});

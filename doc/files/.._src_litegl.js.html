@@ -51,6 +51,8 @@
             
                 <li><a href="../classes/Indexer.html">Indexer</a></li>
             
+                <li><a href="../classes/LEvent.html">LEvent</a></li>
+            
                 <li><a href="../classes/Mesh.html">Mesh</a></li>
             
                 <li><a href="../classes/Octree.html">Octree</a></li>
@@ -160,7 +162,7 @@ var GL = {
 		gl.max_texture_units = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
 		gl.HIGH_PRECISION_FORMAT = gl.half_float_ext ? gl.HALF_FLOAT_OES : (gl.float_ext ? gl.FLOAT : gl.UNSIGNED_BYTE); //because Firefox dont support half float
 
-		//viewport hack to retrieve it without using getParameter (which is superslow)
+		//viewport hack to retrieve it without using getParameter (which is slow)
 		gl._viewport_func = gl.viewport;
 		gl.viewport_data = new Float32Array([0,0,gl.canvas.width,gl.canvas.height]);
 		gl.viewport = function(a,b,c,d) { this.viewport_data.set([a,b,c,d]); this._viewport_func(a,b,c,d); }

@@ -9,6 +9,7 @@
 function Shader(vertexSource, fragmentSource, macros)
 {
 	var extra_code = "";
+	//expand macros
 	if(macros)
 		for(var i in macros)
 			extra_code += "#define " + i + " " + (macros[i] ? macros[i] : "") + "\n";
@@ -23,6 +24,7 @@ function Shader(vertexSource, fragmentSource, macros)
 		}
 		return shader;
 	}
+
 	this.program = gl.createProgram();
 	gl.attachShader(this.program, compileSource(gl.VERTEX_SHADER, extra_code + vertexSource));
 	gl.attachShader(this.program, compileSource(gl.FRAGMENT_SHADER, extra_code + fragmentSource));
@@ -31,7 +33,7 @@ function Shader(vertexSource, fragmentSource, macros)
 		throw 'link error: ' + gl.getProgramInfoLog(this.program);
 	}
 
-	//Extract info
+	//Extract info from the shader
 	this.attributes = {};
 	this.uniformLocations = {};
 	var isSampler = {};
@@ -40,8 +42,7 @@ function Shader(vertexSource, fragmentSource, macros)
 	});
 	this.isSampler = isSampler;
 
-	//extract uniform and attribs locations to speed up 
-	//*
+	//extract uniform and attribs locations to speed up future processes
 	for(var i = 0, l = gl.getProgramParameter(this.program, gl.ACTIVE_UNIFORMS); i < l; ++i)
 	{
 		var data = gl.getActiveUniform( this.program, i);
@@ -56,9 +57,16 @@ function Shader(vertexSource, fragmentSource, macros)
 		this.uniformLocations[ data.name ] = gl.getUniformLocation(this.program, data.name);
 		this.attributes[ data.name ] = gl.getAttribLocation(this.program, data.name );	
 	}
-
-	//*/
 }
+
+/* TODO, I dont like the idea of creating a shader which is not complete till files are retrieved
+Shader.fromFiles = function( vs_path, ps_path )
+{
+	var vs_code = null;
+	var fs_code = null;
+	
+}
+*/
 
 /**
 * Uploads a set of uniforms to the Shader

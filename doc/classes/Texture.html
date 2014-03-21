@@ -51,6 +51,8 @@
             
                 <li><a href="../classes/Indexer.html">Indexer</a></li>
             
+                <li><a href="../classes/LEvent.html">LEvent</a></li>
+            
                 <li><a href="../classes/Mesh.html">Mesh</a></li>
             
                 <li><a href="../classes/Octree.html">Octree</a></li>
@@ -292,6 +294,13 @@
                     <ul class="index-list methods">
                         
                             <li class="index-item method">
+                                <a href="#method_applyBlur">applyBlur</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
                                 <a href="#method_bind">bind</a>
 
                                 
@@ -447,6 +456,179 @@
                 <h2 class="off-left">Methods</h2>
 
                 
+                    <div id="method_applyBlur" class="method item">
+    <h3 class="name"><code>applyBlur</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>offsetx</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>offsety</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>intensity</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>temp_texture</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_texture.js.html#l301"><code>..&#x2F;src&#x2F;texture.js:301</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Applies a blur filter of one pixel to the texture (be careful using it, it is slow)</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">offsetx</code>
+                        <span class="type">Number</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>scalar that multiplies the offset when fetching pixels horizontally (default 1)</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">offsety</code>
+                        <span class="type">Number</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>scalar that multiplies the offset when fetching pixels vertically (default 1)</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">intensity</code>
+                        <span class="type">Number</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>scalar that multiplies the result (default 1)</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">temp_texture</code>
+                        <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>blur needs a temp texture, if not supplied it will create a new one each time!</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>:
+                    
+                    <p>returns the temp_texture in case you want to reuse it</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
                     <div id="method_bind" class="method item">
     <h3 class="name"><code>bind</code></h3>
 
@@ -493,7 +675,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l90"><code>..&#x2F;src&#x2F;texture.js:90</code></a>
+        <a href="../files/.._src_texture.js.html#l109"><code>..&#x2F;src&#x2F;texture.js:109</code></a>
         
         </p>
 
@@ -596,7 +778,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l206"><code>..&#x2F;src&#x2F;texture.js:206</code></a>
+        <a href="../files/.._src_texture.js.html#l233"><code>..&#x2F;src&#x2F;texture.js:233</code></a>
         
         </p>
 
@@ -684,7 +866,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l163"><code>..&#x2F;src&#x2F;texture.js:163</code></a>
+        <a href="../files/.._src_texture.js.html#l182"><code>..&#x2F;src&#x2F;texture.js:182</code></a>
         
         </p>
 
@@ -785,7 +967,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l274"><code>..&#x2F;src&#x2F;texture.js:274</code></a>
+        <a href="../files/.._src_texture.js.html#l333"><code>..&#x2F;src&#x2F;texture.js:333</code></a>
         
         </p>
 
@@ -897,7 +1079,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l576"><code>..&#x2F;src&#x2F;texture.js:576</code></a>
+        <a href="../files/.._src_texture.js.html#l641"><code>..&#x2F;src&#x2F;texture.js:641</code></a>
         
         </p>
 
@@ -964,7 +1146,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l78"><code>..&#x2F;src&#x2F;texture.js:78</code></a>
+        <a href="../files/.._src_texture.js.html#l100"><code>..&#x2F;src&#x2F;texture.js:100</code></a>
         
         </p>
 
@@ -1039,7 +1221,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l482"><code>..&#x2F;src&#x2F;texture.js:482</code></a>
+        <a href="../files/.._src_texture.js.html#l547"><code>..&#x2F;src&#x2F;texture.js:547</code></a>
         
         </p>
 
@@ -1166,7 +1348,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l446"><code>..&#x2F;src&#x2F;texture.js:446</code></a>
+        <a href="../files/.._src_texture.js.html#l511"><code>..&#x2F;src&#x2F;texture.js:511</code></a>
         
         </p>
 
@@ -1293,7 +1475,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l349"><code>..&#x2F;src&#x2F;texture.js:349</code></a>
+        <a href="../files/.._src_texture.js.html#l411"><code>..&#x2F;src&#x2F;texture.js:411</code></a>
         
         </p>
 
@@ -1318,133 +1500,6 @@
                     
                         <code class="param-name">image</code>
                         <span class="type">Image</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                         
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">options</code>
-                        <span class="type">Object</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                         
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>:
-                    
-                    <p>the texture</p>
-
-                
-            </div>
-        </div>
-    
-
-    
-</div>
-
-                
-                    <div id="method_Texture.fromTexture" class="method item">
-    <h3 class="name"><code>Texture.fromTexture</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>old_texture</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>options</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-        <span class="returns-inline">
-            <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>
-        </span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/.._src_texture.js.html#l395"><code>..&#x2F;src&#x2F;texture.js:395</code></a>
-        
-        </p>
-
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        <p>Create a clone of a texture</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">old_texture</code>
-                        <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>
                     
 
                     
@@ -1559,7 +1614,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l409"><code>..&#x2F;src&#x2F;texture.js:409</code></a>
+        <a href="../files/.._src_texture.js.html#l473"><code>..&#x2F;src&#x2F;texture.js:473</code></a>
         
         </p>
 
@@ -1614,6 +1669,133 @@
                     
                         <code class="param-name">pixels</code>
                         <span class="type">ArrayBuffer</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">options</code>
+                        <span class="type">Object</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>:
+                    
+                    <p>the texture</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_Texture.fromTexture" class="method item">
+    <h3 class="name"><code>Texture.fromTexture</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>old_texture</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>options</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_texture.js.html#l459"><code>..&#x2F;src&#x2F;texture.js:459</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Create a clone of a texture</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">old_texture</code>
+                        <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>
                     
 
                     
@@ -1722,7 +1904,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l303"><code>..&#x2F;src&#x2F;texture.js:303</code></a>
+        <a href="../files/.._src_texture.js.html#l364"><code>..&#x2F;src&#x2F;texture.js:364</code></a>
         
         </p>
 
@@ -1864,7 +2046,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l372"><code>..&#x2F;src&#x2F;texture.js:372</code></a>
+        <a href="../files/.._src_texture.js.html#l435"><code>..&#x2F;src&#x2F;texture.js:435</code></a>
         
         </p>
 
@@ -1975,7 +2157,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l548"><code>..&#x2F;src&#x2F;texture.js:548</code></a>
+        <a href="../files/.._src_texture.js.html#l613"><code>..&#x2F;src&#x2F;texture.js:613</code></a>
         
         </p>
 
@@ -2048,7 +2230,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l512"><code>..&#x2F;src&#x2F;texture.js:512</code></a>
+        <a href="../files/.._src_texture.js.html#l577"><code>..&#x2F;src&#x2F;texture.js:577</code></a>
         
         </p>
 
@@ -2127,7 +2309,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l248"><code>..&#x2F;src&#x2F;texture.js:248</code></a>
+        <a href="../files/.._src_texture.js.html#l275"><code>..&#x2F;src&#x2F;texture.js:275</code></a>
         
         </p>
 
@@ -2222,7 +2404,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l232"><code>..&#x2F;src&#x2F;texture.js:232</code></a>
+        <a href="../files/.._src_texture.js.html#l259"><code>..&#x2F;src&#x2F;texture.js:259</code></a>
         
         </p>
 
@@ -2331,7 +2513,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l103"><code>..&#x2F;src&#x2F;texture.js:103</code></a>
+        <a href="../files/.._src_texture.js.html#l122"><code>..&#x2F;src&#x2F;texture.js:122</code></a>
         
         </p>
 
@@ -2434,7 +2616,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l148"><code>..&#x2F;src&#x2F;texture.js:148</code></a>
+        <a href="../files/.._src_texture.js.html#l167"><code>..&#x2F;src&#x2F;texture.js:167</code></a>
         
         </p>
 
@@ -2522,7 +2704,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l120"><code>..&#x2F;src&#x2F;texture.js:120</code></a>
+        <a href="../files/.._src_texture.js.html#l139"><code>..&#x2F;src&#x2F;texture.js:139</code></a>
         
         </p>
 

@@ -371,9 +371,9 @@ var geo = {
 	* @param {mat4} viewprojection matrix
 	* @return {Float32Array} returns all 6 planes in a float32array[24]
 	*/
-	extractPlanes: function(vp)
+	extractPlanes: function(vp, planes)
 	{
-		var planes = new Float32Array(4*6);
+		var planes = planes || new Float32Array(4*6);
 
 		//right
 		planes.set( [vp[3] - vp[0], vp[7] - vp[4], vp[11] - vp[8], vp[15] - vp[12] ], 0); 

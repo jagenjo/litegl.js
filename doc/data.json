@@ -18,6 +18,15 @@
             "fors": {},
             "namespaces": {}
         },
+        "../src/levent.js": {
+            "name": "../src/levent.js",
+            "modules": {},
+            "classes": {
+                "LEvent": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
         "../src/litegl.js": {
             "name": "../src/litegl.js",
             "modules": {},
@@ -106,6 +115,19 @@
             "file": "../src/geo.js",
             "line": 494,
             "description": "BBox is a class to create BoundingBoxes but it works as glMatrix, creating Float32Array with the info inside instead of objects\nThe bounding box is stored as center,halfsize,min,max,radius (total of 13 floats)"
+        },
+        "LEvent": {
+            "name": "LEvent",
+            "shortname": "LEvent",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "../src/levent.js",
+            "line": 1,
+            "description": "LEvent is a lightweight events library focused in low memory footprint",
+            "is_constructor": 1
         },
         "GL": {
             "name": "GL",
@@ -979,7 +1001,147 @@
         {
             "file": "../src/gl-matrix-extra.js",
             "line": 115,
-            "class": "GL"
+            "class": "LEvent"
+        },
+        {
+            "file": "../src/levent.js",
+            "line": 11,
+            "description": "Binds an event to an instance",
+            "itemtype": "method",
+            "name": "LEvent.bind",
+            "params": [
+                {
+                    "name": "instance",
+                    "description": "where to attach the event",
+                    "type": "Object"
+                },
+                {
+                    "name": "event_name",
+                    "description": "string defining the event name",
+                    "type": "String"
+                },
+                {
+                    "name": "callback",
+                    "description": "function to call when the event is triggered",
+                    "type": "Function"
+                },
+                {
+                    "name": "target_instance",
+                    "description": "[Optional] instance to call the function (use this instead of .bind method to help removing events)",
+                    "type": "Object"
+                }
+            ],
+            "class": "LEvent"
+        },
+        {
+            "file": "../src/levent.js",
+            "line": 30,
+            "description": "Unbinds an event from an instance",
+            "itemtype": "method",
+            "name": "LEvent.unbind",
+            "params": [
+                {
+                    "name": "instance",
+                    "description": "where the event is binded",
+                    "type": "Object"
+                },
+                {
+                    "name": "event_name",
+                    "description": "string defining the event name",
+                    "type": "String"
+                },
+                {
+                    "name": "callback",
+                    "description": "function that was binded",
+                    "type": "Function"
+                },
+                {
+                    "name": "target_instance",
+                    "description": "[Optional] target_instance that was binded",
+                    "type": "Object"
+                }
+            ],
+            "class": "LEvent"
+        },
+        {
+            "file": "../src/levent.js",
+            "line": 59,
+            "description": "Unbinds all events from an instance (or the ones that match certain target_instance)",
+            "itemtype": "method",
+            "name": "LEvent.unbindAll",
+            "params": [
+                {
+                    "name": "instance",
+                    "description": "where the events are binded",
+                    "type": "Object"
+                },
+                {
+                    "name": "target_instance",
+                    "description": "[Optional] target_instance of the events to remove",
+                    "type": "Object"
+                }
+            ],
+            "class": "LEvent"
+        },
+        {
+            "file": "../src/levent.js",
+            "line": 103,
+            "description": "Tells if there is a binded callback that matches the criteria",
+            "itemtype": "method",
+            "name": "LEvent.isBind",
+            "params": [
+                {
+                    "name": "instance",
+                    "description": "where the are the events binded",
+                    "type": "Object"
+                },
+                {
+                    "name": "event_name",
+                    "description": "string defining the event name",
+                    "type": "String"
+                },
+                {
+                    "name": "callback",
+                    "description": "the callback",
+                    "type": "Function"
+                },
+                {
+                    "name": "target_instance",
+                    "description": "[Optional] instance binded to callback",
+                    "type": "Object"
+                }
+            ],
+            "class": "LEvent"
+        },
+        {
+            "file": "../src/levent.js",
+            "line": 123,
+            "description": "Triggers and event in an instance",
+            "itemtype": "method",
+            "name": "LEvent.trigger",
+            "params": [
+                {
+                    "name": "instance",
+                    "description": "that triggers the event",
+                    "type": "Object"
+                },
+                {
+                    "name": "event_name",
+                    "description": "string defining the event name",
+                    "type": "String"
+                },
+                {
+                    "name": "parameters",
+                    "description": "that will be received by the binded function",
+                    "type": "*"
+                },
+                {
+                    "name": "skip_jquery",
+                    "description": "[optional] force to skip jquery triggering",
+                    "type": "Boolean"
+                }
+            ],
+            "class": "LEvent"
         },
         {
             "file": "../src/litegl.js",
@@ -1498,7 +1660,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 63,
+            "line": 71,
             "description": "Uploads a set of uniforms to the Shader",
             "itemtype": "method",
             "name": "uniforms",
@@ -1513,7 +1675,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 116,
+            "line": 124,
             "description": "Renders a mesh using this shader, remember to use the function uniforms before to enable the shader",
             "itemtype": "method",
             "name": "draw",
@@ -1533,7 +1695,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 128,
+            "line": 136,
             "description": "Renders a range of a mesh using this shader",
             "itemtype": "method",
             "name": "drawRange",
@@ -1563,7 +1725,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 143,
+            "line": 151,
             "description": "Renders a range of a mesh using this shader",
             "itemtype": "method",
             "name": "drawBuffers",
@@ -1598,7 +1760,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 78,
+            "line": 100,
             "description": "Returns if depth texture is supported by the GPU",
             "itemtype": "method",
             "name": "isDepthSupported",
@@ -1606,7 +1768,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 90,
+            "line": 109,
             "description": "Binds the texture to one texture unit",
             "itemtype": "method",
             "name": "bind",
@@ -1625,7 +1787,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 103,
+            "line": 122,
             "description": "Unbinds the texture",
             "itemtype": "method",
             "name": "unbind",
@@ -1644,7 +1806,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 120,
+            "line": 139,
             "description": "Given an Image/Canvas/Video it uploads it to the GPU",
             "itemtype": "method",
             "name": "uploadImage",
@@ -1659,7 +1821,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 148,
+            "line": 167,
             "description": "Uploads data to the GPU (data must have the appropiate size)",
             "itemtype": "method",
             "name": "uploadData",
@@ -1674,7 +1836,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 163,
+            "line": 182,
             "description": "Render to texture using FBO, just pass the callback to a rendering function and the content of the texture will be updated",
             "itemtype": "method",
             "name": "drawTo",
@@ -1689,7 +1851,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 206,
+            "line": 233,
             "description": "Copy content of one texture into another",
             "itemtype": "method",
             "name": "copyTo",
@@ -1704,7 +1866,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 232,
+            "line": 259,
             "description": "Render texture in a quad to full viewport size",
             "itemtype": "method",
             "name": "toViewport",
@@ -1724,7 +1886,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 248,
+            "line": 275,
             "description": "Copy texture content to a canvas",
             "itemtype": "method",
             "name": "toCanvas",
@@ -1739,7 +1901,41 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 274,
+            "line": 301,
+            "description": "Applies a blur filter of one pixel to the texture (be careful using it, it is slow)",
+            "itemtype": "method",
+            "name": "applyBlur",
+            "params": [
+                {
+                    "name": "offsetx",
+                    "description": "scalar that multiplies the offset when fetching pixels horizontally (default 1)",
+                    "type": "Number"
+                },
+                {
+                    "name": "offsety",
+                    "description": "scalar that multiplies the offset when fetching pixels vertically (default 1)",
+                    "type": "Number"
+                },
+                {
+                    "name": "intensity",
+                    "description": "scalar that multiplies the result (default 1)",
+                    "type": "Number"
+                },
+                {
+                    "name": "temp_texture",
+                    "description": "blur needs a temp texture, if not supplied it will create a new one each time!",
+                    "type": "Texture"
+                }
+            ],
+            "return": {
+                "description": "returns the temp_texture in case you want to reuse it",
+                "type": "Texture"
+            },
+            "class": "Texture"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 333,
             "description": "Similar to drawTo but it also stores the depth in a depth texture",
             "itemtype": "method",
             "name": "drawToColorAndDepth",
@@ -1764,7 +1960,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 303,
+            "line": 364,
             "description": "Loads and uploads a texture from a url",
             "itemtype": "method",
             "name": "Texture.fromURL",
@@ -1793,7 +1989,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 349,
+            "line": 411,
             "description": "Create a texture from an Image",
             "itemtype": "method",
             "name": "Texture.fromImage",
@@ -1817,7 +2013,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 372,
+            "line": 435,
             "description": "Create a texture from a Video",
             "itemtype": "method",
             "name": "Texture.fromVideo",
@@ -1841,7 +2037,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 395,
+            "line": 459,
             "description": "Create a clone of a texture",
             "itemtype": "method",
             "name": "Texture.fromTexture",
@@ -1865,7 +2061,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 409,
+            "line": 473,
             "description": "Create a texture from an ArrayBuffer containing the pixels",
             "itemtype": "method",
             "name": "Texture.fromTexture",
@@ -1899,7 +2095,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 446,
+            "line": 511,
             "description": "Create a cubemap texture from a set of 6 images",
             "itemtype": "method",
             "name": "Texture.cubemapFromImages",
@@ -1923,7 +2119,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 482,
+            "line": 547,
             "description": "Create a cubemap texture from a single image that contains all six images arranged vertically",
             "itemtype": "method",
             "name": "Texture.cubemapFromImage",
@@ -1947,7 +2143,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 512,
+            "line": 577,
             "description": "returns a Blob containing all the data from the texture",
             "itemtype": "method",
             "name": "Texture.toBlob",
@@ -1959,7 +2155,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 548,
+            "line": 613,
             "description": "returns a base64 String containing all the data from the texture",
             "itemtype": "method",
             "name": "Texture.toBase64",
@@ -1971,7 +2167,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 576,
+            "line": 641,
             "description": "generates some basic metadata about the image",
             "itemtype": "method",
             "name": "generateMetadata",
@@ -1983,7 +2179,7 @@
         },
         {
             "file": "../src/utils.js",
-            "line": 9,
+            "line": 10,
             "description": "Tells if one number is power of two (used for textures)",
             "itemtype": "method",
             "name": "isPowerOfTwo",
@@ -2002,7 +2198,7 @@
         },
         {
             "file": "../src/utils.js",
-            "line": 20,
+            "line": 21,
             "description": "Get current time in milliseconds",
             "itemtype": "method",
             "name": "getTime",

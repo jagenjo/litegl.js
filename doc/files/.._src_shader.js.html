@@ -51,6 +51,8 @@
             
                 <li><a href="../classes/Indexer.html">Indexer</a></li>
             
+                <li><a href="../classes/LEvent.html">LEvent</a></li>
+            
                 <li><a href="../classes/Mesh.html">Mesh</a></li>
             
                 <li><a href="../classes/Octree.html">Octree</a></li>
@@ -113,6 +115,7 @@
 function Shader(vertexSource, fragmentSource, macros)
 {
 	var extra_code = &quot;&quot;;
+	//expand macros
 	if(macros)
 		for(var i in macros)
 			extra_code += &quot;#define &quot; + i + &quot; &quot; + (macros[i] ? macros[i] : &quot;&quot;) + &quot;\n&quot;;
@@ -127,6 +130,7 @@ function Shader(vertexSource, fragmentSource, macros)
 		}
 		return shader;
 	}
+
 	this.program = gl.createProgram();
 	gl.attachShader(this.program, compileSource(gl.VERTEX_SHADER, extra_code + vertexSource));
 	gl.attachShader(this.program, compileSource(gl.FRAGMENT_SHADER, extra_code + fragmentSource));
@@ -135,7 +139,7 @@ function Shader(vertexSource, fragmentSource, macros)
 		throw &#x27;link error: &#x27; + gl.getProgramInfoLog(this.program);
 	}
 
-	//Extract info
+	//Extract info from the shader
 	this.attributes = {};
 	this.uniformLocations = {};
 	var isSampler = {};
@@ -144,8 +148,7 @@ function Shader(vertexSource, fragmentSource, macros)
 	});
 	this.isSampler = isSampler;
 
-	//extract uniform and attribs locations to speed up 
-	//*
+	//extract uniform and attribs locations to speed up future processes
 	for(var i = 0, l = gl.getProgramParameter(this.program, gl.ACTIVE_UNIFORMS); i &lt; l; ++i)
 	{
 		var data = gl.getActiveUniform( this.program, i);
@@ -160,9 +163,16 @@ function Shader(vertexSource, fragmentSource, macros)
 		this.uniformLocations[ data.name ] = gl.getUniformLocation(this.program, data.name);
 		this.attributes[ data.name ] = gl.getAttribLocation(this.program, data.name );	
 	}
-
-	//*/
 }
+
+/* TODO, I dont like the idea of creating a shader which is not complete till files are retrieved
+Shader.fromFiles = function( vs_path, ps_path )
+{
+	var vs_code = null;
+	var fs_code = null;
+	
+}
+*/
 
 /**
 * Uploads a set of uniforms to the Shader

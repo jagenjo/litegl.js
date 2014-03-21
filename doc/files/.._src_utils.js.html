@@ -51,6 +51,8 @@
             
                 <li><a href="../classes/Indexer.html">Indexer</a></li>
             
+                <li><a href="../classes/LEvent.html">LEvent</a></li>
+            
                 <li><a href="../classes/Mesh.html">Mesh</a></li>
             
                 <li><a href="../classes/Octree.html">Octree</a></li>
@@ -102,7 +104,8 @@
 
 <div class="file">
     <pre class="code prettyprint linenums">
-//litegl.js (Javi Agenjo) forked from lightgl.js by Evan Wallace (madebyevan.com)
+//litegl.js (Javi Agenjo 2014 @tamat)
+//forked from lightgl.js by Evan Wallace (madebyevan.com)
 &quot;use strict&quot;
 
 var gl;
@@ -153,6 +156,7 @@ function isNumber(obj) {
 }
 */
 
+//given a regular expression, a text and a callback, it calls the function every time it finds it
 function regexMap(regex, text, callback) {
   var result;
   while ((result = regex.exec(text)) != null) {
@@ -198,6 +202,40 @@ function wipeObject(obj)
       delete obj[p];
   }
 };
+
+function HttpRequest(url,data)
+{
+  var xhr = new XMLHttpRequest();
+  xhr.open(&#x27;POST&#x27;, url, true);
+  xhr.onload = function()
+  {
+    var response = this.response;
+    if(this.status != 200)
+    {
+      LEvent.trigger(xhr,&quot;fail&quot;,this.status);
+      return;
+    }
+  }
+  xhr.onerror = function(err)
+  {
+    LEvent.trigger(xhr,&quot;fail&quot;,err);
+  }
+
+  return xhr;
+}
+
+//cheap simple promises
+Object.defineProperty( XMLHttpRequest.prototype, &quot;done&quot;, { enumerable: false, value: function(callback)
+{
+  LEvent.bind(this,&quot;done&quot;, function(e,err) { callback(err); } );
+  return this;
+}});
+
+Object.defineProperty( XMLHttpRequest.prototype, &quot;fail&quot;, { enumerable: false, value: function(callback)
+{
+  LEvent.bind(this,&quot;fail&quot;, function(e,err) { callback(err); } );
+  return this;
+}});
     </pre>
 </div>
 

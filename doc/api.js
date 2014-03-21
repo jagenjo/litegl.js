@@ -5,6 +5,7 @@ YUI.add("yuidoc-meta", function(Y) {
         "Buffer",
         "GL",
         "Indexer",
+        "LEvent",
         "Mesh",
         "Octree",
         "Shader",
