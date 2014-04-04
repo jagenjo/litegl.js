@@ -47,7 +47,13 @@ function Shader(vertexSource, fragmentSource, macros)
 	{
 		var data = gl.getActiveUniform( this.program, i);
 		if(!data) break;
-		this.uniformLocations[ data.name ] = gl.getUniformLocation(this.program, data.name);
+		var uniformName = data.name;
+		/* disabled because WebGL do not allow to upload random size arrays to the GPU...
+		var pos = uniformName.indexOf("["); //arrays have uniformName[0], strip the []
+		if(pos != -1)
+			uniformName = uniformName.substr(0,pos);
+		*/
+		this.uniformLocations[ uniformName ] = gl.getUniformLocation(this.program, uniformName);
 	}
 
 	for(var i = 0, l = gl.getProgramParameter(this.program, gl.ACTIVE_ATTRIBUTES); i < l; ++i)
@@ -229,8 +235,8 @@ Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_
 //Screen shader: used to render one texture into another
 Shader.getScreenShader = function()
 {
-	if(this._screen_shader)
-		return this._screen_shader;
+	if(gl._screen_shader)
+		return gl._screen_shader;
 
 	var shader = new GL.Shader("\n\
 			precision highp float;\n\
@@ -249,15 +255,15 @@ Shader.getScreenShader = function()
 				gl_FragColor = texture2D(texture, coord);\n\
 			}\n\
 			");
-	this._screen_shader = shader;
-	return this._screen_shader;
+	gl._screen_shader = shader;
+	return gl._screen_shader;
 }
 
 //Blur shader
 Shader.getBlurShader = function()
 {
-	if(this._blur_shader)
-		return this._blur_shader;
+	if(gl._blur_shader)
+		return gl._blur_shader;
 
 	var shader = new GL.Shader("\n\
 			precision highp float;\n\
@@ -287,6 +293,6 @@ Shader.getBlurShader = function()
 			   gl_FragColor = u_intensity * sum;\n\
 			}\n\
 			");
-	this._blur_shader = shader;
-	return this._blur_shader;
+	gl._blur_shader = shader;
+	return gl._blur_shader;
 }

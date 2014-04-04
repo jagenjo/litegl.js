@@ -147,9 +147,39 @@ var LEvent = {
 			if( v[0].call(v[1], event_type, params) == false)// || event.stop)
 				break; //stopPropagation
 		}
-
-		return event;
 	},
 
-	//_stopPropagation: function() { this.stop = true; }
+	/**
+	* Triggers and event to every element in an array
+	* @method LEvent.triggerArray
+	* @param {Array} array contains all instances to triggers the event
+	* @param {String} event_name string defining the event name
+	* @param {*} parameters that will be received by the binded function
+	* @param {boolean} skip_jquery [optional] force to skip jquery triggering
+	**/
+	triggerArray: function( instances, event_type, params, skip_jquery )
+	{
+		for(var i in instances)
+		{
+			var instance = instances[i];
+			if(!instance) throw("cannot trigger event from null");
+			if(instance.constructor === String ) throw("cannot bind event to a string");
+
+			//if(typeof(event) == "string")
+			//	event = { type: event, target: instance, stopPropagation: LEvent._stopPropagation };
+			//var event_type = event.type;
+
+			//you can resend the events as jQuery events, but to avoid collisions with system events, we use ":" at the begining
+			if(LEvent.jQuery && !skip_jquery) $(instance).trigger( ":" + event_type, params );
+
+			if(!instance.hasOwnProperty("__on_" + event_type)) 
+				continue;
+			for(var i in instance["__on_" + event_type])
+			{
+				var v = instance["__on_" + event_type][i];
+				if( v[0].call(v[1], event_type, params) == false)// || event.stop)
+					break; //stopPropagation
+			}
+		}
+	}
 };

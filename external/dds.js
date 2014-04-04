@@ -521,12 +521,19 @@ var DDS = (function () {
 		var header = new Int32Array(data, 0, headerLengthInt)
 		var is_cubemap = !!(header[off_caps+1] & DDSCAPS2_CUBEMAP);
 		var tex_type = is_cubemap ? gl.TEXTURE_CUBE_MAP : gl.TEXTURE_2D;
+
 		gl.bindTexture(tex_type, texture);
 		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false );
 		var mipmaps = uploadDDSLevels(gl, ext, data, loadMipmaps);
 		gl.texParameteri(tex_type, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 		gl.texParameteri(tex_type, gl.TEXTURE_MIN_FILTER, mipmaps > 1 ? gl.LINEAR_MIPMAP_LINEAR : gl.LINEAR);
-		gl.bindTexture(tex_type, null);
+        if(is_cubemap)
+        {
+            gl.texParameteri(tex_type, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE );
+            gl.texParameteri(tex_type, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE );
+        }
+
+		gl.bindTexture(tex_type, null); //unbind
 		texture.texture_type = tex_type;
 		texture.width = header[off_width];
 		texture.height = header[off_height];

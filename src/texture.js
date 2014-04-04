@@ -187,11 +187,9 @@ Texture.prototype.uploadData = function(data)
 Texture.prototype.drawTo = function(callback, params) {
 	//var v = gl.getParameter(gl.VIEWPORT);
 	var v = gl.getViewport();
-	if(!Texture.framebuffer) //create static one
-	{
-		Texture.framebuffer = gl.createFramebuffer();
-		Texture.renderbuffer = gl.createRenderbuffer();
-	}
+
+	Texture.framebuffer = Texture.framebuffer || gl.createFramebuffer();
+	Texture.renderbuffer = Texture.renderbuffer || gl.createRenderbuffer();
 
 	var framebuffer = Texture.framebuffer;
 	var renderbuffer = Texture.renderbuffer;
@@ -344,14 +342,13 @@ Texture.drawToColorAndDepth = function(color_texture, depth_texture, callback) {
 
 	var v = gl.getViewport();
 
-	if(Texture.framebuffer)
-		Texture.framebuffer = gl.createFramebuffer();
+	Texture.framebuffer = Texture.framebuffer || gl.createFramebuffer();
 
 	gl.bindFramebuffer(gl.FRAMEBUFFER, Texture.framebuffer);
 
 	gl.viewport(0, 0, color_texture.width, color_texture.height);
 
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, color_texture.handler, 0);
+	gl.d(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, color_texture.handler, 0);
 	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depth_texture.handler, 0);
 
 	callback();

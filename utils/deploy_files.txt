@@ -6,7 +6,7 @@
 ../src/mesh.js
 ../src/texture.js
 ../src/shader.js
-../src/litegl.js
+../src/core.js
 ../src/levent.js
 ../src/geo.js
 ../src/octree.js

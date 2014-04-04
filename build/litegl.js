@@ -654,12 +654,19 @@ var DDS = (function () {
 		var header = new Int32Array(data, 0, headerLengthInt)
 		var is_cubemap = !!(header[off_caps+1] & DDSCAPS2_CUBEMAP);
 		var tex_type = is_cubemap ? gl.TEXTURE_CUBE_MAP : gl.TEXTURE_2D;
+
 		gl.bindTexture(tex_type, texture);
 		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false );
 		var mipmaps = uploadDDSLevels(gl, ext, data, loadMipmaps);
 		gl.texParameteri(tex_type, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 		gl.texParameteri(tex_type, gl.TEXTURE_MIN_FILTER, mipmaps > 1 ? gl.LINEAR_MIPMAP_LINEAR : gl.LINEAR);
-		gl.bindTexture(tex_type, null);
+        if(is_cubemap)
+        {
+            gl.texParameteri(tex_type, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE );
+            gl.texParameteri(tex_type, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE );
+        }
+
+		gl.bindTexture(tex_type, null); //unbind
 		texture.texture_type = tex_type;
 		texture.width = header[off_width];
 		texture.height = header[off_height];
@@ -1687,7 +1694,7 @@ Mesh.prototype.computeTangents = function() {
 
 /**
 * Computes bounding information
-* @method Mesh.getVertexNumber
+* @method getVertexNumber
 * @param {typed Array} vertices array containing all the vertices
 */
 Mesh.prototype.getNumVertices = function() {
@@ -2103,14 +2110,14 @@ Mesh.mergeMeshes = function(meshes)
 
 Mesh.getScreenQuad = function()
 {
-	if(this._screen_quad)
-		return this._screen_quad;
+	if(gl._screen_quad)
+		return gl._screen_quad;
 	var vertices = new Float32Array(18);
 	var coords = new Float32Array([-1,-1, 1,1, -1,1,  -1,-1, 1,-1, 1,1 ]);
-	this._screen_quad = new GL.Mesh({
+	gl._screen_quad = new GL.Mesh({
 		vertices: vertices,
 		coords: coords});
-	return this._screen_quad;
+	return gl._screen_quad;
 }
 
 /**
@@ -2302,11 +2309,9 @@ Texture.prototype.uploadData = function(data)
 Texture.prototype.drawTo = function(callback, params) {
 	//var v = gl.getParameter(gl.VIEWPORT);
 	var v = gl.getViewport();
-	if(!Texture.framebuffer) //create static one
-	{
-		Texture.framebuffer = gl.createFramebuffer();
-		Texture.renderbuffer = gl.createRenderbuffer();
-	}
+
+	Texture.framebuffer = Texture.framebuffer || gl.createFramebuffer();
+	Texture.renderbuffer = Texture.renderbuffer || gl.createRenderbuffer();
 
 	var framebuffer = Texture.framebuffer;
 	var renderbuffer = Texture.renderbuffer;
@@ -2459,14 +2464,13 @@ Texture.drawToColorAndDepth = function(color_texture, depth_texture, callback) {
 
 	var v = gl.getViewport();
 
-	if(Texture.framebuffer)
-		Texture.framebuffer = gl.createFramebuffer();
+	Texture.framebuffer = Texture.framebuffer || gl.createFramebuffer();
 
 	gl.bindFramebuffer(gl.FRAMEBUFFER, Texture.framebuffer);
 
 	gl.viewport(0, 0, color_texture.width, color_texture.height);
 
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, color_texture.handler, 0);
+	gl.d(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, color_texture.handler, 0);
 	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depth_texture.handler, 0);
 
 	callback();
@@ -2823,7 +2827,13 @@ function Shader(vertexSource, fragmentSource, macros)
 	{
 		var data = gl.getActiveUniform( this.program, i);
 		if(!data) break;
-		this.uniformLocations[ data.name ] = gl.getUniformLocation(this.program, data.name);
+		var uniformName = data.name;
+		/* disabled because WebGL do not allow to upload random size arrays to the GPU...
+		var pos = uniformName.indexOf("["); //arrays have uniformName[0], strip the []
+		if(pos != -1)
+			uniformName = uniformName.substr(0,pos);
+		*/
+		this.uniformLocations[ uniformName ] = gl.getUniformLocation(this.program, uniformName);
 	}
 
 	for(var i = 0, l = gl.getProgramParameter(this.program, gl.ACTIVE_ATTRIBUTES); i < l; ++i)
@@ -3005,8 +3015,8 @@ Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_
 //Screen shader: used to render one texture into another
 Shader.getScreenShader = function()
 {
-	if(this._screen_shader)
-		return this._screen_shader;
+	if(gl._screen_shader)
+		return gl._screen_shader;
 
 	var shader = new GL.Shader("\n\
 			precision highp float;\n\
@@ -3025,15 +3035,15 @@ Shader.getScreenShader = function()
 				gl_FragColor = texture2D(texture, coord);\n\
 			}\n\
 			");
-	this._screen_shader = shader;
-	return this._screen_shader;
+	gl._screen_shader = shader;
+	return gl._screen_shader;
 }
 
 //Blur shader
 Shader.getBlurShader = function()
 {
-	if(this._blur_shader)
-		return this._blur_shader;
+	if(gl._blur_shader)
+		return gl._blur_shader;
 
 	var shader = new GL.Shader("\n\
 			precision highp float;\n\
@@ -3063,8 +3073,8 @@ Shader.getBlurShader = function()
 			   gl_FragColor = u_intensity * sum;\n\
 			}\n\
 			");
-	this._blur_shader = shader;
-	return this._blur_shader;
+	gl._blur_shader = shader;
+	return gl._blur_shader;
 }
 "use strict";
 
@@ -3470,6 +3480,24 @@ var GL = {
 };
 
 
+//Define WEBGL ENUMS as statics
+//sometimes I need blend modes before having the gl context, solution, define them globally:
+GL.ZERO = 0;
+GL.ONE = 1;
+GL.SRC_COLOR = 768;
+GL.ONE_MINUS_SRC_COLOR = 769;
+GL.SRC_ALPHA = 770;
+GL.ONE_MINUS_SRC_ALPHA = 771;
+GL.DST_ALPHA = 772;
+GL.ONE_MINUS_DST_ALPHA = 773;
+GL.DST_COLOR = 774;
+GL.ONE_MINUS_DST_COLOR = 775;
+GL.SRC_ALPHA_SATURATE = 776;
+GL.CONSTANT_COLOR = 32769;
+GL.ONE_MINUS_CONSTANT_COLOR = 32770;
+GL.CONSTANT_ALPHA = 32771;
+GL.ONE_MINUS_CONSTANT_ALPHA = 32772;
+
 
 
 /**
@@ -3621,11 +3649,41 @@ var LEvent = {
 			if( v[0].call(v[1], event_type, params) == false)// || event.stop)
 				break; //stopPropagation
 		}
-
-		return event;
 	},
 
-	//_stopPropagation: function() { this.stop = true; }
+	/**
+	* Triggers and event to every element in an array
+	* @method LEvent.triggerArray
+	* @param {Array} array contains all instances to triggers the event
+	* @param {String} event_name string defining the event name
+	* @param {*} parameters that will be received by the binded function
+	* @param {boolean} skip_jquery [optional] force to skip jquery triggering
+	**/
+	triggerArray: function( instances, event_type, params, skip_jquery )
+	{
+		for(var i in instances)
+		{
+			var instance = instances[i];
+			if(!instance) throw("cannot trigger event from null");
+			if(instance.constructor === String ) throw("cannot bind event to a string");
+
+			//if(typeof(event) == "string")
+			//	event = { type: event, target: instance, stopPropagation: LEvent._stopPropagation };
+			//var event_type = event.type;
+
+			//you can resend the events as jQuery events, but to avoid collisions with system events, we use ":" at the begining
+			if(LEvent.jQuery && !skip_jquery) $(instance).trigger( ":" + event_type, params );
+
+			if(!instance.hasOwnProperty("__on_" + event_type)) 
+				continue;
+			for(var i in instance["__on_" + event_type])
+			{
+				var v = instance["__on_" + event_type][i];
+				if( v[0].call(v[1], event_type, params) == false)// || event.stop)
+					break; //stopPropagation
+			}
+		}
+	}
 };
 /* geometric utilities */
 var CLIP_INSIDE = 0;
@@ -3871,25 +3929,26 @@ var geo = {
 	* @param {vec3} result collision position
 	* @return {boolean} returns if the ray collides the box
 	*/
-	testRayBox: function(start, direction, minB, maxB, result)
+	testRayBox: function(start, direction, minB, maxB, result, max_dist)
 	{
-	//#define NUMDIM	3
-	//#define RIGHT	0
-	//#define LEFT	1
-	//#define MIDDLE	2
+		//#define NUMDIM	3
+		//#define RIGHT		0
+		//#define LEFT		1
+		//#define MIDDLE	2
 
 		result = result || vec3.create();
+		max_dist = max_dist || Number.MAX_VALUE;
 
 		var inside = true;
 		var quadrant = new Float32Array(3);
-		var i;
+		var i = 0|0;
 		var whichPlane;
 		var maxT = new Float32Array(3);
 		var candidatePlane = new Float32Array(3);
 
 		/* Find candidate planes; this loop can be avoided if
 		rays cast all from the eye(assume perpsective view) */
-		for (i=0; i < 3; i++)
+		for (i=0; i < 3; ++i)
 			if(start[i] < minB[i]) {
 				quadrant[i] = 1;
 				candidatePlane[i] = minB[i];
@@ -3910,7 +3969,7 @@ var geo = {
 
 
 		/* Calculate T distances to candidate planes */
-		for (i = 0; i < 3; i++)
+		for (i = 0; i < 3; ++i)
 			if (quadrant[i] != 2 && direction[i] != 0.)
 				maxT[i] = (candidatePlane[i] - start[i]) / direction[i];
 			else
@@ -3924,7 +3983,9 @@ var geo = {
 
 		/* Check final candidate actually inside box */
 		if (maxT[whichPlane] < 0.) return false;
-		for (i = 0; i < 3; i++)
+		if (maxT[whichPlane] > max_dist) return false; //NOT TESTED
+
+		for (i = 0; i < 3; ++i)
 			if (whichPlane != i) {
 				result[i] = start[i] + maxT[whichPlane] * direction[i];
 				if (result[i] < minB[i] || result[i] > maxB[i])
@@ -3945,7 +4006,7 @@ var geo = {
 	* @param {vec3} result collision position
 	* @return {boolean} returns if the ray collides the box
 	*/
-	testRayBBox: function(start, direction, box, model, result)
+	testRayBBox: function(start, direction, box, model, result, max_dist)
 	{
 		if(model)
 		{
@@ -3956,10 +4017,26 @@ var geo = {
 			vec3.sub(end, end, start);
 			direction = vec3.normalize(end, end);
 		}
-		var r = this.testRayBox(start, direction, box.subarray(6,9), box.subarray(9,12), result );
+		var r = this.testRayBox(start, direction, box.subarray(6,9), box.subarray(9,12), result, max_dist );
 		if(model)
 			vec3.transformMat4(result, result, model);
 		return r;
+	},
+
+
+	/**
+	* test if a 3d point is inside a BBox
+	* @method testPointBBox
+	* @param {vec3} point
+	* @param {BBox} bbox
+	* @return {boolean} true if it is inside
+	*/
+	testPointBBox: function(point, bbox) {
+		if(point[0] < bbox[6] || point[0] > bbox[9] ||
+			point[1] < bbox[7] || point[0] > bbox[10] ||
+			point[2] < bbox[8] || point[0] > bbox[11])
+			return false;
+		return true;
 	},
 
 	closestPointBetweenLines: function(a0,a1, b0,b1, p_a, p_b)
@@ -4104,11 +4181,12 @@ var geo = {
 		return overlap ? CLIP_OVERLAP : CLIP_INSIDE;
 	},
 
+
 	/**
 	* test if a 2d point is inside a 2d polygon
 	* @method testPoint2DInPolygon
 	* @param {Array} poly array of 2d points
-	* @pt {vec2} point
+	* @param {vec2} point
 	* @return {boolean} true if it is inside
 	*/
 	testPoint2DInPolygon: function(poly, pt) {

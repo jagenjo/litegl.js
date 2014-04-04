@@ -604,7 +604,7 @@ Mesh.prototype.computeTangents = function() {
 
 /**
 * Computes bounding information
-* @method Mesh.getVertexNumber
+* @method getVertexNumber
 * @param {typed Array} vertices array containing all the vertices
 */
 Mesh.prototype.getNumVertices = function() {
@@ -1020,12 +1020,12 @@ Mesh.mergeMeshes = function(meshes)
 
 Mesh.getScreenQuad = function()
 {
-	if(this._screen_quad)
-		return this._screen_quad;
+	if(gl._screen_quad)
+		return gl._screen_quad;
 	var vertices = new Float32Array(18);
 	var coords = new Float32Array([-1,-1, 1,1, -1,1,  -1,-1, 1,-1, 1,1 ]);
-	this._screen_quad = new GL.Mesh({
+	gl._screen_quad = new GL.Mesh({
 		vertices: vertices,
 		coords: coords});
-	return this._screen_quad;
+	return gl._screen_quad;
 }
