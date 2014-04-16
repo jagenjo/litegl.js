@@ -658,7 +658,7 @@ Mesh.prototype.updateBounding = function() {
 * @param {vec3} half_size vector from the center to positive corner
 */
 Mesh.prototype.setBounding = function(center, half_size) {
-	this.bounding = BBox.fromCenterHalfsize( this.bounding || BBox.create(), center, half_size );	
+	this.bounding = BBox.setCenterHalfsize( this.bounding || BBox.create(), center, half_size );	
 }
 
 

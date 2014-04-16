@@ -1748,7 +1748,7 @@ Mesh.prototype.updateBounding = function() {
 * @param {vec3} half_size vector from the center to positive corner
 */
 Mesh.prototype.setBounding = function(center, half_size) {
-	this.bounding = BBox.fromCenterHalfsize( this.bounding || BBox.create(), center, half_size );	
+	this.bounding = BBox.setCenterHalfsize( this.bounding || BBox.create(), center, half_size );	
 }
 
 
@@ -2470,7 +2470,7 @@ Texture.drawToColorAndDepth = function(color_texture, depth_texture, callback) {
 
 	gl.viewport(0, 0, color_texture.width, color_texture.height);
 
-	gl.d(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, color_texture.handler, 0);
+	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, color_texture.handler, 0);
 	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depth_texture.handler, 0);
 
 	callback();
