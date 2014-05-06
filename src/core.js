@@ -403,7 +403,17 @@ var GL = {
 
 
 //Define WEBGL ENUMS as statics
-//sometimes I need blend modes before having the gl context, solution, define them globally:
+//sometimes I need some gl enums before having the gl context, solution: define them globally because the specs says they are constant:
+
+GL.BYTE = 5120;
+GL.UNSIGNED_BYTE = 5121;
+GL.SHORT = 5122;
+GL.UNSIGNED_SHORT = 5123;
+GL.INT = 5124;
+GL.UNSIGNED_INT = 5125;
+GL.FLOAT = 5126;
+GL.UNSIGNED_BYTE = 5125;
+
 GL.ZERO = 0;
 GL.ONE = 1;
 GL.SRC_COLOR = 768;
@@ -419,5 +429,6 @@ GL.CONSTANT_COLOR = 32769;
 GL.ONE_MINUS_CONSTANT_COLOR = 32770;
 GL.CONSTANT_ALPHA = 32771;
 GL.ONE_MINUS_CONSTANT_ALPHA = 32772;
+
 
 

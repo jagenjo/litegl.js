@@ -48,11 +48,11 @@ function Shader(vertexSource, fragmentSource, macros)
 		var data = gl.getActiveUniform( this.program, i);
 		if(!data) break;
 		var uniformName = data.name;
-		/* disabled because WebGL do not allow to upload random size arrays to the GPU...
+		//* disabled because WebGL do not allow to upload random size arrays to the GPU...
 		var pos = uniformName.indexOf("["); //arrays have uniformName[0], strip the []
 		if(pos != -1)
 			uniformName = uniformName.substr(0,pos);
-		*/
+		//*/
 		this.uniformLocations[ uniformName ] = gl.getUniformLocation(this.program, uniformName);
 	}
 
@@ -102,7 +102,14 @@ Shader.prototype.uniforms = function(uniforms) {
 				case 4: gl.uniform4fv(location, value); break; //vec4
 				case 9: gl.uniformMatrix3fv(location, false,  value); break; //matrix3
 				case 16: gl.uniformMatrix4fv(location, false, value); break; //matrix4
-				default: throw 'don\'t know how to load uniform "' + name + '" of length ' + value.length;
+				default: 
+					if(value.length % 16 == 0) //HACK for bones
+						gl.uniformMatrix4fv(location, false, value ); //mat4
+					else
+						gl.uniform1fv(location, value); 
+					break; //n float
+
+				//default: throw 'don\'t know how to load uniform "' + name + '" of length ' + value.length;
 			}
 		} 
 		else if (isArray(value)) //non-typed arrays
@@ -112,9 +119,16 @@ Shader.prototype.uniforms = function(uniforms) {
 			case 2: gl.uniform2f(location, value[0], value[1] ); break; //vec2
 			case 3: gl.uniform3f(location, value[0], value[1], value[2] ); break; //vec3
 			case 4: gl.uniform4f(location, value[0], value[1], value[2], value[3] ); break; //vec4
-			case 9: Shader._temp_uniform.set( value ); gl.uniformMatrix3fv(location, false, value ); break; //mat3
-			case 16: Shader._temp_uniform.set( value ); gl.uniformMatrix4fv(location, false, value ); break; //mat4
-			default: throw 'don\'t know how to load uniform "' + name + '" of length ' + value.length;
+			case 9: Shader._temp_uniform.set( value ); gl.uniformMatrix3fv(location, false, Shader._temp_uniform ); break; //mat3
+			case 16: Shader._temp_uniform.set( value ); gl.uniformMatrix4fv(location, false, Shader._temp_uniform ); break; //mat4
+			default: 
+				Shader._temp_uniform.set( value ); 
+				if(value.length % 16 == 0)
+					gl.uniformMatrix4fv(location, false, Shader._temp_uniform ); //mat4
+				else
+					gl.uniform1fv(location, Shader._temp_uniform); 
+				break; //n float
+			//default: throw 'don\'t know how to load uniform "' + name + '" of length ' + value.length;
 			}
 		}
 		else if (isNumber(value))
@@ -192,7 +206,8 @@ Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_
 		//this.attributes[attribute] = location;
 		gl.bindBuffer(gl.ARRAY_BUFFER, buffer.buffer);
 		gl.enableVertexAttribArray(location);
-		gl.vertexAttribPointer(location, buffer.buffer.spacing, gl.FLOAT, false, 0, 0);
+
+		gl.vertexAttribPointer(location, buffer.buffer.spacing, buffer.buffer.gl_type, false, 0, 0);
 		length = buffer.buffer.length / buffer.buffer.spacing;
 	}
 

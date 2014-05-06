@@ -113,6 +113,11 @@ vec4.random = function(vec)
 
 
 /** MATRIX ********************/
+mat4.toArray = function(mat)
+{
+	return [mat[0],mat[1],mat[2],mat[3],mat[4],mat[5],mat[6],mat[7],mat[8],mat[9],mat[10],mat[11],mat[12],mat[13],mat[14],mat[15]];
+}
+
 
 mat4.multiplyVec3 = function(out, m, a) {
     var x = a[0], y = a[1], z = a[2];
@@ -214,6 +219,16 @@ mat4.swapRows = function(out, mat, row, row2)
 	var temp = new Float32Array(matrix.subarray(row*4,row*5));
 	matrix.set( matrix.subarray(row2*4,row2*5), row*4 );
 	matrix.set( temp, row2*4 );
+	return out;
+}
+
+//used in skinning
+mat4.scaleAndAdd = function(out, mat, mat2, v)
+{
+	out[0] = mat[0] + mat2[0] * v; 	out[1] = mat[1] + mat2[1] * v; 	out[2] = mat[2] + mat2[2] * v; 	out[3] = mat[3] + mat2[3] * v;
+	out[4] = mat[4] + mat2[4] * v; 	out[5] = mat[5] + mat2[5] * v; 	out[6] = mat[6] + mat2[6] * v; 	out[7] = mat[7] + mat2[7] * v;
+	out[8] = mat[8] + mat2[8] * v; 	out[9] = mat[9] + mat2[9] * v; 	out[10] = mat[10] + mat2[10] * v; 	out[11] = mat[11] + mat2[11] * v;
+	out[12] = mat[12] + mat2[12] * v;  out[13] = mat[13] + mat2[13] * v; 	out[14] = mat[14] + mat2[14] * v; 	out[15] = mat[15] + mat2[15] * v;
 	return out;
 }
 

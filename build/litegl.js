@@ -839,6 +839,11 @@ vec4.random = function(vec)
 
 
 /** MATRIX ********************/
+mat4.toArray = function(mat)
+{
+	return [mat[0],mat[1],mat[2],mat[3],mat[4],mat[5],mat[6],mat[7],mat[8],mat[9],mat[10],mat[11],mat[12],mat[13],mat[14],mat[15]];
+}
+
 
 mat4.multiplyVec3 = function(out, m, a) {
     var x = a[0], y = a[1], z = a[2];
@@ -940,6 +945,16 @@ mat4.swapRows = function(out, mat, row, row2)
 	var temp = new Float32Array(matrix.subarray(row*4,row*5));
 	matrix.set( matrix.subarray(row2*4,row2*5), row*4 );
 	matrix.set( temp, row2*4 );
+	return out;
+}
+
+//used in skinning
+mat4.scaleAndAdd = function(out, mat, mat2, v)
+{
+	out[0] = mat[0] + mat2[0] * v; 	out[1] = mat[1] + mat2[1] * v; 	out[2] = mat[2] + mat2[2] * v; 	out[3] = mat[3] + mat2[3] * v;
+	out[4] = mat[4] + mat2[4] * v; 	out[5] = mat[5] + mat2[5] * v; 	out[6] = mat[6] + mat2[6] * v; 	out[7] = mat[7] + mat2[7] * v;
+	out[8] = mat[8] + mat2[8] * v; 	out[9] = mat[9] + mat2[9] * v; 	out[10] = mat[10] + mat2[10] * v; 	out[11] = mat[11] + mat2[11] * v;
+	out[12] = mat[12] + mat2[12] * v;  out[13] = mat[13] + mat2[13] * v; 	out[14] = mat[14] + mat2[14] * v; 	out[15] = mat[15] + mat2[15] * v;
 	return out;
 }
 
@@ -1160,10 +1175,24 @@ Buffer.prototype.compile = function(stream_type) { //default gl.STATIC_DRAW (oth
 	if(!data.buffer)
 		throw("Buffers must be typed arrays");
 
+	//I store some stuff inside the WebGL buffer instance, it is supported
 	this.buffer = this.buffer || gl.createBuffer();
 	this.buffer.length = data.length;
 	this.buffer.spacing = spacing;
 
+	//store the data format
+	switch( data.constructor )
+	{
+		case Int8Array: this.buffer.gl_type = gl.BYTE; break;
+		case Uint8ClampedArray: 
+		case Uint8Array: this.buffer.gl_type = gl.UNSIGNED_BYTE; break;
+		case Int16Array: this.buffer.gl_type = gl.SHORT; break;
+		case Uint16Array: this.buffer.gl_type = gl.UNSIGNED_SHORT; break;
+		case Int32Array: this.buffer.gl_type = gl.INT; break;
+		case Uint32Array: this.buffer.gl_type = gl.UNSIGNED_INT; break;
+		case Float32Array: this.buffer.gl_type = gl.FLOAT; break;
+		default: throw("unsupported buffer type");
+	}
 
 	gl.bindBuffer(this.target, this.buffer);
 	gl.bufferData(this.target, data , stream_type || this.stream_type || gl.STATIC_DRAW);
@@ -1200,7 +1229,7 @@ Mesh.common_buffers = {
 	"coords2": { spacing:2, attribute: "a_coord2"},
 	"colors": { spacing:4, attribute: "a_color"},
 	"tangents": { spacing:3, attribute: "a_tangent"},
-	"bone_indices": { spacing:4, attribute: "a_bone_indices", type: Uint8Array},
+	"bone_indices": { spacing:4, attribute: "a_bone_indices", type: Uint8Array },
 	"weights": { spacing:4, attribute: "a_weights"},
 	"extra": { spacing:1, attribute: "a_extra"},
 	"extra2": { spacing:2, attribute: "a_extra2"},
@@ -2828,11 +2857,11 @@ function Shader(vertexSource, fragmentSource, macros)
 		var data = gl.getActiveUniform( this.program, i);
 		if(!data) break;
 		var uniformName = data.name;
-		/* disabled because WebGL do not allow to upload random size arrays to the GPU...
+		//* disabled because WebGL do not allow to upload random size arrays to the GPU...
 		var pos = uniformName.indexOf("["); //arrays have uniformName[0], strip the []
 		if(pos != -1)
 			uniformName = uniformName.substr(0,pos);
-		*/
+		//*/
 		this.uniformLocations[ uniformName ] = gl.getUniformLocation(this.program, uniformName);
 	}
 
@@ -2882,7 +2911,14 @@ Shader.prototype.uniforms = function(uniforms) {
 				case 4: gl.uniform4fv(location, value); break; //vec4
 				case 9: gl.uniformMatrix3fv(location, false,  value); break; //matrix3
 				case 16: gl.uniformMatrix4fv(location, false, value); break; //matrix4
-				default: throw 'don\'t know how to load uniform "' + name + '" of length ' + value.length;
+				default: 
+					if(value.length % 16 == 0) //HACK for bones
+						gl.uniformMatrix4fv(location, false, value ); //mat4
+					else
+						gl.uniform1fv(location, value); 
+					break; //n float
+
+				//default: throw 'don\'t know how to load uniform "' + name + '" of length ' + value.length;
 			}
 		} 
 		else if (isArray(value)) //non-typed arrays
@@ -2892,9 +2928,16 @@ Shader.prototype.uniforms = function(uniforms) {
 			case 2: gl.uniform2f(location, value[0], value[1] ); break; //vec2
 			case 3: gl.uniform3f(location, value[0], value[1], value[2] ); break; //vec3
 			case 4: gl.uniform4f(location, value[0], value[1], value[2], value[3] ); break; //vec4
-			case 9: Shader._temp_uniform.set( value ); gl.uniformMatrix3fv(location, false, value ); break; //mat3
-			case 16: Shader._temp_uniform.set( value ); gl.uniformMatrix4fv(location, false, value ); break; //mat4
-			default: throw 'don\'t know how to load uniform "' + name + '" of length ' + value.length;
+			case 9: Shader._temp_uniform.set( value ); gl.uniformMatrix3fv(location, false, Shader._temp_uniform ); break; //mat3
+			case 16: Shader._temp_uniform.set( value ); gl.uniformMatrix4fv(location, false, Shader._temp_uniform ); break; //mat4
+			default: 
+				Shader._temp_uniform.set( value ); 
+				if(value.length % 16 == 0)
+					gl.uniformMatrix4fv(location, false, Shader._temp_uniform ); //mat4
+				else
+					gl.uniform1fv(location, Shader._temp_uniform); 
+				break; //n float
+			//default: throw 'don\'t know how to load uniform "' + name + '" of length ' + value.length;
 			}
 		}
 		else if (isNumber(value))
@@ -2972,7 +3015,8 @@ Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_
 		//this.attributes[attribute] = location;
 		gl.bindBuffer(gl.ARRAY_BUFFER, buffer.buffer);
 		gl.enableVertexAttribArray(location);
-		gl.vertexAttribPointer(location, buffer.buffer.spacing, gl.FLOAT, false, 0, 0);
+
+		gl.vertexAttribPointer(location, buffer.buffer.spacing, buffer.buffer.gl_type, false, 0, 0);
 		length = buffer.buffer.length / buffer.buffer.spacing;
 	}
 
@@ -3481,7 +3525,17 @@ var GL = {
 
 
 //Define WEBGL ENUMS as statics
-//sometimes I need blend modes before having the gl context, solution, define them globally:
+//sometimes I need some gl enums before having the gl context, solution: define them globally because the specs says they are constant:
+
+GL.BYTE = 5120;
+GL.UNSIGNED_BYTE = 5121;
+GL.SHORT = 5122;
+GL.UNSIGNED_SHORT = 5123;
+GL.INT = 5124;
+GL.UNSIGNED_INT = 5125;
+GL.FLOAT = 5126;
+GL.UNSIGNED_BYTE = 5125;
+
 GL.ZERO = 0;
 GL.ONE = 1;
 GL.SRC_COLOR = 768;
@@ -3497,6 +3551,7 @@ GL.CONSTANT_COLOR = 32769;
 GL.ONE_MINUS_CONSTANT_COLOR = 32770;
 GL.CONSTANT_ALPHA = 32771;
 GL.ONE_MINUS_CONSTANT_ALPHA = 32772;
+
 
 
 

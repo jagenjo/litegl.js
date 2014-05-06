@@ -70,10 +70,24 @@ Buffer.prototype.compile = function(stream_type) { //default gl.STATIC_DRAW (oth
 	if(!data.buffer)
 		throw("Buffers must be typed arrays");
 
+	//I store some stuff inside the WebGL buffer instance, it is supported
 	this.buffer = this.buffer || gl.createBuffer();
 	this.buffer.length = data.length;
 	this.buffer.spacing = spacing;
 
+	//store the data format
+	switch( data.constructor )
+	{
+		case Int8Array: this.buffer.gl_type = gl.BYTE; break;
+		case Uint8ClampedArray: 
+		case Uint8Array: this.buffer.gl_type = gl.UNSIGNED_BYTE; break;
+		case Int16Array: this.buffer.gl_type = gl.SHORT; break;
+		case Uint16Array: this.buffer.gl_type = gl.UNSIGNED_SHORT; break;
+		case Int32Array: this.buffer.gl_type = gl.INT; break;
+		case Uint32Array: this.buffer.gl_type = gl.UNSIGNED_INT; break;
+		case Float32Array: this.buffer.gl_type = gl.FLOAT; break;
+		default: throw("unsupported buffer type");
+	}
 
 	gl.bindBuffer(this.target, this.buffer);
 	gl.bufferData(this.target, data , stream_type || this.stream_type || gl.STATIC_DRAW);
@@ -110,7 +124,7 @@ Mesh.common_buffers = {
 	"coords2": { spacing:2, attribute: "a_coord2"},
 	"colors": { spacing:4, attribute: "a_color"},
 	"tangents": { spacing:3, attribute: "a_tangent"},
-	"bone_indices": { spacing:4, attribute: "a_bone_indices", type: Uint8Array},
+	"bone_indices": { spacing:4, attribute: "a_bone_indices", type: Uint8Array },
 	"weights": { spacing:4, attribute: "a_weights"},
 	"extra": { spacing:1, attribute: "a_extra"},
 	"extra2": { spacing:2, attribute: "a_extra2"},
