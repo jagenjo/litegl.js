@@ -76,14 +76,14 @@ var GL = {
 		*/
 		gl.animate = function() {
 			var post = window.requestAnimationFrame;
-			var time = window.performance.now();
+			var time = getTime();
 			var context = this;
 
 			//loop only if browser tab visible
 			function loop() {
 				post(loop); //do it first, in case it crashes
 
-				var now = window.performance.now();
+				var now = getTime();
 				var dt = (now - time) / 1000;
 
 				if (context.onupdate) context.onupdate(dt);
@@ -121,7 +121,7 @@ var GL = {
 			var old_mouse_mask = gl.mouse_buttons;
 			GL.augmentEvent(e, canvas);
 			e.eventType = e.eventType || e.type; //type cannot be overwritten, so I make a clone to allow me to overwrite
-			var now = window.performance.now();
+			var now = getTime();
 
 			if(e.eventType == "mousedown")
 			{

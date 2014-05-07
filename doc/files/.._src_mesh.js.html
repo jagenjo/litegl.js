@@ -176,10 +176,24 @@ Buffer.prototype.compile = function(stream_type) { //default gl.STATIC_DRAW (oth
 	if(!data.buffer)
 		throw(&quot;Buffers must be typed arrays&quot;);
 
+	//I store some stuff inside the WebGL buffer instance, it is supported
 	this.buffer = this.buffer || gl.createBuffer();
 	this.buffer.length = data.length;
 	this.buffer.spacing = spacing;
 
+	//store the data format
+	switch( data.constructor )
+	{
+		case Int8Array: this.buffer.gl_type = gl.BYTE; break;
+		case Uint8ClampedArray: 
+		case Uint8Array: this.buffer.gl_type = gl.UNSIGNED_BYTE; break;
+		case Int16Array: this.buffer.gl_type = gl.SHORT; break;
+		case Uint16Array: this.buffer.gl_type = gl.UNSIGNED_SHORT; break;
+		case Int32Array: this.buffer.gl_type = gl.INT; break;
+		case Uint32Array: this.buffer.gl_type = gl.UNSIGNED_INT; break;
+		case Float32Array: this.buffer.gl_type = gl.FLOAT; break;
+		default: throw(&quot;unsupported buffer type&quot;);
+	}
 
 	gl.bindBuffer(this.target, this.buffer);
 	gl.bufferData(this.target, data , stream_type || this.stream_type || gl.STATIC_DRAW);
@@ -216,7 +230,7 @@ Mesh.common_buffers = {
 	&quot;coords2&quot;: { spacing:2, attribute: &quot;a_coord2&quot;},
 	&quot;colors&quot;: { spacing:4, attribute: &quot;a_color&quot;},
 	&quot;tangents&quot;: { spacing:3, attribute: &quot;a_tangent&quot;},
-	&quot;bone_indices&quot;: { spacing:4, attribute: &quot;a_bone_indices&quot;, type: Uint8Array},
+	&quot;bone_indices&quot;: { spacing:4, attribute: &quot;a_bone_indices&quot;, type: Uint8Array },
 	&quot;weights&quot;: { spacing:4, attribute: &quot;a_weights&quot;},
 	&quot;extra&quot;: { spacing:1, attribute: &quot;a_extra&quot;},
 	&quot;extra2&quot;: { spacing:2, attribute: &quot;a_extra2&quot;},
@@ -710,7 +724,7 @@ Mesh.prototype.computeTangents = function() {
 
 /**
 * Computes bounding information
-* @method Mesh.getVertexNumber
+* @method getVertexNumber
 * @param {typed Array} vertices array containing all the vertices
 */
 Mesh.prototype.getNumVertices = function() {
@@ -764,7 +778,7 @@ Mesh.prototype.updateBounding = function() {
 * @param {vec3} half_size vector from the center to positive corner
 */
 Mesh.prototype.setBounding = function(center, half_size) {
-	this.bounding = BBox.fromCenterHalfsize( this.bounding || BBox.create(), center, half_size );	
+	this.bounding = BBox.setCenterHalfsize( this.bounding || BBox.create(), center, half_size );	
 }
 
 
@@ -1126,14 +1140,14 @@ Mesh.mergeMeshes = function(meshes)
 
 Mesh.getScreenQuad = function()
 {
-	if(this._screen_quad)
-		return this._screen_quad;
+	if(gl._screen_quad)
+		return gl._screen_quad;
 	var vertices = new Float32Array(18);
 	var coords = new Float32Array([-1,-1, 1,1, -1,1,  -1,-1, 1,-1, 1,1 ]);
-	this._screen_quad = new GL.Mesh({
+	gl._screen_quad = new GL.Mesh({
 		vertices: vertices,
 		coords: coords});
-	return this._screen_quad;
+	return gl._screen_quad;
 }
 
     </pre>

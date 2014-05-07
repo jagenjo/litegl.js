@@ -7,6 +7,8 @@ var DEG2RAD = 0.0174532925;
 var RAD2DEG = 57.295779578552306;
 var EPSILON = 0.000001;
 
+var global = window; //todo: change this to be common js
+
 /**
 * Tells if one number is power of two (used for textures)
 * @method isPowerOfTwo
@@ -23,10 +25,12 @@ function isPowerOfTwo(v)
 * @method getTime
 * @return {number}
 */
-function getTime() {
-	//return new Date().getTime();
-  return performance.now();
-}
+if(typeof(performance) != "undefined")
+  global.getTime = function getTime() { return performance.now(); }
+else
+  global.getTime = function getTime() { return Date.now(); }
+
+
 
 function isFunction(obj) {
   return !!(obj && obj.constructor && obj.call && obj.apply);

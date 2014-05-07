@@ -8,6 +8,8 @@ var DEG2RAD = 0.0174532925;
 var RAD2DEG = 57.295779578552306;
 var EPSILON = 0.000001;
 
+var global = window; //todo: change this to be common js
+
 /**
 * Tells if one number is power of two (used for textures)
 * @method isPowerOfTwo
@@ -24,10 +26,12 @@ function isPowerOfTwo(v)
 * @method getTime
 * @return {number}
 */
-function getTime() {
-	//return new Date().getTime();
-  return performance.now();
-}
+if(typeof(performance) != "undefined")
+  global.getTime = function getTime() { return performance.now(); }
+else
+  global.getTime = function getTime() { return Date.now(); }
+
+
 
 function isFunction(obj) {
   return !!(obj && obj.constructor && obj.call && obj.apply);
@@ -2199,11 +2203,8 @@ function Texture(width, height, options) {
 	{
 		//I use an invalid gl enum to say this texture is a depth texture, ugly, I know...
 		gl.bindTexture(this.texture_type, this.handler);
-		if(options.premultiply_alpha)
-			gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
-		else
-			gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+		gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, !!(options.premultiply_alpha) );
+		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, !(options.no_flip) );
 		gl.texParameteri(this.texture_type, gl.TEXTURE_MAG_FILTER, this.magFilter );
 		gl.texParameteri(this.texture_type, gl.TEXTURE_MIN_FILTER, this.minFilter );
 		gl.texParameteri(this.texture_type, gl.TEXTURE_WRAP_S, this.wrapS );
@@ -2323,7 +2324,7 @@ Texture.prototype.uploadImage = function(image)
 Texture.prototype.uploadData = function(data)
 {
 	this.bind();
-	gl.texImage2D(this.texture_type, 0, this.format, this.format, this.type, data);
+	gl.texImage2D(this.texture_type, 0, this.format, this.width, this.height, 0, this.format, this.type, data);
 	if (this.minFilter && this.minFilter != gl.NEAREST && this.minFilter != gl.LINEAR) {
 		gl.generateMipmap(texture.texture_type);
 		this.has_mipmaps = true;
@@ -2829,7 +2830,7 @@ function Shader(vertexSource, fragmentSource, macros)
 		gl.shaderSource(shader, source);
 		gl.compileShader(shader);
 		if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-			throw 'compile error: ' + gl.getShaderInfoLog(shader);
+			throw (type == gl.VERTEX_SHADER ? "Vertex" : "Fragment") + ' shader compile error: ' + gl.getShaderInfoLog(shader);
 		}
 		return shader;
 	}
@@ -2843,35 +2844,91 @@ function Shader(vertexSource, fragmentSource, macros)
 	}
 
 	//Extract info from the shader
-	this.attributes = {};
-	this.uniformLocations = {};
-	var isSampler = {};
-		regexMap(/uniform\s+sampler(1D|2D|3D|Cube)\s+(\w+)\s*;/g, vertexSource + fragmentSource, function(groups) {
-		isSampler[groups[2]] = 1;
+	this.attributes = {}; 
+	this.uniformInfo = {};
+	this.samplers = {};
+	/* old version, search samplers using regexMap as done by lightGL, now I query the shader directly
+	var samplers = this.samplers;
+	regexMap(/uniform\s+sampler(1D|2D|3D|Cube)\s+(\w+)\s*;/g, vertexSource + fragmentSource, function(groups) {
+		samplers[groups[2]] = 1;
 	});
-	this.isSampler = isSampler;
+	*/
 
 	//extract uniform and attribs locations to speed up future processes
 	for(var i = 0, l = gl.getProgramParameter(this.program, gl.ACTIVE_UNIFORMS); i < l; ++i)
 	{
 		var data = gl.getActiveUniform( this.program, i);
 		if(!data) break;
+
 		var uniformName = data.name;
-		//* disabled because WebGL do not allow to upload random size arrays to the GPU...
-		var pos = uniformName.indexOf("["); //arrays have uniformName[0], strip the []
+
+		//arrays have uniformName[0], strip the [] (also data.size tells you if it is an array)
+		var pos = uniformName.indexOf("["); 
 		if(pos != -1)
 			uniformName = uniformName.substr(0,pos);
-		//*/
-		this.uniformLocations[ uniformName ] = gl.getUniformLocation(this.program, uniformName);
+
+		//store texture samplers
+		if(data.type == gl.SAMPLER_2D || data.type == gl.SAMPLER_CUBE)
+			this.samplers[ uniformName ] = data.type;
+		
+		//get which function to call when uploading this uniform
+		var func = Shader.getUniformFunc(data);
+		var is_matrix = false;
+		if(data.type == gl.FLOAT_MAT2 || data.type == gl.FLOAT_MAT3 || data.type == gl.FLOAT_MAT4)
+			is_matrix = true;
+
+
+		//save the info so I the user doesnt have to specify types when uploading data to the shader
+		this.uniformInfo[ uniformName ] = { type: data.type, func: func, size: data.size, is_matrix: is_matrix, loc: gl.getUniformLocation(this.program, uniformName) };
 	}
 
 	for(var i = 0, l = gl.getProgramParameter(this.program, gl.ACTIVE_ATTRIBUTES); i < l; ++i)
 	{
 		var data = gl.getActiveAttrib( this.program, i);
 		if(!data) break;
-		this.uniformLocations[ data.name ] = gl.getUniformLocation(this.program, data.name);
+		var func = Shader.getUniformFunc(data);
+		//this.uniformInfo[ data.name ] = { type: data.gl.getUniformLocation(this.program, data.name) };
+		this.uniformInfo[ data.name ] = { type: data.type, func: func, size: data.size, loc: gl.getUniformLocation(this.program, data.name ) };
 		this.attributes[ data.name ] = gl.getAttribLocation(this.program, data.name );	
 	}
+}
+
+//Tells you which function to call when uploading a uniform according to the data type in the shader
+Shader.getUniformFunc = function( data )
+{
+	var func = null;
+	switch (data.type)
+	{
+		case gl.FLOAT: 		
+			if(data.size == 1)
+				func = gl.uniform1f; 
+			else
+				func = gl.uniform1fv; 
+			break;
+		case gl.FLOAT_MAT2: func = gl.uniformMatrix2fv; break;
+		case gl.FLOAT_MAT3:	func = gl.uniformMatrix3fv; break;
+		case gl.FLOAT_MAT4:	func = gl.uniformMatrix4fv; break;
+		case gl.FLOAT_VEC2: func = gl.uniform2fv; break;
+		case gl.FLOAT_VEC3: func = gl.uniform3fv; break;
+		case gl.FLOAT_VEC4: func = gl.uniform4fv; break;
+
+		case gl.UNSIGNED_INT: 
+		case gl.INT: 	  
+			if(data.size == 1)
+				func = gl.uniform1i; 
+			else
+				func = gl.uniform1iv; 
+			break;
+		case gl.INT_VEC2: func = gl.uniform2iv; break;
+		case gl.INT_VEC3: func = gl.uniform3iv; break;
+		case gl.INT_VEC4: func = gl.uniform4iv; break;
+
+		case gl.SAMPLER_2D:
+		case gl.SAMPLER_CUBE:
+			func = gl.uniform1i; break;
+		default: func = gl.uniform1f; break;
+	}	
+	return func;
 }
 
 /* TODO, I dont like the idea of creating a shader which is not complete till files are retrieved
@@ -2897,8 +2954,33 @@ Shader.prototype.uniforms = function(uniforms) {
 	//var last_slot = 0;
 
 	for (var name in uniforms) {
-		var location = this.uniformLocations[name];
-		if (!location) continue;
+		var info = this.uniformInfo[name];
+		if (!info) continue;
+
+		var value = uniforms[name];
+		if(value == null) continue;
+
+		if(value.constructor === Array)
+			value = new Float32Array(value);  //garbage...
+
+		if(info.is_matrix)
+			info.func.call( gl, info.loc, false, value );
+		else
+			info.func.call( gl, info.loc, value );
+	}
+	return this;
+}//uniforms
+
+/*
+Shader.prototype.uniforms_OLD = function(uniforms) {
+
+	gl.useProgram(this.program);
+	//var last_slot = 0;
+
+	for (var name in uniforms) {
+		var info = this.uniformInfo[name];
+		if (!info) continue;
+		var location = info.loc;
 
 		var value = uniforms[name];
 		if(value == null) continue;
@@ -2912,12 +2994,12 @@ Shader.prototype.uniforms = function(uniforms) {
 				case 9: gl.uniformMatrix3fv(location, false,  value); break; //matrix3
 				case 16: gl.uniformMatrix4fv(location, false, value); break; //matrix4
 				default: 
+					var data = gl.getActiveAttrib( this.program, name );
 					if(value.length % 16 == 0) //HACK for bones
 						gl.uniformMatrix4fv(location, false, value ); //mat4
 					else
 						gl.uniform1fv(location, value); 
 					break; //n float
-
 				//default: throw 'don\'t know how to load uniform "' + name + '" of length ' + value.length;
 			}
 		} 
@@ -2942,13 +3024,14 @@ Shader.prototype.uniforms = function(uniforms) {
 		}
 		else if (isNumber(value))
 		{
-			(this.isSampler[name] ? gl.uniform1i : gl.uniform1f).call(gl, location, value);
+			(this.samplers[name] ? gl.uniform1i : gl.uniform1f).call(gl, location, value);
 		} else {
 			throw 'attempted to set uniform "' + name + '" to invalid value ' + value;
 		}
 	}
 	return this;
 }//uniforms
+*/
 
 /**
 * Renders a mesh using this shader, remember to use the function uniforms before to enable the shader
@@ -3198,14 +3281,14 @@ var GL = {
 		*/
 		gl.animate = function() {
 			var post = window.requestAnimationFrame;
-			var time = window.performance.now();
+			var time = getTime();
 			var context = this;
 
 			//loop only if browser tab visible
 			function loop() {
 				post(loop); //do it first, in case it crashes
 
-				var now = window.performance.now();
+				var now = getTime();
 				var dt = (now - time) / 1000;
 
 				if (context.onupdate) context.onupdate(dt);
@@ -3243,7 +3326,7 @@ var GL = {
 			var old_mouse_mask = gl.mouse_buttons;
 			GL.augmentEvent(e, canvas);
 			e.eventType = e.eventType || e.type; //type cannot be overwritten, so I make a clone to allow me to overwrite
-			var now = window.performance.now();
+			var now = getTime();
 
 			if(e.eventType == "mousedown")
 			{

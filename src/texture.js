@@ -48,11 +48,8 @@ function Texture(width, height, options) {
 	{
 		//I use an invalid gl enum to say this texture is a depth texture, ugly, I know...
 		gl.bindTexture(this.texture_type, this.handler);
-		if(options.premultiply_alpha)
-			gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
-		else
-			gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+		gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, !!(options.premultiply_alpha) );
+		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, !(options.no_flip) );
 		gl.texParameteri(this.texture_type, gl.TEXTURE_MAG_FILTER, this.magFilter );
 		gl.texParameteri(this.texture_type, gl.TEXTURE_MIN_FILTER, this.minFilter );
 		gl.texParameteri(this.texture_type, gl.TEXTURE_WRAP_S, this.wrapS );
@@ -172,7 +169,7 @@ Texture.prototype.uploadImage = function(image)
 Texture.prototype.uploadData = function(data)
 {
 	this.bind();
-	gl.texImage2D(this.texture_type, 0, this.format, this.format, this.type, data);
+	gl.texImage2D(this.texture_type, 0, this.format, this.width, this.height, 0, this.format, this.type, data);
 	if (this.minFilter && this.minFilter != gl.NEAREST && this.minFilter != gl.LINEAR) {
 		gl.generateMipmap(texture.texture_type);
 		this.has_mipmaps = true;

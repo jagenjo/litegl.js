@@ -348,25 +348,26 @@ var geo = {
 	* @param {vec3} result collision position
 	* @return {boolean} returns if the ray collides the box
 	*/
-	testRayBox: function(start, direction, minB, maxB, result)
+	testRayBox: function(start, direction, minB, maxB, result, max_dist)
 	{
-	//#define NUMDIM	3
-	//#define RIGHT	0
-	//#define LEFT	1
-	//#define MIDDLE	2
+		//#define NUMDIM	3
+		//#define RIGHT		0
+		//#define LEFT		1
+		//#define MIDDLE	2
 
 		result = result || vec3.create();
+		max_dist = max_dist || Number.MAX_VALUE;
 
 		var inside = true;
 		var quadrant = new Float32Array(3);
-		var i;
+		var i = 0|0;
 		var whichPlane;
 		var maxT = new Float32Array(3);
 		var candidatePlane = new Float32Array(3);
 
 		/* Find candidate planes; this loop can be avoided if
 		rays cast all from the eye(assume perpsective view) */
-		for (i=0; i &lt; 3; i++)
+		for (i=0; i &lt; 3; ++i)
 			if(start[i] &lt; minB[i]) {
 				quadrant[i] = 1;
 				candidatePlane[i] = minB[i];
@@ -387,7 +388,7 @@ var geo = {
 
 
 		/* Calculate T distances to candidate planes */
-		for (i = 0; i &lt; 3; i++)
+		for (i = 0; i &lt; 3; ++i)
 			if (quadrant[i] != 2 &amp;&amp; direction[i] != 0.)
 				maxT[i] = (candidatePlane[i] - start[i]) / direction[i];
 			else
@@ -401,7 +402,9 @@ var geo = {
 
 		/* Check final candidate actually inside box */
 		if (maxT[whichPlane] &lt; 0.) return false;
-		for (i = 0; i &lt; 3; i++)
+		if (maxT[whichPlane] &gt; max_dist) return false; //NOT TESTED
+
+		for (i = 0; i &lt; 3; ++i)
 			if (whichPlane != i) {
 				result[i] = start[i] + maxT[whichPlane] * direction[i];
 				if (result[i] &lt; minB[i] || result[i] &gt; maxB[i])
@@ -422,7 +425,7 @@ var geo = {
 	* @param {vec3} result collision position
 	* @return {boolean} returns if the ray collides the box
 	*/
-	testRayBBox: function(start, direction, box, model, result)
+	testRayBBox: function(start, direction, box, model, result, max_dist)
 	{
 		if(model)
 		{
@@ -433,10 +436,26 @@ var geo = {
 			vec3.sub(end, end, start);
 			direction = vec3.normalize(end, end);
 		}
-		var r = this.testRayBox(start, direction, box.subarray(6,9), box.subarray(9,12), result );
+		var r = this.testRayBox(start, direction, box.subarray(6,9), box.subarray(9,12), result, max_dist );
 		if(model)
 			vec3.transformMat4(result, result, model);
 		return r;
+	},
+
+
+	/**
+	* test if a 3d point is inside a BBox
+	* @method testPointBBox
+	* @param {vec3} point
+	* @param {BBox} bbox
+	* @return {boolean} true if it is inside
+	*/
+	testPointBBox: function(point, bbox) {
+		if(point[0] &lt; bbox[6] || point[0] &gt; bbox[9] ||
+			point[1] &lt; bbox[7] || point[0] &gt; bbox[10] ||
+			point[2] &lt; bbox[8] || point[0] &gt; bbox[11])
+			return false;
+		return true;
 	},
 
 	closestPointBetweenLines: function(a0,a1, b0,b1, p_a, p_b)
@@ -581,11 +600,12 @@ var geo = {
 		return overlap ? CLIP_OVERLAP : CLIP_INSIDE;
 	},
 
+
 	/**
 	* test if a 2d point is inside a 2d polygon
 	* @method testPoint2DInPolygon
 	* @param {Array} poly array of 2d points
-	* @pt {vec2} point
+	* @param {vec2} point
 	* @return {boolean} true if it is inside
 	*/
 	testPoint2DInPolygon: function(poly, pt) {
