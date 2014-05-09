@@ -41,15 +41,13 @@ function Texture(width, height, options) {
 		throw("Float Texture not supported");
 	if(this.type == gl.HALF_FLOAT_OES && !gl.half_float_ext)
 		throw("Half Float Texture not supported");
-	if((this.minFilter == gl.LINEAR_MIPMAP_LINEAR || this.wrapS != gl.CLAMP_TO_EDGE || this.wrapT != gl.CLAMP_TO_EDGE) && (!isPowerOfTwo(this.width) || !isPowerOfTwo(this.height)))
+	if(( (this.minFilter != gl.NEAREST && this.minFilter != gl.LINEAR) || this.wrapS != gl.CLAMP_TO_EDGE || this.wrapT != gl.CLAMP_TO_EDGE) && (!isPowerOfTwo(this.width) || !isPowerOfTwo(this.height)))
 		throw("Cannot use texture-wrap or mipmaps in Non-Power-of-Two textures");
 
 	if(width && height)
 	{
 		//I use an invalid gl enum to say this texture is a depth texture, ugly, I know...
 		gl.bindTexture(this.texture_type, this.handler);
-		gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, !!(options.premultiply_alpha) );
-		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, !(options.no_flip) );
 		gl.texParameteri(this.texture_type, gl.TEXTURE_MAG_FILTER, this.magFilter );
 		gl.texParameteri(this.texture_type, gl.TEXTURE_MIN_FILTER, this.minFilter );
 		gl.texParameteri(this.texture_type, gl.TEXTURE_WRAP_S, this.wrapS );
@@ -133,14 +131,33 @@ Texture.prototype.setParameter = function(param,value) {
 	gl.texParameteri(this.texture_type, param, value);
 }
 
+Texture.setUploadOptions = function(options)
+{
+	if(options) //options that are not stored in the texture should be passed again to avoid reusing unknown state
+	{
+		gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, !!(options.premultiply_alpha) );
+		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, !(options.no_flip) );
+	}
+	else
+	{
+		gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false );
+		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true );
+	}
+	gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+}
+
 /**
 * Given an Image/Canvas/Video it uploads it to the GPU
 * @method uploadImage
 * @param {Image} img
+* @param {Object} options [optional] upload options (premultiply_alpha, no_flip)
 */
-Texture.prototype.uploadImage = function(image)
+Texture.prototype.uploadImage = function(image, options)
 {
 	this.bind();
+
+	Texture.setUploadOptions(options);
+
 	try {
 		gl.texImage2D(gl.TEXTURE_2D, 0, this.format, this.format, this.type, image);
 		this.width = image.videoWidth || image.width;
@@ -165,15 +182,19 @@ Texture.prototype.uploadImage = function(image)
 * Uploads data to the GPU (data must have the appropiate size)
 * @method uploadData
 * @param {ArrayBuffer} data
+* @param {Object} options [optional] upload options (premultiply_alpha, no_flip)
 */
-Texture.prototype.uploadData = function(data)
+Texture.prototype.uploadData = function(data, options )
 {
 	this.bind();
+	Texture.setUploadOptions(options);
+
 	gl.texImage2D(this.texture_type, 0, this.format, this.width, this.height, 0, this.format, this.type, data);
 	if (this.minFilter && this.minFilter != gl.NEAREST && this.minFilter != gl.LINEAR) {
 		gl.generateMipmap(texture.texture_type);
 		this.has_mipmaps = true;
 	}
+	gl.bindTexture(this.texture_type, null); //disable
 }
 
 /**
@@ -414,9 +435,7 @@ Texture.fromImage = function(image, options) {
 
 	var texture = options.texture || new GL.Texture(image.width, image.height, options);
 	texture.bind();
-	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, (options.flipY != true ? 1 : 0) );
-	gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, !!options.premultiply_alpha );
-	texture.uploadImage(image);
+	texture.uploadImage(image, options);
 	if (options.minFilter && options.minFilter != gl.NEAREST && options.minFilter != gl.LINEAR) {
 		texture.bind();
 		gl.generateMipmap(texture.texture_type);
@@ -438,9 +457,7 @@ Texture.fromVideo = function(video, options) {
 
 	var texture = options.texture || new GL.Texture(video.videoWidth, video.videoHeight, options);
 	texture.bind();
-	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, (options.flipY != true ? 1 : 0) );
-	gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, !!options.premultiply_alpha );
-	texture.uploadImage(video);
+	texture.uploadImage(video, options);
 	if (options.minFilter && options.minFilter != gl.NEAREST && options.minFilter != gl.LINEAR) {
 		texture.bind();
 		gl.generateMipmap(texture.texture_type);

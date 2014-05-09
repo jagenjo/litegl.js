@@ -26,9 +26,9 @@ function isPowerOfTwo(v)
 * @return {number}
 */
 if(typeof(performance) != "undefined")
-  global.getTime = function getTime() { return performance.now(); }
+  global.getTime = performance.now.bind(performance);
 else
-  global.getTime = function getTime() { return Date.now(); }
+  global.getTime = Date.now.bind( Date );
 
 
 
