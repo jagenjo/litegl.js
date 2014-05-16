@@ -3273,7 +3273,12 @@ var GL = {
 		gl.float_ext_linear = gl.getExtension("OES_texture_float_linear");
 		gl.half_float_ext = gl.getExtension("OES_texture_half_float");
 		gl.half_float_ext_linear = gl.getExtension("OES_texture_half_float_linear");
+		if(!gl.half_float_ext_linear)
+			gl.half_float_ext = null;
+
 		gl.HALF_FLOAT_OES = 0x8D61; 
+		if(gl.half_float_ext)
+			gl.HALF_FLOAT_OES = gl.half_float_ext.HALF_FLOAT_OES;
 		gl.max_texture_units = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
 		gl.HIGH_PRECISION_FORMAT = gl.half_float_ext ? gl.HALF_FLOAT_OES : (gl.float_ext ? gl.FLOAT : gl.UNSIGNED_BYTE); //because Firefox dont support half float
 
@@ -3633,7 +3638,6 @@ GL.UNSIGNED_SHORT = 5123;
 GL.INT = 5124;
 GL.UNSIGNED_INT = 5125;
 GL.FLOAT = 5126;
-GL.UNSIGNED_BYTE = 5125;
 
 GL.ZERO = 0;
 GL.ONE = 1;
