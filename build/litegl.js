@@ -732,6 +732,8 @@ var DDS = (function () {
 if(typeof(glMatrix) == "undefined")
 	throw("You must include glMatrix on your project");
 
+Math.clamp = function(v,a,b) { return (a > v ? a : (b < v ? b : v)); }
+
 var V3 = vec3.create;
 var M4 = vec3.create;
 
@@ -816,6 +818,17 @@ vec3.rotateZ = function(out,vec,angle_in_rad)
 	out[1] = x * sin + y * cos;
 	out[2] = vec[2];
 	return out;
+}
+
+//signed angles
+vec2.perpdot = function(a,b)
+{
+	return a[1] * b[0] + -a[0] * b[1];
+}
+
+vec2.computeSignedAngle = function( a, b )
+{
+	return Math.atan2( vec2.perpdot(a,b), vec2.dot(a,b) );
 }
 
 //random value
@@ -1864,6 +1877,9 @@ Mesh.plane = function(options) {
 	var coords = [];
 	var normals = [];
 
+	var N = vec3.fromValues(0,0,1);
+	if(xz) N.set([0,1,0]);
+
 	for (var y = 0; y <= detailY; y++) {
 	var t = y / detailY;
 	for (var x = 0; x <= detailX; x++) {
@@ -1873,15 +1889,15 @@ Mesh.plane = function(options) {
 	  else
 		  vertices.push((2 * s - 1) * width, (2 * t - 1) * height, 0);
 	  if (coords) coords.push(s, t);
-	  if (normals) normals.push(0, xz?1:0, xz?0:1);
+	  if (normals) normals.push(N[0],N[1],N[2]);
 	  if (x < detailX && y < detailY) {
 		var i = x + y * (detailX + 1);
-		if(xz)
+		if(xz) //horizontal
 		{
 			triangles.push(i + 1, i, i + detailX + 1);
 			triangles.push(i + 1, i + detailX + 1, i + detailX + 2);
 		}
-		else
+		else //vertical
 		{
 			triangles.push(i, i + 1, i + detailX + 1);
 			triangles.push(i + detailX + 1, i + 1, i + detailX + 2);
@@ -1895,7 +1911,7 @@ Mesh.plane = function(options) {
 };
 
 /**
-* Returns a 2D Mesh (be careful, stream is vertices2D )
+* Returns a 2D Mesh (be careful, stream is vertices2D, used for 2D engines )
 * @method Mesh.plane2D
 */
 Mesh.plane2D = function(options) {
@@ -1908,7 +1924,7 @@ Mesh.plane2D = function(options) {
 		for(var i = 0; i < vertices.length; ++i)
 			vertices[i] *= s;
 	}
-	return new GL.Mesh( {vertices2D:vertices, coords: coords } );
+	return new GL.Mesh( {vertices2D: vertices, coords: coords } );
 };
 
 /**
@@ -1935,6 +1951,101 @@ Mesh.cube = function(options) {
 	options.bounding = BBox.fromCenterHalfsize( [0,0,0], [size,size,size] );
 
 	return Mesh.load(buffers, options);
+}
+
+/**
+* Returns a circle mesh 
+* @method Mesh.circle
+* @param {Object} options valid options: size,radius, xz = in xz plane, otherwise xy plane
+*/
+Mesh.circle = function(options) {
+	options = options || {};
+	var size = options.size || options.radius || 1;
+	var slices = Math.ceil(options.slices || 24);
+	var xz = options.xz || false;
+	var empty = options.empty || false;
+	if(slices < 3) slices = 3;
+	var delta = (2 * Math.PI) / slices;
+
+	var center = vec3.create();
+	var A = vec3.create();
+	var N = vec3.fromValues(0,0,1);
+	var uv_center = vec2.fromValues(0.5,0.5);
+	var uv = vec2.create();
+
+	if(xz) N.set([0,1,0]);
+
+	var index = xz ? 2 : 1;
+
+	var vertices = new Float32Array(3 * (slices + 1));
+	var normals = new Float32Array(3 * (slices + 1));
+	var coords = new Float32Array(2 * (slices + 1));
+	var triangles = null;
+
+	//the center is always the same
+	vertices.set(center, 0);
+	normals.set(N, 0);
+	coords.set(uv_center, 0);
+
+	var sin = 0;
+	var cos = 0;
+
+	//compute vertices
+	for(var i = 0; i < slices; ++i )
+	{
+		sin = Math.sin( delta * i );
+		cos = Math.cos( delta * i );
+
+		A[0] = sin * size;
+		A[index] = cos * size;
+		uv[0] = sin * 0.5 + 0.5;
+		uv[1] = cos * 0.5 + 0.5;
+		vertices.set(A, i * 3 + 3);
+		normals.set(N, i * 3 + 3);
+		coords.set(uv, i * 2 + 2);
+	}
+
+	if(empty)
+	{
+		vertices = vertices.subarray(3);
+		normals = vertices.subarray(3);
+		coords = vertices.subarray(2);
+		triangles = null;
+	}
+	else
+	{
+		var triangles = new Uint16Array(3 * slices);
+		var offset = 2;
+		var offset2 = 1;
+		if(xz)
+		{
+			offset = 1;
+			offset2 = 2;
+		}
+
+		//compute indices
+		for(var i = 0; i < slices-1; ++i )
+		{
+			triangles[i*3] = 0;
+			triangles[i*3+1] = i+offset;
+			triangles[i*3+2] = i+offset2;
+		}
+
+		triangles[i*3] = 0;
+		if(xz)
+		{
+			triangles[i*3+1] = i+1;
+			triangles[i*3+2] = 1;
+		}
+		else
+		{
+			triangles[i*3+1] = 1;
+			triangles[i*3+2] = i+1;
+		}
+	}
+
+	options.bounding = BBox.fromCenterHalfsize( [0,0,0], xz ? [size,0,size] : [size,size,0] );
+	return Mesh.load( {vertices: vertices, normals: normals, coords: coords, triangles: triangles}, options );
 }
 
 /**

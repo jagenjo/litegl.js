@@ -2,6 +2,8 @@
 if(typeof(glMatrix) == "undefined")
 	throw("You must include glMatrix on your project");
 
+Math.clamp = function(v,a,b) { return (a > v ? a : (b < v ? b : v)); }
+
 var V3 = vec3.create;
 var M4 = vec3.create;
 
@@ -86,6 +88,17 @@ vec3.rotateZ = function(out,vec,angle_in_rad)
 	out[1] = x * sin + y * cos;
 	out[2] = vec[2];
 	return out;
+}
+
+//signed angles
+vec2.perpdot = function(a,b)
+{
+	return a[1] * b[0] + -a[0] * b[1];
+}
+
+vec2.computeSignedAngle = function( a, b )
+{
+	return Math.atan2( vec2.perpdot(a,b), vec2.dot(a,b) );
 }
 
 //random value
