@@ -220,15 +220,22 @@ var GL = {
 				return;
 
 			e.character = String.fromCharCode(e.keyCode).toLowerCase();
+			var prev_state = false;
+			var key = GL.mapKeyCode(e.keyCode);
 
 			if (!e.altKey && !e.ctrlKey && !e.metaKey) {
-				var key = GL.mapKeyCode(e.keyCode);
-				if (key) gl.keys[key] = e.type == "keydown";
+				if (key) 
+					gl.keys[key] = e.type == "keydown";
+				prev_state = gl.keys[e.keyCode];
 				gl.keys[e.keyCode] = e.type == "keydown";
 			}
 
-			if(e.type == "keydown" && gl.onkeydown) gl.onkeydown(e);
-			else if(e.type == "keyup" && gl.onkeyup) gl.onkeyup(e);
+			//avoid repetition if key stais pressed
+			if(prev_state != gl.keys[e.keyCode])
+			{
+				if(e.type == "keydown" && gl.onkeydown) gl.onkeydown(e);
+				else if(e.type == "keyup" && gl.onkeyup) gl.onkeyup(e);
+			}
 
 			if(prevent_default && (e.isChar || GL.blockable_keys[e.keyIdentifier || e.key ]) )
 				e.preventDefault();

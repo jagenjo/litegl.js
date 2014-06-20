@@ -870,6 +870,7 @@ vec2.random = function(vec)
 {
 	vec[0] = Math.random();
 	vec[1] = Math.random();
+	return vec;
 }
 
 vec3.random = function(vec)
@@ -877,6 +878,7 @@ vec3.random = function(vec)
 	vec[0] = Math.random();
 	vec[1] = Math.random();
 	vec[2] = Math.random();
+	return vec;
 }
 
 //random value
@@ -886,6 +888,19 @@ vec4.random = function(vec)
 	vec[1] = Math.random();
 	vec[2] = Math.random();
 	vec[3] = Math.random();	
+	return vec;
+}
+
+//converts a polar coordinate (radius, lat, long) to (x,y,z)
+vec3.polarToCartesian = function(out, v)
+{
+	var r = v[0];
+	var lat = v[1];
+	var lon = v[2];
+	out[0] = r * Math.cos(lat) * Math.sin(lon);
+	out[1] = r * Math.sin(lat);
+	out[2] = r * Math.cos(lat) * Math.cos(lon);
+	return out;
 }
 
 
@@ -1619,7 +1634,7 @@ Mesh.prototype.computeWireframe = function() {
 	}
 
 	//create stream
-	this.addIndexBuffer('lines', buffer);
+	this.addIndexBuffer('wireframe', buffer);
 	return this;
 }
 
@@ -1870,7 +1885,7 @@ Mesh.prototype.configure = function(o, options)
 	{
 		if(!o[j]) continue;
 
-		if(j == "indices" || j == "lines" || j == "triangles")
+		if(j == "indices" || j == "lines" ||  j == "wireframe" || j == "triangles")
 			i[j] = o[j];
 		else if(Mesh.common_buffers[j])
 			v[j] = o[j];
@@ -1993,6 +2008,42 @@ Mesh.cube = function(options) {
 	buffers.coords = new Float32Array([0,1,1,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,0,1,1,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,0,1,1,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0]);
 
 	options.bounding = BBox.fromCenterHalfsize( [0,0,0], [size,size,size] );
+
+	return Mesh.load(buffers, options);
+}
+
+
+/**
+* Returns a cube mesh 
+* @method Mesh.cube
+* @param {Object} options valid options: size 
+*/
+Mesh.box = function(options) {
+	options = options || {};
+	var sizex = options.sizex || 1;
+	var sizey = options.sizey || 1;
+	var sizez = options.sizez || 1;
+	sizex *= 0.5;
+	sizey *= 0.5;
+	sizez *= 0.5;
+
+	var buffers = {};
+	//[[-1,1,-1],[-1,-1,+1],[-1,1,1],[-1,1,-1],[-1,-1,-1],[-1,-1,+1],[1,1,-1],[1,1,1],[1,-1,+1],[1,1,-1],[1,-1,+1],[1,-1,-1],[-1,1,1],[1,-1,1],[1,1,1],[-1,1,1],[-1,-1,1],[1,-1,1],[-1,1,-1],[1,1,-1],[1,-1,-1],[-1,1,-1],[1,-1,-1],[-1,-1,-1],[-1,1,-1],[1,1,1],[1,1,-1],[-1,1,-1],[-1,1,1],[1,1,1],[-1,-1,-1],[1,-1,-1],[1,-1,1],[-1,-1,-1],[1,-1,1],[-1,-1,1]]
+	buffers.vertices = new Float32Array([-1,1,-1,-1,-1,+1,-1,1,1,-1,1,-1,-1,-1,-1,-1,-1,+1,1,1,-1,1,1,1,1,-1,+1,1,1,-1,1,-1,+1,1,-1,-1,-1,1,1,1,-1,1,1,1,1,-1,1,1,-1,-1,1,1,-1,1,-1,1,-1,1,1,-1,1,-1,-1,-1,1,-1,1,-1,-1,-1,-1,-1,-1,1,-1,1,1,1,1,1,-1,-1,1,-1,-1,1,1,1,1,1,-1,-1,-1,1,-1,-1,1,-1,1,-1,-1,-1,1,-1,1,-1,-1,1]);
+	//for(var i in options.vertices) for(var j in options.vertices[i]) options.vertices[i][j] *= size;
+	for(var i = 0, l = buffers.vertices.length; i < l; i+=3) 
+	{
+		buffers.vertices[i] *= sizex;
+		buffers.vertices[i+1] *= sizey;
+		buffers.vertices[i+2] *= sizez;
+	}
+
+	//[[-1,0,0],[-1,0,0],[-1,0,0],[-1,0,0],[-1,0,0],[-1,0,0],[1,0,0],[1,0,0],[1,0,0],[1,0,0],[1,0,0],[1,0,0],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[0,0,-1],[0,0,-1],[0,0,-1],[0,0,-1],[0,0,-1],[0,0,-1],[0,1,0],[0,1,0],[0,1,0],[0,1,0],[0,1,0],[0,1,0],[0,-1,0],[0,-1,0],[0,-1,0],[0,-1,0],[0,-1,0],[0,-1,0]]
+	//[[0,1],[1,0],[1,1],[0,1],[0,0],[1,0],[1,1],[0,1],[0,0],[1,1],[0,0],[1,0],[0,1],[1,0],[1,1],[0,1],[0,0],[1,0],[1,1],[0,1],[0,0],[1,1],[0,0],[1,0],[0,1],[1,0],[1,1],[0,1],[0,0],[1,0],[1,1],[0,1],[0,0],[1,1],[0,0],[1,0]];
+	buffers.normals = new Float32Array([-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0]);
+	buffers.coords = new Float32Array([0,1,1,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,0,1,1,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,0,1,1,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0]);
+
+	options.bounding = BBox.fromCenterHalfsize( [0,0,0], [sizex,sizey,sizez] );
 
 	return Mesh.load(buffers, options);
 }
@@ -3596,15 +3647,22 @@ var GL = {
 				return;
 
 			e.character = String.fromCharCode(e.keyCode).toLowerCase();
+			var prev_state = false;
+			var key = GL.mapKeyCode(e.keyCode);
 
 			if (!e.altKey && !e.ctrlKey && !e.metaKey) {
-				var key = GL.mapKeyCode(e.keyCode);
-				if (key) gl.keys[key] = e.type == "keydown";
+				if (key) 
+					gl.keys[key] = e.type == "keydown";
+				prev_state = gl.keys[e.keyCode];
 				gl.keys[e.keyCode] = e.type == "keydown";
 			}
 
-			if(e.type == "keydown" && gl.onkeydown) gl.onkeydown(e);
-			else if(e.type == "keyup" && gl.onkeyup) gl.onkeyup(e);
+			//avoid repetition if key stais pressed
+			if(prev_state != gl.keys[e.keyCode])
+			{
+				if(e.type == "keydown" && gl.onkeydown) gl.onkeydown(e);
+				else if(e.type == "keyup" && gl.onkeyup) gl.onkeyup(e);
+			}
 
 			if(prevent_default && (e.isChar || GL.blockable_keys[e.keyIdentifier || e.key ]) )
 				e.preventDefault();

@@ -453,7 +453,7 @@ Mesh.prototype.computeWireframe = function() {
 	}
 
 	//create stream
-	this.addIndexBuffer('lines', buffer);
+	this.addIndexBuffer('wireframe', buffer);
 	return this;
 }
 
@@ -704,7 +704,7 @@ Mesh.prototype.configure = function(o, options)
 	{
 		if(!o[j]) continue;
 
-		if(j == "indices" || j == "lines" || j == "triangles")
+		if(j == "indices" || j == "lines" ||  j == "wireframe" || j == "triangles")
 			i[j] = o[j];
 		else if(Mesh.common_buffers[j])
 			v[j] = o[j];
@@ -827,6 +827,42 @@ Mesh.cube = function(options) {
 	buffers.coords = new Float32Array([0,1,1,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,0,1,1,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,0,1,1,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0]);
 
 	options.bounding = BBox.fromCenterHalfsize( [0,0,0], [size,size,size] );
+
+	return Mesh.load(buffers, options);
+}
+
+
+/**
+* Returns a cube mesh 
+* @method Mesh.cube
+* @param {Object} options valid options: size 
+*/
+Mesh.box = function(options) {
+	options = options || {};
+	var sizex = options.sizex || 1;
+	var sizey = options.sizey || 1;
+	var sizez = options.sizez || 1;
+	sizex *= 0.5;
+	sizey *= 0.5;
+	sizez *= 0.5;
+
+	var buffers = {};
+	//[[-1,1,-1],[-1,-1,+1],[-1,1,1],[-1,1,-1],[-1,-1,-1],[-1,-1,+1],[1,1,-1],[1,1,1],[1,-1,+1],[1,1,-1],[1,-1,+1],[1,-1,-1],[-1,1,1],[1,-1,1],[1,1,1],[-1,1,1],[-1,-1,1],[1,-1,1],[-1,1,-1],[1,1,-1],[1,-1,-1],[-1,1,-1],[1,-1,-1],[-1,-1,-1],[-1,1,-1],[1,1,1],[1,1,-1],[-1,1,-1],[-1,1,1],[1,1,1],[-1,-1,-1],[1,-1,-1],[1,-1,1],[-1,-1,-1],[1,-1,1],[-1,-1,1]]
+	buffers.vertices = new Float32Array([-1,1,-1,-1,-1,+1,-1,1,1,-1,1,-1,-1,-1,-1,-1,-1,+1,1,1,-1,1,1,1,1,-1,+1,1,1,-1,1,-1,+1,1,-1,-1,-1,1,1,1,-1,1,1,1,1,-1,1,1,-1,-1,1,1,-1,1,-1,1,-1,1,1,-1,1,-1,-1,-1,1,-1,1,-1,-1,-1,-1,-1,-1,1,-1,1,1,1,1,1,-1,-1,1,-1,-1,1,1,1,1,1,-1,-1,-1,1,-1,-1,1,-1,1,-1,-1,-1,1,-1,1,-1,-1,1]);
+	//for(var i in options.vertices) for(var j in options.vertices[i]) options.vertices[i][j] *= size;
+	for(var i = 0, l = buffers.vertices.length; i < l; i+=3) 
+	{
+		buffers.vertices[i] *= sizex;
+		buffers.vertices[i+1] *= sizey;
+		buffers.vertices[i+2] *= sizez;
+	}
+
+	//[[-1,0,0],[-1,0,0],[-1,0,0],[-1,0,0],[-1,0,0],[-1,0,0],[1,0,0],[1,0,0],[1,0,0],[1,0,0],[1,0,0],[1,0,0],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[0,0,-1],[0,0,-1],[0,0,-1],[0,0,-1],[0,0,-1],[0,0,-1],[0,1,0],[0,1,0],[0,1,0],[0,1,0],[0,1,0],[0,1,0],[0,-1,0],[0,-1,0],[0,-1,0],[0,-1,0],[0,-1,0],[0,-1,0]]
+	//[[0,1],[1,0],[1,1],[0,1],[0,0],[1,0],[1,1],[0,1],[0,0],[1,1],[0,0],[1,0],[0,1],[1,0],[1,1],[0,1],[0,0],[1,0],[1,1],[0,1],[0,0],[1,1],[0,0],[1,0],[0,1],[1,0],[1,1],[0,1],[0,0],[1,0],[1,1],[0,1],[0,0],[1,1],[0,0],[1,0]];
+	buffers.normals = new Float32Array([-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0]);
+	buffers.coords = new Float32Array([0,1,1,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,0,1,1,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,0,1,1,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0]);
+
+	options.bounding = BBox.fromCenterHalfsize( [0,0,0], [sizex,sizey,sizez] );
 
 	return Mesh.load(buffers, options);
 }

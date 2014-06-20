@@ -106,6 +106,7 @@ vec2.random = function(vec)
 {
 	vec[0] = Math.random();
 	vec[1] = Math.random();
+	return vec;
 }
 
 vec3.random = function(vec)
@@ -113,6 +114,7 @@ vec3.random = function(vec)
 	vec[0] = Math.random();
 	vec[1] = Math.random();
 	vec[2] = Math.random();
+	return vec;
 }
 
 //random value
@@ -122,6 +124,19 @@ vec4.random = function(vec)
 	vec[1] = Math.random();
 	vec[2] = Math.random();
 	vec[3] = Math.random();	
+	return vec;
+}
+
+//converts a polar coordinate (radius, lat, long) to (x,y,z)
+vec3.polarToCartesian = function(out, v)
+{
+	var r = v[0];
+	var lat = v[1];
+	var lon = v[2];
+	out[0] = r * Math.cos(lat) * Math.sin(lon);
+	out[1] = r * Math.sin(lat);
+	out[2] = r * Math.cos(lat) * Math.cos(lon);
+	return out;
 }
 
 
