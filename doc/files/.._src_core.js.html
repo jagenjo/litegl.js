@@ -158,7 +158,12 @@ var GL = {
 		gl.float_ext_linear = gl.getExtension(&quot;OES_texture_float_linear&quot;);
 		gl.half_float_ext = gl.getExtension(&quot;OES_texture_half_float&quot;);
 		gl.half_float_ext_linear = gl.getExtension(&quot;OES_texture_half_float_linear&quot;);
+		if(!gl.half_float_ext_linear)
+			gl.half_float_ext = null;
+
 		gl.HALF_FLOAT_OES = 0x8D61; 
+		if(gl.half_float_ext)
+			gl.HALF_FLOAT_OES = gl.half_float_ext.HALF_FLOAT_OES;
 		gl.max_texture_units = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
 		gl.HIGH_PRECISION_FORMAT = gl.half_float_ext ? gl.HALF_FLOAT_OES : (gl.float_ext ? gl.FLOAT : gl.UNSIGNED_BYTE); //because Firefox dont support half float
 
@@ -182,14 +187,14 @@ var GL = {
 		*/
 		gl.animate = function() {
 			var post = window.requestAnimationFrame;
-			var time = window.performance.now();
+			var time = getTime();
 			var context = this;
 
 			//loop only if browser tab visible
 			function loop() {
 				post(loop); //do it first, in case it crashes
 
-				var now = window.performance.now();
+				var now = getTime();
 				var dt = (now - time) / 1000;
 
 				if (context.onupdate) context.onupdate(dt);
@@ -227,7 +232,7 @@ var GL = {
 			var old_mouse_mask = gl.mouse_buttons;
 			GL.augmentEvent(e, canvas);
 			e.eventType = e.eventType || e.type; //type cannot be overwritten, so I make a clone to allow me to overwrite
-			var now = window.performance.now();
+			var now = getTime();
 
 			if(e.eventType == &quot;mousedown&quot;)
 			{
@@ -321,15 +326,22 @@ var GL = {
 				return;
 
 			e.character = String.fromCharCode(e.keyCode).toLowerCase();
+			var prev_state = false;
+			var key = GL.mapKeyCode(e.keyCode);
 
 			if (!e.altKey &amp;&amp; !e.ctrlKey &amp;&amp; !e.metaKey) {
-				var key = GL.mapKeyCode(e.keyCode);
-				if (key) gl.keys[key] = e.type == &quot;keydown&quot;;
+				if (key) 
+					gl.keys[key] = e.type == &quot;keydown&quot;;
+				prev_state = gl.keys[e.keyCode];
 				gl.keys[e.keyCode] = e.type == &quot;keydown&quot;;
 			}
 
-			if(e.type == &quot;keydown&quot; &amp;&amp; gl.onkeydown) gl.onkeydown(e);
-			else if(e.type == &quot;keyup&quot; &amp;&amp; gl.onkeyup) gl.onkeyup(e);
+			//avoid repetition if key stais pressed
+			if(prev_state != gl.keys[e.keyCode])
+			{
+				if(e.type == &quot;keydown&quot; &amp;&amp; gl.onkeydown) gl.onkeydown(e);
+				else if(e.type == &quot;keyup&quot; &amp;&amp; gl.onkeyup) gl.onkeyup(e);
+			}
 
 			if(prevent_default &amp;&amp; (e.isChar || GL.blockable_keys[e.keyIdentifier || e.key ]) )
 				e.preventDefault();
@@ -518,7 +530,6 @@ GL.UNSIGNED_SHORT = 5123;
 GL.INT = 5124;
 GL.UNSIGNED_INT = 5125;
 GL.FLOAT = 5126;
-GL.UNSIGNED_BYTE = 5125;
 
 GL.ZERO = 0;
 GL.ONE = 1;

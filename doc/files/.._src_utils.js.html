@@ -113,6 +113,8 @@ var DEG2RAD = 0.0174532925;
 var RAD2DEG = 57.295779578552306;
 var EPSILON = 0.000001;
 
+var global = window; //todo: change this to be common js
+
 /**
 * Tells if one number is power of two (used for textures)
 * @method isPowerOfTwo
@@ -129,10 +131,12 @@ function isPowerOfTwo(v)
 * @method getTime
 * @return {number}
 */
-function getTime() {
-	//return new Date().getTime();
-  return performance.now();
-}
+if(typeof(performance) != &quot;undefined&quot;)
+  global.getTime = performance.now.bind(performance);
+else
+  global.getTime = Date.now.bind( Date );
+
+
 
 function isFunction(obj) {
   return !!(obj &amp;&amp; obj.constructor &amp;&amp; obj.call &amp;&amp; obj.apply);
@@ -203,6 +207,40 @@ function wipeObject(obj)
   }
 };
 
+//copy methods from origin to target
+function extendClass( target, origin ) {
+	for(var i in origin) //copy class properties
+	{
+		if(target.hasOwnProperty(i))
+			continue;
+		target[i] = origin[i];
+	}
+
+	if(origin.prototype) //copy prototype properties
+		for(var i in origin.prototype) //only enumerables
+		{
+			if(!origin.prototype.hasOwnProperty(i)) 
+				continue;
+
+			if(target.prototype.hasOwnProperty(i)) //avoid overwritting existing ones
+				continue;
+
+			//copy getters 
+			if(origin.prototype.__lookupGetter__(i))
+				target.prototype.__defineGetter__(i, origin.prototype.__lookupGetter__(i));
+			else 
+				target.prototype[i] = origin.prototype[i];
+
+			//and setters
+			if(origin.prototype.__lookupSetter__(i))
+				target.prototype.__defineSetter__(i, origin.prototype.__lookupSetter__(i));
+		}
+}
+
+
+
+
+//simple http request
 function HttpRequest(url,data)
 {
   var xhr = new XMLHttpRequest();

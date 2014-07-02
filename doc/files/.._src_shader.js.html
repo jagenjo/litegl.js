@@ -247,7 +247,6 @@ Shader._temp_uniform = new Float32Array(16);
 Shader.prototype.uniforms = function(uniforms) {
 
 	gl.useProgram(this.program);
-	//var last_slot = 0;
 
 	for (var name in uniforms) {
 		var info = this.uniformInfo[name];

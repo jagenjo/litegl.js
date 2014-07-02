@@ -205,6 +205,13 @@
                             </li>
                         
                             <li class="index-item method">
+                                <a href="#method_testBBoxBBox">testBBoxBBox</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
                                 <a href="#method_testPoint2DInPolygon">testPoint2DInPolygon</a>
 
                                 
@@ -248,6 +255,13 @@
                         
                             <li class="index-item method">
                                 <a href="#method_testRaySphere">testRaySphere</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
+                                <a href="#method_testSphereBBox">testSphereBBox</a>
 
                                 
                                 
@@ -696,7 +710,7 @@
             
         
         
-        <a href="../files/.._src_geo.js.html#l387"><code>..&#x2F;src&#x2F;geo.js:387</code></a>
+        <a href="../files/.._src_geo.js.html#l470"><code>..&#x2F;src&#x2F;geo.js:470</code></a>
         
         </p>
 
@@ -809,7 +823,7 @@
             
         
         
-        <a href="../files/.._src_geo.js.html#l436"><code>..&#x2F;src&#x2F;geo.js:436</code></a>
+        <a href="../files/.._src_geo.js.html#l519"><code>..&#x2F;src&#x2F;geo.js:519</code></a>
         
         </p>
 
@@ -938,7 +952,7 @@
             
         
         
-        <a href="../files/.._src_geo.js.html#l463"><code>..&#x2F;src&#x2F;geo.js:463</code></a>
+        <a href="../files/.._src_geo.js.html#l546"><code>..&#x2F;src&#x2F;geo.js:546</code></a>
         
         </p>
 
@@ -1338,6 +1352,133 @@
 </div>
 
                 
+                    <div id="method_testBBoxBBox" class="method item">
+    <h3 class="name"><code>testBBoxBBox</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>a</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>b</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type">Boolean</span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_geo.js.html#l355"><code>..&#x2F;src&#x2F;geo.js:355</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>test if a BBox overlaps another BBox</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">a</code>
+                        <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">b</code>
+                        <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">Boolean</span>:
+                    
+                    <p>true if it overlaps</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
                     <div id="method_testPoint2DInPolygon" class="method item">
     <h3 class="name"><code>testPoint2DInPolygon</code></h3>
 
@@ -1390,7 +1531,7 @@
             
         
         
-        <a href="../files/.._src_geo.js.html#l498"><code>..&#x2F;src&#x2F;geo.js:498</code></a>
+        <a href="../files/.._src_geo.js.html#l581"><code>..&#x2F;src&#x2F;geo.js:581</code></a>
         
         </p>
 
@@ -2199,201 +2340,6 @@
             
                 <li class="arg">
                     
-                        <code>center</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>radius</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>result</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-        <span class="returns-inline">
-            <span class="type">Boolean</span>
-        </span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/.._src_geo.js.html#l108"><code>..&#x2F;src&#x2F;geo.js:108</code></a>
-        
-        </p>
-
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        <p>test a ray sphere collision and retrieves the collision point</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">start</code>
-                        <span class="type">Vec3</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>ray start</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">direction</code>
-                        <span class="type">Vec3</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>ray direction</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">center</code>
-                        <span class="type">Vec3</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>center of the sphere</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">radius</code>
-                        <span class="type">Number</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>radius of the sphere</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">result</code>
-                        <span class="type">Vec3</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>collision position</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type">Boolean</span>:
-                    
-                    <p>returns if the ray collides the sphere</p>
-
-                
-            </div>
-        </div>
-    
-
-    
-</div>
-
-                
-                    <div id="method_testRaySphere" class="method item">
-    <h3 class="name"><code>testRaySphere</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>start</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>direction</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
                         <code>p</code>
                     
                 </li>
@@ -2580,6 +2526,349 @@
                         <span class="type">Boolean</span>:
                     
                     <p>returns if the ray collides the cylinder</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_testRaySphere" class="method item">
+    <h3 class="name"><code>testRaySphere</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>start</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>direction</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>center</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>radius</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>result</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type">Boolean</span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_geo.js.html#l108"><code>..&#x2F;src&#x2F;geo.js:108</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>test a ray sphere collision and retrieves the collision point</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">start</code>
+                        <span class="type">Vec3</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>ray start</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">direction</code>
+                        <span class="type">Vec3</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>ray direction</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">center</code>
+                        <span class="type">Vec3</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>center of the sphere</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">radius</code>
+                        <span class="type">Number</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>radius of the sphere</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">result</code>
+                        <span class="type">Vec3</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>collision position</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">Boolean</span>:
+                    
+                    <p>returns if the ray collides the sphere</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_testSphereBBox" class="method item">
+    <h3 class="name"><code>testSphereBBox</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>point</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>radius</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>bounding_box</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type">Boolean</span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_geo.js.html#l387"><code>..&#x2F;src&#x2F;geo.js:387</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>test if a sphere overlaps a BBox</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">point</code>
+                        <span class="type">Vec3</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">radius</code>
+                        <span class="type">Float</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">bounding_box</code>
+                        <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">Boolean</span>:
+                    
+                    <p>true if it overlaps</p>
 
                 
             </div>

@@ -4410,6 +4410,89 @@ var geo = {
 		return true;
 	},
 
+	/**
+	* test if a BBox overlaps another BBox
+	* @method testBBoxBBox
+	* @param {BBox} a
+	* @param {BBox} b
+	* @return {boolean} true if it overlaps
+	*/
+	testBBoxBBox: function(a, b) 
+	{
+		var tx =  Math.abs( b[0] - a[0]);
+		if (tx > (a[3] + b[3]))
+			return false; //outside
+		var ty =  Math.abs(b[1] - a[1]);
+		if (ty > (a[4] + b[4]))
+			return false; //outside
+		var tz =  Math.abs( b[2] - a[2]);
+		if (tz > (a[5] + b[5]) )
+			return false; //outside
+
+		var vmin = BBox.getMin(b);
+		if ( geo.testPointBBox(vmin, a) )
+		{
+			var vmax = BBox.getMax(b);
+			if (geo.testPointBBox(vmax, a))
+			{
+				return true;// INSIDE;// this instance contains b
+			}
+		}
+
+		return true; //OVERLAP; // this instance  overlaps with b
+	},
+
+	/**
+	* test if a sphere overlaps a BBox
+	* @method testSphereBBox
+	* @param {vec3} point
+	* @param {float} radius
+	* @param {BBox} bounding_box
+	* @return {boolean} true if it overlaps
+	*/
+	testSphereBBox: function(center, radius, bbox) 
+	{
+		// arvo's algorithm from gamasutra
+		// http://www.gamasutra.com/features/19991018/Gomez_4.htm
+
+		var s, d = 0.0;
+		//find the square of the distance
+		//from the sphere to the box
+		var vmin = BBox.getMin( bbox );
+		var vmax = BBox.getMax( bbox );
+		for(var i = 0; i < 3; ++i) 
+		{ 
+			if( center[i] < vmin[i] )
+			{
+				s = center[i] - vmin[i];
+				d += s*s; 
+			}
+			else if( center[i] > vmax[i] )
+			{ 
+				s = center[i] - vmax[i];
+				d += s*s; 
+			}
+		}
+		//return d <= r*r
+
+		var radiusSquared = radius * radius;
+		if (d <= radiusSquared)
+		{
+			return true;
+			/*
+			// this is used just to know if it overlaps or is just inside, but I dont care
+			// make an aabb aabb test with the sphere aabb to test inside state
+			var halfsize = vec3.fromValues( radius, radius, radius );
+			var sphere_bbox = BBox.fromCenterHalfsize( center, halfsize );
+			if ( geo.testBBoxBBox(bbox, sphere_bbox) )
+				return INSIDE;
+			return OVERLAP;	
+			*/
+		}
+
+		return false; //OUTSIDE;
+	},
+
 	closestPointBetweenLines: function(a0,a1, b0,b1, p_a, p_b)
 	{
 		var u = vec3.subtract( vec3.create(), a1, a0 );

@@ -108,6 +108,8 @@
 if(typeof(glMatrix) == &quot;undefined&quot;)
 	throw(&quot;You must include glMatrix on your project&quot;);
 
+Math.clamp = function(v,a,b) { return (a &gt; v ? a : (b &lt; v ? b : v)); }
+
 var V3 = vec3.create;
 var M4 = vec3.create;
 
@@ -194,11 +196,23 @@ vec3.rotateZ = function(out,vec,angle_in_rad)
 	return out;
 }
 
+//signed angles
+vec2.perpdot = function(a,b)
+{
+	return a[1] * b[0] + -a[0] * b[1];
+}
+
+vec2.computeSignedAngle = function( a, b )
+{
+	return Math.atan2( vec2.perpdot(a,b), vec2.dot(a,b) );
+}
+
 //random value
 vec2.random = function(vec)
 {
 	vec[0] = Math.random();
 	vec[1] = Math.random();
+	return vec;
 }
 
 vec3.random = function(vec)
@@ -206,6 +220,7 @@ vec3.random = function(vec)
 	vec[0] = Math.random();
 	vec[1] = Math.random();
 	vec[2] = Math.random();
+	return vec;
 }
 
 //random value
@@ -215,6 +230,19 @@ vec4.random = function(vec)
 	vec[1] = Math.random();
 	vec[2] = Math.random();
 	vec[3] = Math.random();	
+	return vec;
+}
+
+//converts a polar coordinate (radius, lat, long) to (x,y,z)
+vec3.polarToCartesian = function(out, v)
+{
+	var r = v[0];
+	var lat = v[1];
+	var lon = v[2];
+	out[0] = r * Math.cos(lat) * Math.sin(lon);
+	out[1] = r * Math.sin(lat);
+	out[2] = r * Math.cos(lat) * Math.cos(lon);
+	return out;
 }
 
 
@@ -234,10 +262,20 @@ mat4.multiplyVec3 = function(out, m, a) {
 };
 
 mat4.projectVec3 = function(out, m, a) {
+
 	mat4.multiplyVec3( out, m, a );
 	out[0] /= out[2];
 	out[1] /= out[2];
 	return out;
+	
+	/* this doesnt work 
+    var x = a[0], y = a[1], z = a[2];
+	var w = m[3] + m[7] + m[11] + m[14];
+    out[0] = (m[0] * x + m[4] * y + m[8] * z + m[12]) / w;
+    out[1] = (m[1] * x + m[5] * y + m[9] * z + m[13]) / w;
+    out[2] = (m[2] * x + m[6] * y + m[10] * z + m[14]) / w;
+	return out;
+	*/
 };
 
 
