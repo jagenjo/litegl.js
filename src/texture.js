@@ -121,7 +121,8 @@ Texture.prototype.bind = function(unit) {
 * @return {number} returns the texture unit
 */
 Texture.prototype.unbind = function(unit) {
-	if(unit == undefined) unit = 0;
+	if(unit === undefined)
+		unit = 0;
 	gl.activeTexture(gl.TEXTURE0 + unit );
 	gl.bindTexture(this.texture_type, null);
 }
@@ -389,7 +390,7 @@ Texture.fromURL = function(url, options, on_complete) {
 	var texture = options.texture || new GL.Texture(1, 1, options);
 
 	texture.bind();
-	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, (options.flipY != true ? 1 : 0) );
+	Texture.setUploadOptions(options);
 	var temp_color = new Uint8Array(options.temp_color || [0,0,0,255]);
 	gl.texImage2D(gl.TEXTURE_2D, 0, texture.format, texture.width, texture.height, 0, texture.format, texture.type, temp_color );
 	gl.bindTexture(texture.texture_type, null); //disable
@@ -495,10 +496,7 @@ Texture.fromMemory = function(width, height, pixels, options) //format in option
 	options = options || {};
 
 	var texture = options.texture || new GL.Texture(width, height, options);
-	gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-	//the standard is to flip, so noflip means flip
-	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, (options.flipY != true ? 1 : 0) );
-	gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, !!options.premultiply_alpha );
+	Texture.setUploadOptions(options);
 	texture.bind();
 
 	try {
@@ -531,11 +529,14 @@ Texture.cubemapFromImages = function(images, options) {
 	if(images.length != 6)
 		throw "missing images to create cubemap";
 
-	var size = images[0].width;
+	var width = images[0].width;
 	var height = images[0].height;
 	options.texture_type = gl.TEXTURE_CUBE_MAP;
 
-	var texture = options.texture || new Texture(size, options);
+	var texture = options.texture || new Texture(width, height, options);
+	Texture.setUploadOptions(options);
+	texture.bind();
+
 	try {
 
 		for(var i = 0; i < 6; i++)
@@ -552,6 +553,8 @@ Texture.cubemapFromImages = function(images, options) {
 		gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
 		texture.has_mipmaps = true;
 	}
+
+	texture.unbind();
 	return texture;
 };
 
@@ -594,6 +597,23 @@ Texture.prototype.toBlob = function()
 {
 	var w = this.width;
 	var h = this.height;
+
+	if(this.texture_type == gl.TEXTURE_CUBE_MAP)
+	{
+		if(!this.image)
+		{
+			console.warning("Litegl: cannot call toBlob of a cubemap GL.Texture");
+			return null; //cannot blob
+		}
+		else
+		{
+			//use the associated image
+			var final_canvas = createCanvas(this.image.width,this.image.height);
+			var final_ctx = final_canvas.getContext("2d");
+			final_ctx.drawImage( this.image, 0, 0 );
+			return final_canvas.toBlob();
+		}
+	}
 
 	//Read pixels form WebGL
 	var buffer = new Uint8Array(w*h*4);

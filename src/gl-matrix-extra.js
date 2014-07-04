@@ -310,6 +310,7 @@ vec3.unproject = function (out, vec, view, proj, viewport) {
 	return out;
 };
 
+/*
 quat.toEuler = function(out, quat) {
 	var q = quat;
 	var heading, attitude, bank;
@@ -338,11 +339,23 @@ quat.toEuler = function(out, quat) {
 	vec3.set(out, heading, attitude, bank);
 	return out;
 }
+*/
+
+quat.toEuler = function(out, q)
+{
+    var heading = Math.atan2(2*q[1]*q[3] - 2*q[0]*q[2], 1 - 2*q[1]*q[1] - 2*q[2]*q[2]);
+    var attitude = Math.asin(2*q[0]*q[1] + 2*q[2]*q[3]);
+    var bank = Math.atan2(2*q[0]*q[3] - 2*q[1]*q[2], 1 - 2*q[0]*q[0] - 2*q[2]*q[2]);
+	if(!out)
+		out = vec3.create();
+	vec3.set(out, heading, attitude, bank);
+	return out;
+}
 
 quat.fromEuler = function(out, vec) {
-	var heading = vec[0]; //yaw
-	var attitude = vec[1]; //pitch
-	var bank = vec[2]; //roll
+	var heading = vec[0];
+	var attitude = vec[1];
+	var bank = vec[2];
 
 	var C1 = Math.cos(heading);
 	var C2 = Math.cos(attitude);
