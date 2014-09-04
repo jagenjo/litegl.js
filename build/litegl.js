@@ -136,25 +136,45 @@ function extendClass( target, origin ) {
 
 
 //simple http request
-function HttpRequest(url,data)
+function HttpRequest(url,params, callback, error, sync)
 {
-  var xhr = new XMLHttpRequest();
-  xhr.open('POST', url, true);
-  xhr.onload = function()
-  {
-    var response = this.response;
-    if(this.status != 200)
-    {
-      LEvent.trigger(xhr,"fail",this.status);
-      return;
-    }
-  }
-  xhr.onerror = function(err)
-  {
-    LEvent.trigger(xhr,"fail",err);
-  }
+	if(params)
+	{
+		var params_str = null;
+		var params_arr = [];
+		for(var i in params)
+			params_arr.push(i + "=" + params[i]);
+		params_str = params_arr.join("&");
+		url = url + "?" + params_str;
+	}
 
-  return xhr;
+	var xhr = new XMLHttpRequest();
+	xhr.open('GET', url, !sync);
+	xhr.onload = function()
+	{
+		var response = this.response;
+		if(this.status != 200)
+		{
+			LEvent.trigger(xhr,"fail",this.status);
+			if(error)
+				error(this.status);
+			return;
+		}
+
+		LEvent.trigger(xhr,"done",this.response);
+		if(callback)
+			callback(this.response);
+		return;
+	}
+
+	xhr.onerror = function(err)
+	{
+		LEvent.trigger(xhr,"fail",err);
+	}
+
+	xhr.send();
+
+	return xhr;
 }
 
 //cheap simple promises
@@ -169,6 +189,65 @@ Object.defineProperty( XMLHttpRequest.prototype, "fail", { enumerable: false, va
   LEvent.bind(this,"fail", function(e,err) { callback(err); } );
   return this;
 }});
+
+
+//allows to pack several (text)files inside one single file (useful for shaders)
+//every file must start with \filename.ext  or /filename.ext
+function loadFileAtlas(url, callback, sync)
+{
+	var deferred_callback = null;
+
+	HttpRequest(url, null, function(data) {
+		var files = processFileAtlas(data); 
+		if(callback)
+			callback(files);
+		if(deferred_callback)
+			deferred_callback(files);
+	}, alert, sync);
+
+	return { done: function(callback) { deferred_callback = callback; } };
+
+	function processFileAtlas(data, callback)
+	{
+		//var reg = /^[a-z0-9/_]+$/i;
+		var lines = data.split("\n");
+		var files = {};
+		var file = [];
+		var filename = "";
+		for(var i in lines)
+		{
+			var line = lines[i].trim();
+			if(!line.length)
+				continue;
+			if( line[0] == "\\") // || (line[0] == '/' && reg.test( line[1] ) ) //allow to use forward slash instead of backward slash
+			{
+				if(!filename)
+				{
+					filename = line.substr(1);
+					continue;
+				}
+				inner_newfile();
+			}
+			else
+				file.push(line);
+		}
+
+		if(filename)
+			inner_newfile();
+
+		function inner_newfile()
+		{
+			var resource = file.join("\n");
+			files[ filename ] = resource;
+			file.length = 0;
+			filename = line.substr(1);
+		}
+
+		return files;
+	}
+}
+
+
 /**
  * @fileoverview dds - Utilities for loading DDS texture files
  * @author Brandon Jones
@@ -2283,6 +2362,43 @@ Mesh.sphere = function(options) {
 }
 
 /**
+* Returns a grid mesh (must be rendered using gl.LINES)
+* @method Mesh.grid
+* @param {Object} options valid options: size, lines
+*/
+Mesh.grid = function(options)
+{
+	options = options || {};
+	var num_lines = options.lines || 10;
+	if(num_lines < 0) num_lines = 1;
+	var size = options.size || 10;
+
+	var vertexPositionData = new Float32Array( num_lines*2*2*3 );
+	var hsize = size * 0.5;
+	var pos = 0;
+	var x = -hsize;
+	var delta = size / (num_lines-1);
+
+	for(var i = 0; i < num_lines; i++)
+	{
+		vertexPositionData[ pos ] = x;
+		vertexPositionData[ pos+2 ] = -hsize;
+		vertexPositionData[ pos+3 ] = x;
+		vertexPositionData[ pos+5 ] = hsize;
+
+		vertexPositionData[ pos+6 ] = hsize;
+		vertexPositionData[ pos+8 ] = x
+		vertexPositionData[ pos+9 ] = -hsize;
+		vertexPositionData[ pos+11 ] = x
+
+		x += delta;
+		pos += 12;
+	}
+
+	return new GL.Mesh({vertices: vertexPositionData});
+}
+
+/**
 * Returns a mesh with all the meshes merged
 * @method Mesh.mergeMeshes
 * @param {Array} meshes array containing all the meshes
@@ -2365,7 +2481,7 @@ Mesh.getScreenQuad = function()
 	if(gl._screen_quad)
 		return gl._screen_quad;
 	var vertices = new Float32Array(18);
-	var coords = new Float32Array([-1,-1, 1,1, -1,1,  -1,-1, 1,-1, 1,1 ]);
+	var coords = new Float32Array([0,0, 1,1, 0,1,  0,0, 1,0, 1,1 ]);
 	gl._screen_quad = new GL.Mesh({
 		vertices: vertices,
 		coords: coords});

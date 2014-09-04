@@ -135,25 +135,45 @@ function extendClass( target, origin ) {
 
 
 //simple http request
-function HttpRequest(url,data)
+function HttpRequest(url,params, callback, error, sync)
 {
-  var xhr = new XMLHttpRequest();
-  xhr.open('POST', url, true);
-  xhr.onload = function()
-  {
-    var response = this.response;
-    if(this.status != 200)
-    {
-      LEvent.trigger(xhr,"fail",this.status);
-      return;
-    }
-  }
-  xhr.onerror = function(err)
-  {
-    LEvent.trigger(xhr,"fail",err);
-  }
+	if(params)
+	{
+		var params_str = null;
+		var params_arr = [];
+		for(var i in params)
+			params_arr.push(i + "=" + params[i]);
+		params_str = params_arr.join("&");
+		url = url + "?" + params_str;
+	}
 
-  return xhr;
+	var xhr = new XMLHttpRequest();
+	xhr.open('GET', url, !sync);
+	xhr.onload = function()
+	{
+		var response = this.response;
+		if(this.status != 200)
+		{
+			LEvent.trigger(xhr,"fail",this.status);
+			if(error)
+				error(this.status);
+			return;
+		}
+
+		LEvent.trigger(xhr,"done",this.response);
+		if(callback)
+			callback(this.response);
+		return;
+	}
+
+	xhr.onerror = function(err)
+	{
+		LEvent.trigger(xhr,"fail",err);
+	}
+
+	xhr.send();
+
+	return xhr;
 }
 
 //cheap simple promises
@@ -168,3 +188,61 @@ Object.defineProperty( XMLHttpRequest.prototype, "fail", { enumerable: false, va
   LEvent.bind(this,"fail", function(e,err) { callback(err); } );
   return this;
 }});
+
+
+//allows to pack several (text)files inside one single file (useful for shaders)
+//every file must start with \filename.ext  or /filename.ext
+function loadFileAtlas(url, callback, sync)
+{
+	var deferred_callback = null;
+
+	HttpRequest(url, null, function(data) {
+		var files = processFileAtlas(data); 
+		if(callback)
+			callback(files);
+		if(deferred_callback)
+			deferred_callback(files);
+	}, alert, sync);
+
+	return { done: function(callback) { deferred_callback = callback; } };
+
+	function processFileAtlas(data, callback)
+	{
+		//var reg = /^[a-z0-9/_]+$/i;
+		var lines = data.split("\n");
+		var files = {};
+		var file = [];
+		var filename = "";
+		for(var i in lines)
+		{
+			var line = lines[i].trim();
+			if(!line.length)
+				continue;
+			if( line[0] == "\\") // || (line[0] == '/' && reg.test( line[1] ) ) //allow to use forward slash instead of backward slash
+			{
+				if(!filename)
+				{
+					filename = line.substr(1);
+					continue;
+				}
+				inner_newfile();
+			}
+			else
+				file.push(line);
+		}
+
+		if(filename)
+			inner_newfile();
+
+		function inner_newfile()
+		{
+			var resource = file.join("\n");
+			files[ filename ] = resource;
+			file.length = 0;
+			filename = line.substr(1);
+		}
+
+		return files;
+	}
+}
+

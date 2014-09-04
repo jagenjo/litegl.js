@@ -1089,6 +1089,43 @@ Mesh.sphere = function(options) {
 }
 
 /**
+* Returns a grid mesh (must be rendered using gl.LINES)
+* @method Mesh.grid
+* @param {Object} options valid options: size, lines
+*/
+Mesh.grid = function(options)
+{
+	options = options || {};
+	var num_lines = options.lines || 10;
+	if(num_lines < 0) num_lines = 1;
+	var size = options.size || 10;
+
+	var vertexPositionData = new Float32Array( num_lines*2*2*3 );
+	var hsize = size * 0.5;
+	var pos = 0;
+	var x = -hsize;
+	var delta = size / (num_lines-1);
+
+	for(var i = 0; i < num_lines; i++)
+	{
+		vertexPositionData[ pos ] = x;
+		vertexPositionData[ pos+2 ] = -hsize;
+		vertexPositionData[ pos+3 ] = x;
+		vertexPositionData[ pos+5 ] = hsize;
+
+		vertexPositionData[ pos+6 ] = hsize;
+		vertexPositionData[ pos+8 ] = x
+		vertexPositionData[ pos+9 ] = -hsize;
+		vertexPositionData[ pos+11 ] = x
+
+		x += delta;
+		pos += 12;
+	}
+
+	return new GL.Mesh({vertices: vertexPositionData});
+}
+
+/**
 * Returns a mesh with all the meshes merged
 * @method Mesh.mergeMeshes
 * @param {Array} meshes array containing all the meshes
@@ -1171,7 +1208,7 @@ Mesh.getScreenQuad = function()
 	if(gl._screen_quad)
 		return gl._screen_quad;
 	var vertices = new Float32Array(18);
-	var coords = new Float32Array([-1,-1, 1,1, -1,1,  -1,-1, 1,-1, 1,1 ]);
+	var coords = new Float32Array([0,0, 1,1, 0,1,  0,0, 1,0, 1,1 ]);
 	gl._screen_quad = new GL.Mesh({
 		vertices: vertices,
 		coords: coords});
