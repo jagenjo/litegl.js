@@ -109,6 +109,11 @@ vec2.random = function(vec)
 	return vec;
 }
 
+vec3.angle = function( a, b )
+{
+	return Math.acos( vec3.dot(a,b) );
+}
+
 vec3.random = function(vec)
 {
 	vec[0] = Math.random();
@@ -146,6 +151,18 @@ mat4.toArray = function(mat)
 	return [mat[0],mat[1],mat[2],mat[3],mat[4],mat[5],mat[6],mat[7],mat[8],mat[9],mat[10],mat[11],mat[12],mat[13],mat[14],mat[15]];
 }
 
+mat4.setUpAndOrthonormalize = function(out, m, up)
+{
+	if(m != out)
+		mat4.copy(out,m);
+	var right = out.subarray(0,3);
+	vec3.normalize(out.subarray(4,7),up);
+	var front = out.subarray(8,11);
+	vec3.cross( right, up, front );
+	vec3.normalize( right, right );
+	vec3.cross( front, right, up );
+	vec3.normalize( front, front );
+}
 
 mat4.multiplyVec3 = function(out, m, a) {
     var x = a[0], y = a[1], z = a[2];
@@ -155,8 +172,8 @@ mat4.multiplyVec3 = function(out, m, a) {
     return out;
 };
 
-mat4.projectVec3 = function(out, m, a) {
-
+mat4.projectVec3 = function(out, m, a)
+{
 	mat4.multiplyVec3( out, m, a );
 	out[0] /= out[2];
 	out[1] /= out[2];

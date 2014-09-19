@@ -33,6 +33,9 @@ function Texture(width, height, options) {
 	this.wrapS = options.wrap || options.wrapS || gl.CLAMP_TO_EDGE;
 	this.wrapT = options.wrap || options.wrapT || gl.CLAMP_TO_EDGE;
 
+	if(!Texture.MAX_TEXTURE_IMAGE_UNITS)
+		Texture.MAX_TEXTURE_IMAGE_UNITS = gl.getParameter( gl.MAX_TEXTURE_IMAGE_UNITS );
+
 	this.has_mipmaps = false;
 
 	if(this.format == gl.DEPTH_COMPONENT && !gl.depth_ext)
@@ -46,6 +49,8 @@ function Texture(width, height, options) {
 
 	if(width && height)
 	{
+		//this is done because in some cases the user binds a texture to slot 0 and then creates a new one, which overrides slot 0
+		gl.activeTexture(gl.TEXTURE0 + Texture.MAX_TEXTURE_IMAGE_UNITS - 1);
 		//I use an invalid gl enum to say this texture is a depth texture, ugly, I know...
 		gl.bindTexture(this.texture_type, this.handler);
 		gl.texParameteri(this.texture_type, gl.TEXTURE_MAG_FILTER, this.magFilter );
@@ -56,7 +61,7 @@ function Texture(width, height, options) {
 		//gl.TEXTURE_1D is not supported by WebGL...
 		if(this.texture_type == gl.TEXTURE_2D)
 		{
-			gl.texImage2D(gl.TEXTURE_2D, 0, this.format, width, height, 0, this.format, this.type, null);
+			gl.texImage2D(gl.TEXTURE_2D, 0, this.format, width, height, 0, this.format, this.type, options.pixel_data || null );
 		}
 		else if(this.texture_type == gl.TEXTURE_CUBE_MAP)
 		{
@@ -68,6 +73,7 @@ function Texture(width, height, options) {
 			gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, this.format, this.width, this.height, 0, this.format, this.type, null);
 		}
 		gl.bindTexture(this.texture_type, null); //disable
+		gl.activeTexture(gl.TEXTURE0);
 	}
 }
 
@@ -276,18 +282,49 @@ Texture.prototype.copyTo = function(target_texture) {
 /**
 * Render texture in a quad to full viewport size
 * @method toViewport
-* @param {Shader} shader to apply, otherwise a default textured shader is applied
-* @param {Object} uniforms for the shader if needed
+* @param {Shader} shader to apply, otherwise a default textured shader is applied [optional]
+* @param {Object} uniforms for the shader if needed [optional]
 */
 Texture.prototype.toViewport = function(shader, uniforms)
 {
 	shader = shader || Shader.getScreenShader();
 	var mesh = Mesh.getScreenQuad();
+	this.bind(0);
+	shader.uniforms({u_texture: 0});
 	if(uniforms)
 		shader.uniforms(uniforms);
-	this.bind(0);
-	shader.uniforms({texture: 0}).draw( mesh, gl.TRIANGLES );
+	shader.draw( mesh, gl.TRIANGLES );
 }
+
+/**
+* Render texture in a quad of specified area
+* @method renderQuad
+* @param {number} x
+* @param {number} y
+* @param {number} width
+* @param {number} height
+*/
+Texture.prototype.renderQuad = (function() {
+	//static variables: less garbage
+	var identity = mat3.create();
+	var pos = vec2.create();
+	var size = vec2.create();
+	var white = vec4.fromValues(1,1,1,1);
+
+	return (function(x,y,w,h, shader, uniforms)
+	{
+		pos[0] = x;	pos[1] = y;
+		size[0] = w; size[1] = h;
+
+		shader = shader || Shader.getQuadShader();
+		var mesh = Mesh.getScreenQuad();
+		this.bind(0);
+		shader.uniforms({u_texture: 0, u_position: pos, u_color: white, u_size: size, u_viewport: gl.viewport_data.subarray(2,4), u_transform: identity });
+		if(uniforms)
+			shader.uniforms(uniforms);
+		shader.draw( mesh, gl.TRIANGLES );
+	});
+})();
 
 /**
 * Copy texture content to a canvas
@@ -514,6 +551,31 @@ Texture.fromMemory = function(width, height, pixels, options) //format in option
 		texture.has_mipmaps = true;
 	}
 	gl.bindTexture(texture.texture_type, null); //disable
+	return texture;
+};
+
+/**
+* Create a generative texture from a shader ( must GL.Shader.getScreenShader as reference for the shader )
+* @method Texture.fromShader
+* @param {number} width
+* @param {number} height
+* @param {Shader} shader
+* @param {Object} options
+* @return {Texture} the texture
+*/
+Texture.fromShader = function(width, height, shader, options) {
+	options = options || {};
+	
+	var texture = new GL.Texture( width, height, options );
+	//copy content
+	texture.drawTo(function() {
+		gl.disable( gl.BLEND );
+		gl.disable( gl.DEPTH_TEST );
+		gl.disable( gl.CULL_FACE );
+		var mesh = Mesh.getScreenQuad();
+		shader.draw( mesh );
+	});
+
 	return texture;
 };
 

@@ -2,11 +2,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-<!--
-<meta property="og:title" content="GameEditor" />
-<meta property="og:description" content="GameEditor for simple games" />
-<meta property="og:image" content="" />
--->
 
 <title>litegl.js: Quad example</title>
 	<link rel="stylesheet" type="text/css" href="style.css" />
@@ -26,22 +21,14 @@
 		container.appendChild(gl.canvas);
 		gl.animate();
 		gl.captureMouse();
+		var pos = [0,0];
+
 
 		//build the mesh
 		var texture = GL.Texture.fromURL("texture.png",{temp_color:[80,120,40,255], minFilter: gl.LINEAR_MIPMAP_LINEAR});
-		var start_time = getTime();
 
 		//basic distort shader
-		var shader = new Shader("\n\
-			precision highp float;\n\
-			attribute vec3 a_vertex;\n\
-			attribute vec2 a_coord;\n\
-			varying vec2 coord;\n\
-			void main() { \n\
-				coord = a_coord; \n\
-				gl_Position = vec4(coord * 2.0 - 1.0, 0.0, 1.0); \n\
-			}\n\
-			","\
+		var shader = new Shader( Shader.SCREEN_VERTEX_SHADER, "\
 			precision highp float;\n\
 			uniform sampler2D texture;\n\
 			uniform float u_time;\n\
@@ -56,18 +43,15 @@
 			}\n\
 		");
 
-		//generic gl flags and settings
-		gl.disable( gl.DEPTH_TEST );
-
-		var pos = [0,0];
 
 		//rendering loop
 		gl.ondraw = function()
 		{
 			//render mesh using the shader
-			texture.toViewport( shader, {
+			texture.bind(0);
+			shader.toViewport({
 				u_texture: 0,
-				u_time: (getTime() - start_time ) * 0.001,
+				u_time: getTime() * 0.001,
 				u_mousepos: [pos[0]/gl.canvas.width,pos[1]/gl.canvas.height]
 			});
 		};

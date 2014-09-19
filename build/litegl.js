@@ -952,6 +952,11 @@ vec2.random = function(vec)
 	return vec;
 }
 
+vec3.angle = function( a, b )
+{
+	return Math.acos( vec3.dot(a,b) );
+}
+
 vec3.random = function(vec)
 {
 	vec[0] = Math.random();
@@ -989,6 +994,18 @@ mat4.toArray = function(mat)
 	return [mat[0],mat[1],mat[2],mat[3],mat[4],mat[5],mat[6],mat[7],mat[8],mat[9],mat[10],mat[11],mat[12],mat[13],mat[14],mat[15]];
 }
 
+mat4.setUpAndOrthonormalize = function(out, m, up)
+{
+	if(m != out)
+		mat4.copy(out,m);
+	var right = out.subarray(0,3);
+	vec3.normalize(out.subarray(4,7),up);
+	var front = out.subarray(8,11);
+	vec3.cross( right, up, front );
+	vec3.normalize( right, right );
+	vec3.cross( front, right, up );
+	vec3.normalize( front, front );
+}
 
 mat4.multiplyVec3 = function(out, m, a) {
     var x = a[0], y = a[1], z = a[2];
@@ -998,8 +1015,8 @@ mat4.multiplyVec3 = function(out, m, a) {
     return out;
 };
 
-mat4.projectVec3 = function(out, m, a) {
-
+mat4.projectVec3 = function(out, m, a)
+{
 	mat4.multiplyVec3( out, m, a );
 	out[0] /= out[2];
 	out[1] /= out[2];
@@ -2079,6 +2096,15 @@ Mesh.plane2D = function(options) {
 };
 
 /**
+* Returns a point mesh 
+* @method Mesh.point
+* @param {Object} options no options
+*/
+Mesh.point = function(options) {
+	return new GL.Mesh( {vertices: [0,0,0]} );
+}
+
+/**
 * Returns a cube mesh 
 * @method Mesh.cube
 * @param {Object} options valid options: size 
@@ -2475,6 +2501,30 @@ Mesh.mergeMeshes = function(meshes)
 	return new Mesh(vertex_buffers,index_buffers);
 }
 
+//Here we store all basic mesh parsers
+Mesh.parsers = {};
+
+/**
+* Returns am empty mesh and loads a mesh and parses it using the Mesh.parsers, by default only OBJ is supported
+* @method Mesh.fromOBJ
+* @param {Array} meshes array containing all the meshes
+*/
+Mesh.fromURL = function(url, on_complete)
+{
+	var mesh = new GL.Mesh();
+	HttpRequest( url, null, function(data) {
+		var ext = url.substr(url.length - 4).toLowerCase();
+		var parser = Mesh.parsers[ ext ];
+		if(parser)
+			parser.call(null, data, {mesh: mesh});
+		else
+			throw("Mesh.fromURL: no parser found for format " + ext);
+		if(on_complete)
+			on_complete(mesh);
+	});
+	return mesh;
+}
+
 
 Mesh.getScreenQuad = function()
 {
@@ -2523,6 +2573,9 @@ function Texture(width, height, options) {
 	this.wrapS = options.wrap || options.wrapS || gl.CLAMP_TO_EDGE;
 	this.wrapT = options.wrap || options.wrapT || gl.CLAMP_TO_EDGE;
 
+	if(!Texture.MAX_TEXTURE_IMAGE_UNITS)
+		Texture.MAX_TEXTURE_IMAGE_UNITS = gl.getParameter( gl.MAX_TEXTURE_IMAGE_UNITS );
+
 	this.has_mipmaps = false;
 
 	if(this.format == gl.DEPTH_COMPONENT && !gl.depth_ext)
@@ -2536,6 +2589,8 @@ function Texture(width, height, options) {
 
 	if(width && height)
 	{
+		//this is done because in some cases the user binds a texture to slot 0 and then creates a new one, which overrides slot 0
+		gl.activeTexture(gl.TEXTURE0 + Texture.MAX_TEXTURE_IMAGE_UNITS - 1);
 		//I use an invalid gl enum to say this texture is a depth texture, ugly, I know...
 		gl.bindTexture(this.texture_type, this.handler);
 		gl.texParameteri(this.texture_type, gl.TEXTURE_MAG_FILTER, this.magFilter );
@@ -2546,7 +2601,7 @@ function Texture(width, height, options) {
 		//gl.TEXTURE_1D is not supported by WebGL...
 		if(this.texture_type == gl.TEXTURE_2D)
 		{
-			gl.texImage2D(gl.TEXTURE_2D, 0, this.format, width, height, 0, this.format, this.type, null);
+			gl.texImage2D(gl.TEXTURE_2D, 0, this.format, width, height, 0, this.format, this.type, options.pixel_data || null );
 		}
 		else if(this.texture_type == gl.TEXTURE_CUBE_MAP)
 		{
@@ -2558,6 +2613,7 @@ function Texture(width, height, options) {
 			gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, this.format, this.width, this.height, 0, this.format, this.type, null);
 		}
 		gl.bindTexture(this.texture_type, null); //disable
+		gl.activeTexture(gl.TEXTURE0);
 	}
 }
 
@@ -2766,18 +2822,49 @@ Texture.prototype.copyTo = function(target_texture) {
 /**
 * Render texture in a quad to full viewport size
 * @method toViewport
-* @param {Shader} shader to apply, otherwise a default textured shader is applied
-* @param {Object} uniforms for the shader if needed
+* @param {Shader} shader to apply, otherwise a default textured shader is applied [optional]
+* @param {Object} uniforms for the shader if needed [optional]
 */
 Texture.prototype.toViewport = function(shader, uniforms)
 {
 	shader = shader || Shader.getScreenShader();
 	var mesh = Mesh.getScreenQuad();
+	this.bind(0);
+	shader.uniforms({u_texture: 0});
 	if(uniforms)
 		shader.uniforms(uniforms);
-	this.bind(0);
-	shader.uniforms({texture: 0}).draw( mesh, gl.TRIANGLES );
+	shader.draw( mesh, gl.TRIANGLES );
 }
+
+/**
+* Render texture in a quad of specified area
+* @method renderQuad
+* @param {number} x
+* @param {number} y
+* @param {number} width
+* @param {number} height
+*/
+Texture.prototype.renderQuad = (function() {
+	//static variables: less garbage
+	var identity = mat3.create();
+	var pos = vec2.create();
+	var size = vec2.create();
+	var white = vec4.fromValues(1,1,1,1);
+
+	return (function(x,y,w,h, shader, uniforms)
+	{
+		pos[0] = x;	pos[1] = y;
+		size[0] = w; size[1] = h;
+
+		shader = shader || Shader.getQuadShader();
+		var mesh = Mesh.getScreenQuad();
+		this.bind(0);
+		shader.uniforms({u_texture: 0, u_position: pos, u_color: white, u_size: size, u_viewport: gl.viewport_data.subarray(2,4), u_transform: identity });
+		if(uniforms)
+			shader.uniforms(uniforms);
+		shader.draw( mesh, gl.TRIANGLES );
+	});
+})();
 
 /**
 * Copy texture content to a canvas
@@ -3008,6 +3095,31 @@ Texture.fromMemory = function(width, height, pixels, options) //format in option
 };
 
 /**
+* Create a generative texture from a shader ( must GL.Shader.getScreenShader as reference for the shader )
+* @method Texture.fromShader
+* @param {number} width
+* @param {number} height
+* @param {Shader} shader
+* @param {Object} options
+* @return {Texture} the texture
+*/
+Texture.fromShader = function(width, height, shader, options) {
+	options = options || {};
+	
+	var texture = new GL.Texture( width, height, options );
+	//copy content
+	texture.drawTo(function() {
+		gl.disable( gl.BLEND );
+		gl.disable( gl.DEPTH_TEST );
+		gl.disable( gl.CULL_FACE );
+		var mesh = Mesh.getScreenQuad();
+		shader.draw( mesh );
+	});
+
+	return texture;
+};
+
+/**
 * Create a cubemap texture from a set of 6 images
 * @method Texture.cubemapFromImages
 * @param {Array} images
@@ -3190,26 +3302,15 @@ Texture.compareFormats = function(a,b)
 */
 function Shader(vertexSource, fragmentSource, macros)
 {
-	var extra_code = "";
 	//expand macros
+	var extra_code = "";
 	if(macros)
 		for(var i in macros)
 			extra_code += "#define " + i + " " + (macros[i] ? macros[i] : "") + "\n";
 
-	//Compile shader
-	function compileSource(type, source) {
-		var shader = gl.createShader(type);
-		gl.shaderSource(shader, source);
-		gl.compileShader(shader);
-		if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-			throw (type == gl.VERTEX_SHADER ? "Vertex" : "Fragment") + ' shader compile error: ' + gl.getShaderInfoLog(shader);
-		}
-		return shader;
-	}
-
 	this.program = gl.createProgram();
-	gl.attachShader(this.program, compileSource(gl.VERTEX_SHADER, extra_code + vertexSource));
-	gl.attachShader(this.program, compileSource(gl.FRAGMENT_SHADER, extra_code + fragmentSource));
+	gl.attachShader(this.program, Shader.compileSource(gl.VERTEX_SHADER, extra_code + vertexSource));
+	gl.attachShader(this.program, Shader.compileSource(gl.FRAGMENT_SHADER, extra_code + fragmentSource));
 	gl.linkProgram(this.program);
 	if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
 		throw 'link error: ' + gl.getProgramInfoLog(this.program);
@@ -3219,14 +3320,25 @@ function Shader(vertexSource, fragmentSource, macros)
 	this.attributes = {}; 
 	this.uniformInfo = {};
 	this.samplers = {};
-	/* old version, search samplers using regexMap as done by lightGL, now I query the shader directly
-	var samplers = this.samplers;
-	regexMap(/uniform\s+sampler(1D|2D|3D|Cube)\s+(\w+)\s*;/g, vertexSource + fragmentSource, function(groups) {
-		samplers[groups[2]] = 1;
-	});
-	*/
 
-	//extract uniform and attribs locations to speed up future processes
+	//extract info about the shader to speed up future processes
+	this.extractShaderInfo();
+}
+
+Shader.compileSource = function(type, source)
+{
+	var shader = gl.createShader(type);
+	gl.shaderSource(shader, source);
+	gl.compileShader(shader);
+	if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+		throw (type == gl.VERTEX_SHADER ? "Vertex" : "Fragment") + ' shader compile error: ' + gl.getShaderInfoLog(shader);
+	}
+	return shader;
+}
+
+Shader.prototype.extractShaderInfo = function()
+{
+	//extract uniforms info
 	for(var i = 0, l = gl.getProgramParameter(this.program, gl.ACTIVE_UNIFORMS); i < l; ++i)
 	{
 		var data = gl.getActiveUniform( this.program, i);
@@ -3237,7 +3349,11 @@ function Shader(vertexSource, fragmentSource, macros)
 		//arrays have uniformName[0], strip the [] (also data.size tells you if it is an array)
 		var pos = uniformName.indexOf("["); 
 		if(pos != -1)
-			uniformName = uniformName.substr(0,pos);
+		{
+			var pos2 = uniformName.indexOf("]."); //leave array of structs though
+			if(pos2 == -1)
+				uniformName = uniformName.substr(0,pos);
+		}
 
 		//store texture samplers
 		if(data.type == gl.SAMPLER_2D || data.type == gl.SAMPLER_CUBE)
@@ -3254,6 +3370,7 @@ function Shader(vertexSource, fragmentSource, macros)
 		this.uniformInfo[ uniformName ] = { type: data.type, func: func, size: data.size, is_matrix: is_matrix, loc: gl.getUniformLocation(this.program, uniformName) };
 	}
 
+	//extract attributes info
 	for(var i = 0, l = gl.getProgramParameter(this.program, gl.ACTIVE_ATTRIBUTES); i < l; ++i)
 	{
 		var data = gl.getActiveAttrib( this.program, i);
@@ -3303,14 +3420,54 @@ Shader.getUniformFunc = function( data )
 	return func;
 }
 
-/* TODO, I dont like the idea of creating a shader which is not complete till files are retrieved
-Shader.fromFiles = function( vs_path, ps_path )
+
+Shader.fromURL = function( vs_path, fs_path, on_complete )
 {
-	var vs_code = null;
-	var fs_code = null;
+	//create simple shader first
+	var vs_code = "\n\
+			precision highp float;\n\
+			attribute vec3 a_vertex;\n\
+			attribute mat4 u_mvp;\n\
+			void main() { \n\
+				gl_Position = u_mvp * vec4(a_vertex,1.0); \n\
+			}\n\
+		";
+	var fs_code = "\n\
+			precision highp float;\n\
+			void main() {\n\
+				gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n\
+			}\n\
+			";
 	
+	var shader = new GL.Shader(vs_code, fs_code);
+	shader.ready = false;
+
+	var true_vs = null;
+	var true_fs = null;
+
+	HttpRequest( vs_path, null, function(vs_code) {
+		true_vs = vs_code;
+		if(true_fs)
+			compileShader();
+	});
+
+	HttpRequest( fs_path, null, function(fs_code) {
+		true_fs = fs_code;
+		if(true_vs)
+			compileShader();
+	});
+
+	function compileShader()
+	{
+		var true_shader = new GL.Shader(true_vs, true_fs);
+		for(var i in true_shader)
+			shader[i] = true_shader[i];
+		shader.ready = true;
+	}
+
+	return shader;
 }
-*/
+
 
 /**
 * Uploads a set of uniforms to the Shader
@@ -3326,7 +3483,8 @@ Shader.prototype.uniforms = function(uniforms) {
 
 	for (var name in uniforms) {
 		var info = this.uniformInfo[name];
-		if (!info) continue;
+		if (!info)
+			continue;
 
 		var value = uniforms[name];
 		if(value == null) continue;
@@ -3341,68 +3499,6 @@ Shader.prototype.uniforms = function(uniforms) {
 	}
 	return this;
 }//uniforms
-
-/*
-Shader.prototype.uniforms_OLD = function(uniforms) {
-
-	gl.useProgram(this.program);
-	//var last_slot = 0;
-
-	for (var name in uniforms) {
-		var info = this.uniformInfo[name];
-		if (!info) continue;
-		var location = info.loc;
-
-		var value = uniforms[name];
-		if(value == null) continue;
-		if(value.constructor == Float32Array)
-		{
-			switch (value.length) {
-				case 1: gl.uniform1fv(location, value); break; //float
-				case 2: gl.uniform2fv(location, value); break; //vec2
-				case 3: gl.uniform3fv(location, value); break; //vec3
-				case 4: gl.uniform4fv(location, value); break; //vec4
-				case 9: gl.uniformMatrix3fv(location, false,  value); break; //matrix3
-				case 16: gl.uniformMatrix4fv(location, false, value); break; //matrix4
-				default: 
-					var data = gl.getActiveAttrib( this.program, name );
-					if(value.length % 16 == 0) //HACK for bones
-						gl.uniformMatrix4fv(location, false, value ); //mat4
-					else
-						gl.uniform1fv(location, value); 
-					break; //n float
-				//default: throw 'don\'t know how to load uniform "' + name + '" of length ' + value.length;
-			}
-		} 
-		else if (isArray(value)) //non-typed arrays
-		{
-			switch (value.length) {
-			case 1: gl.uniform1f(location, value); break; //float
-			case 2: gl.uniform2f(location, value[0], value[1] ); break; //vec2
-			case 3: gl.uniform3f(location, value[0], value[1], value[2] ); break; //vec3
-			case 4: gl.uniform4f(location, value[0], value[1], value[2], value[3] ); break; //vec4
-			case 9: Shader._temp_uniform.set( value ); gl.uniformMatrix3fv(location, false, Shader._temp_uniform ); break; //mat3
-			case 16: Shader._temp_uniform.set( value ); gl.uniformMatrix4fv(location, false, Shader._temp_uniform ); break; //mat4
-			default: 
-				Shader._temp_uniform.set( value ); 
-				if(value.length % 16 == 0)
-					gl.uniformMatrix4fv(location, false, Shader._temp_uniform ); //mat4
-				else
-					gl.uniform1fv(location, Shader._temp_uniform); 
-				break; //n float
-			//default: throw 'don\'t know how to load uniform "' + name + '" of length ' + value.length;
-			}
-		}
-		else if (isNumber(value))
-		{
-			(this.samplers[name] ? gl.uniform1i : gl.uniform1f).call(gl, location, value);
-		} else {
-			throw 'attempted to set uniform "' + name + '" to invalid value ' + value;
-		}
-	}
-	return this;
-}//uniforms
-*/
 
 /**
 * Renders a mesh using this shader, remember to use the function uniforms before to enable the shader
@@ -3448,6 +3544,8 @@ Shader._temp_attribs_array_zero = new Uint8Array(16); //should be filled with ze
 Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_start, range_length)
 {
 	if(range_length == 0) return;
+
+	gl.useProgram(this.program); //this could be removed assuming every shader is called with some uniforms 
 
 	// enable attributes as necessary.
 	var length = 0;
@@ -3507,34 +3605,125 @@ Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_
 	return this;
 }
 
+Shader.SCREEN_VERTEX_SHADER = "\n\
+			precision highp float;\n\
+			attribute vec3 a_vertex;\n\
+			attribute vec2 a_coord;\n\
+			varying vec2 v_coord;\n\
+			void main() { \n\
+				v_coord = a_coord; \n\
+				gl_Position = vec4(a_coord * 2.0 - 1.0, 0.0, 1.0); \n\
+			}\n\
+			";
+
+Shader.SCREEN_FRAGMENT_SHADER = "\n\
+			precision highp float;\n\
+			uniform sampler2D u_texture;\n\
+			varying vec2 v_coord;\n\
+			void main() {\n\
+				gl_FragColor = texture2D(u_texture, v_coord);\n\
+			}\n\
+			";
+
+Shader.SCREEN_FLAT_FRAGMENT_SHADER = "\n\
+			precision highp float;\n\
+			uniform vec4 u_color;\n\
+			varying vec2 v_coord;\n\
+			void main() {\n\
+				gl_FragColor = u_color;\n\
+			}\n\
+			";
+
+//used to paint quads
+Shader.QUAD_VERTEX_SHADER = "\n\
+			precision highp float;\n\
+			attribute vec3 a_vertex;\n\
+			attribute vec2 a_coord;\n\
+			varying vec2 v_coord;\n\
+			uniform vec2 u_position;\n\
+			uniform vec2 u_size;\n\
+			uniform vec2 u_viewport;\n\
+			uniform mat3 u_transform;\n\
+			void main() { \n\
+				v_coord = vec2(a_coord.x, 1.0 - a_coord.y); \n\
+				vec3 pos = vec3(u_position + a_coord * u_size, 1.0);\n\
+				pos = u_transform * pos;\n\
+				pos.z = 0.0;\n\
+				//normalize\n\
+				pos.x = (2.0 * pos.x / u_viewport.x) - 1.0;\n\
+				pos.y = -((2.0 * pos.y / u_viewport.y) - 1.0);\n\
+				gl_Position = vec4(pos, 1.0); \n\
+			}\n\
+			";
+
+Shader.QUAD_FRAGMENT_SHADER = "\n\
+			precision highp float;\n\
+			uniform sampler2D u_texture;\n\
+			uniform vec4 u_color;\n\
+			varying vec2 v_coord;\n\
+			void main() {\n\
+				gl_FragColor = u_color * texture2D(u_texture, v_coord);\n\
+			}\n\
+			";
+
+Shader.PRIMITIVE2D_VERTEX_SHADER = "\n\
+			precision highp float;\n\
+			attribute vec3 a_vertex;\n\
+			uniform vec2 u_viewport;\n\
+			uniform mat3 u_transform;\n\
+			void main() { \n\
+				vec3 pos = a_vertex;\n\
+				pos = u_transform * pos;\n\
+				pos.z = 0.0;\n\
+				//normalize\n\
+				pos.x = (2.0 * pos.x / u_viewport.x) - 1.0;\n\
+				pos.y = -((2.0 * pos.y / u_viewport.y) - 1.0);\n\
+				gl_Position = vec4(pos, 1.0); \n\
+			}\n\
+			";
+
+/**
+* Renders a fullscreen quad with this shader applied
+* @method toViewport
+* @param {object} uniforms
+*/
+Shader.prototype.toViewport = function(uniforms)
+{
+	var mesh = Mesh.getScreenQuad();
+	if(uniforms)
+		this.uniforms(uniforms);
+	this.draw( mesh );
+}
 
 //Now some common shaders everybody needs
 
-//Screen shader: used to render one texture into another
+/**
+* Returns a shader ready to render a quad in fullscreen, use with Mesh.getScreenQuad() mesh
+* @method Shader.getScreenShader
+*/
 Shader.getScreenShader = function()
 {
 	if(gl._screen_shader)
 		return gl._screen_shader;
 
-	var shader = new GL.Shader("\n\
-			precision highp float;\n\
-			attribute vec3 a_vertex;\n\
-			attribute vec2 a_coord;\n\
-			varying vec2 coord;\n\
-			void main() { \n\
-				coord = a_coord; \n\
-				gl_Position = vec4(coord * 2.0 - 1.0, 0.0, 1.0); \n\
-			}\n\
-			","\n\
-			precision highp float;\n\
-			uniform sampler2D texture;\n\
-			varying vec2 coord;\n\
-			void main() {\n\
-				gl_FragColor = texture2D(texture, coord);\n\
-			}\n\
-			");
+	var shader = new GL.Shader( Shader.SCREEN_VERTEX_SHADER, Shader.SCREEN_FRAGMENT_SHADER);
 	gl._screen_shader = shader;
 	return gl._screen_shader;
+}
+
+/**
+* Returns a shader ready to render a quad with transform, use with Mesh.getScreenQuad() mesh
+* shader must have: u_position, u_size, u_viewport, u_transform (mat3)
+* @method Shader.getQuadShader
+*/
+Shader.getQuadShader = function()
+{
+	if(gl._quad_shader)
+		return gl._quad_shader;
+
+	var shader = new GL.Shader( Shader.QUAD_VERTEX_SHADER, Shader.QUAD_FRAGMENT_SHADER );
+	gl._quad_shader = shader;
+	return gl._quad_shader;
 }
 
 //Blur shader
@@ -3543,15 +3732,7 @@ Shader.getBlurShader = function()
 	if(gl._blur_shader)
 		return gl._blur_shader;
 
-	var shader = new GL.Shader("\n\
-			precision highp float;\n\
-			attribute vec3 a_vertex;\n\
-			attribute vec2 a_coord;\n\
-			varying vec2 v_coord;\n\
-			void main() {\n\
-				v_coord = a_coord; gl_Position = vec4(v_coord * 2.0 - 1.0, 0.0, 1.0);\n\
-			}\n\
-			","\n\
+	var shader = new GL.Shader( Shader.SCREEN_VERTEX_SHADER,"\n\
 			precision highp float;\n\
 			varying vec2 v_coord;\n\
 			uniform sampler2D u_texture;\n\
@@ -4211,7 +4392,7 @@ var CLIP_OUTSIDE = 1;
 var CLIP_OVERLAP = 2;
 
 /**
-* Computational geometry algorithms, is a static calss
+* Computational geometry algorithms, is a static class
 * @class geo
 */
 
@@ -4307,7 +4488,33 @@ var geo = {
 		var t = (numer / denom);
 		if(t < 0.0) return false; //behind the ray
 		if(result)
-			vec3.add( result,  start, vec3.scale( vec3.create(), direction, t) );
+			vec3.add( result,  start, vec3.scale( result, direction, t) );
+
+		return true;
+	},
+
+	/**
+	* test collision between segment and plane and retrieves the collision point
+	* @method testSegmentPlane
+	* @param {vec3} start segment start
+	* @param {vec3} end segment end
+	* @param {vec3} P point where the plane passes	
+	* @param {vec3} N normal of the plane
+	* @param {vec3} result collision position
+	* @return {boolean} returns if the segment collides the plane or it is parallel to the plane
+	*/
+	testSegmentPlane: function(start, end, P, N, result)
+	{
+		var D = vec3.dot( P, N );
+		var numer = D - vec3.dot(N, start);
+		var direction = vec3.sub( vec3.create(), end, start );
+		var denom = vec3.dot(N, direction);
+		if( Math.abs(denom) < EPSILON) return false; //parallel 
+		var t = (numer / denom);
+		if(t < 0.0) return false; //behind the start
+		if(t > 1.0) return false; //after the end
+		if(result)
+			vec3.add( result,  start, vec3.scale( result, direction, t) );
 
 		return true;
 	},
@@ -5912,8 +6119,12 @@ Mesh.parseOBJ = function(text, options)
 		info.groups = groups;
 	mesh.info = info;
 
-	var final_mesh = Mesh.load(mesh);
+	var final_mesh = null;
+	
+	final_mesh = Mesh.load(mesh, null, options.mesh);
 	final_mesh.updateBounding();
 	return final_mesh;
 }
+
+Mesh.parsers[".obj"] = Mesh.parseOBJ.bind( Mesh );
 

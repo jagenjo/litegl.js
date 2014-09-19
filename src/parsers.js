@@ -277,7 +277,11 @@ Mesh.parseOBJ = function(text, options)
 		info.groups = groups;
 	mesh.info = info;
 
-	var final_mesh = Mesh.load(mesh);
+	var final_mesh = null;
+	
+	final_mesh = Mesh.load(mesh, null, options.mesh);
 	final_mesh.updateBounding();
 	return final_mesh;
 }
+
+Mesh.parsers[".obj"] = Mesh.parseOBJ.bind( Mesh );

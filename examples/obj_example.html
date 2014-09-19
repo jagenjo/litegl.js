@@ -2,11 +2,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-<!--
-<meta property="og:title" content="GameEditor" />
-<meta property="og:description" content="GameEditor for simple games" />
-<meta property="og:image" content="" />
--->
 
 <title>litegl.js: obj mesh example</title>
 	<link rel="stylesheet" type="text/css" href="style.css" />
@@ -26,15 +21,8 @@
 		container.appendChild(gl.canvas);
 		gl.animate();
 
-		var mesh = null;
-
 		//build the mesh
-		var request = new XMLHttpRequest;
-		request.open('GET', "man.obj", true);
-		request.send();
-		request.onload = function() {
-			mesh = GL.Mesh.parseOBJ(this.response);
-		}
+		var mesh = GL.Mesh.fromURL("man.obj");
 
 		//create basic matrices for cameras and transformation
 		var persp = mat4.create();

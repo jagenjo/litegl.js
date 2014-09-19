@@ -4,7 +4,7 @@ var CLIP_OUTSIDE = 1;
 var CLIP_OVERLAP = 2;
 
 /**
-* Computational geometry algorithms, is a static calss
+* Computational geometry algorithms, is a static class
 * @class geo
 */
 
@@ -100,7 +100,33 @@ var geo = {
 		var t = (numer / denom);
 		if(t < 0.0) return false; //behind the ray
 		if(result)
-			vec3.add( result,  start, vec3.scale( vec3.create(), direction, t) );
+			vec3.add( result,  start, vec3.scale( result, direction, t) );
+
+		return true;
+	},
+
+	/**
+	* test collision between segment and plane and retrieves the collision point
+	* @method testSegmentPlane
+	* @param {vec3} start segment start
+	* @param {vec3} end segment end
+	* @param {vec3} P point where the plane passes	
+	* @param {vec3} N normal of the plane
+	* @param {vec3} result collision position
+	* @return {boolean} returns if the segment collides the plane or it is parallel to the plane
+	*/
+	testSegmentPlane: function(start, end, P, N, result)
+	{
+		var D = vec3.dot( P, N );
+		var numer = D - vec3.dot(N, start);
+		var direction = vec3.sub( vec3.create(), end, start );
+		var denom = vec3.dot(N, direction);
+		if( Math.abs(denom) < EPSILON) return false; //parallel 
+		var t = (numer / denom);
+		if(t < 0.0) return false; //behind the start
+		if(t > 1.0) return false; //after the end
+		if(result)
+			vec3.add( result,  start, vec3.scale( result, direction, t) );
 
 		return true;
 	},

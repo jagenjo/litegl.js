@@ -806,6 +806,15 @@ Mesh.plane2D = function(options) {
 };
 
 /**
+* Returns a point mesh 
+* @method Mesh.point
+* @param {Object} options no options
+*/
+Mesh.point = function(options) {
+	return new GL.Mesh( {vertices: [0,0,0]} );
+}
+
+/**
 * Returns a cube mesh 
 * @method Mesh.cube
 * @param {Object} options valid options: size 
@@ -1200,6 +1209,30 @@ Mesh.mergeMeshes = function(meshes)
 	}
 
 	return new Mesh(vertex_buffers,index_buffers);
+}
+
+//Here we store all basic mesh parsers
+Mesh.parsers = {};
+
+/**
+* Returns am empty mesh and loads a mesh and parses it using the Mesh.parsers, by default only OBJ is supported
+* @method Mesh.fromOBJ
+* @param {Array} meshes array containing all the meshes
+*/
+Mesh.fromURL = function(url, on_complete)
+{
+	var mesh = new GL.Mesh();
+	HttpRequest( url, null, function(data) {
+		var ext = url.substr(url.length - 4).toLowerCase();
+		var parser = Mesh.parsers[ ext ];
+		if(parser)
+			parser.call(null, data, {mesh: mesh});
+		else
+			throw("Mesh.fromURL: no parser found for format " + ext);
+		if(on_complete)
+			on_complete(mesh);
+	});
+	return mesh;
 }
 
 
