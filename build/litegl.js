@@ -1,7 +1,8 @@
 //packer version
-//litegl.js (Javi Agenjo 2014 @tamat)
+//litegl.js by Javi Agenjo 2014 @tamat (tamats.com)
 //forked from lightgl.js by Evan Wallace (madebyevan.com)
-"use strict"
+"use strict";
+
 
 var gl;
 var DEG2RAD = 0.0174532925;
@@ -1327,7 +1328,7 @@ function Buffer(target, data, spacing, stream_type) {
 	this.spacing = spacing || 3;
 
 	if(this.data)
-		this.compile(stream_type);
+		this.upload(stream_type);
 }
 
 /**
@@ -1347,10 +1348,10 @@ Buffer.prototype.forEach = function(callback)
 
 /**
 * Uploads the buffer data (stored in this.data) to the GPU
-* @method compile
+* @method upload
 * @param {number} stream_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW 
 */
-Buffer.prototype.compile = function(stream_type) { //default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW )
+Buffer.prototype.upload = function(stream_type) { //default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW )
 	var spacing = this.spacing || 3; //default spacing	
 
 	if(!this.data)
@@ -1382,6 +1383,32 @@ Buffer.prototype.compile = function(stream_type) { //default gl.STATIC_DRAW (oth
 	gl.bindBuffer(this.target, this.buffer);
 	gl.bufferData(this.target, data , stream_type || this.stream_type || gl.STATIC_DRAW);
 };
+//legacy
+Buffer.prototype.compile = Buffer.prototype.upload;
+
+
+/**
+* Uploads the buffer data (stored in this.data) to the GPU
+* @method uploadRange
+* @param {number} start offset in bytes
+* @param {number} size sizes in bytes
+*/
+Buffer.prototype.uploadRange = function(start, size) {
+	var spacing = this.spacing || 3; //default spacing	
+
+	if(!this.data)
+		throw("No data supplied");
+
+	var data = this.data;
+	if(!data.buffer)
+		throw("Buffers must be typed arrays");
+
+	var view = new Uint8Array( this.data.buffer, start, size );
+
+	gl.bindBuffer(this.target, this.buffer);
+	gl.bufferSubData(this.target, start, view );
+};
+
 
 
 /**
@@ -2585,7 +2612,15 @@ function Texture(width, height, options) {
 	if(this.type == gl.HALF_FLOAT_OES && !gl.half_float_ext)
 		throw("Half Float Texture not supported");
 	if(( (this.minFilter != gl.NEAREST && this.minFilter != gl.LINEAR) || this.wrapS != gl.CLAMP_TO_EDGE || this.wrapT != gl.CLAMP_TO_EDGE) && (!isPowerOfTwo(this.width) || !isPowerOfTwo(this.height)))
-		throw("Cannot use texture-wrap or mipmaps in Non-Power-of-Two textures");
+	{
+		if(!options.ignore_pot)
+			throw("Cannot use texture-wrap or mipmaps in Non-Power-of-Two textures");
+		else
+		{
+			this.minFilter = this.magFilter = gl.LINEAR;
+			this.wrapS = this.wrapT = gl.CLAMP_TO_EDGE;
+		}
+	}
 
 	if(width && height)
 	{
@@ -2743,6 +2778,15 @@ Texture.prototype.uploadData = function(data, options )
 	}
 	gl.bindTexture(this.texture_type, null); //disable
 }
+
+Texture.cubemap_camera_parameters = [
+	{ dir: vec3.fromValues(1,0,0), 	up: vec3.fromValues(0,-1,0) }, //positive X
+	{ dir: vec3.fromValues(-1,0,0), up: vec3.fromValues(0,-1,0) }, //negative X
+	{ dir: vec3.fromValues(0,1,0), 	up: vec3.fromValues(0,0,1) }, //positive Y
+	{ dir: vec3.fromValues(0,-1,0), up: vec3.fromValues(0,0,-1) }, //negative Y
+	{ dir: vec3.fromValues(0,0,1), 	up: vec3.fromValues(0,-1,0) }, //positive Z
+	{ dir: vec3.fromValues(0,0,-1), up: vec3.fromValues(0,-1,0) } //negative Z
+];
 
 /**
 * Render to texture using FBO, just pass the callback to a rendering function and the content of the texture will be updated
@@ -2968,7 +3012,8 @@ Texture.fromURL = function(url, options, on_complete) {
 
 	texture.bind();
 	Texture.setUploadOptions(options);
-	var temp_color = new Uint8Array(options.temp_color || [0,0,0,255]);
+	var default_color = options.temp_color || [0,0,0,255];
+	var temp_color = options.type == gl.FLOAT ? new Float32Array(default_color) : new Uint8Array(default_color);
 	gl.texImage2D(gl.TEXTURE_2D, 0, texture.format, texture.width, texture.height, 0, texture.format, texture.type, temp_color );
 	gl.bindTexture(texture.texture_type, null); //disable
 	texture.ready = false;
@@ -3382,6 +3427,17 @@ Shader.prototype.extractShaderInfo = function()
 	}
 }
 
+Shader.prototype.hasUniform = function(name)
+{
+	return this.uniformInfo[name];
+}
+
+Shader.prototype.hasAttribute = function(name)
+{
+	return this.attributes[name];
+}
+
+
 //Tells you which function to call when uploading a uniform according to the data type in the shader
 Shader.getUniformFunc = function( data )
 {
@@ -3628,7 +3684,6 @@ Shader.SCREEN_FRAGMENT_SHADER = "\n\
 Shader.SCREEN_FLAT_FRAGMENT_SHADER = "\n\
 			precision highp float;\n\
 			uniform vec4 u_color;\n\
-			varying vec2 v_coord;\n\
 			void main() {\n\
 				gl_FragColor = u_color;\n\
 			}\n\
@@ -3755,7 +3810,6 @@ Shader.getBlurShader = function()
 	gl._blur_shader = shader;
 	return gl._blur_shader;
 }
-"use strict";
 
 //polyfill
 window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || function(callback) { setTimeout(callback, 1000 / 60); };
@@ -3799,6 +3853,8 @@ var GL = {
 		try { gl = canvas.getContext('webgl', options); } catch (e) {}
 		try { gl = gl || canvas.getContext('experimental-webgl', options); } catch (e) {}
 		if (!gl) { throw 'WebGL not supported'; }
+
+		canvas.is_webgl = true;
 
 		//get some useful extensions
 		gl.derivatives_supported = gl.getExtension('OES_standard_derivatives') || false ;
@@ -6127,4 +6183,5 @@ Mesh.parseOBJ = function(text, options)
 }
 
 Mesh.parsers[".obj"] = Mesh.parseOBJ.bind( Mesh );
+
 

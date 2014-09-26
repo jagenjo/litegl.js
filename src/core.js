@@ -1,4 +1,3 @@
-"use strict";
 
 //polyfill
 window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || function(callback) { setTimeout(callback, 1000 / 60); };
@@ -42,6 +41,8 @@ var GL = {
 		try { gl = canvas.getContext('webgl', options); } catch (e) {}
 		try { gl = gl || canvas.getContext('experimental-webgl', options); } catch (e) {}
 		if (!gl) { throw 'WebGL not supported'; }
+
+		canvas.is_webgl = true;
 
 		//get some useful extensions
 		gl.derivatives_supported = gl.getExtension('OES_standard_derivatives') || false ;

@@ -45,7 +45,15 @@ function Texture(width, height, options) {
 	if(this.type == gl.HALF_FLOAT_OES && !gl.half_float_ext)
 		throw("Half Float Texture not supported");
 	if(( (this.minFilter != gl.NEAREST && this.minFilter != gl.LINEAR) || this.wrapS != gl.CLAMP_TO_EDGE || this.wrapT != gl.CLAMP_TO_EDGE) && (!isPowerOfTwo(this.width) || !isPowerOfTwo(this.height)))
-		throw("Cannot use texture-wrap or mipmaps in Non-Power-of-Two textures");
+	{
+		if(!options.ignore_pot)
+			throw("Cannot use texture-wrap or mipmaps in Non-Power-of-Two textures");
+		else
+		{
+			this.minFilter = this.magFilter = gl.LINEAR;
+			this.wrapS = this.wrapT = gl.CLAMP_TO_EDGE;
+		}
+	}
 
 	if(width && height)
 	{
@@ -203,6 +211,15 @@ Texture.prototype.uploadData = function(data, options )
 	}
 	gl.bindTexture(this.texture_type, null); //disable
 }
+
+Texture.cubemap_camera_parameters = [
+	{ dir: vec3.fromValues(1,0,0), 	up: vec3.fromValues(0,-1,0) }, //positive X
+	{ dir: vec3.fromValues(-1,0,0), up: vec3.fromValues(0,-1,0) }, //negative X
+	{ dir: vec3.fromValues(0,1,0), 	up: vec3.fromValues(0,0,1) }, //positive Y
+	{ dir: vec3.fromValues(0,-1,0), up: vec3.fromValues(0,0,-1) }, //negative Y
+	{ dir: vec3.fromValues(0,0,1), 	up: vec3.fromValues(0,-1,0) }, //positive Z
+	{ dir: vec3.fromValues(0,0,-1), up: vec3.fromValues(0,-1,0) } //negative Z
+];
 
 /**
 * Render to texture using FBO, just pass the callback to a rendering function and the content of the texture will be updated
@@ -428,7 +445,8 @@ Texture.fromURL = function(url, options, on_complete) {
 
 	texture.bind();
 	Texture.setUploadOptions(options);
-	var temp_color = new Uint8Array(options.temp_color || [0,0,0,255]);
+	var default_color = options.temp_color || [0,0,0,255];
+	var temp_color = options.type == gl.FLOAT ? new Float32Array(default_color) : new Uint8Array(default_color);
 	gl.texImage2D(gl.TEXTURE_2D, 0, texture.format, texture.width, texture.height, 0, texture.format, texture.type, temp_color );
 	gl.bindTexture(texture.texture_type, null); //disable
 	texture.ready = false;

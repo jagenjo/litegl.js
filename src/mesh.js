@@ -37,7 +37,7 @@ function Buffer(target, data, spacing, stream_type) {
 	this.spacing = spacing || 3;
 
 	if(this.data)
-		this.compile(stream_type);
+		this.upload(stream_type);
 }
 
 /**
@@ -57,10 +57,10 @@ Buffer.prototype.forEach = function(callback)
 
 /**
 * Uploads the buffer data (stored in this.data) to the GPU
-* @method compile
+* @method upload
 * @param {number} stream_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW 
 */
-Buffer.prototype.compile = function(stream_type) { //default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW )
+Buffer.prototype.upload = function(stream_type) { //default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW )
 	var spacing = this.spacing || 3; //default spacing	
 
 	if(!this.data)
@@ -92,6 +92,30 @@ Buffer.prototype.compile = function(stream_type) { //default gl.STATIC_DRAW (oth
 	gl.bindBuffer(this.target, this.buffer);
 	gl.bufferData(this.target, data , stream_type || this.stream_type || gl.STATIC_DRAW);
 };
+//legacy
+Buffer.prototype.compile = Buffer.prototype.upload;
+
+
+/**
+* Uploads the buffer data (stored in this.data) to the GPU
+* @method uploadRange
+* @param {number} start offset in bytes
+* @param {number} size sizes in bytes
+*/
+Buffer.prototype.uploadRange = function(start, size) {
+	if(!this.data)
+		throw("No data stored in this buffer");
+
+	var data = this.data;
+	if(!data.buffer)
+		throw("Buffers must be typed arrays");
+
+	var view = new Uint8Array( this.data.buffer, start, size );
+
+	gl.bindBuffer(this.target, this.buffer);
+	gl.bufferSubData(this.target, start, view );
+};
+
 
 
 /**

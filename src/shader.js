@@ -88,6 +88,17 @@ Shader.prototype.extractShaderInfo = function()
 	}
 }
 
+Shader.prototype.hasUniform = function(name)
+{
+	return this.uniformInfo[name];
+}
+
+Shader.prototype.hasAttribute = function(name)
+{
+	return this.attributes[name];
+}
+
+
 //Tells you which function to call when uploading a uniform according to the data type in the shader
 Shader.getUniformFunc = function( data )
 {
@@ -334,7 +345,6 @@ Shader.SCREEN_FRAGMENT_SHADER = "\n\
 Shader.SCREEN_FLAT_FRAGMENT_SHADER = "\n\
 			precision highp float;\n\
 			uniform vec4 u_color;\n\
-			varying vec2 v_coord;\n\
 			void main() {\n\
 				gl_FragColor = u_color;\n\
 			}\n\

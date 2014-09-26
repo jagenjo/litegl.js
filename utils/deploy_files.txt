@@ -1,3 +1,4 @@
+../src/header.js
 ../src/utils.js
 
 ../external/dds.js
@@ -12,3 +13,5 @@
 ../src/octree.js
 ../src/raytracer.js
 ../src/parsers.js
+
+../src/footer.js

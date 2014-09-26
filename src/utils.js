@@ -1,6 +1,3 @@
-//litegl.js (Javi Agenjo 2014 @tamat)
-//forked from lightgl.js by Evan Wallace (madebyevan.com)
-"use strict"
 
 var gl;
 var DEG2RAD = 0.0174532925;

@@ -6,6 +6,7 @@
 <title>litegl.js: mesh example</title>
 	<link rel="stylesheet" type="text/css" href="style.css" />
 	<style type='text/css'>
+		html, body { width: 100%; height: 100%; margin: 0; padding: 0 }
 		body { background-color: #DDD;}
 		h1 { color: #777; background-color: #CCC; }
 	</style>
@@ -16,8 +17,9 @@
 	function init()
 	{
 		//create the rendering context
-		var gl = GL.create({width:1000,height:500});
-		var container = document.querySelector("#content");
+		var container = document.body;
+
+		var gl = GL.create({width: container.offsetWidth, height: container.offsetHeight});
 		container.appendChild(gl.canvas);
 		gl.animate(); //launch loop
 
@@ -25,12 +27,11 @@
 		var mesh = GL.Mesh.cube({size:10});
 
 		//create basic matrices for cameras and transformation
-		var persp = mat4.create();
+		var proj = mat4.create();
 		var view = mat4.create();
 		var model = mat4.create();
 		var mvp = mat4.create();
 		var temp = mat4.create();
-		var modelt = mat4.create();
 
 		//get mouse actions
 		gl.captureMouse();
@@ -41,7 +42,7 @@
 		}
 
 		//set the camera position
-		mat4.perspective(persp, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 0.1, 1000);
+		mat4.perspective(proj, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 0.1, 1000);
 		mat4.lookAt(view, [0,50,50],[0,0,0], [0,1,0]);
 
 		//basic phong shader
@@ -51,9 +52,9 @@
 				attribute vec3 a_normal;\
 				varying vec3 v_normal;\
 				uniform mat4 u_mvp;\
-				uniform mat4 u_modelt;\
+				uniform mat4 u_model;\
 				void main() {\
-					v_normal = (u_modelt * vec4(a_normal,1.0)).xyz;\
+					v_normal = (u_model * vec4(a_normal,0.0)).xyz;\
 					gl_Position = u_mvp * vec4(a_vertex,1.0);\
 				}\
 				', '\
@@ -75,7 +76,7 @@
 		var uniforms = {
 			u_color: [1,1,1,1],
 			u_lightvector: vec3.normalize(vec3.create(),[1,1,1]),
-			u_modelt: modelt,
+			u_model: model,
 			u_mvp: mvp
 		};
 
@@ -86,10 +87,7 @@
 
 			//create modelview and projection matrices
 			mat4.multiply(temp,view,model);
-			mat4.multiply(mvp,persp,temp);
-
-			//compute rotation matrix for normals
-			mat4.toRotationMat4(modelt, model);
+			mat4.multiply(mvp,proj,temp);
 
 			//render mesh using the shader
 			shader.uniforms(uniforms).draw(mesh);
@@ -106,14 +104,6 @@
 	</script>
 </head>
 <body>
-
-<div id="wrap">
-	<div id="main">
-		<h1>Mesh DEMO</h1>
-		<div id="content"></div>
-	</div>
-</div>
-
 <script>init();</script>
 </body>
 </html>
