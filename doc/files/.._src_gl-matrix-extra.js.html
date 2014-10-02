@@ -215,6 +215,11 @@ vec2.random = function(vec)
 	return vec;
 }
 
+vec3.angle = function( a, b )
+{
+	return Math.acos( vec3.dot(a,b) );
+}
+
 vec3.random = function(vec)
 {
 	vec[0] = Math.random();
@@ -252,6 +257,18 @@ mat4.toArray = function(mat)
 	return [mat[0],mat[1],mat[2],mat[3],mat[4],mat[5],mat[6],mat[7],mat[8],mat[9],mat[10],mat[11],mat[12],mat[13],mat[14],mat[15]];
 }
 
+mat4.setUpAndOrthonormalize = function(out, m, up)
+{
+	if(m != out)
+		mat4.copy(out,m);
+	var right = out.subarray(0,3);
+	vec3.normalize(out.subarray(4,7),up);
+	var front = out.subarray(8,11);
+	vec3.cross( right, up, front );
+	vec3.normalize( right, right );
+	vec3.cross( front, right, up );
+	vec3.normalize( front, front );
+}
 
 mat4.multiplyVec3 = function(out, m, a) {
     var x = a[0], y = a[1], z = a[2];
@@ -261,8 +278,8 @@ mat4.multiplyVec3 = function(out, m, a) {
     return out;
 };
 
-mat4.projectVec3 = function(out, m, a) {
-
+mat4.projectVec3 = function(out, m, a)
+{
 	mat4.multiplyVec3( out, m, a );
 	out[0] /= out[2];
 	out[1] /= out[2];
@@ -416,6 +433,7 @@ vec3.unproject = function (out, vec, view, proj, viewport) {
 	return out;
 };
 
+/*
 quat.toEuler = function(out, quat) {
 	var q = quat;
 	var heading, attitude, bank;
@@ -444,11 +462,23 @@ quat.toEuler = function(out, quat) {
 	vec3.set(out, heading, attitude, bank);
 	return out;
 }
+*/
+
+quat.toEuler = function(out, q)
+{
+    var heading = Math.atan2(2*q[1]*q[3] - 2*q[0]*q[2], 1 - 2*q[1]*q[1] - 2*q[2]*q[2]);
+    var attitude = Math.asin(2*q[0]*q[1] + 2*q[2]*q[3]);
+    var bank = Math.atan2(2*q[0]*q[3] - 2*q[1]*q[2], 1 - 2*q[0]*q[0] - 2*q[2]*q[2]);
+	if(!out)
+		out = vec3.create();
+	vec3.set(out, heading, attitude, bank);
+	return out;
+}
 
 quat.fromEuler = function(out, vec) {
-	var heading = vec[0]; //yaw
-	var attitude = vec[1]; //pitch
-	var bank = vec[2]; //roll
+	var heading = vec[0];
+	var attitude = vec[1];
+	var bank = vec[2];
 
 	var C1 = Math.cos(heading);
 	var C2 = Math.cos(attitude);

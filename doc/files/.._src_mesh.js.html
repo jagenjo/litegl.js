@@ -143,7 +143,7 @@ function Buffer(target, data, spacing, stream_type) {
 	this.spacing = spacing || 3;
 
 	if(this.data)
-		this.compile(stream_type);
+		this.upload(stream_type);
 }
 
 /**
@@ -163,10 +163,10 @@ Buffer.prototype.forEach = function(callback)
 
 /**
 * Uploads the buffer data (stored in this.data) to the GPU
-* @method compile
+* @method upload
 * @param {number} stream_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW 
 */
-Buffer.prototype.compile = function(stream_type) { //default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW )
+Buffer.prototype.upload = function(stream_type) { //default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW )
 	var spacing = this.spacing || 3; //default spacing	
 
 	if(!this.data)
@@ -198,6 +198,30 @@ Buffer.prototype.compile = function(stream_type) { //default gl.STATIC_DRAW (oth
 	gl.bindBuffer(this.target, this.buffer);
 	gl.bufferData(this.target, data , stream_type || this.stream_type || gl.STATIC_DRAW);
 };
+//legacy
+Buffer.prototype.compile = Buffer.prototype.upload;
+
+
+/**
+* Uploads the buffer data (stored in this.data) to the GPU
+* @method uploadRange
+* @param {number} start offset in bytes
+* @param {number} size sizes in bytes
+*/
+Buffer.prototype.uploadRange = function(start, size) {
+	if(!this.data)
+		throw(&quot;No data stored in this buffer&quot;);
+
+	var data = this.data;
+	if(!data.buffer)
+		throw(&quot;Buffers must be typed arrays&quot;);
+
+	var view = new Uint8Array( this.data.buffer, start, size );
+
+	gl.bindBuffer(this.target, this.buffer);
+	gl.bufferSubData(this.target, start, view );
+};
+
 
 
 /**
@@ -208,7 +232,10 @@ Buffer.prototype.compile = function(stream_type) { //default gl.STATIC_DRAW (oth
 * @param {Object} options
 * @constructor
 */
-function Mesh(vertexbuffers, indexbuffers, options) {
+function Mesh(vertexbuffers, indexbuffers, options)
+{
+	//used to avoid problems with resources moving between different webgl context
+	this._context_id = gl.context_id; 
 
 	this.vertexBuffers = {};
 	this.indexBuffers = {};
@@ -912,6 +939,15 @@ Mesh.plane2D = function(options) {
 };
 
 /**
+* Returns a point mesh 
+* @method Mesh.point
+* @param {Object} options no options
+*/
+Mesh.point = function(options) {
+	return new GL.Mesh( {vertices: [0,0,0]} );
+}
+
+/**
 * Returns a cube mesh 
 * @method Mesh.cube
 * @param {Object} options valid options: size 
@@ -1195,6 +1231,43 @@ Mesh.sphere = function(options) {
 }
 
 /**
+* Returns a grid mesh (must be rendered using gl.LINES)
+* @method Mesh.grid
+* @param {Object} options valid options: size, lines
+*/
+Mesh.grid = function(options)
+{
+	options = options || {};
+	var num_lines = options.lines || 10;
+	if(num_lines &lt; 0) num_lines = 1;
+	var size = options.size || 10;
+
+	var vertexPositionData = new Float32Array( num_lines*2*2*3 );
+	var hsize = size * 0.5;
+	var pos = 0;
+	var x = -hsize;
+	var delta = size / (num_lines-1);
+
+	for(var i = 0; i &lt; num_lines; i++)
+	{
+		vertexPositionData[ pos ] = x;
+		vertexPositionData[ pos+2 ] = -hsize;
+		vertexPositionData[ pos+3 ] = x;
+		vertexPositionData[ pos+5 ] = hsize;
+
+		vertexPositionData[ pos+6 ] = hsize;
+		vertexPositionData[ pos+8 ] = x
+		vertexPositionData[ pos+9 ] = -hsize;
+		vertexPositionData[ pos+11 ] = x
+
+		x += delta;
+		pos += 12;
+	}
+
+	return new GL.Mesh({vertices: vertexPositionData});
+}
+
+/**
 * Returns a mesh with all the meshes merged
 * @method Mesh.mergeMeshes
 * @param {Array} meshes array containing all the meshes
@@ -1271,17 +1344,41 @@ Mesh.mergeMeshes = function(meshes)
 	return new Mesh(vertex_buffers,index_buffers);
 }
 
+//Here we store all basic mesh parsers
+Mesh.parsers = {};
+
+/**
+* Returns am empty mesh and loads a mesh and parses it using the Mesh.parsers, by default only OBJ is supported
+* @method Mesh.fromOBJ
+* @param {Array} meshes array containing all the meshes
+*/
+Mesh.fromURL = function(url, on_complete)
+{
+	var mesh = new GL.Mesh();
+	HttpRequest( url, null, function(data) {
+		var ext = url.substr(url.length - 4).toLowerCase();
+		var parser = Mesh.parsers[ ext ];
+		if(parser)
+			parser.call(null, data, {mesh: mesh});
+		else
+			throw(&quot;Mesh.fromURL: no parser found for format &quot; + ext);
+		if(on_complete)
+			on_complete(mesh);
+	});
+	return mesh;
+}
+
 
 Mesh.getScreenQuad = function()
 {
-	if(gl._screen_quad)
-		return gl._screen_quad;
+	var mesh = gl.meshes[&quot;:screen_quad&quot;];
+	if(mesh)
+		return mesh;
+
 	var vertices = new Float32Array(18);
-	var coords = new Float32Array([-1,-1, 1,1, -1,1,  -1,-1, 1,-1, 1,1 ]);
-	gl._screen_quad = new GL.Mesh({
-		vertices: vertices,
-		coords: coords});
-	return gl._screen_quad;
+	var coords = new Float32Array([0,0, 1,1, 0,1,  0,0, 1,0, 1,1 ]);
+	mesh = new GL.Mesh({ vertices: vertices, coords: coords});
+	return gl.meshes[&quot;:screen_quad&quot;] = mesh;
 }
 
     </pre>

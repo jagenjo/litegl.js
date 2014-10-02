@@ -8,6 +8,9 @@
 */
 function Shader(vertexSource, fragmentSource, macros)
 {
+	//used to avoid problems with resources moving between different webgl context
+	this._context_id = gl.context_id; 
+
 	//expand macros
 	var extra_code = "";
 	if(macros)
@@ -419,12 +422,10 @@ Shader.prototype.toViewport = function(uniforms)
 */
 Shader.getScreenShader = function()
 {
-	if(gl._screen_shader)
-		return gl._screen_shader;
-
-	var shader = new GL.Shader( Shader.SCREEN_VERTEX_SHADER, Shader.SCREEN_FRAGMENT_SHADER);
-	gl._screen_shader = shader;
-	return gl._screen_shader;
+	var shader = gl.shaders[":screen_shader"];
+	if(shader)
+		return shader;
+	return gl.shaders[":screen_shader"] = new GL.Shader( Shader.SCREEN_VERTEX_SHADER, Shader.SCREEN_FRAGMENT_SHADER );
 }
 
 /**
@@ -434,19 +435,18 @@ Shader.getScreenShader = function()
 */
 Shader.getQuadShader = function()
 {
-	if(gl._quad_shader)
-		return gl._quad_shader;
-
-	var shader = new GL.Shader( Shader.QUAD_VERTEX_SHADER, Shader.QUAD_FRAGMENT_SHADER );
-	gl._quad_shader = shader;
-	return gl._quad_shader;
+	var shader = gl.shaders[":quad_shader"];
+	if(shader)
+		return shader;
+	return gl.shaders[":quad_shader"] = new GL.Shader( Shader.QUAD_VERTEX_SHADER, Shader.QUAD_FRAGMENT_SHADER );
 }
 
 //Blur shader
 Shader.getBlurShader = function()
 {
-	if(gl._blur_shader)
-		return gl._blur_shader;
+	var shader = gl.shaders[":blur_shader"];
+	if(shader)
+		return shader;
 
 	var shader = new GL.Shader( Shader.SCREEN_VERTEX_SHADER,"\n\
 			precision highp float;\n\
@@ -468,6 +468,5 @@ Shader.getBlurShader = function()
 			   gl_FragColor = u_intensity * sum;\n\
 			}\n\
 			");
-	gl._blur_shader = shader;
-	return gl._blur_shader;
+	return gl.shaders[":blur_shader"] = shader;
 }

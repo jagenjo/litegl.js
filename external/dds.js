@@ -211,6 +211,23 @@ var DDS = (function () {
         return dst;
     }
 
+    function BGRtoRGB( byteArray )
+	{
+		for(var j = 0, l = byteArray.length, tmp = 0; j < l; j+=4) //BGR fix
+		{
+			tmp = byteArray[j];
+			byteArray[j] = byteArray[j+2];
+			byteArray[j+2] = tmp;
+		}
+	}
+
+    function flipDXT( width, blockBytes, byteArray )
+	{
+		//TODO
+		//var row = Uint8Array(width);
+	}
+
+
     /**
      * Parses a DDS file from the given arrayBuffer and uploads it into the currently bound texture
      *
@@ -263,6 +280,7 @@ var DDS = (function () {
 
             default:
 				blockBytes = 4;
+				fourCC = null;
 				internalFormat = gl.RGBA;
                 //console.error("Unsupported FourCC code:", int32ToFourCC(fourCC), fourCC);
                 //return null;
@@ -292,19 +310,14 @@ var DDS = (function () {
 					{
 						dataLength = Math.max( 4, width )/4 * Math.max( 4, height )/4 * blockBytes;
 						byteArray = new Uint8Array(arrayBuffer, dataOffset, dataLength);
+						flipDXT( width, blockBytes, byteArray );
 						gl.compressedTexImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face, i, internalFormat, width, height, 0, byteArray);
 					}
 					else
 					{
 						dataLength = width * height * blockBytes;
 						byteArray = new Uint8Array(arrayBuffer, dataOffset, dataLength);
-						for(var j = 0, l = byteArray.length, tmp = 0; j < l; j+=4) //BGR fix
-						{
-							tmp = byteArray[j];
-							byteArray[j] = byteArray[j+2];
-							byteArray[j+2] = tmp;
-						}
-
+						BGRtoRGB(byteArray);
 						gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face, i, internalFormat, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, byteArray);
 					}
 					dataOffset += dataLength;
@@ -316,10 +329,21 @@ var DDS = (function () {
 		else //2d texture
 		{
 			if(ext) {
+				gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true );
 				for(i = 0; i < mipmapCount; ++i) {
-					dataLength = Math.max( 4, width )/4 * Math.max( 4, height )/4 * blockBytes;
-					byteArray = new Uint8Array(arrayBuffer, dataOffset, dataLength);
-					gl.compressedTexImage2D(gl.TEXTURE_2D, i, internalFormat, width, height, 0, byteArray);
+					if(fourCC)
+					{
+						dataLength = Math.max( 4, width )/4 * Math.max( 4, height )/4 * blockBytes;
+						byteArray = new Uint8Array(arrayBuffer, dataOffset, dataLength);
+						gl.compressedTexImage2D(gl.TEXTURE_2D, i, internalFormat, width, height, 0, byteArray);
+					}
+					else
+					{
+						dataLength = width * height * blockBytes;
+						byteArray = new Uint8Array(arrayBuffer, dataOffset, dataLength);
+						BGRtoRGB(byteArray);
+						gl.texImage2D(gl.TEXTURE_2D, i, internalFormat, width, height, 0, internalFormat, gl.UNSIGNED_BYTE, byteArray);
+					}
 					dataOffset += dataLength;
 					width *= 0.5;
 					height *= 0.5;
@@ -328,6 +352,7 @@ var DDS = (function () {
 				if(fourCC == FOURCC_DXT1) {
 					dataLength = Math.max( 4, width )/4 * Math.max( 4, height )/4 * blockBytes;
 					byteArray = new Uint16Array(arrayBuffer);
+					//Decompress
 					rgb565Data = dxtToRgb565(byteArray, dataOffset / 2, width, height);
 					gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, width, height, 0, gl.RGB, gl.UNSIGNED_SHORT_5_6_5, rgb565Data);
 					if(loadMipmaps) {
@@ -424,12 +449,7 @@ var DDS = (function () {
 					{
 						dataLength = width * height * blockBytes;
 						byteArray = new Uint8Array(arrayBuffer, dataOffset, dataLength);
-						for(var j = 0, l = byteArray.length, tmp = 0; j < l; j+=4) //BGR fix
-						{
-							tmp = byteArray[j];
-							byteArray[j] = byteArray[j+2];
-							byteArray[j+2] = tmp;
-						}
+						BGRtoRGB(byteArray);
 						buffers.push({ tex: "TEXTURE_CUBE_MAP", face: face, mipmap: i, internalFormat: internalFormat, width: width, height: height, offset: 0, type: "UNSIGNED_BYTE", dataOffset: dataOffset, dataLength: dataLength });
 					}
 					dataOffset += dataLength;
@@ -514,7 +534,7 @@ var DDS = (function () {
      * @param {WebGLRenderingContext} gl WebGL rendering context
      * @param {WebGLCompressedTextureS3TC} ext WEBGL_compressed_texture_s3tc extension object
      * @param {ArrayBuffer} data containing the DDS file
-     *
+     * @param {Texture} texture from GL.Texture
      * @returns {WebGLTexture} New texture that will receive the DDS image data
      */
     function loadDDSTextureFromMemoryEx(gl, ext, data, texture, loadMipmaps) {
@@ -522,9 +542,13 @@ var DDS = (function () {
 		var is_cubemap = !!(header[off_caps+1] & DDSCAPS2_CUBEMAP);
 		var tex_type = is_cubemap ? gl.TEXTURE_CUBE_MAP : gl.TEXTURE_2D;
 
-		gl.bindTexture(tex_type, texture);
-		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false );
+		var handler = texture.handler || texture;
+
+		gl.bindTexture(tex_type, texture.handler);
+
+		//upload data
 		var mipmaps = uploadDDSLevels(gl, ext, data, loadMipmaps);
+
 		gl.texParameteri(tex_type, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 		gl.texParameteri(tex_type, gl.TEXTURE_MIN_FILTER, mipmaps > 1 ? gl.LINEAR_MIPMAP_LINEAR : gl.LINEAR);
         if(is_cubemap)
@@ -534,9 +558,12 @@ var DDS = (function () {
         }
 
 		gl.bindTexture(tex_type, null); //unbind
-		texture.texture_type = tex_type;
-		texture.width = header[off_width];
-		texture.height = header[off_height];
+		if(texture.handler)
+		{
+			texture.texture_type = tex_type;
+			texture.width = header[off_width];
+			texture.height = header[off_height];
+		}
         return texture;
     }
 

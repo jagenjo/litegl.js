@@ -20,6 +20,9 @@
 
 function Texture(width, height, options) {
 	options = options || {};
+	//used to avoid problems with resources moving between different webgl context
+	this._context_id = gl.context_id; 
+
 	width = parseInt(width); 
 	height = parseInt(height);
 	this.handler = gl.createTexture();
@@ -146,6 +149,7 @@ Texture.prototype.setParameter = function(param,value) {
 	gl.texParameteri(this.texture_type, param, value);
 }
 
+//default: flip_y: true, premultiply: false
 Texture.setUploadOptions = function(options)
 {
 	if(options) //options that are not stored in the texture should be passed again to avoid reusing unknown state
@@ -453,7 +457,7 @@ Texture.fromURL = function(url, options, on_complete) {
 
 	if( url.toLowerCase().indexOf(".dds") != -1)
 	{
-		var ext = gl.getExtension("WEBKIT_WEBGL_compressed_texture_s3tc");
+		var ext = gl.getExtension("WEBKIT_WEBGL_compressed_texture_s3tc") || gl.getExtension("WEBGL_compressed_texture_s3tc");
 		var new_texture = new GL.Texture(0,0, options);
 		DDS.loadDDSTextureEx(gl, ext, url, new_texture.handler, true, function(t) {
 			texture.texture_type = t.texture_type;
@@ -568,6 +572,28 @@ Texture.fromMemory = function(width, height, pixels, options) //format in option
 		gl.generateMipmap(gl.TEXTURE_2D);
 		texture.has_mipmaps = true;
 	}
+	gl.bindTexture(texture.texture_type, null); //disable
+	return texture;
+};
+
+/**
+* Create a texture from an ArrayBuffer containing the pixels
+* @method Texture.fromDDSInMemory
+* @param {ArrayBuffer} DDS data
+* @param {Object} options
+* @return {Texture} the texture
+*/
+Texture.fromDDSInMemory = function(data, options) //format in options as format
+{
+	options = options || {};
+
+	var texture = options.texture || new GL.Texture(0, 0, options);
+	GL.Texture.setUploadOptions(options);
+	texture.bind();
+
+	var ext = gl.getExtension("WEBKIT_WEBGL_compressed_texture_s3tc") || gl.getExtension("WEBGL_compressed_texture_s3tc");
+	DDS.loadDDSTextureFromMemoryEx(gl, ext, data, texture, true );
+
 	gl.bindTexture(texture.texture_type, null); //disable
 	return texture;
 };
@@ -769,4 +795,23 @@ Texture.compareFormats = function(a,b)
 	if(a.width != b.width || a.height != b.height || a.type != b.type || a.texture_type != b.texture_type) 
 		return false;
 	return true;
+}
+
+Texture.getWhiteTexture = function()
+{
+	var tex = gl.textures[":white"];
+	if(tex)
+		return tex;
+
+	var color = new Uint8Array([255,255,255,255]);
+	return gl.textures[":white"] = new GL.Texture(1,1,{ pixel_data: color });
+}
+
+Texture.getBlackTexture = function()
+{
+	var tex = gl.textures[":black"];
+	if(tex)
+		return tex;
+	var color = new Uint8Array([0,0,0,255]);
+	return gl.textures[":black"] = new GL.Texture(1,1,{ pixel_data: color });
 }

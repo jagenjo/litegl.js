@@ -126,6 +126,9 @@
 
 function Texture(width, height, options) {
 	options = options || {};
+	//used to avoid problems with resources moving between different webgl context
+	this._context_id = gl.context_id; 
+
 	width = parseInt(width); 
 	height = parseInt(height);
 	this.handler = gl.createTexture();
@@ -139,6 +142,9 @@ function Texture(width, height, options) {
 	this.wrapS = options.wrap || options.wrapS || gl.CLAMP_TO_EDGE;
 	this.wrapT = options.wrap || options.wrapT || gl.CLAMP_TO_EDGE;
 
+	if(!Texture.MAX_TEXTURE_IMAGE_UNITS)
+		Texture.MAX_TEXTURE_IMAGE_UNITS = gl.getParameter( gl.MAX_TEXTURE_IMAGE_UNITS );
+
 	this.has_mipmaps = false;
 
 	if(this.format == gl.DEPTH_COMPONENT &amp;&amp; !gl.depth_ext)
@@ -148,10 +154,20 @@ function Texture(width, height, options) {
 	if(this.type == gl.HALF_FLOAT_OES &amp;&amp; !gl.half_float_ext)
 		throw(&quot;Half Float Texture not supported&quot;);
 	if(( (this.minFilter != gl.NEAREST &amp;&amp; this.minFilter != gl.LINEAR) || this.wrapS != gl.CLAMP_TO_EDGE || this.wrapT != gl.CLAMP_TO_EDGE) &amp;&amp; (!isPowerOfTwo(this.width) || !isPowerOfTwo(this.height)))
-		throw(&quot;Cannot use texture-wrap or mipmaps in Non-Power-of-Two textures&quot;);
+	{
+		if(!options.ignore_pot)
+			throw(&quot;Cannot use texture-wrap or mipmaps in Non-Power-of-Two textures&quot;);
+		else
+		{
+			this.minFilter = this.magFilter = gl.LINEAR;
+			this.wrapS = this.wrapT = gl.CLAMP_TO_EDGE;
+		}
+	}
 
 	if(width &amp;&amp; height)
 	{
+		//this is done because in some cases the user binds a texture to slot 0 and then creates a new one, which overrides slot 0
+		gl.activeTexture(gl.TEXTURE0 + Texture.MAX_TEXTURE_IMAGE_UNITS - 1);
 		//I use an invalid gl enum to say this texture is a depth texture, ugly, I know...
 		gl.bindTexture(this.texture_type, this.handler);
 		gl.texParameteri(this.texture_type, gl.TEXTURE_MAG_FILTER, this.magFilter );
@@ -162,7 +178,7 @@ function Texture(width, height, options) {
 		//gl.TEXTURE_1D is not supported by WebGL...
 		if(this.texture_type == gl.TEXTURE_2D)
 		{
-			gl.texImage2D(gl.TEXTURE_2D, 0, this.format, width, height, 0, this.format, this.type, null);
+			gl.texImage2D(gl.TEXTURE_2D, 0, this.format, width, height, 0, this.format, this.type, options.pixel_data || null );
 		}
 		else if(this.texture_type == gl.TEXTURE_CUBE_MAP)
 		{
@@ -174,6 +190,7 @@ function Texture(width, height, options) {
 			gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, this.format, this.width, this.height, 0, this.format, this.type, null);
 		}
 		gl.bindTexture(this.texture_type, null); //disable
+		gl.activeTexture(gl.TEXTURE0);
 	}
 }
 
@@ -227,7 +244,8 @@ Texture.prototype.bind = function(unit) {
 * @return {number} returns the texture unit
 */
 Texture.prototype.unbind = function(unit) {
-	if(unit == undefined) unit = 0;
+	if(unit === undefined)
+		unit = 0;
 	gl.activeTexture(gl.TEXTURE0 + unit );
 	gl.bindTexture(this.texture_type, null);
 }
@@ -237,6 +255,7 @@ Texture.prototype.setParameter = function(param,value) {
 	gl.texParameteri(this.texture_type, param, value);
 }
 
+//default: flip_y: true, premultiply: false
 Texture.setUploadOptions = function(options)
 {
 	if(options) //options that are not stored in the texture should be passed again to avoid reusing unknown state
@@ -302,6 +321,15 @@ Texture.prototype.uploadData = function(data, options )
 	}
 	gl.bindTexture(this.texture_type, null); //disable
 }
+
+Texture.cubemap_camera_parameters = [
+	{ dir: vec3.fromValues(1,0,0), 	up: vec3.fromValues(0,-1,0) }, //positive X
+	{ dir: vec3.fromValues(-1,0,0), up: vec3.fromValues(0,-1,0) }, //negative X
+	{ dir: vec3.fromValues(0,1,0), 	up: vec3.fromValues(0,0,1) }, //positive Y
+	{ dir: vec3.fromValues(0,-1,0), up: vec3.fromValues(0,0,-1) }, //negative Y
+	{ dir: vec3.fromValues(0,0,1), 	up: vec3.fromValues(0,-1,0) }, //positive Z
+	{ dir: vec3.fromValues(0,0,-1), up: vec3.fromValues(0,-1,0) } //negative Z
+];
 
 /**
 * Render to texture using FBO, just pass the callback to a rendering function and the content of the texture will be updated
@@ -381,18 +409,49 @@ Texture.prototype.copyTo = function(target_texture) {
 /**
 * Render texture in a quad to full viewport size
 * @method toViewport
-* @param {Shader} shader to apply, otherwise a default textured shader is applied
-* @param {Object} uniforms for the shader if needed
+* @param {Shader} shader to apply, otherwise a default textured shader is applied [optional]
+* @param {Object} uniforms for the shader if needed [optional]
 */
 Texture.prototype.toViewport = function(shader, uniforms)
 {
 	shader = shader || Shader.getScreenShader();
 	var mesh = Mesh.getScreenQuad();
+	this.bind(0);
+	shader.uniforms({u_texture: 0});
 	if(uniforms)
 		shader.uniforms(uniforms);
-	this.bind(0);
-	shader.uniforms({texture: 0}).draw( mesh, gl.TRIANGLES );
+	shader.draw( mesh, gl.TRIANGLES );
 }
+
+/**
+* Render texture in a quad of specified area
+* @method renderQuad
+* @param {number} x
+* @param {number} y
+* @param {number} width
+* @param {number} height
+*/
+Texture.prototype.renderQuad = (function() {
+	//static variables: less garbage
+	var identity = mat3.create();
+	var pos = vec2.create();
+	var size = vec2.create();
+	var white = vec4.fromValues(1,1,1,1);
+
+	return (function(x,y,w,h, shader, uniforms)
+	{
+		pos[0] = x;	pos[1] = y;
+		size[0] = w; size[1] = h;
+
+		shader = shader || Shader.getQuadShader();
+		var mesh = Mesh.getScreenQuad();
+		this.bind(0);
+		shader.uniforms({u_texture: 0, u_position: pos, u_color: white, u_size: size, u_viewport: gl.viewport_data.subarray(2,4), u_transform: identity });
+		if(uniforms)
+			shader.uniforms(uniforms);
+		shader.draw( mesh, gl.TRIANGLES );
+	});
+})();
 
 /**
 * Copy texture content to a canvas
@@ -495,15 +554,16 @@ Texture.fromURL = function(url, options, on_complete) {
 	var texture = options.texture || new GL.Texture(1, 1, options);
 
 	texture.bind();
-	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, (options.flipY != true ? 1 : 0) );
-	var temp_color = new Uint8Array(options.temp_color || [0,0,0,255]);
+	Texture.setUploadOptions(options);
+	var default_color = options.temp_color || [0,0,0,255];
+	var temp_color = options.type == gl.FLOAT ? new Float32Array(default_color) : new Uint8Array(default_color);
 	gl.texImage2D(gl.TEXTURE_2D, 0, texture.format, texture.width, texture.height, 0, texture.format, texture.type, temp_color );
 	gl.bindTexture(texture.texture_type, null); //disable
 	texture.ready = false;
 
 	if( url.toLowerCase().indexOf(&quot;.dds&quot;) != -1)
 	{
-		var ext = gl.getExtension(&quot;WEBKIT_WEBGL_compressed_texture_s3tc&quot;);
+		var ext = gl.getExtension(&quot;WEBKIT_WEBGL_compressed_texture_s3tc&quot;) || gl.getExtension(&quot;WEBGL_compressed_texture_s3tc&quot;);
 		var new_texture = new GL.Texture(0,0, options);
 		DDS.loadDDSTextureEx(gl, ext, url, new_texture.handler, true, function(t) {
 			texture.texture_type = t.texture_type;
@@ -601,10 +661,7 @@ Texture.fromMemory = function(width, height, pixels, options) //format in option
 	options = options || {};
 
 	var texture = options.texture || new GL.Texture(width, height, options);
-	gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-	//the standard is to flip, so noflip means flip
-	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, (options.flipY != true ? 1 : 0) );
-	gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, !!options.premultiply_alpha );
+	Texture.setUploadOptions(options);
 	texture.bind();
 
 	try {
@@ -626,6 +683,53 @@ Texture.fromMemory = function(width, height, pixels, options) //format in option
 };
 
 /**
+* Create a texture from an ArrayBuffer containing the pixels
+* @method Texture.fromDDSInMemory
+* @param {ArrayBuffer} DDS data
+* @param {Object} options
+* @return {Texture} the texture
+*/
+Texture.fromDDSInMemory = function(data, options) //format in options as format
+{
+	options = options || {};
+
+	var texture = options.texture || new GL.Texture(0, 0, options);
+	GL.Texture.setUploadOptions(options);
+	texture.bind();
+
+	var ext = gl.getExtension(&quot;WEBKIT_WEBGL_compressed_texture_s3tc&quot;) || gl.getExtension(&quot;WEBGL_compressed_texture_s3tc&quot;);
+	DDS.loadDDSTextureFromMemoryEx(gl, ext, data, texture, true );
+
+	gl.bindTexture(texture.texture_type, null); //disable
+	return texture;
+};
+
+/**
+* Create a generative texture from a shader ( must GL.Shader.getScreenShader as reference for the shader )
+* @method Texture.fromShader
+* @param {number} width
+* @param {number} height
+* @param {Shader} shader
+* @param {Object} options
+* @return {Texture} the texture
+*/
+Texture.fromShader = function(width, height, shader, options) {
+	options = options || {};
+	
+	var texture = new GL.Texture( width, height, options );
+	//copy content
+	texture.drawTo(function() {
+		gl.disable( gl.BLEND );
+		gl.disable( gl.DEPTH_TEST );
+		gl.disable( gl.CULL_FACE );
+		var mesh = Mesh.getScreenQuad();
+		shader.draw( mesh );
+	});
+
+	return texture;
+};
+
+/**
 * Create a cubemap texture from a set of 6 images
 * @method Texture.cubemapFromImages
 * @param {Array} images
@@ -637,11 +741,14 @@ Texture.cubemapFromImages = function(images, options) {
 	if(images.length != 6)
 		throw &quot;missing images to create cubemap&quot;;
 
-	var size = images[0].width;
+	var width = images[0].width;
 	var height = images[0].height;
 	options.texture_type = gl.TEXTURE_CUBE_MAP;
 
-	var texture = options.texture || new Texture(size, options);
+	var texture = options.texture || new Texture(width, height, options);
+	Texture.setUploadOptions(options);
+	texture.bind();
+
 	try {
 
 		for(var i = 0; i &lt; 6; i++)
@@ -658,6 +765,8 @@ Texture.cubemapFromImages = function(images, options) {
 		gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
 		texture.has_mipmaps = true;
 	}
+
+	texture.unbind();
 	return texture;
 };
 
@@ -700,6 +809,23 @@ Texture.prototype.toBlob = function()
 {
 	var w = this.width;
 	var h = this.height;
+
+	if(this.texture_type == gl.TEXTURE_CUBE_MAP)
+	{
+		if(!this.image)
+		{
+			console.warning(&quot;Litegl: cannot call toBlob of a cubemap GL.Texture&quot;);
+			return null; //cannot blob
+		}
+		else
+		{
+			//use the associated image
+			var final_canvas = createCanvas(this.image.width,this.image.height);
+			var final_ctx = final_canvas.getContext(&quot;2d&quot;);
+			final_ctx.drawImage( this.image, 0, 0 );
+			return final_canvas.toBlob();
+		}
+	}
 
 	//Read pixels form WebGL
 	var buffer = new Uint8Array(w*h*4);
@@ -775,6 +901,25 @@ Texture.compareFormats = function(a,b)
 	if(a.width != b.width || a.height != b.height || a.type != b.type || a.texture_type != b.texture_type) 
 		return false;
 	return true;
+}
+
+Texture.getWhiteTexture = function()
+{
+	var tex = gl.textures[&quot;:white&quot;];
+	if(tex)
+		return tex;
+
+	var color = new Uint8Array([255,255,255,255]);
+	return gl.textures[&quot;:white&quot;] = new GL.Texture(1,1,{ pixel_data: color });
+}
+
+Texture.getBlackTexture = function()
+{
+	var tex = gl.textures[&quot;:black&quot;];
+	if(tex)
+		return tex;
+	var color = new Uint8Array([0,0,0,255]);
+	return gl.textures[&quot;:black&quot;] = new GL.Texture(1,1,{ pixel_data: color });
 }
     </pre>
 </div>

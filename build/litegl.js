@@ -135,7 +135,6 @@ function extendClass( target, origin ) {
 
 
 
-
 //simple http request
 function HttpRequest(url,params, callback, error, sync)
 {
@@ -190,6 +189,18 @@ Object.defineProperty( XMLHttpRequest.prototype, "fail", { enumerable: false, va
   LEvent.bind(this,"fail", function(e,err) { callback(err); } );
   return this;
 }});
+
+
+function getFileExtension(url)
+{
+	var question = url.indexOf("?");
+	if(question != -1)
+		url = url.substr(0,question);
+	var point = url.lastIndexOf(".");
+	if(point == -1) 
+		return "";
+	return url.substr(point+1).toLowerCase();
+} 
 
 
 //allows to pack several (text)files inside one single file (useful for shaders)
@@ -462,6 +473,23 @@ var DDS = (function () {
         return dst;
     }
 
+    function BGRtoRGB( byteArray )
+	{
+		for(var j = 0, l = byteArray.length, tmp = 0; j < l; j+=4) //BGR fix
+		{
+			tmp = byteArray[j];
+			byteArray[j] = byteArray[j+2];
+			byteArray[j+2] = tmp;
+		}
+	}
+
+    function flipDXT( width, blockBytes, byteArray )
+	{
+		//TODO
+		//var row = Uint8Array(width);
+	}
+
+
     /**
      * Parses a DDS file from the given arrayBuffer and uploads it into the currently bound texture
      *
@@ -514,6 +542,7 @@ var DDS = (function () {
 
             default:
 				blockBytes = 4;
+				fourCC = null;
 				internalFormat = gl.RGBA;
                 //console.error("Unsupported FourCC code:", int32ToFourCC(fourCC), fourCC);
                 //return null;
@@ -543,19 +572,14 @@ var DDS = (function () {
 					{
 						dataLength = Math.max( 4, width )/4 * Math.max( 4, height )/4 * blockBytes;
 						byteArray = new Uint8Array(arrayBuffer, dataOffset, dataLength);
+						flipDXT( width, blockBytes, byteArray );
 						gl.compressedTexImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face, i, internalFormat, width, height, 0, byteArray);
 					}
 					else
 					{
 						dataLength = width * height * blockBytes;
 						byteArray = new Uint8Array(arrayBuffer, dataOffset, dataLength);
-						for(var j = 0, l = byteArray.length, tmp = 0; j < l; j+=4) //BGR fix
-						{
-							tmp = byteArray[j];
-							byteArray[j] = byteArray[j+2];
-							byteArray[j+2] = tmp;
-						}
-
+						BGRtoRGB(byteArray);
 						gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face, i, internalFormat, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, byteArray);
 					}
 					dataOffset += dataLength;
@@ -567,10 +591,21 @@ var DDS = (function () {
 		else //2d texture
 		{
 			if(ext) {
+				gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true );
 				for(i = 0; i < mipmapCount; ++i) {
-					dataLength = Math.max( 4, width )/4 * Math.max( 4, height )/4 * blockBytes;
-					byteArray = new Uint8Array(arrayBuffer, dataOffset, dataLength);
-					gl.compressedTexImage2D(gl.TEXTURE_2D, i, internalFormat, width, height, 0, byteArray);
+					if(fourCC)
+					{
+						dataLength = Math.max( 4, width )/4 * Math.max( 4, height )/4 * blockBytes;
+						byteArray = new Uint8Array(arrayBuffer, dataOffset, dataLength);
+						gl.compressedTexImage2D(gl.TEXTURE_2D, i, internalFormat, width, height, 0, byteArray);
+					}
+					else
+					{
+						dataLength = width * height * blockBytes;
+						byteArray = new Uint8Array(arrayBuffer, dataOffset, dataLength);
+						BGRtoRGB(byteArray);
+						gl.texImage2D(gl.TEXTURE_2D, i, internalFormat, width, height, 0, internalFormat, gl.UNSIGNED_BYTE, byteArray);
+					}
 					dataOffset += dataLength;
 					width *= 0.5;
 					height *= 0.5;
@@ -579,6 +614,7 @@ var DDS = (function () {
 				if(fourCC == FOURCC_DXT1) {
 					dataLength = Math.max( 4, width )/4 * Math.max( 4, height )/4 * blockBytes;
 					byteArray = new Uint16Array(arrayBuffer);
+					//Decompress
 					rgb565Data = dxtToRgb565(byteArray, dataOffset / 2, width, height);
 					gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, width, height, 0, gl.RGB, gl.UNSIGNED_SHORT_5_6_5, rgb565Data);
 					if(loadMipmaps) {
@@ -675,12 +711,7 @@ var DDS = (function () {
 					{
 						dataLength = width * height * blockBytes;
 						byteArray = new Uint8Array(arrayBuffer, dataOffset, dataLength);
-						for(var j = 0, l = byteArray.length, tmp = 0; j < l; j+=4) //BGR fix
-						{
-							tmp = byteArray[j];
-							byteArray[j] = byteArray[j+2];
-							byteArray[j+2] = tmp;
-						}
+						BGRtoRGB(byteArray);
 						buffers.push({ tex: "TEXTURE_CUBE_MAP", face: face, mipmap: i, internalFormat: internalFormat, width: width, height: height, offset: 0, type: "UNSIGNED_BYTE", dataOffset: dataOffset, dataLength: dataLength });
 					}
 					dataOffset += dataLength;
@@ -765,7 +796,7 @@ var DDS = (function () {
      * @param {WebGLRenderingContext} gl WebGL rendering context
      * @param {WebGLCompressedTextureS3TC} ext WEBGL_compressed_texture_s3tc extension object
      * @param {ArrayBuffer} data containing the DDS file
-     *
+     * @param {Texture} texture from GL.Texture
      * @returns {WebGLTexture} New texture that will receive the DDS image data
      */
     function loadDDSTextureFromMemoryEx(gl, ext, data, texture, loadMipmaps) {
@@ -773,9 +804,13 @@ var DDS = (function () {
 		var is_cubemap = !!(header[off_caps+1] & DDSCAPS2_CUBEMAP);
 		var tex_type = is_cubemap ? gl.TEXTURE_CUBE_MAP : gl.TEXTURE_2D;
 
-		gl.bindTexture(tex_type, texture);
-		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false );
+		var handler = texture.handler || texture;
+
+		gl.bindTexture(tex_type, texture.handler);
+
+		//upload data
 		var mipmaps = uploadDDSLevels(gl, ext, data, loadMipmaps);
+
 		gl.texParameteri(tex_type, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 		gl.texParameteri(tex_type, gl.TEXTURE_MIN_FILTER, mipmaps > 1 ? gl.LINEAR_MIPMAP_LINEAR : gl.LINEAR);
         if(is_cubemap)
@@ -785,9 +820,12 @@ var DDS = (function () {
         }
 
 		gl.bindTexture(tex_type, null); //unbind
-		texture.texture_type = tex_type;
-		texture.width = header[off_width];
-		texture.height = header[off_height];
+		if(texture.handler)
+		{
+			texture.texture_type = tex_type;
+			texture.width = header[off_width];
+			texture.height = header[off_height];
+		}
         return texture;
     }
 
@@ -1394,10 +1432,8 @@ Buffer.prototype.compile = Buffer.prototype.upload;
 * @param {number} size sizes in bytes
 */
 Buffer.prototype.uploadRange = function(start, size) {
-	var spacing = this.spacing || 3; //default spacing	
-
 	if(!this.data)
-		throw("No data supplied");
+		throw("No data stored in this buffer");
 
 	var data = this.data;
 	if(!data.buffer)
@@ -1419,7 +1455,10 @@ Buffer.prototype.uploadRange = function(start, size) {
 * @param {Object} options
 * @constructor
 */
-function Mesh(vertexbuffers, indexbuffers, options) {
+function Mesh(vertexbuffers, indexbuffers, options)
+{
+	//used to avoid problems with resources moving between different webgl context
+	this._context_id = gl.context_id; 
 
 	this.vertexBuffers = {};
 	this.indexBuffers = {};
@@ -2555,14 +2594,14 @@ Mesh.fromURL = function(url, on_complete)
 
 Mesh.getScreenQuad = function()
 {
-	if(gl._screen_quad)
-		return gl._screen_quad;
+	var mesh = gl.meshes[":screen_quad"];
+	if(mesh)
+		return mesh;
+
 	var vertices = new Float32Array(18);
 	var coords = new Float32Array([0,0, 1,1, 0,1,  0,0, 1,0, 1,1 ]);
-	gl._screen_quad = new GL.Mesh({
-		vertices: vertices,
-		coords: coords});
-	return gl._screen_quad;
+	mesh = new GL.Mesh({ vertices: vertices, coords: coords});
+	return gl.meshes[":screen_quad"] = mesh;
 }
 
 /**
@@ -2587,6 +2626,9 @@ Mesh.getScreenQuad = function()
 
 function Texture(width, height, options) {
 	options = options || {};
+	//used to avoid problems with resources moving between different webgl context
+	this._context_id = gl.context_id; 
+
 	width = parseInt(width); 
 	height = parseInt(height);
 	this.handler = gl.createTexture();
@@ -2713,6 +2755,7 @@ Texture.prototype.setParameter = function(param,value) {
 	gl.texParameteri(this.texture_type, param, value);
 }
 
+//default: flip_y: true, premultiply: false
 Texture.setUploadOptions = function(options)
 {
 	if(options) //options that are not stored in the texture should be passed again to avoid reusing unknown state
@@ -3020,7 +3063,7 @@ Texture.fromURL = function(url, options, on_complete) {
 
 	if( url.toLowerCase().indexOf(".dds") != -1)
 	{
-		var ext = gl.getExtension("WEBKIT_WEBGL_compressed_texture_s3tc");
+		var ext = gl.getExtension("WEBKIT_WEBGL_compressed_texture_s3tc") || gl.getExtension("WEBGL_compressed_texture_s3tc");
 		var new_texture = new GL.Texture(0,0, options);
 		DDS.loadDDSTextureEx(gl, ext, url, new_texture.handler, true, function(t) {
 			texture.texture_type = t.texture_type;
@@ -3135,6 +3178,28 @@ Texture.fromMemory = function(width, height, pixels, options) //format in option
 		gl.generateMipmap(gl.TEXTURE_2D);
 		texture.has_mipmaps = true;
 	}
+	gl.bindTexture(texture.texture_type, null); //disable
+	return texture;
+};
+
+/**
+* Create a texture from an ArrayBuffer containing the pixels
+* @method Texture.fromDDSInMemory
+* @param {ArrayBuffer} DDS data
+* @param {Object} options
+* @return {Texture} the texture
+*/
+Texture.fromDDSInMemory = function(data, options) //format in options as format
+{
+	options = options || {};
+
+	var texture = options.texture || new GL.Texture(0, 0, options);
+	GL.Texture.setUploadOptions(options);
+	texture.bind();
+
+	var ext = gl.getExtension("WEBKIT_WEBGL_compressed_texture_s3tc") || gl.getExtension("WEBGL_compressed_texture_s3tc");
+	DDS.loadDDSTextureFromMemoryEx(gl, ext, data, texture, true );
+
 	gl.bindTexture(texture.texture_type, null); //disable
 	return texture;
 };
@@ -3337,6 +3402,25 @@ Texture.compareFormats = function(a,b)
 		return false;
 	return true;
 }
+
+Texture.getWhiteTexture = function()
+{
+	var tex = gl.textures[":white"];
+	if(tex)
+		return tex;
+
+	var color = new Uint8Array([255,255,255,255]);
+	return gl.textures[":white"] = new GL.Texture(1,1,{ pixel_data: color });
+}
+
+Texture.getBlackTexture = function()
+{
+	var tex = gl.textures[":black"];
+	if(tex)
+		return tex;
+	var color = new Uint8Array([0,0,0,255]);
+	return gl.textures[":black"] = new GL.Texture(1,1,{ pixel_data: color });
+}
 /**
 * Shader class to upload programs to the GPU
 * @class Shader
@@ -3347,6 +3431,9 @@ Texture.compareFormats = function(a,b)
 */
 function Shader(vertexSource, fragmentSource, macros)
 {
+	//used to avoid problems with resources moving between different webgl context
+	this._context_id = gl.context_id; 
+
 	//expand macros
 	var extra_code = "";
 	if(macros)
@@ -3758,12 +3845,10 @@ Shader.prototype.toViewport = function(uniforms)
 */
 Shader.getScreenShader = function()
 {
-	if(gl._screen_shader)
-		return gl._screen_shader;
-
-	var shader = new GL.Shader( Shader.SCREEN_VERTEX_SHADER, Shader.SCREEN_FRAGMENT_SHADER);
-	gl._screen_shader = shader;
-	return gl._screen_shader;
+	var shader = gl.shaders[":screen_shader"];
+	if(shader)
+		return shader;
+	return gl.shaders[":screen_shader"] = new GL.Shader( Shader.SCREEN_VERTEX_SHADER, Shader.SCREEN_FRAGMENT_SHADER );
 }
 
 /**
@@ -3773,19 +3858,18 @@ Shader.getScreenShader = function()
 */
 Shader.getQuadShader = function()
 {
-	if(gl._quad_shader)
-		return gl._quad_shader;
-
-	var shader = new GL.Shader( Shader.QUAD_VERTEX_SHADER, Shader.QUAD_FRAGMENT_SHADER );
-	gl._quad_shader = shader;
-	return gl._quad_shader;
+	var shader = gl.shaders[":quad_shader"];
+	if(shader)
+		return shader;
+	return gl.shaders[":quad_shader"] = new GL.Shader( Shader.QUAD_VERTEX_SHADER, Shader.QUAD_FRAGMENT_SHADER );
 }
 
 //Blur shader
 Shader.getBlurShader = function()
 {
-	if(gl._blur_shader)
-		return gl._blur_shader;
+	var shader = gl.shaders[":blur_shader"];
+	if(shader)
+		return shader;
 
 	var shader = new GL.Shader( Shader.SCREEN_VERTEX_SHADER,"\n\
 			precision highp float;\n\
@@ -3807,8 +3891,7 @@ Shader.getBlurShader = function()
 			   gl_FragColor = u_intensity * sum;\n\
 			}\n\
 			");
-	gl._blur_shader = shader;
-	return gl._blur_shader;
+	return gl.shaders[":blur_shader"] = shader;
 }
 
 //polyfill
@@ -3826,6 +3909,8 @@ var GL = {
 	LEFT_MOUSE_BUTTON: 1,
 	RIGHT_MOUSE_BUTTON: 3,
 	MIDDLE_MOUSE_BUTTON: 2,
+
+	last_context_id: 0,
 
 	/**
 	* creates a new WebGL canvas
@@ -3855,6 +3940,7 @@ var GL = {
 		if (!gl) { throw 'WebGL not supported'; }
 
 		canvas.is_webgl = true;
+		gl.context_id = this.last_context_id++;
 
 		//get some useful extensions
 		gl.derivatives_supported = gl.getExtension('OES_standard_derivatives') || false ;
@@ -3885,7 +3971,21 @@ var GL = {
 			throw("glMatrix not found, LiteGL requires glMatrix to be included");
 
 		var last_click_time = 0;
-		gl.mouse_buttons = 0;		
+		gl.mouse_buttons = 0;
+
+		//some global containers, use them to reuse assets
+		gl.shaders = {};
+		gl.textures = {};
+		gl.meshes = {};
+
+		/**
+		* sets this context as the current gl context
+		* @method gl.makeCurrent
+		*/
+		gl.makeCurrent = function()
+		{
+			window.gl = this;
+		}
 
 
 		/**

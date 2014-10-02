@@ -15,6 +15,8 @@ var GL = {
 	RIGHT_MOUSE_BUTTON: 3,
 	MIDDLE_MOUSE_BUTTON: 2,
 
+	last_context_id: 0,
+
 	/**
 	* creates a new WebGL canvas
 	* @method create
@@ -43,6 +45,7 @@ var GL = {
 		if (!gl) { throw 'WebGL not supported'; }
 
 		canvas.is_webgl = true;
+		gl.context_id = this.last_context_id++;
 
 		//get some useful extensions
 		gl.derivatives_supported = gl.getExtension('OES_standard_derivatives') || false ;
@@ -73,7 +76,21 @@ var GL = {
 			throw("glMatrix not found, LiteGL requires glMatrix to be included");
 
 		var last_click_time = 0;
-		gl.mouse_buttons = 0;		
+		gl.mouse_buttons = 0;
+
+		//some global containers, use them to reuse assets
+		gl.shaders = {};
+		gl.textures = {};
+		gl.meshes = {};
+
+		/**
+		* sets this context as the current gl context
+		* @method gl.makeCurrent
+		*/
+		gl.makeCurrent = function()
+		{
+			window.gl = this;
+		}
 
 
 		/**

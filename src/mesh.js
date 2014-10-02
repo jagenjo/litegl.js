@@ -126,7 +126,10 @@ Buffer.prototype.uploadRange = function(start, size) {
 * @param {Object} options
 * @constructor
 */
-function Mesh(vertexbuffers, indexbuffers, options) {
+function Mesh(vertexbuffers, indexbuffers, options)
+{
+	//used to avoid problems with resources moving between different webgl context
+	this._context_id = gl.context_id; 
 
 	this.vertexBuffers = {};
 	this.indexBuffers = {};
@@ -1262,12 +1265,12 @@ Mesh.fromURL = function(url, on_complete)
 
 Mesh.getScreenQuad = function()
 {
-	if(gl._screen_quad)
-		return gl._screen_quad;
+	var mesh = gl.meshes[":screen_quad"];
+	if(mesh)
+		return mesh;
+
 	var vertices = new Float32Array(18);
 	var coords = new Float32Array([0,0, 1,1, 0,1,  0,0, 1,0, 1,1 ]);
-	gl._screen_quad = new GL.Mesh({
-		vertices: vertices,
-		coords: coords});
-	return gl._screen_quad;
+	mesh = new GL.Mesh({ vertices: vertices, coords: coords});
+	return gl.meshes[":screen_quad"] = mesh;
 }

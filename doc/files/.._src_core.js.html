@@ -104,7 +104,6 @@
 
 <div class="file">
     <pre class="code prettyprint linenums">
-&quot;use strict&quot;;
 
 //polyfill
 window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || function(callback) { setTimeout(callback, 1000 / 60); };
@@ -121,6 +120,8 @@ var GL = {
 	LEFT_MOUSE_BUTTON: 1,
 	RIGHT_MOUSE_BUTTON: 3,
 	MIDDLE_MOUSE_BUTTON: 2,
+
+	last_context_id: 0,
 
 	/**
 	* creates a new WebGL canvas
@@ -148,6 +149,9 @@ var GL = {
 		try { gl = canvas.getContext(&#x27;webgl&#x27;, options); } catch (e) {}
 		try { gl = gl || canvas.getContext(&#x27;experimental-webgl&#x27;, options); } catch (e) {}
 		if (!gl) { throw &#x27;WebGL not supported&#x27;; }
+
+		canvas.is_webgl = true;
+		gl.context_id = this.last_context_id++;
 
 		//get some useful extensions
 		gl.derivatives_supported = gl.getExtension(&#x27;OES_standard_derivatives&#x27;) || false ;
@@ -178,7 +182,21 @@ var GL = {
 			throw(&quot;glMatrix not found, LiteGL requires glMatrix to be included&quot;);
 
 		var last_click_time = 0;
-		gl.mouse_buttons = 0;		
+		gl.mouse_buttons = 0;
+
+		//some global containers, use them to reuse assets
+		gl.shaders = {};
+		gl.textures = {};
+		gl.meshes = {};
+
+		/**
+		* sets this context as the current gl context
+		* @method gl.makeCurrent
+		*/
+		gl.makeCurrent = function()
+		{
+			window.gl = this;
+		}
 
 
 		/**

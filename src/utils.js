@@ -130,7 +130,6 @@ function extendClass( target, origin ) {
 
 
 
-
 //simple http request
 function HttpRequest(url,params, callback, error, sync)
 {
@@ -185,6 +184,18 @@ Object.defineProperty( XMLHttpRequest.prototype, "fail", { enumerable: false, va
   LEvent.bind(this,"fail", function(e,err) { callback(err); } );
   return this;
 }});
+
+
+function getFileExtension(url)
+{
+	var question = url.indexOf("?");
+	if(question != -1)
+		url = url.substr(0,question);
+	var point = url.lastIndexOf(".");
+	if(point == -1) 
+		return "";
+	return url.substr(point+1).toLowerCase();
+} 
 
 
 //allows to pack several (text)files inside one single file (useful for shaders)
