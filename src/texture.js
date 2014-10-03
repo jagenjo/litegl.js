@@ -28,7 +28,7 @@ function Texture(width, height, options) {
 	this.handler = gl.createTexture();
 	this.width = width;
 	this.height = height;
-	this.format = options.format || gl.RGBA; //gl.DEPTH_COMPONENT
+	this.format = options.format || gl.RGBA; //(if gl.DEPTH_COMPONENT remember format: gl.UNSIGNED_SHORT)
 	this.type = options.type || gl.UNSIGNED_BYTE; //gl.UNSIGNED_SHORT
 	this.texture_type = options.texture_type || gl.TEXTURE_2D;
 	this.magFilter = options.magFilter || options.filter || gl.LINEAR;
@@ -227,23 +227,25 @@ Texture.cubemap_camera_parameters = [
 
 /**
 * Render to texture using FBO, just pass the callback to a rendering function and the content of the texture will be updated
+* Keep in mind that it tries to reuse the last renderbuffer for the depth, and if it cannot (different size) it creates a new one (throwing the old)
 * @method drawTo
 * @param {Function} callback function that does all the rendering inside this texture
 */
-Texture.prototype.drawTo = function(callback, params) {
-	//var v = gl.getParameter(gl.VIEWPORT);
+Texture.prototype.drawTo = function(callback, params)
+{
 	var v = gl.getViewport();
 
-	Texture.framebuffer = Texture.framebuffer || gl.createFramebuffer();
-	Texture.renderbuffer = Texture.renderbuffer || gl.createRenderbuffer();
+	var framebuffer = gl._framebuffer = gl._framebuffer || gl.createFramebuffer();
+	var renderbuffer = gl._renderbuffer = gl._renderbuffer || gl.createRenderbuffer();
 
-	var framebuffer = Texture.framebuffer;
-	var renderbuffer = Texture.renderbuffer;
+	if(this.format == gl.DEPTH_COMPONENT)
+		throw("cannot use drawTo in depth textures, use Texture.drawToColorAndDepth");
 
-	gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
-	gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer);
+	gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer );
+	gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer );
 
-	if (this.width != renderbuffer.width || this.height != renderbuffer.height) {
+	//create to store depth
+	if (this.width != renderbuffer.width || this.height != renderbuffer.height ) {
 	  renderbuffer.width = this.width;
 	  renderbuffer.height = this.height;
 	  gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.width, this.height);
@@ -273,6 +275,38 @@ Texture.prototype.drawTo = function(callback, params) {
 
 	return this;
 }
+
+/**
+* Similar to drawTo but it also stores the depth in a depth texture
+* @method drawToColorAndDepth
+* @param {Texture} color_texture
+* @param {Texture} depth_texture
+* @param {Function} callback
+*/
+Texture.drawToColorAndDepth = function(color_texture, depth_texture, callback) {
+
+	if(depth_texture.width != color_texture.width || depth_texture.height != color_texture.height)
+		throw("Different size between color texture and depth texture");
+
+	var v = gl.getViewport();
+
+	Texture.framebuffer = Texture.framebuffer || gl.createFramebuffer();
+
+	gl.bindFramebuffer(gl.FRAMEBUFFER, Texture.framebuffer);
+
+	gl.viewport(0, 0, color_texture.width, color_texture.height);
+
+	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, color_texture.handler, 0);
+	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depth_texture.handler, 0);
+
+	callback();
+
+	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+	gl.viewport(v[0], v[1], v[2], v[3]);
+}
+
+
 
 /**
 * Copy content of one texture into another
@@ -405,35 +439,6 @@ Texture.prototype.applyBlur = function(offsetx, offsety, intensity, temp_texture
 }
 
 
-/**
-* Similar to drawTo but it also stores the depth in a depth texture
-* @method drawToColorAndDepth
-* @param {Texture} color_texture
-* @param {Texture} depth_texture
-* @param {Function} callback
-*/
-Texture.drawToColorAndDepth = function(color_texture, depth_texture, callback) {
-
-	if(depth_texture.width != color_texture.width || depth_texture.height != color_texture.height)
-		throw("Different size between color texture and depth texture");
-
-	var v = gl.getViewport();
-
-	Texture.framebuffer = Texture.framebuffer || gl.createFramebuffer();
-
-	gl.bindFramebuffer(gl.FRAMEBUFFER, Texture.framebuffer);
-
-	gl.viewport(0, 0, color_texture.width, color_texture.height);
-
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, color_texture.handler, 0);
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depth_texture.handler, 0);
-
-	callback();
-
-	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-
-	gl.viewport(v[0], v[1], v[2], v[3]);
-}
 
 /**
 * Loads and uploads a texture from a url

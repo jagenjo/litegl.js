@@ -161,6 +161,25 @@ Mesh.common_buffers = {
 
 
 /**
+* Adds buffer to mesh
+* @method addBuffer
+* @param {string} name
+* @param {Buffer} buffer 
+*/
+
+Mesh.prototype.addBuffer = function(name, buffer)
+{
+	if(buffer.target == gl.ARRAY_BUFFER)
+		this.vertexBuffers[name] = buffer;
+	else
+		this.indexBuffers[name] = buffer;
+
+	if(!buffer.attribute)
+		buffer.attribute = Mesh.common_buffers[name].attribute;
+}
+
+
+/**
 * Adds vertex and indices buffers to a mesh
 * @method addBuffers
 * @param {Object} vertexBuffers object with all the vertex streams
@@ -211,7 +230,7 @@ Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers, stream_type)
 		var attribute = "a_" + i;
 		if(stream_info && stream_info.attribute)
 			attribute = stream_info.attribute;
-		this.addVertexBuffer( i, attribute, spacing, data, stream_type);
+		this.createVertexBuffer( i, attribute, spacing, data, stream_type);
 	}
 
 	if(indexbuffers)
@@ -236,13 +255,13 @@ Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers, stream_type)
 				data = new datatype( data );
 			}
 
-			this.addIndexBuffer( i, data );
+			this.createIndexBuffer( i, data );
 		}
 }
 
 /**
 * Creates a new empty buffer and attachs it to this mesh
-* @method addVertexBuffer
+* @method createVertexBuffer
 * @param {String} name "vertices","normals"...
 * @param {String} attribute name of the stream in the shader "a_vertex","a_normal",... [optional, if omitted is used the common_buffers]
 * @param {number} spacing components per vertex [optioanl, if ommited is used the common_buffers, otherwise 3]
@@ -250,7 +269,7 @@ Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers, stream_type)
 * @param {enum} stream_type [optional, default = gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW ) ]
 */
 
-Mesh.prototype.addVertexBuffer = function(name, attribute, buffer_spacing, buffer_data, stream_type ) {
+Mesh.prototype.createVertexBuffer = function(name, attribute, buffer_spacing, buffer_data, stream_type ) {
 
 	var common = Mesh.common_buffers[name]; //generinc info about buffers with this name
 
@@ -311,12 +330,12 @@ Mesh.prototype.getVertexBuffer = function(name)
 
 /**
 * Creates a new empty index buffer and attachs it to this mesh
-* @method addIndexBuffer
+* @method createIndexBuffer
 * @param {String} name 
 * @param {Typed array} data 
 * @param {enum} stream_type gl.STATIC_DRAW, gl.DYNAMIC_DRAW, gl.STREAM_DRAW
 */
-Mesh.prototype.addIndexBuffer = function(name, buffer_data, stream_type) {
+Mesh.prototype.createIndexBuffer = function(name, buffer_data, stream_type) {
 	var buffer = this.indexBuffers[name] = new Buffer(gl.ELEMENT_ARRAY_BUFFER, buffer_data, stream_type);
 	return buffer;
 }
@@ -348,7 +367,7 @@ Mesh.prototype.getIndexBuffer = function(name)
 * @method compile
 * @param {number} buffer_type gl.STATIC_DRAW, gl.DYNAMIC_DRAW, gl.STREAM_DRAW
 */
-Mesh.prototype.compile = function(buffer_type) {
+Mesh.prototype.upload = function(buffer_type) {
 	for (var attribute in this.vertexBuffers) {
 		var buffer = this.vertexBuffers[attribute];
 		//buffer.data = this[buffer.name];
@@ -361,6 +380,9 @@ Mesh.prototype.compile = function(buffer_type) {
 		buffer.compile();
 	}
 }
+
+//LEGACY, plz remove
+Mesh.prototype.upload = Mesh.prototype.compile;
 
 /**
 * Computes some data about the mesh
@@ -480,7 +502,7 @@ Mesh.prototype.computeWireframe = function() {
 	}
 
 	//create stream
-	this.addIndexBuffer('wireframe', buffer);
+	this.createIndexBuffer('wireframe', buffer);
 	return this;
 }
 
@@ -551,7 +573,7 @@ Mesh.prototype.computeNormals = function() {
 		vec3.normalize(n,n);
 	}
 
-	this.addVertexBuffer('normals', Mesh.common_buffers["normals"].attribute, 3, normals );
+	this.createVertexBuffer('normals', Mesh.common_buffers["normals"].attribute, 3, normals );
 }
 
 
@@ -640,7 +662,7 @@ Mesh.prototype.computeTangents = function() {
 		tangents.set([temp[0], temp[1], temp[2], w],(a/3)*4);
 	}
 
-	this.addVertexBuffer('tangents', Mesh.common_buffers["tangents"].attribute, 4, tangents );
+	this.createVertexBuffer('tangents', Mesh.common_buffers["tangents"].attribute, 4, tangents );
 }
 
 /**

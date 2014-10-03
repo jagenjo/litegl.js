@@ -47,7 +47,7 @@ var GL = {
 		canvas.is_webgl = true;
 		gl.context_id = this.last_context_id++;
 
-		//get some useful extensions
+		//get some common extensions
 		gl.derivatives_supported = gl.getExtension('OES_standard_derivatives') || false ;
 		gl.depth_ext = gl.getExtension("WEBGL_depth_texture") || gl.getExtension("WEBKIT_WEBGL_depth_texture") || gl.getExtension("MOZ_WEBGL_depth_texture");
 

@@ -1490,6 +1490,25 @@ Mesh.common_buffers = {
 
 
 /**
+* Adds buffer to mesh
+* @method addBuffer
+* @param {string} name
+* @param {Buffer} buffer 
+*/
+
+Mesh.prototype.addBuffer = function(name, buffer)
+{
+	if(buffer.target == gl.ARRAY_BUFFER)
+		this.vertexBuffers[name] = buffer;
+	else
+		this.indexBuffers[name] = buffer;
+
+	if(!buffer.attribute)
+		buffer.attribute = Mesh.common_buffers[name].attribute;
+}
+
+
+/**
 * Adds vertex and indices buffers to a mesh
 * @method addBuffers
 * @param {Object} vertexBuffers object with all the vertex streams
@@ -1540,7 +1559,7 @@ Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers, stream_type)
 		var attribute = "a_" + i;
 		if(stream_info && stream_info.attribute)
 			attribute = stream_info.attribute;
-		this.addVertexBuffer( i, attribute, spacing, data, stream_type);
+		this.createVertexBuffer( i, attribute, spacing, data, stream_type);
 	}
 
 	if(indexbuffers)
@@ -1565,13 +1584,13 @@ Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers, stream_type)
 				data = new datatype( data );
 			}
 
-			this.addIndexBuffer( i, data );
+			this.createIndexBuffer( i, data );
 		}
 }
 
 /**
 * Creates a new empty buffer and attachs it to this mesh
-* @method addVertexBuffer
+* @method createVertexBuffer
 * @param {String} name "vertices","normals"...
 * @param {String} attribute name of the stream in the shader "a_vertex","a_normal",... [optional, if omitted is used the common_buffers]
 * @param {number} spacing components per vertex [optioanl, if ommited is used the common_buffers, otherwise 3]
@@ -1579,7 +1598,7 @@ Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers, stream_type)
 * @param {enum} stream_type [optional, default = gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW ) ]
 */
 
-Mesh.prototype.addVertexBuffer = function(name, attribute, buffer_spacing, buffer_data, stream_type ) {
+Mesh.prototype.createVertexBuffer = function(name, attribute, buffer_spacing, buffer_data, stream_type ) {
 
 	var common = Mesh.common_buffers[name]; //generinc info about buffers with this name
 
@@ -1640,12 +1659,12 @@ Mesh.prototype.getVertexBuffer = function(name)
 
 /**
 * Creates a new empty index buffer and attachs it to this mesh
-* @method addIndexBuffer
+* @method createIndexBuffer
 * @param {String} name 
 * @param {Typed array} data 
 * @param {enum} stream_type gl.STATIC_DRAW, gl.DYNAMIC_DRAW, gl.STREAM_DRAW
 */
-Mesh.prototype.addIndexBuffer = function(name, buffer_data, stream_type) {
+Mesh.prototype.createIndexBuffer = function(name, buffer_data, stream_type) {
 	var buffer = this.indexBuffers[name] = new Buffer(gl.ELEMENT_ARRAY_BUFFER, buffer_data, stream_type);
 	return buffer;
 }
@@ -1677,7 +1696,7 @@ Mesh.prototype.getIndexBuffer = function(name)
 * @method compile
 * @param {number} buffer_type gl.STATIC_DRAW, gl.DYNAMIC_DRAW, gl.STREAM_DRAW
 */
-Mesh.prototype.compile = function(buffer_type) {
+Mesh.prototype.upload = function(buffer_type) {
 	for (var attribute in this.vertexBuffers) {
 		var buffer = this.vertexBuffers[attribute];
 		//buffer.data = this[buffer.name];
@@ -1690,6 +1709,9 @@ Mesh.prototype.compile = function(buffer_type) {
 		buffer.compile();
 	}
 }
+
+//LEGACY, plz remove
+Mesh.prototype.upload = Mesh.prototype.compile;
 
 /**
 * Computes some data about the mesh
@@ -1809,7 +1831,7 @@ Mesh.prototype.computeWireframe = function() {
 	}
 
 	//create stream
-	this.addIndexBuffer('wireframe', buffer);
+	this.createIndexBuffer('wireframe', buffer);
 	return this;
 }
 
@@ -1880,7 +1902,7 @@ Mesh.prototype.computeNormals = function() {
 		vec3.normalize(n,n);
 	}
 
-	this.addVertexBuffer('normals', Mesh.common_buffers["normals"].attribute, 3, normals );
+	this.createVertexBuffer('normals', Mesh.common_buffers["normals"].attribute, 3, normals );
 }
 
 
@@ -1969,7 +1991,7 @@ Mesh.prototype.computeTangents = function() {
 		tangents.set([temp[0], temp[1], temp[2], w],(a/3)*4);
 	}
 
-	this.addVertexBuffer('tangents', Mesh.common_buffers["tangents"].attribute, 4, tangents );
+	this.createVertexBuffer('tangents', Mesh.common_buffers["tangents"].attribute, 4, tangents );
 }
 
 /**
@@ -2634,7 +2656,7 @@ function Texture(width, height, options) {
 	this.handler = gl.createTexture();
 	this.width = width;
 	this.height = height;
-	this.format = options.format || gl.RGBA; //gl.DEPTH_COMPONENT
+	this.format = options.format || gl.RGBA; //(if gl.DEPTH_COMPONENT remember format: gl.UNSIGNED_SHORT)
 	this.type = options.type || gl.UNSIGNED_BYTE; //gl.UNSIGNED_SHORT
 	this.texture_type = options.texture_type || gl.TEXTURE_2D;
 	this.magFilter = options.magFilter || options.filter || gl.LINEAR;
@@ -2833,23 +2855,25 @@ Texture.cubemap_camera_parameters = [
 
 /**
 * Render to texture using FBO, just pass the callback to a rendering function and the content of the texture will be updated
+* Keep in mind that it tries to reuse the last renderbuffer for the depth, and if it cannot (different size) it creates a new one (throwing the old)
 * @method drawTo
 * @param {Function} callback function that does all the rendering inside this texture
 */
-Texture.prototype.drawTo = function(callback, params) {
-	//var v = gl.getParameter(gl.VIEWPORT);
+Texture.prototype.drawTo = function(callback, params)
+{
 	var v = gl.getViewport();
 
-	Texture.framebuffer = Texture.framebuffer || gl.createFramebuffer();
-	Texture.renderbuffer = Texture.renderbuffer || gl.createRenderbuffer();
+	var framebuffer = gl._framebuffer = gl._framebuffer || gl.createFramebuffer();
+	var renderbuffer = gl._renderbuffer = gl._renderbuffer || gl.createRenderbuffer();
 
-	var framebuffer = Texture.framebuffer;
-	var renderbuffer = Texture.renderbuffer;
+	if(this.format == gl.DEPTH_COMPONENT)
+		throw("cannot use drawTo in depth textures, use Texture.drawToColorAndDepth");
 
-	gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
-	gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer);
+	gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer );
+	gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer );
 
-	if (this.width != renderbuffer.width || this.height != renderbuffer.height) {
+	//create to store depth
+	if (this.width != renderbuffer.width || this.height != renderbuffer.height ) {
 	  renderbuffer.width = this.width;
 	  renderbuffer.height = this.height;
 	  gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.width, this.height);
@@ -2879,6 +2903,38 @@ Texture.prototype.drawTo = function(callback, params) {
 
 	return this;
 }
+
+/**
+* Similar to drawTo but it also stores the depth in a depth texture
+* @method drawToColorAndDepth
+* @param {Texture} color_texture
+* @param {Texture} depth_texture
+* @param {Function} callback
+*/
+Texture.drawToColorAndDepth = function(color_texture, depth_texture, callback) {
+
+	if(depth_texture.width != color_texture.width || depth_texture.height != color_texture.height)
+		throw("Different size between color texture and depth texture");
+
+	var v = gl.getViewport();
+
+	Texture.framebuffer = Texture.framebuffer || gl.createFramebuffer();
+
+	gl.bindFramebuffer(gl.FRAMEBUFFER, Texture.framebuffer);
+
+	gl.viewport(0, 0, color_texture.width, color_texture.height);
+
+	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, color_texture.handler, 0);
+	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depth_texture.handler, 0);
+
+	callback();
+
+	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+	gl.viewport(v[0], v[1], v[2], v[3]);
+}
+
+
 
 /**
 * Copy content of one texture into another
@@ -3011,35 +3067,6 @@ Texture.prototype.applyBlur = function(offsetx, offsety, intensity, temp_texture
 }
 
 
-/**
-* Similar to drawTo but it also stores the depth in a depth texture
-* @method drawToColorAndDepth
-* @param {Texture} color_texture
-* @param {Texture} depth_texture
-* @param {Function} callback
-*/
-Texture.drawToColorAndDepth = function(color_texture, depth_texture, callback) {
-
-	if(depth_texture.width != color_texture.width || depth_texture.height != color_texture.height)
-		throw("Different size between color texture and depth texture");
-
-	var v = gl.getViewport();
-
-	Texture.framebuffer = Texture.framebuffer || gl.createFramebuffer();
-
-	gl.bindFramebuffer(gl.FRAMEBUFFER, Texture.framebuffer);
-
-	gl.viewport(0, 0, color_texture.width, color_texture.height);
-
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, color_texture.handler, 0);
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depth_texture.handler, 0);
-
-	callback();
-
-	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-
-	gl.viewport(v[0], v[1], v[2], v[3]);
-}
 
 /**
 * Loads and uploads a texture from a url
@@ -3942,7 +3969,7 @@ var GL = {
 		canvas.is_webgl = true;
 		gl.context_id = this.last_context_id++;
 
-		//get some useful extensions
+		//get some common extensions
 		gl.derivatives_supported = gl.getExtension('OES_standard_derivatives') || false ;
 		gl.depth_ext = gl.getExtension("WEBGL_depth_texture") || gl.getExtension("WEBKIT_WEBGL_depth_texture") || gl.getExtension("MOZ_WEBGL_depth_texture");
 
