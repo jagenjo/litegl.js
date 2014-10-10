@@ -422,10 +422,10 @@ Shader.prototype.toViewport = function(uniforms)
 */
 Shader.getScreenShader = function()
 {
-	var shader = gl.shaders[":screen_shader"];
+	var shader = gl.shaders[":screen"];
 	if(shader)
 		return shader;
-	return gl.shaders[":screen_shader"] = new GL.Shader( Shader.SCREEN_VERTEX_SHADER, Shader.SCREEN_FRAGMENT_SHADER );
+	return gl.shaders[":screen"] = new GL.Shader( Shader.SCREEN_VERTEX_SHADER, Shader.SCREEN_FRAGMENT_SHADER );
 }
 
 /**
@@ -435,16 +435,20 @@ Shader.getScreenShader = function()
 */
 Shader.getQuadShader = function()
 {
-	var shader = gl.shaders[":quad_shader"];
+	var shader = gl.shaders[":quad"];
 	if(shader)
 		return shader;
-	return gl.shaders[":quad_shader"] = new GL.Shader( Shader.QUAD_VERTEX_SHADER, Shader.QUAD_FRAGMENT_SHADER );
+	return gl.shaders[":quad"] = new GL.Shader( Shader.QUAD_VERTEX_SHADER, Shader.QUAD_FRAGMENT_SHADER );
 }
 
-//Blur shader
+/**
+* Returns a shader used to apply gaussian blur to one texture in one axis (you should use it twice to get a gaussian blur)
+* shader params are: vec2 u_offset, float u_intensity
+* @method Shader.getBlurShader
+*/
 Shader.getBlurShader = function()
 {
-	var shader = gl.shaders[":blur_shader"];
+	var shader = gl.shaders[":blur"];
 	if(shader)
 		return shader;
 
@@ -468,5 +472,76 @@ Shader.getBlurShader = function()
 			   gl_FragColor = u_intensity * sum;\n\
 			}\n\
 			");
-	return gl.shaders[":blur_shader"] = shader;
+	return gl.shaders[":blur"] = shader;
+}
+
+/**
+* Returns a shader to apply FXAA antialiasing
+* params are vec2 u_viewportSize, mat4 u_iViewprojection
+* @method Shader.getFXAAShader
+*/
+Shader.getFXAAShader = function()
+{
+	var shader = gl.shaders[":fxaa"];
+	if(shader)
+		return shader;
+
+	var shader = new GL.Shader( Shader.SCREEN_VERTEX_SHADER,"\n\
+			precision highp float;\n\
+			varying vec2 v_coord;\n\
+			uniform sampler2D u_texture;\n\
+			uniform vec2 u_viewportSize;\n\
+			uniform vec2 u_iViewprojection;\n\
+			#define FXAA_REDUCE_MIN   (1.0/ 128.0)\n\
+			#define FXAA_REDUCE_MUL   (1.0 / 8.0)\n\
+			#define FXAA_SPAN_MAX     8.0\n\
+			\n\
+			/* from mitsuhiko/webgl-meincraft based on the code on geeks3d.com */\n\
+			vec4 applyFXAA(sampler2D tex, vec2 fragCoord)\n\
+			{\n\
+				vec4 color = vec4(0.0);\n\
+				/*vec2 u_iViewprojection = vec2(1.0 / u_viewportSize.x, 1.0 / u_viewportSize.y);*/\n\
+				vec3 rgbNW = texture2D(tex, (fragCoord + vec2(-1.0, -1.0)) * u_iViewprojection).xyz;\n\
+				vec3 rgbNE = texture2D(tex, (fragCoord + vec2(1.0, -1.0)) * u_iViewprojection).xyz;\n\
+				vec3 rgbSW = texture2D(tex, (fragCoord + vec2(-1.0, 1.0)) * u_iViewprojection).xyz;\n\
+				vec3 rgbSE = texture2D(tex, (fragCoord + vec2(1.0, 1.0)) * u_iViewprojection).xyz;\n\
+				vec3 rgbM  = texture2D(tex, fragCoord  * u_iViewprojection).xyz;\n\
+				vec3 luma = vec3(0.299, 0.587, 0.114);\n\
+				float lumaNW = dot(rgbNW, luma);\n\
+				float lumaNE = dot(rgbNE, luma);\n\
+				float lumaSW = dot(rgbSW, luma);\n\
+				float lumaSE = dot(rgbSE, luma);\n\
+				float lumaM  = dot(rgbM,  luma);\n\
+				float lumaMin = min(lumaM, min(min(lumaNW, lumaNE), min(lumaSW, lumaSE)));\n\
+				float lumaMax = max(lumaM, max(max(lumaNW, lumaNE), max(lumaSW, lumaSE)));\n\
+				\n\
+				vec2 dir;\n\
+				dir.x = -((lumaNW + lumaNE) - (lumaSW + lumaSE));\n\
+				dir.y =  ((lumaNW + lumaSW) - (lumaNE + lumaSE));\n\
+				\n\
+				float dirReduce = max((lumaNW + lumaNE + lumaSW + lumaSE) * (0.25 * FXAA_REDUCE_MUL), FXAA_REDUCE_MIN);\n\
+				\n\
+				float rcpDirMin = 1.0 / (min(abs(dir.x), abs(dir.y)) + dirReduce);\n\
+				dir = min(vec2(FXAA_SPAN_MAX, FXAA_SPAN_MAX), max(vec2(-FXAA_SPAN_MAX, -FXAA_SPAN_MAX), dir * rcpDirMin)) * u_iViewprojection;\n\
+				\n\
+				vec3 rgbA = 0.5 * (texture2D(tex, fragCoord * u_iViewprojection + dir * (1.0 / 3.0 - 0.5)).xyz + \n\
+					texture2D(tex, fragCoord * u_iViewprojection + dir * (2.0 / 3.0 - 0.5)).xyz);\n\
+				vec3 rgbB = rgbA * 0.5 + 0.25 * (texture2D(tex, fragCoord * u_iViewprojection + dir * -0.5).xyz + \n\
+					texture2D(tex, fragCoord * u_iViewprojection + dir * 0.5).xyz);\n\
+				\n\
+				return vec4(rgbA,1.0);\n\
+				float lumaB = dot(rgbB, luma);\n\
+				if ((lumaB < lumaMin) || (lumaB > lumaMax))\n\
+					color = vec4(rgbA, 1.0);\n\
+				else\n\
+					color = vec4(rgbB, 1.0);\n\
+				return color;\n\
+			}\n\
+			\n\
+			void main() {\n\
+			   gl_FragColor = applyFXAA( u_texture, v_coord * u_viewportSize) ;\n\
+			}\n\
+			");
+
+	return gl.shaders[":fxaa"] = shader;
 }

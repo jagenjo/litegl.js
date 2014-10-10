@@ -2063,6 +2063,22 @@
             "class": "Shader"
         },
         {
+            "file": "../src/shader.js",
+            "line": 444,
+            "description": "Returns a shader used to apply gaussian blur to one texture in one axis (you should use it twice to get a gaussian blur)\nshader params are: vec2 u_offset, float u_intensity",
+            "itemtype": "method",
+            "name": "Shader.getBlurShader",
+            "class": "Shader"
+        },
+        {
+            "file": "../src/shader.js",
+            "line": 478,
+            "description": "Returns a shader to apply FXAA antialiasing\nparams are vec2 u_viewportSize, mat4 u_iViewprojection",
+            "itemtype": "method",
+            "name": "Shader.getFXAAShader",
+            "class": "Shader"
+        },
+        {
             "file": "../src/texture.js",
             "line": 112,
             "description": "Returns if depth texture is supported by the GPU",

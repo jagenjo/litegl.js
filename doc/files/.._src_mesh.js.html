@@ -477,18 +477,18 @@ Mesh.prototype.upload = function(buffer_type) {
 	for (var attribute in this.vertexBuffers) {
 		var buffer = this.vertexBuffers[attribute];
 		//buffer.data = this[buffer.name];
-		buffer.compile(buffer_type);
+		buffer.upload(buffer_type);
 	}
 
 	for (var name in this.indexBuffers) {
 		var buffer = this.indexBuffers[name];
 		//buffer.data = this[name];
-		buffer.compile();
+		buffer.upload();
 	}
 }
 
 //LEGACY, plz remove
-Mesh.prototype.upload = Mesh.prototype.compile;
+Mesh.prototype.compile = Mesh.prototype.upload;
 
 /**
 * Computes some data about the mesh
