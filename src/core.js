@@ -138,6 +138,10 @@ var GL = {
 			canvas.addEventListener("touchmove", ontouch, true);
 			canvas.addEventListener("touchend", ontouch, true);
 			canvas.addEventListener("touchcancel", ontouch, true);   
+
+			canvas.addEventListener('gesturestart', ongesture );
+			canvas.addEventListener('gesturechange', ongesture );
+			canvas.addEventListener('gestureend', ongesture );
 		}
 
 		function onmouse(e) {
@@ -200,6 +204,9 @@ var GL = {
 				first = touches[0],
 				type = "";
 
+			if(touches > 1)
+				return;
+
 			 switch(event.type)
 			{
 				case "touchstart": type = "mousedown"; break;
@@ -214,6 +221,16 @@ var GL = {
 									  first.clientX, first.clientY, false,
 									  false, false, false, 0/*left*/, null);
 			first.target.dispatchEvent(simulatedEvent);
+			event.preventDefault();
+		}
+
+		function ongesture(e)
+		{
+			if(gl.ongesture)
+			{ 
+				e.eventType = e.type;
+				gl.ongesture(e);
+			}
 			event.preventDefault();
 		}
 
@@ -314,6 +331,10 @@ var GL = {
 			return gamepads;
 		}
 
+		/**
+		* launches de canvas in fullscreen mode
+		* @method gl.fullscreen
+		*/
 		gl.fullscreen = function()
 		{
 			var canvas = this.canvas;
@@ -325,6 +346,76 @@ var GL = {
 				canvas.mozRequestFullScreen();
 			else
 				console.error("Fullscreen not supported");
+		}
+
+		/**
+		* returns a canvas with a snapshot of an area
+		* this is safer than using the canvas itself due to internals of webgl
+		* @method gl.snapshot
+		* @param {Number} startx viewport x coordinate
+		* @param {Number} starty viewport y coordinate from bottom
+		* @param {Number} areax viewport area width
+		* @param {Number} areay viewport area height
+		* @return {Canvas} canvas
+		*/
+		gl.snapshot = function(startx, starty, areax, areay, skip_reverse)
+		{
+			var canvas = createCanvas(areax,areay);
+			var ctx = canvas.getContext("2d");
+			var pixels = ctx.getImageData(0,0,canvas.width,canvas.height);
+
+			var buffer = new Uint8Array(areax * areay * 4);
+			gl.readPixels(startx, starty, canvas.width, canvas.height, gl.RGBA,gl.UNSIGNED_BYTE, buffer);
+
+			pixels.data.set( buffer );
+			ctx.putImageData(pixels,0,0);
+
+			if(skip_reverse)
+				return canvas;
+
+			//flip image 
+			var final_canvas = createCanvas(areax,areay);
+			var ctx = final_canvas.getContext("2d");
+			ctx.translate(0,areay);
+			ctx.scale(1,-1);
+			ctx.drawImage(canvas,0,0);
+
+			return final_canvas;
+		}
+
+
+		//mini textures manager
+		var loading_textures = {};
+		/**
+		* returns a texture and caches it inside gl.textures[]
+		* @method gl.loadTexture
+		* @param {String} url
+		* @param {Object} options (same options as when creating a texture)
+		* @param {Function} callback function called once the texture is loaded
+		* @return {Texture} texture
+		*/
+		gl.loadTexture = function(url, options, on_load)
+		{
+			if(this.textures[ url ])
+				return this.textures[url];
+
+			if( loading_textures[url] )
+				return null;
+
+			var img = new Image();
+			img.url = url;
+			img.onload = function()
+			{
+				var texture = GL.Texture.fromImage(this, options);
+				texture.img = this;
+				gl.textures[this.url] = texture;
+				delete loading_textures[this.url];
+				if(on_load)
+					on_load(texture);
+			} 
+			img.src = url;
+			loading_textures[url] = true;
+			return null;
 		}
 
 		return gl;
@@ -404,31 +495,6 @@ var GL = {
 	Mesh: Mesh,
 	Texture: Texture,
 	Shader: Shader,
-
-	//mini textures manager
-	textures: {},
-	_loading_textures: {},
-
-	loadTexture: function(url, options, on_load)
-	{
-		if(this.textures[url]) return this.textures[url];
-		if(this._loading_textures[url]) return null;
-		var img = new Image();
-		img.url = url;
-		img.onload = function()
-		{
-			var texture = GL.Texture.fromImage(this, options);
-			texture.img = this;
-			GL.textures[this.url] = texture;
-			delete GL._loading_textures[this.url];
-			if(on_load) on_load(texture);
-		} 
-		img.src = url;
-		this._loading_textures[url] = true;
-		return null;
-	}
-
-
 };
 
 

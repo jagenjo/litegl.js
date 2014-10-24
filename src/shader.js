@@ -34,6 +34,15 @@ function Shader(vertexSource, fragmentSource, macros)
 	this.extractShaderInfo();
 }
 
+/**
+* Compiles one single shader source (could be gl.VERTEX_SHADER or gl.FRAGMENT_SHADER) and returns the webgl shader handler 
+* Used internaly to compile the vertex and fragment shader.
+* It throws an exception if there is any error in the code
+* @method Shader.compileSource
+* @param {Number} type could be gl.VERTEX_SHADER or gl.FRAGMENT_SHADER
+* @param {String} source the source file to compile
+* @return {WebGLHandler}
+*/
 Shader.compileSource = function(type, source)
 {
 	var shader = gl.createShader(type);
@@ -45,6 +54,11 @@ Shader.compileSource = function(type, source)
 	return shader;
 }
 
+/**
+* It extract all the info about the compiled shader program, all the info about uniforms and attributes.
+* This info is stored so it works faster during rendering.
+* @method extractShaderInfo
+*/
 Shader.prototype.extractShaderInfo = function()
 {
 	//extract uniforms info
@@ -91,18 +105,36 @@ Shader.prototype.extractShaderInfo = function()
 	}
 }
 
+/**
+* Returns if this shader has a uniform with the given name
+* @method hasUniform
+* @param {String} name name of the uniform
+* @return {Boolean}
+*/
 Shader.prototype.hasUniform = function(name)
 {
 	return this.uniformInfo[name];
 }
 
+/**
+* Returns if this shader has an attribute with the given name
+* @method hasAttribute
+* @param {String} name name of the attribute
+* @return {Boolean}
+*/
 Shader.prototype.hasAttribute = function(name)
 {
 	return this.attributes[name];
 }
 
 
-//Tells you which function to call when uploading a uniform according to the data type in the shader
+/**
+* Tells you which function to call when uploading a uniform according to the data type in the shader
+* Used internally from extractShaderInfo to optimize calls 
+* @method Shader.getUniformFunc
+* @param {Object} data info about the uniform
+* @return {Function}
+*/
 Shader.getUniformFunc = function( data )
 {
 	var func = null;
@@ -140,7 +172,14 @@ Shader.getUniformFunc = function( data )
 	return func;
 }
 
-
+/**
+* Create a shader from two urls. While the system is fetching the two urls, the shader contains a dummy shader that renders black.
+* @method Shader.fromURL
+* @param {String} vs_path the url to the vertex shader
+* @param {String} fs_path the url to the fragment shader
+* @param {Function} on_complete [Optional] a callback to call once the shader is ready.
+* @return {Shader}
+*/
 Shader.fromURL = function( vs_path, fs_path, on_complete )
 {
 	//create simple shader first
@@ -190,11 +229,10 @@ Shader.fromURL = function( vs_path, fs_path, on_complete )
 
 
 /**
-* Uploads a set of uniforms to the Shader
+* Uploads a set of uniforms to the Shader. You dont need to specify types, they are infered from the shader info.
 * @method uniforms
 * @param {Object} uniforms
 */
-
 Shader._temp_uniform = new Float32Array(16);
 
 Shader.prototype.uniforms = function(uniforms) {
@@ -207,7 +245,8 @@ Shader.prototype.uniforms = function(uniforms) {
 			continue;
 
 		var value = uniforms[name];
-		if(value == null) continue;
+		if(value == null) 
+			continue;
 
 		if(value.constructor === Array)
 			value = new Float32Array(value);  //garbage...
@@ -324,6 +363,43 @@ Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_
 
 	return this;
 }
+
+
+/**
+* Given a source code with the directive #import it expands it inserting the code using Shader.files to fetch for import files.
+* Warning: Imports are evaluated only the first inclusion, the rest are ignored to avoid double inclusion of functions
+*          Also, imports cannot have other imports inside.
+* @method Shader.expandImports
+* @param {String} code the source code
+* @param {Object} files [Optional] object with files to import from (otherwise Shader.files is used)
+* @return {String} the code with the lines #import removed and replaced by the code
+*/
+Shader.expandImports = function(code, files)
+{
+	files = files || Shader.files;
+
+	var already_imported = {}; //avoid to import two times the same code
+	if( !files )
+		throw("Shader.files not initialized, assign files there");
+
+	var replace_import = function(v)
+	{
+		var token = v.split("\"");
+		var id = token[1];
+		if( already_imported[id] )
+			return "//already imported: " + id + "\n";
+		var file = files[id];
+		already_imported[ id ] = true;
+		if(file)
+			return file;
+		return "//import code not found: " + id + "\n";
+	}
+
+	//return code.replace(/#import\s+\"(\w+)\"\s*\n/g, replace_import );
+	return code.replace(/#import\s+\"([a-zA-Z0-9_\.]+)\"\s*\n/g, replace_import );
+}
+
+//**************** SHADERS ***********************************
 
 Shader.SCREEN_VERTEX_SHADER = "\n\
 			precision highp float;\n\

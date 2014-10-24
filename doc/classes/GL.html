@@ -184,6 +184,13 @@
                             </li>
                         
                             <li class="index-item method">
+                                <a href="#method_gl.fullscreen">gl.fullscreen</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
                                 <a href="#method_gl.getGamepads">gl.getGamepads</a>
 
                                 
@@ -191,7 +198,21 @@
                             </li>
                         
                             <li class="index-item method">
+                                <a href="#method_gl.loadTexture">gl.loadTexture</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
                                 <a href="#method_gl.makeCurrent">gl.makeCurrent</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
+                                <a href="#method_gl.snapshot">gl.snapshot</a>
 
                                 
                                 
@@ -407,7 +428,7 @@
             
         
         
-        <a href="../files/.._src_core.js.html#l271"><code>..&#x2F;src&#x2F;core.js:271</code></a>
+        <a href="../files/.._src_core.js.html#l288"><code>..&#x2F;src&#x2F;core.js:288</code></a>
         
         </p>
 
@@ -472,7 +493,7 @@
             
         
         
-        <a href="../files/.._src_core.js.html#l220"><code>..&#x2F;src&#x2F;core.js:220</code></a>
+        <a href="../files/.._src_core.js.html#l237"><code>..&#x2F;src&#x2F;core.js:237</code></a>
         
         </p>
 
@@ -608,6 +629,61 @@
 </div>
 
                 
+                    <div id="method_gl.fullscreen" class="method item">
+    <h3 class="name"><code>gl.fullscreen</code></h3>
+
+    
+        <span class="paren">()</span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_core.js.html#l334"><code>..&#x2F;src&#x2F;core.js:334</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>launches de canvas in fullscreen mode</p>
+
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+                
                     <div id="method_gl.getGamepads" class="method item">
     <h3 class="name"><code>gl.getGamepads</code></h3>
 
@@ -640,7 +716,7 @@
             
         
         
-        <a href="../files/.._src_core.js.html#l290"><code>..&#x2F;src&#x2F;core.js:290</code></a>
+        <a href="../files/.._src_core.js.html#l307"><code>..&#x2F;src&#x2F;core.js:307</code></a>
         
         </p>
 
@@ -657,6 +733,156 @@
 
     
 
+    
+
+    
+</div>
+
+                
+                    <div id="method_gl.loadTexture" class="method item">
+    <h3 class="name"><code>gl.loadTexture</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>url</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>options</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>callback</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_core.js.html#l389"><code>..&#x2F;src&#x2F;core.js:389</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>returns a texture and caches it inside gl.textures[]</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">url</code>
+                        <span class="type">String</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">options</code>
+                        <span class="type">Object</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>(same options as when creating a texture)</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">callback</code>
+                        <span class="type">Function</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>function called once the texture is loaded</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>:
+                    
+                    <p>texture</p>
+
+                
+            </div>
+        </div>
     
 
     
@@ -712,6 +938,180 @@
 
     
 
+    
+
+    
+</div>
+
+                
+                    <div id="method_gl.snapshot" class="method item">
+    <h3 class="name"><code>gl.snapshot</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>startx</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>starty</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>areax</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>areay</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type">Canvas</span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_core.js.html#l351"><code>..&#x2F;src&#x2F;core.js:351</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>returns a canvas with a snapshot of an area
+this is safer than using the canvas itself due to internals of webgl</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">startx</code>
+                        <span class="type">Number</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>viewport x coordinate</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">starty</code>
+                        <span class="type">Number</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>viewport y coordinate from bottom</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">areax</code>
+                        <span class="type">Number</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>viewport area width</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">areay</code>
+                        <span class="type">Number</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>viewport area height</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">Canvas</span>:
+                    
+                    <p>canvas</p>
+
+                
+            </div>
+        </div>
     
 
     

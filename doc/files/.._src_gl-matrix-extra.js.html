@@ -113,6 +113,16 @@ Math.clamp = function(v,a,b) { return (a &gt; v ? a : (b &lt; v ? b : v)); }
 var V3 = vec3.create;
 var M4 = vec3.create;
 
+vec2.rotate = function(out,vec,angle_in_rad)
+{
+	var x = vec[0], y = vec[1];
+	var cos = Math.cos(angle_in_rad);
+	var sin = Math.sin(angle_in_rad);
+	out[0] = x * cos - y * sin;
+	out[1] = x * sin + y * cos;
+	return out;
+}
+
 vec3.zero = function(a)
 {
 	a[0] = a[1] = a[2] = 0.0;

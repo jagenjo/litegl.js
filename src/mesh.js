@@ -97,7 +97,7 @@ Buffer.prototype.compile = Buffer.prototype.upload;
 
 
 /**
-* Uploads the buffer data (stored in this.data) to the GPU
+* Uploads part of the buffer data (stored in this.data) to the GPU
 * @method uploadRange
 * @param {number} start offset in bytes
 * @param {number} size sizes in bytes
@@ -364,7 +364,7 @@ Mesh.prototype.getIndexBuffer = function(name)
 
 /**
 * Uploads data inside buffers to VRAM.
-* @method compile
+* @method upload
 * @param {number} buffer_type gl.STATIC_DRAW, gl.DYNAMIC_DRAW, gl.STREAM_DRAW
 */
 Mesh.prototype.upload = function(buffer_type) {

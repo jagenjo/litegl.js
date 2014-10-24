@@ -303,6 +303,48 @@
                             </li>
                         
                             <li class="index-item method">
+                                <a href="#method_extractShaderInfo">extractShaderInfo</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
+                                <a href="#method_hasAttribute">hasAttribute</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
+                                <a href="#method_hasUniform">hasUniform</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
+                                <a href="#method_Shader.compileSource">Shader.compileSource</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
+                                <a href="#method_Shader.expandImports">Shader.expandImports</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
+                                <a href="#method_Shader.fromURL">Shader.fromURL</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
                                 <a href="#method_Shader.getBlurShader">Shader.getBlurShader</a>
 
                                 
@@ -325,6 +367,13 @@
                         
                             <li class="index-item method">
                                 <a href="#method_Shader.getScreenShader">Shader.getScreenShader</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
+                                <a href="#method_Shader.getUniformFunc">Shader.getUniformFunc</a>
 
                                 
                                 
@@ -408,7 +457,7 @@
             
         
         
-        <a href="../files/.._src_shader.js.html#l223"><code>..&#x2F;src&#x2F;shader.js:223</code></a>
+        <a href="../files/.._src_shader.js.html#l262"><code>..&#x2F;src&#x2F;shader.js:262</code></a>
         
         </p>
 
@@ -536,7 +585,7 @@
             
         
         
-        <a href="../files/.._src_shader.js.html#l250"><code>..&#x2F;src&#x2F;shader.js:250</code></a>
+        <a href="../files/.._src_shader.js.html#l289"><code>..&#x2F;src&#x2F;shader.js:289</code></a>
         
         </p>
 
@@ -706,7 +755,7 @@
             
         
         
-        <a href="../files/.._src_shader.js.html#l235"><code>..&#x2F;src&#x2F;shader.js:235</code></a>
+        <a href="../files/.._src_shader.js.html#l274"><code>..&#x2F;src&#x2F;shader.js:274</code></a>
         
         </p>
 
@@ -800,6 +849,681 @@
 </div>
 
                 
+                    <div id="method_extractShaderInfo" class="method item">
+    <h3 class="name"><code>extractShaderInfo</code></h3>
+
+    
+        <span class="paren">()</span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_shader.js.html#l57"><code>..&#x2F;src&#x2F;shader.js:57</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>It extract all the info about the compiled shader program, all the info about uniforms and attributes.
+This info is stored so it works faster during rendering.</p>
+
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="method_hasAttribute" class="method item">
+    <h3 class="name"><code>hasAttribute</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>name</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type">Boolean</span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_shader.js.html#l119"><code>..&#x2F;src&#x2F;shader.js:119</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Returns if this shader has an attribute with the given name</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">name</code>
+                        <span class="type">String</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>name of the attribute</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">Boolean</span>:
+                    
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_hasUniform" class="method item">
+    <h3 class="name"><code>hasUniform</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>name</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type">Boolean</span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_shader.js.html#l108"><code>..&#x2F;src&#x2F;shader.js:108</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Returns if this shader has a uniform with the given name</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">name</code>
+                        <span class="type">String</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>name of the uniform</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">Boolean</span>:
+                    
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_Shader.compileSource" class="method item">
+    <h3 class="name"><code>Shader.compileSource</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>type</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>source</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type">WebGLHandler</span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_shader.js.html#l37"><code>..&#x2F;src&#x2F;shader.js:37</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Compiles one single shader source (could be gl.VERTEX_SHADER or gl.FRAGMENT_SHADER) and returns the webgl shader handler 
+Used internaly to compile the vertex and fragment shader.
+It throws an exception if there is any error in the code</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">type</code>
+                        <span class="type">Number</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>could be gl.VERTEX_SHADER or gl.FRAGMENT_SHADER</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">source</code>
+                        <span class="type">String</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>the source file to compile</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">WebGLHandler</span>:
+                    
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_Shader.expandImports" class="method item">
+    <h3 class="name"><code>Shader.expandImports</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>code</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>files</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type">String</span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_shader.js.html#l368"><code>..&#x2F;src&#x2F;shader.js:368</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Given a source code with the directive #import it expands it inserting the code using Shader.files to fetch for import files.
+Warning: Imports are evaluated only the first inclusion, the rest are ignored to avoid double inclusion of functions
+         Also, imports cannot have other imports inside.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">code</code>
+                        <span class="type">String</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>the source code</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">files</code>
+                        <span class="type">Object</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>[Optional] object with files to import from (otherwise Shader.files is used)</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">String</span>:
+                    
+                    <p>the code with the lines #import removed and replaced by the code</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_Shader.fromURL" class="method item">
+    <h3 class="name"><code>Shader.fromURL</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>vs_path</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>fs_path</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>on_complete</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type"><a href="../classes/Shader.html" class="crosslink">Shader</a></span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_shader.js.html#l175"><code>..&#x2F;src&#x2F;shader.js:175</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Create a shader from two urls. While the system is fetching the two urls, the shader contains a dummy shader that renders black.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">vs_path</code>
+                        <span class="type">String</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>the url to the vertex shader</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">fs_path</code>
+                        <span class="type">String</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>the url to the fragment shader</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">on_complete</code>
+                        <span class="type">Function</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>[Optional] a callback to call once the shader is ready.</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="../classes/Shader.html" class="crosslink">Shader</a></span>:
+                    
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
                     <div id="method_Shader.getBlurShader" class="method item">
     <h3 class="name"><code>Shader.getBlurShader</code></h3>
 
@@ -832,7 +1556,7 @@
             
         
         
-        <a href="../files/.._src_shader.js.html#l444"><code>..&#x2F;src&#x2F;shader.js:444</code></a>
+        <a href="../files/.._src_shader.js.html#l520"><code>..&#x2F;src&#x2F;shader.js:520</code></a>
         
         </p>
 
@@ -888,7 +1612,7 @@ shader params are: vec2 u_offset, float u_intensity</p>
             
         
         
-        <a href="../files/.._src_shader.js.html#l478"><code>..&#x2F;src&#x2F;shader.js:478</code></a>
+        <a href="../files/.._src_shader.js.html#l554"><code>..&#x2F;src&#x2F;shader.js:554</code></a>
         
         </p>
 
@@ -944,7 +1668,7 @@ params are vec2 u_viewportSize, mat4 u_iViewprojection</p>
             
         
         
-        <a href="../files/.._src_shader.js.html#l431"><code>..&#x2F;src&#x2F;shader.js:431</code></a>
+        <a href="../files/.._src_shader.js.html#l507"><code>..&#x2F;src&#x2F;shader.js:507</code></a>
         
         </p>
 
@@ -1000,7 +1724,7 @@ shader must have: u_position, u_size, u_viewport, u_transform (mat3)</p>
             
         
         
-        <a href="../files/.._src_shader.js.html#l419"><code>..&#x2F;src&#x2F;shader.js:419</code></a>
+        <a href="../files/.._src_shader.js.html#l495"><code>..&#x2F;src&#x2F;shader.js:495</code></a>
         
         </p>
 
@@ -1017,6 +1741,112 @@ shader must have: u_position, u_size, u_viewport, u_transform (mat3)</p>
 
     
 
+    
+
+    
+</div>
+
+                
+                    <div id="method_Shader.getUniformFunc" class="method item">
+    <h3 class="name"><code>Shader.getUniformFunc</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>data</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type">Function</span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_shader.js.html#l131"><code>..&#x2F;src&#x2F;shader.js:131</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Tells you which function to call when uploading a uniform according to the data type in the shader
+Used internally from extractShaderInfo to optimize calls</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">data</code>
+                        <span class="type">Object</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>info about the uniform</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">Function</span>:
+                    
+                
+            </div>
+        </div>
     
 
     
@@ -1065,7 +1895,7 @@ shader must have: u_position, u_size, u_viewport, u_transform (mat3)</p>
             
         
         
-        <a href="../files/.._src_shader.js.html#l404"><code>..&#x2F;src&#x2F;shader.js:404</code></a>
+        <a href="../files/.._src_shader.js.html#l480"><code>..&#x2F;src&#x2F;shader.js:480</code></a>
         
         </p>
 
@@ -1153,7 +1983,7 @@ shader must have: u_position, u_size, u_viewport, u_transform (mat3)</p>
             
         
         
-        <a href="../files/.._src_shader.js.html#l192"><code>..&#x2F;src&#x2F;shader.js:192</code></a>
+        <a href="../files/.._src_shader.js.html#l231"><code>..&#x2F;src&#x2F;shader.js:231</code></a>
         
         </p>
 
@@ -1164,7 +1994,7 @@ shader must have: u_position, u_size, u_viewport, u_transform (mat3)</p>
     </div>
 
     <div class="description">
-        <p>Uploads a set of uniforms to the Shader</p>
+        <p>Uploads a set of uniforms to the Shader. You dont need to specify types, they are infered from the shader info.</p>
 
     </div>
 

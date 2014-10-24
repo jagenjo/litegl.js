@@ -354,7 +354,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 220,
+            "line": 237,
             "description": "Tells the system to capture key events on the canvas. This will trigger onkey",
             "itemtype": "method",
             "name": "gl.captureKeys",
@@ -369,7 +369,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 271,
+            "line": 288,
             "description": "Tells the system to capture gamepad events on the canvas.",
             "itemtype": "method",
             "name": "gl.captureGamepads",
@@ -377,10 +377,81 @@
         },
         {
             "file": "../src/core.js",
-            "line": 290,
+            "line": 307,
             "description": "returns the detected gamepads on the system",
             "itemtype": "method",
             "name": "gl.getGamepads",
+            "class": "GL"
+        },
+        {
+            "file": "../src/core.js",
+            "line": 334,
+            "description": "launches de canvas in fullscreen mode",
+            "itemtype": "method",
+            "name": "gl.fullscreen",
+            "class": "GL"
+        },
+        {
+            "file": "../src/core.js",
+            "line": 351,
+            "description": "returns a canvas with a snapshot of an area\nthis is safer than using the canvas itself due to internals of webgl",
+            "itemtype": "method",
+            "name": "gl.snapshot",
+            "params": [
+                {
+                    "name": "startx",
+                    "description": "viewport x coordinate",
+                    "type": "Number"
+                },
+                {
+                    "name": "starty",
+                    "description": "viewport y coordinate from bottom",
+                    "type": "Number"
+                },
+                {
+                    "name": "areax",
+                    "description": "viewport area width",
+                    "type": "Number"
+                },
+                {
+                    "name": "areay",
+                    "description": "viewport area height",
+                    "type": "Number"
+                }
+            ],
+            "return": {
+                "description": "canvas",
+                "type": "Canvas"
+            },
+            "class": "GL"
+        },
+        {
+            "file": "../src/core.js",
+            "line": 389,
+            "description": "returns a texture and caches it inside gl.textures[]",
+            "itemtype": "method",
+            "name": "gl.loadTexture",
+            "params": [
+                {
+                    "name": "url",
+                    "description": "",
+                    "type": "String"
+                },
+                {
+                    "name": "options",
+                    "description": "(same options as when creating a texture)",
+                    "type": "Object"
+                },
+                {
+                    "name": "callback",
+                    "description": "function called once the texture is loaded",
+                    "type": "Function"
+                }
+            ],
+            "return": {
+                "description": "texture",
+                "type": "Texture"
+            },
             "class": "GL"
         },
         {
@@ -1201,7 +1272,7 @@
         },
         {
             "file": "../src/gl-matrix-extra.js",
-            "line": 148,
+            "line": 158,
             "class": "LEvent"
         },
         {
@@ -1407,7 +1478,7 @@
         {
             "file": "../src/mesh.js",
             "line": 99,
-            "description": "Uploads the buffer data (stored in this.data) to the GPU",
+            "description": "Uploads part of the buffer data (stored in this.data) to the GPU",
             "itemtype": "method",
             "name": "uploadRange",
             "params": [
@@ -1606,7 +1677,7 @@
             "line": 365,
             "description": "Uploads data inside buffers to VRAM.",
             "itemtype": "method",
-            "name": "compile",
+            "name": "upload",
             "params": [
                 {
                     "name": "buffer_type",
@@ -1933,8 +2004,126 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 192,
-            "description": "Uploads a set of uniforms to the Shader",
+            "line": 37,
+            "description": "Compiles one single shader source (could be gl.VERTEX_SHADER or gl.FRAGMENT_SHADER) and returns the webgl shader handler \nUsed internaly to compile the vertex and fragment shader.\nIt throws an exception if there is any error in the code",
+            "itemtype": "method",
+            "name": "Shader.compileSource",
+            "params": [
+                {
+                    "name": "type",
+                    "description": "could be gl.VERTEX_SHADER or gl.FRAGMENT_SHADER",
+                    "type": "Number"
+                },
+                {
+                    "name": "source",
+                    "description": "the source file to compile",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "WebGLHandler"
+            },
+            "class": "Shader"
+        },
+        {
+            "file": "../src/shader.js",
+            "line": 57,
+            "description": "It extract all the info about the compiled shader program, all the info about uniforms and attributes.\nThis info is stored so it works faster during rendering.",
+            "itemtype": "method",
+            "name": "extractShaderInfo",
+            "class": "Shader"
+        },
+        {
+            "file": "../src/shader.js",
+            "line": 108,
+            "description": "Returns if this shader has a uniform with the given name",
+            "itemtype": "method",
+            "name": "hasUniform",
+            "params": [
+                {
+                    "name": "name",
+                    "description": "name of the uniform",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "Boolean"
+            },
+            "class": "Shader"
+        },
+        {
+            "file": "../src/shader.js",
+            "line": 119,
+            "description": "Returns if this shader has an attribute with the given name",
+            "itemtype": "method",
+            "name": "hasAttribute",
+            "params": [
+                {
+                    "name": "name",
+                    "description": "name of the attribute",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "Boolean"
+            },
+            "class": "Shader"
+        },
+        {
+            "file": "../src/shader.js",
+            "line": 131,
+            "description": "Tells you which function to call when uploading a uniform according to the data type in the shader\nUsed internally from extractShaderInfo to optimize calls",
+            "itemtype": "method",
+            "name": "Shader.getUniformFunc",
+            "params": [
+                {
+                    "name": "data",
+                    "description": "info about the uniform",
+                    "type": "Object"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "Function"
+            },
+            "class": "Shader"
+        },
+        {
+            "file": "../src/shader.js",
+            "line": 175,
+            "description": "Create a shader from two urls. While the system is fetching the two urls, the shader contains a dummy shader that renders black.",
+            "itemtype": "method",
+            "name": "Shader.fromURL",
+            "params": [
+                {
+                    "name": "vs_path",
+                    "description": "the url to the vertex shader",
+                    "type": "String"
+                },
+                {
+                    "name": "fs_path",
+                    "description": "the url to the fragment shader",
+                    "type": "String"
+                },
+                {
+                    "name": "on_complete",
+                    "description": "[Optional] a callback to call once the shader is ready.",
+                    "type": "Function"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "Shader"
+            },
+            "class": "Shader"
+        },
+        {
+            "file": "../src/shader.js",
+            "line": 231,
+            "description": "Uploads a set of uniforms to the Shader. You dont need to specify types, they are infered from the shader info.",
             "itemtype": "method",
             "name": "uniforms",
             "params": [
@@ -1948,7 +2137,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 223,
+            "line": 262,
             "description": "Renders a mesh using this shader, remember to use the function uniforms before to enable the shader",
             "itemtype": "method",
             "name": "draw",
@@ -1968,7 +2157,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 235,
+            "line": 274,
             "description": "Renders a range of a mesh using this shader",
             "itemtype": "method",
             "name": "drawRange",
@@ -1998,7 +2187,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 250,
+            "line": 289,
             "description": "Renders a range of a mesh using this shader",
             "itemtype": "method",
             "name": "drawBuffers",
@@ -2033,7 +2222,31 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 404,
+            "line": 368,
+            "description": "Given a source code with the directive #import it expands it inserting the code using Shader.files to fetch for import files.\nWarning: Imports are evaluated only the first inclusion, the rest are ignored to avoid double inclusion of functions\n         Also, imports cannot have other imports inside.",
+            "itemtype": "method",
+            "name": "Shader.expandImports",
+            "params": [
+                {
+                    "name": "code",
+                    "description": "the source code",
+                    "type": "String"
+                },
+                {
+                    "name": "files",
+                    "description": "[Optional] object with files to import from (otherwise Shader.files is used)",
+                    "type": "Object"
+                }
+            ],
+            "return": {
+                "description": "the code with the lines #import removed and replaced by the code",
+                "type": "String"
+            },
+            "class": "Shader"
+        },
+        {
+            "file": "../src/shader.js",
+            "line": 480,
             "description": "Renders a fullscreen quad with this shader applied",
             "itemtype": "method",
             "name": "toViewport",
@@ -2048,7 +2261,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 419,
+            "line": 495,
             "description": "Returns a shader ready to render a quad in fullscreen, use with Mesh.getScreenQuad() mesh",
             "itemtype": "method",
             "name": "Shader.getScreenShader",
@@ -2056,7 +2269,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 431,
+            "line": 507,
             "description": "Returns a shader ready to render a quad with transform, use with Mesh.getScreenQuad() mesh\nshader must have: u_position, u_size, u_viewport, u_transform (mat3)",
             "itemtype": "method",
             "name": "Shader.getQuadShader",
@@ -2064,7 +2277,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 444,
+            "line": 520,
             "description": "Returns a shader used to apply gaussian blur to one texture in one axis (you should use it twice to get a gaussian blur)\nshader params are: vec2 u_offset, float u_intensity",
             "itemtype": "method",
             "name": "Shader.getBlurShader",
@@ -2072,7 +2285,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 478,
+            "line": 554,
             "description": "Returns a shader to apply FXAA antialiasing\nparams are vec2 u_viewportSize, mat4 u_iViewprojection",
             "itemtype": "method",
             "name": "Shader.getFXAAShader",
@@ -2562,6 +2775,30 @@
         {
             "file": "../src/texture.js",
             "line": 702,
+            "description": "Create a cubemap texture from a single image url that contains the six images in vertical",
+            "itemtype": "method",
+            "name": "Texture.cubemapFromURL",
+            "params": [
+                {
+                    "name": "image",
+                    "description": "",
+                    "type": "Image"
+                },
+                {
+                    "name": "options",
+                    "description": "",
+                    "type": "Object"
+                }
+            ],
+            "return": {
+                "description": "the texture",
+                "type": "Texture"
+            },
+            "class": "Texture"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 739,
             "description": "returns a Blob containing all the data from the texture",
             "itemtype": "method",
             "name": "Texture.toBlob",
@@ -2573,7 +2810,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 755,
+            "line": 792,
             "description": "returns a base64 String containing all the data from the texture",
             "itemtype": "method",
             "name": "Texture.toBase64",
@@ -2585,7 +2822,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 783,
+            "line": 820,
             "description": "generates some basic metadata about the image",
             "itemtype": "method",
             "name": "generateMetadata",
@@ -2630,7 +2867,7 @@
     "warnings": [
         {
             "message": "Missing item type",
-            "line": " ../src/gl-matrix-extra.js:148"
+            "line": " ../src/gl-matrix-extra.js:158"
         }
     ]
 }

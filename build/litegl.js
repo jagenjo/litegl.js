@@ -889,6 +889,16 @@ Math.clamp = function(v,a,b) { return (a > v ? a : (b < v ? b : v)); }
 var V3 = vec3.create;
 var M4 = vec3.create;
 
+vec2.rotate = function(out,vec,angle_in_rad)
+{
+	var x = vec[0], y = vec[1];
+	var cos = Math.cos(angle_in_rad);
+	var sin = Math.sin(angle_in_rad);
+	out[0] = x * cos - y * sin;
+	out[1] = x * sin + y * cos;
+	return out;
+}
+
 vec3.zero = function(a)
 {
 	a[0] = a[1] = a[2] = 0.0;
@@ -1426,7 +1436,7 @@ Buffer.prototype.compile = Buffer.prototype.upload;
 
 
 /**
-* Uploads the buffer data (stored in this.data) to the GPU
+* Uploads part of the buffer data (stored in this.data) to the GPU
 * @method uploadRange
 * @param {number} start offset in bytes
 * @param {number} size sizes in bytes
@@ -1693,7 +1703,7 @@ Mesh.prototype.getIndexBuffer = function(name)
 
 /**
 * Uploads data inside buffers to VRAM.
-* @method compile
+* @method upload
 * @param {number} buffer_type gl.STATIC_DRAW, gl.DYNAMIC_DRAW, gl.STREAM_DRAW
 */
 Mesh.prototype.upload = function(buffer_type) {
@@ -2658,7 +2668,7 @@ function Texture(width, height, options) {
 	this.height = height;
 	this.format = options.format || gl.RGBA; //(if gl.DEPTH_COMPONENT remember format: gl.UNSIGNED_SHORT)
 	this.type = options.type || gl.UNSIGNED_BYTE; //gl.UNSIGNED_SHORT
-	this.texture_type = options.texture_type || gl.TEXTURE_2D;
+	this.texture_type = options.texture_type || gl.TEXTURE_2D; //gl.TEXTURE_CUBE_MAP
 	this.magFilter = options.magFilter || options.filter || gl.LINEAR;
 	this.minFilter = options.minFilter || options.filter || gl.LINEAR;
 	this.wrapS = options.wrap || options.wrapS || gl.CLAMP_TO_EDGE;
@@ -3328,6 +3338,43 @@ Texture.cubemapFromImage = function(image, options) {
 };
 
 /**
+* Create a cubemap texture from a single image url that contains the six images in vertical
+* @method Texture.cubemapFromURL
+* @param {Image} image
+* @param {Object} options
+* @return {Texture} the texture
+*/
+Texture.cubemapFromURL = function(url, options, on_complete) {
+	options = options || {};
+	options.texture_type = gl.TEXTURE_CUBE_MAP;
+	var texture = options.texture || new GL.Texture(1, 1, options);
+
+	texture.bind();
+	Texture.setUploadOptions(options);
+	var default_color = options.temp_color || [0,0,0,255];
+	var temp_color = options.type == gl.FLOAT ? new Float32Array(default_color) : new Uint8Array(default_color);
+
+	for(var i = 0; i < 6; i++)
+		gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X+i, 0, texture.format, 1, 1, 0, texture.format, texture.type, temp_color);
+	gl.bindTexture(texture.texture_type, null); //disable
+	texture.ready = false;
+
+	var image = new Image();
+	image.src = url;
+	var that = this;
+	image.onload = function()
+	{
+		options.texture = texture;
+		GL.Texture.cubemapFromImage(this, options);
+		texture.ready = true;
+		if(on_complete)
+			on_complete(texture);
+	}
+
+	return texture;	
+};
+
+/**
 * returns a Blob containing all the data from the texture
 * @method Texture.toBlob
 * @return {Blob} the blob containing the data
@@ -3484,6 +3531,15 @@ function Shader(vertexSource, fragmentSource, macros)
 	this.extractShaderInfo();
 }
 
+/**
+* Compiles one single shader source (could be gl.VERTEX_SHADER or gl.FRAGMENT_SHADER) and returns the webgl shader handler 
+* Used internaly to compile the vertex and fragment shader.
+* It throws an exception if there is any error in the code
+* @method Shader.compileSource
+* @param {Number} type could be gl.VERTEX_SHADER or gl.FRAGMENT_SHADER
+* @param {String} source the source file to compile
+* @return {WebGLHandler}
+*/
 Shader.compileSource = function(type, source)
 {
 	var shader = gl.createShader(type);
@@ -3495,6 +3551,11 @@ Shader.compileSource = function(type, source)
 	return shader;
 }
 
+/**
+* It extract all the info about the compiled shader program, all the info about uniforms and attributes.
+* This info is stored so it works faster during rendering.
+* @method extractShaderInfo
+*/
 Shader.prototype.extractShaderInfo = function()
 {
 	//extract uniforms info
@@ -3541,18 +3602,36 @@ Shader.prototype.extractShaderInfo = function()
 	}
 }
 
+/**
+* Returns if this shader has a uniform with the given name
+* @method hasUniform
+* @param {String} name name of the uniform
+* @return {Boolean}
+*/
 Shader.prototype.hasUniform = function(name)
 {
 	return this.uniformInfo[name];
 }
 
+/**
+* Returns if this shader has an attribute with the given name
+* @method hasAttribute
+* @param {String} name name of the attribute
+* @return {Boolean}
+*/
 Shader.prototype.hasAttribute = function(name)
 {
 	return this.attributes[name];
 }
 
 
-//Tells you which function to call when uploading a uniform according to the data type in the shader
+/**
+* Tells you which function to call when uploading a uniform according to the data type in the shader
+* Used internally from extractShaderInfo to optimize calls 
+* @method Shader.getUniformFunc
+* @param {Object} data info about the uniform
+* @return {Function}
+*/
 Shader.getUniformFunc = function( data )
 {
 	var func = null;
@@ -3590,7 +3669,14 @@ Shader.getUniformFunc = function( data )
 	return func;
 }
 
-
+/**
+* Create a shader from two urls. While the system is fetching the two urls, the shader contains a dummy shader that renders black.
+* @method Shader.fromURL
+* @param {String} vs_path the url to the vertex shader
+* @param {String} fs_path the url to the fragment shader
+* @param {Function} on_complete [Optional] a callback to call once the shader is ready.
+* @return {Shader}
+*/
 Shader.fromURL = function( vs_path, fs_path, on_complete )
 {
 	//create simple shader first
@@ -3640,11 +3726,10 @@ Shader.fromURL = function( vs_path, fs_path, on_complete )
 
 
 /**
-* Uploads a set of uniforms to the Shader
+* Uploads a set of uniforms to the Shader. You dont need to specify types, they are infered from the shader info.
 * @method uniforms
 * @param {Object} uniforms
 */
-
 Shader._temp_uniform = new Float32Array(16);
 
 Shader.prototype.uniforms = function(uniforms) {
@@ -3657,7 +3742,8 @@ Shader.prototype.uniforms = function(uniforms) {
 			continue;
 
 		var value = uniforms[name];
-		if(value == null) continue;
+		if(value == null) 
+			continue;
 
 		if(value.constructor === Array)
 			value = new Float32Array(value);  //garbage...
@@ -3774,6 +3860,43 @@ Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_
 
 	return this;
 }
+
+
+/**
+* Given a source code with the directive #import it expands it inserting the code using Shader.files to fetch for import files.
+* Warning: Imports are evaluated only the first inclusion, the rest are ignored to avoid double inclusion of functions
+*          Also, imports cannot have other imports inside.
+* @method Shader.expandImports
+* @param {String} code the source code
+* @param {Object} files [Optional] object with files to import from (otherwise Shader.files is used)
+* @return {String} the code with the lines #import removed and replaced by the code
+*/
+Shader.expandImports = function(code, files)
+{
+	files = files || Shader.files;
+
+	var already_imported = {}; //avoid to import two times the same code
+	if( !files )
+		throw("Shader.files not initialized, assign files there");
+
+	var replace_import = function(v)
+	{
+		var token = v.split("\"");
+		var id = token[1];
+		if( already_imported[id] )
+			return "//already imported: " + id + "\n";
+		var file = files[id];
+		already_imported[ id ] = true;
+		if(file)
+			return file;
+		return "//import code not found: " + id + "\n";
+	}
+
+	//return code.replace(/#import\s+\"(\w+)\"\s*\n/g, replace_import );
+	return code.replace(/#import\s+\"([a-zA-Z0-9_\.]+)\"\s*\n/g, replace_import );
+}
+
+//**************** SHADERS ***********************************
 
 Shader.SCREEN_VERTEX_SHADER = "\n\
 			precision highp float;\n\
@@ -4135,6 +4258,10 @@ var GL = {
 			canvas.addEventListener("touchmove", ontouch, true);
 			canvas.addEventListener("touchend", ontouch, true);
 			canvas.addEventListener("touchcancel", ontouch, true);   
+
+			canvas.addEventListener('gesturestart', ongesture );
+			canvas.addEventListener('gesturechange', ongesture );
+			canvas.addEventListener('gestureend', ongesture );
 		}
 
 		function onmouse(e) {
@@ -4197,6 +4324,9 @@ var GL = {
 				first = touches[0],
 				type = "";
 
+			if(touches > 1)
+				return;
+
 			 switch(event.type)
 			{
 				case "touchstart": type = "mousedown"; break;
@@ -4211,6 +4341,16 @@ var GL = {
 									  first.clientX, first.clientY, false,
 									  false, false, false, 0/*left*/, null);
 			first.target.dispatchEvent(simulatedEvent);
+			event.preventDefault();
+		}
+
+		function ongesture(e)
+		{
+			if(gl.ongesture)
+			{ 
+				e.eventType = e.type;
+				gl.ongesture(e);
+			}
 			event.preventDefault();
 		}
 
@@ -4311,6 +4451,10 @@ var GL = {
 			return gamepads;
 		}
 
+		/**
+		* launches de canvas in fullscreen mode
+		* @method gl.fullscreen
+		*/
 		gl.fullscreen = function()
 		{
 			var canvas = this.canvas;
@@ -4322,6 +4466,76 @@ var GL = {
 				canvas.mozRequestFullScreen();
 			else
 				console.error("Fullscreen not supported");
+		}
+
+		/**
+		* returns a canvas with a snapshot of an area
+		* this is safer than using the canvas itself due to internals of webgl
+		* @method gl.snapshot
+		* @param {Number} startx viewport x coordinate
+		* @param {Number} starty viewport y coordinate from bottom
+		* @param {Number} areax viewport area width
+		* @param {Number} areay viewport area height
+		* @return {Canvas} canvas
+		*/
+		gl.snapshot = function(startx, starty, areax, areay, skip_reverse)
+		{
+			var canvas = createCanvas(areax,areay);
+			var ctx = canvas.getContext("2d");
+			var pixels = ctx.getImageData(0,0,canvas.width,canvas.height);
+
+			var buffer = new Uint8Array(areax * areay * 4);
+			gl.readPixels(startx, starty, canvas.width, canvas.height, gl.RGBA,gl.UNSIGNED_BYTE, buffer);
+
+			pixels.data.set( buffer );
+			ctx.putImageData(pixels,0,0);
+
+			if(skip_reverse)
+				return canvas;
+
+			//flip image 
+			var final_canvas = createCanvas(areax,areay);
+			var ctx = final_canvas.getContext("2d");
+			ctx.translate(0,areay);
+			ctx.scale(1,-1);
+			ctx.drawImage(canvas,0,0);
+
+			return final_canvas;
+		}
+
+
+		//mini textures manager
+		var loading_textures = {};
+		/**
+		* returns a texture and caches it inside gl.textures[]
+		* @method gl.loadTexture
+		* @param {String} url
+		* @param {Object} options (same options as when creating a texture)
+		* @param {Function} callback function called once the texture is loaded
+		* @return {Texture} texture
+		*/
+		gl.loadTexture = function(url, options, on_load)
+		{
+			if(this.textures[ url ])
+				return this.textures[url];
+
+			if( loading_textures[url] )
+				return null;
+
+			var img = new Image();
+			img.url = url;
+			img.onload = function()
+			{
+				var texture = GL.Texture.fromImage(this, options);
+				texture.img = this;
+				gl.textures[this.url] = texture;
+				delete loading_textures[this.url];
+				if(on_load)
+					on_load(texture);
+			} 
+			img.src = url;
+			loading_textures[url] = true;
+			return null;
 		}
 
 		return gl;
@@ -4401,31 +4615,6 @@ var GL = {
 	Mesh: Mesh,
 	Texture: Texture,
 	Shader: Shader,
-
-	//mini textures manager
-	textures: {},
-	_loading_textures: {},
-
-	loadTexture: function(url, options, on_load)
-	{
-		if(this.textures[url]) return this.textures[url];
-		if(this._loading_textures[url]) return null;
-		var img = new Image();
-		img.url = url;
-		img.onload = function()
-		{
-			var texture = GL.Texture.fromImage(this, options);
-			texture.img = this;
-			GL.textures[this.url] = texture;
-			delete GL._loading_textures[this.url];
-			if(on_load) on_load(texture);
-		} 
-		img.src = url;
-		this._loading_textures[url] = true;
-		return null;
-	}
-
-
 };
 
 

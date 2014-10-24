@@ -30,7 +30,7 @@ function Texture(width, height, options) {
 	this.height = height;
 	this.format = options.format || gl.RGBA; //(if gl.DEPTH_COMPONENT remember format: gl.UNSIGNED_SHORT)
 	this.type = options.type || gl.UNSIGNED_BYTE; //gl.UNSIGNED_SHORT
-	this.texture_type = options.texture_type || gl.TEXTURE_2D;
+	this.texture_type = options.texture_type || gl.TEXTURE_2D; //gl.TEXTURE_CUBE_MAP
 	this.magFilter = options.magFilter || options.filter || gl.LINEAR;
 	this.minFilter = options.minFilter || options.filter || gl.LINEAR;
 	this.wrapS = options.wrap || options.wrapS || gl.CLAMP_TO_EDGE;
@@ -697,6 +697,43 @@ Texture.cubemapFromImage = function(image, options) {
 	}
 
 	return Texture.cubemapFromImages(images, options);
+};
+
+/**
+* Create a cubemap texture from a single image url that contains the six images in vertical
+* @method Texture.cubemapFromURL
+* @param {Image} image
+* @param {Object} options
+* @return {Texture} the texture
+*/
+Texture.cubemapFromURL = function(url, options, on_complete) {
+	options = options || {};
+	options.texture_type = gl.TEXTURE_CUBE_MAP;
+	var texture = options.texture || new GL.Texture(1, 1, options);
+
+	texture.bind();
+	Texture.setUploadOptions(options);
+	var default_color = options.temp_color || [0,0,0,255];
+	var temp_color = options.type == gl.FLOAT ? new Float32Array(default_color) : new Uint8Array(default_color);
+
+	for(var i = 0; i < 6; i++)
+		gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X+i, 0, texture.format, 1, 1, 0, texture.format, texture.type, temp_color);
+	gl.bindTexture(texture.texture_type, null); //disable
+	texture.ready = false;
+
+	var image = new Image();
+	image.src = url;
+	var that = this;
+	image.onload = function()
+	{
+		options.texture = texture;
+		GL.Texture.cubemapFromImage(this, options);
+		texture.ready = true;
+		if(on_complete)
+			on_complete(texture);
+	}
+
+	return texture;	
 };
 
 /**
