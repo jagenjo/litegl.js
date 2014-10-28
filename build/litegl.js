@@ -3,13 +3,59 @@
 //forked from lightgl.js by Evan Wallace (madebyevan.com)
 "use strict";
 
+(function(global){
 
-var gl;
-var DEG2RAD = 0.0174532925;
-var RAD2DEG = 57.295779578552306;
-var EPSILON = 0.000001;
+/**
+* The static module that contains all the features
+* @class GL
+*/
+var GL = global.GL = {};
 
-var global = window; //todo: change this to be common js
+
+//polyfill
+global.requestAnimationFrame = global.requestAnimationFrame || global.mozRequestAnimationFrame || global.webkitRequestAnimationFrame || function(callback) { setTimeout(callback, 1000 / 60); };
+
+GL.blockable_keys = {"Up":true,"Down":true,"Left":true,"Right":true};
+
+//some consts
+GL.LEFT_MOUSE_BUTTON = 1;
+GL.RIGHT_MOUSE_BUTTON = 3;
+GL.MIDDLE_MOUSE_BUTTON = 2;
+GL.last_context_id = 0;
+
+
+//Define WEBGL ENUMS as statics
+//sometimes I need some gl enums before having the gl context, solution: define them globally because the specs says they are constant:
+
+GL.BYTE = 5120;
+GL.UNSIGNED_BYTE = 5121;
+GL.SHORT = 5122;
+GL.UNSIGNED_SHORT = 5123;
+GL.INT = 5124;
+GL.UNSIGNED_INT = 5125;
+GL.FLOAT = 5126;
+
+GL.ZERO = 0;
+GL.ONE = 1;
+GL.SRC_COLOR = 768;
+GL.ONE_MINUS_SRC_COLOR = 769;
+GL.SRC_ALPHA = 770;
+GL.ONE_MINUS_SRC_ALPHA = 771;
+GL.DST_ALPHA = 772;
+GL.ONE_MINUS_DST_ALPHA = 773;
+GL.DST_COLOR = 774;
+GL.ONE_MINUS_DST_COLOR = 775;
+GL.SRC_ALPHA_SATURATE = 776;
+GL.CONSTANT_COLOR = 32769;
+GL.ONE_MINUS_CONSTANT_COLOR = 32770;
+GL.CONSTANT_ALPHA = 32771;
+GL.ONE_MINUS_CONSTANT_ALPHA = 32772;
+
+
+
+global.DEG2RAD = 0.0174532925;
+global.RAD2DEG = 57.295779578552306;
+global.EPSILON = 0.000001;
 
 /**
 * Tells if one number is power of two (used for textures)
@@ -17,7 +63,7 @@ var global = window; //todo: change this to be common js
 * @param {v} number
 * @return {boolean}
 */
-function isPowerOfTwo(v)
+global.isPowerOfTwo = function isPowerOfTwo(v)
 {
 	return ((Math.log(v) / Math.log(2)) % 1) == 0;
 }
@@ -34,17 +80,17 @@ else
 
 
 
-function isFunction(obj) {
+global.isFunction = function isFunction(obj) {
   return !!(obj && obj.constructor && obj.call && obj.apply);
 }
 
-function isArray(obj) {
+global.isArray = function isArray(obj) {
   return (obj && obj.constructor === Array );
   //var str = Object.prototype.toString.call(obj);
   //return str == '[object Array]' || str == '[object Float32Array]';
 }
 
-function isNumber(obj) {
+global.isNumber = function isNumber(obj) {
   return (obj != null && obj.constructor === Number );
 }
 
@@ -57,21 +103,21 @@ function isNumber(obj) {
 */
 
 //given a regular expression, a text and a callback, it calls the function every time it finds it
-function regexMap(regex, text, callback) {
+global.regexMap = function regexMap(regex, text, callback) {
   var result;
   while ((result = regex.exec(text)) != null) {
     callback(result);
   }
 }
 
-function createCanvas(width, height) {
+global.createCanvas = function createCanvas(width, height) {
     var canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;
     return canvas;
 }
 
-function cloneCanvas(c) {
+global.cloneCanvas = function cloneCanvas(c) {
     var canvas = document.createElement('canvas');
     canvas.width = c.width;
     canvas.height = c.height;
@@ -94,7 +140,7 @@ Object.defineProperty(Array.prototype, "subarray", { value: Array.prototype.slic
 
 
 // remove all properties on obj, effectively reverting it to a new object (to reduce garbage)
-function wipeObject(obj)
+global.wipeObject = function wipeObject(obj)
 {
   for (var p in obj)
   {
@@ -104,7 +150,7 @@ function wipeObject(obj)
 };
 
 //copy methods from origin to target
-function extendClass( target, origin ) {
+global.extendClass = function extendClass( target, origin ) {
 	for(var i in origin) //copy class properties
 	{
 		if(target.hasOwnProperty(i))
@@ -136,7 +182,7 @@ function extendClass( target, origin ) {
 
 
 //simple http request
-function HttpRequest(url,params, callback, error, sync)
+global.HttpRequest = function HttpRequest(url,params, callback, error, sync)
 {
 	if(params)
 	{
@@ -191,7 +237,7 @@ Object.defineProperty( XMLHttpRequest.prototype, "fail", { enumerable: false, va
 }});
 
 
-function getFileExtension(url)
+global.getFileExtension = function getFileExtension(url)
 {
 	var question = url.indexOf("?");
 	if(question != -1)
@@ -205,7 +251,7 @@ function getFileExtension(url)
 
 //allows to pack several (text)files inside one single file (useful for shaders)
 //every file must start with \filename.ext  or /filename.ext
-function loadFileAtlas(url, callback, sync)
+global.loadFileAtlas = function loadFileAtlas(url, callback, sync)
 {
 	var deferred_callback = null;
 
@@ -1342,12 +1388,12 @@ quat.lookAt = function(target, up, quat) {
 * @class Indexer
 * @constructor
 */
-function Indexer() {
+GL.Indexer = function Indexer() {
   this.unique = [];
   this.indices = [];
   this.map = {};
 }
-Indexer.prototype = {
+GL.Indexer.prototype = {
 	add: function(obj) {
     var key = JSON.stringify(obj);
     if (!(key in this.map)) {
@@ -1367,9 +1413,11 @@ Indexer.prototype = {
 * @param {number} spacing number of numbers per component (3 per vertex, 2 per uvs...), default 3
 * @param {enum} stream_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW 
 */
-function Buffer(target, data, spacing, stream_type) {
+global.Buffer = GL.Buffer = function Buffer(target, data, spacing, stream_type, gl) {
+	gl = gl || global.gl;
 	this.buffer = null; //webgl buffer
 	this.target = target;
+	this.gl = gl;
 
 	//optional
 	this.data = data;
@@ -1384,7 +1432,7 @@ function Buffer(target, data, spacing, stream_type) {
 * @method forEach
 * @param {function} callback to be called for every vertex (or whatever is contained in the buffer)
 */
-Buffer.prototype.forEach = function(callback)
+GL.Buffer.prototype.forEach = function(callback)
 {
 	var d = this.data;
 	for (var i = 0, s = this.spacing, l = d.length; i < l; i += s)
@@ -1399,8 +1447,9 @@ Buffer.prototype.forEach = function(callback)
 * @method upload
 * @param {number} stream_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW 
 */
-Buffer.prototype.upload = function(stream_type) { //default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW )
+GL.Buffer.prototype.upload = function(stream_type) { //default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW )
 	var spacing = this.spacing || 3; //default spacing	
+	var gl = this.gl;
 
 	if(!this.data)
 		throw("No data supplied");
@@ -1432,7 +1481,7 @@ Buffer.prototype.upload = function(stream_type) { //default gl.STATIC_DRAW (othe
 	gl.bufferData(this.target, data , stream_type || this.stream_type || gl.STATIC_DRAW);
 };
 //legacy
-Buffer.prototype.compile = Buffer.prototype.upload;
+GL.Buffer.prototype.compile = GL.Buffer.prototype.upload;
 
 
 /**
@@ -1441,7 +1490,7 @@ Buffer.prototype.compile = Buffer.prototype.upload;
 * @param {number} start offset in bytes
 * @param {number} size sizes in bytes
 */
-Buffer.prototype.uploadRange = function(start, size) {
+GL.Buffer.prototype.uploadRange = function(start, size) {
 	if(!this.data)
 		throw("No data stored in this buffer");
 
@@ -1451,6 +1500,7 @@ Buffer.prototype.uploadRange = function(start, size) {
 
 	var view = new Uint8Array( this.data.buffer, start, size );
 
+	var gl = this.gl;
 	gl.bindBuffer(this.target, this.buffer);
 	gl.bufferSubData(this.target, start, view );
 };
@@ -1463,10 +1513,14 @@ Buffer.prototype.uploadRange = function(start, size) {
 * @param {Object} vertexBuffers object with all the vertex streams
 * @param {Object} indexBuffers object with all the indices streams
 * @param {Object} options
+* @param {WebGLContext} gl [Optional] gl context where to create the mesh
 * @constructor
 */
-function Mesh(vertexbuffers, indexbuffers, options)
+global.Mesh = GL.Mesh = function Mesh(vertexbuffers, indexbuffers, options, gl)
 {
+	gl = gl || global.gl;
+	this.gl = gl;
+
 	//used to avoid problems with resources moving between different webgl context
 	this._context_id = gl.context_id; 
 
@@ -1537,8 +1591,12 @@ Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers, stream_type)
 		var data = vertexbuffers[i];
 		if(!data) continue;
 
-		//linearize: (transform Arrays in typed arrays)
-		if( typeof(data[0]) != "number") 
+		
+		if( data.constructor == GL.Buffer )
+		{
+			data = data.data;
+		}
+		else if( typeof(data[0]) != "number") //linearize: (transform Arrays in typed arrays)
 		{
 			var newdata = [];
 			for (var j = 0, chunk = 10000; j < data.length; j += chunk) {
@@ -1577,6 +1635,11 @@ Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers, stream_type)
 		{
 			var data = indexbuffers[i];
 			if(!data) continue;
+
+			if( data.constructor == GL.Buffer )
+			{
+				data = data.data;
+			}
 			if( typeof(data[0]) != "number") //linearize
 			{
 				data = [];
@@ -1637,7 +1700,8 @@ Mesh.prototype.createVertexBuffer = function(name, attribute, buffer_spacing, bu
 	if(!buffer_data.buffer)
 		throw("Buffer data MUST be typed array");
 
-	var buffer = this.vertexBuffers[name] = new Buffer(gl.ARRAY_BUFFER, buffer_data, buffer_spacing, stream_type);
+	//used to ensure the buffers are held in the same gl context as the mesh
+	var buffer = this.vertexBuffers[name] = new GL.Buffer(gl.ARRAY_BUFFER, buffer_data, buffer_spacing, stream_type, this.gl );
 	buffer.name = name;
 	buffer.attribute = attribute;
 
@@ -1675,7 +1739,8 @@ Mesh.prototype.getVertexBuffer = function(name)
 * @param {enum} stream_type gl.STATIC_DRAW, gl.DYNAMIC_DRAW, gl.STREAM_DRAW
 */
 Mesh.prototype.createIndexBuffer = function(name, buffer_data, stream_type) {
-	var buffer = this.indexBuffers[name] = new Buffer(gl.ELEMENT_ARRAY_BUFFER, buffer_data, stream_type);
+	//(target, data, spacing, stream_type, gl)
+	var buffer = this.indexBuffers[name] = new GL.Buffer(gl.ELEMENT_ARRAY_BUFFER, buffer_data, 0, stream_type, this.gl );
 	return buffer;
 }
 
@@ -1722,6 +1787,35 @@ Mesh.prototype.upload = function(buffer_type) {
 
 //LEGACY, plz remove
 Mesh.prototype.compile = Mesh.prototype.upload;
+
+/**
+* Creates a clone of the mesh, the datarrays are cloned too
+* @method clone
+*/
+Mesh.prototype.clone = function( gl )
+{
+	var gl = gl || global.gl;
+	var vbs = {};
+	var ibs = {};
+
+	for(var i in mesh.vertexBuffers)
+		vbs[i] = mesh.vertexBuffers[i].data;
+	for(var i in mesh.indexBuffers)
+		ibs[i] = mesh.indexBuffers[i].data;
+
+	return new GL.Mesh( vbs, ibs, undefined, gl );
+}
+
+/**
+* Creates a clone of the mesh, but the data-arrays are shared between both meshes (useful for sharing a mesh between contexts)
+* @method clone
+*/
+Mesh.prototype.cloneShared = function( gl )
+{
+	var gl = gl || global.gl;
+	return new GL.Mesh( this.vertexBuffers, this.indexBuffers, undefined, gl );
+}
+
 
 /**
 * Computes some data about the mesh
@@ -1824,7 +1918,7 @@ Mesh.prototype.computeWireframe = function() {
 	{
 		var data = index_buffer.data;
 
-		var indexer = new Indexer();
+		var indexer = new GL.Indexer();
 		for (var i = 0; i < data.length; i+=3) {
 		  var t = data.subarray(i,i+3);
 		  for (var j = 0; j < t.length; j++) {
@@ -2599,7 +2693,7 @@ Mesh.mergeMeshes = function(meshes)
 	return new Mesh(vertex_buffers,index_buffers);
 }
 
-//Here we store all basic mesh parsers
+//Here we store all basic mesh parsers (OBJ, STL)
 Mesh.parsers = {};
 
 /**
@@ -2607,9 +2701,10 @@ Mesh.parsers = {};
 * @method Mesh.fromOBJ
 * @param {Array} meshes array containing all the meshes
 */
-Mesh.fromURL = function(url, on_complete)
+Mesh.fromURL = function(url, on_complete, gl)
 {
-	var mesh = new GL.Mesh();
+	gl = gl || global.gl;
+	var mesh = new GL.Mesh(undefined,undefined,undefined,gl);
 	HttpRequest( url, null, function(data) {
 		var ext = url.substr(url.length - 4).toLowerCase();
 		var parser = Mesh.parsers[ ext ];
@@ -2624,15 +2719,16 @@ Mesh.fromURL = function(url, on_complete)
 }
 
 
-Mesh.getScreenQuad = function()
+Mesh.getScreenQuad = function(gl)
 {
+	gl = gl || global.gl;
 	var mesh = gl.meshes[":screen_quad"];
 	if(mesh)
 		return mesh;
 
 	var vertices = new Float32Array(18);
 	var coords = new Float32Array([0,0, 1,1, 0,1,  0,0, 1,0, 1,1 ]);
-	mesh = new GL.Mesh({ vertices: vertices, coords: coords});
+	mesh = new GL.Mesh({ vertices: vertices, coords: coords}, undefined, undefined, gl);
 	return gl.meshes[":screen_quad"] = mesh;
 }
 
@@ -2656,9 +2752,11 @@ Mesh.getScreenQuad = function()
 * @constructor
 */
 
-function Texture(width, height, options) {
+global.Texture = GL.Texture = function Texture(width, height, options, gl) {
 	options = options || {};
 	//used to avoid problems with resources moving between different webgl context
+	gl = gl || global.gl;
+	this.gl = gl;
 	this._context_id = gl.context_id; 
 
 	width = parseInt(width); 
@@ -2764,6 +2862,7 @@ Texture.isDepthSupported = function()
 */
 Texture.prototype.bind = function(unit) {
 	if(unit == undefined) unit = 0;
+	var gl = this.gl;
 	gl.activeTexture(gl.TEXTURE0 + unit);
 	gl.bindTexture(this.texture_type, this.handler);
 	return unit;
@@ -2778,18 +2877,21 @@ Texture.prototype.bind = function(unit) {
 Texture.prototype.unbind = function(unit) {
 	if(unit === undefined)
 		unit = 0;
+	var gl = this.gl;
 	gl.activeTexture(gl.TEXTURE0 + unit );
 	gl.bindTexture(this.texture_type, null);
 }
 
 
 Texture.prototype.setParameter = function(param,value) {
-	gl.texParameteri(this.texture_type, param, value);
+	this.gl.texParameteri(this.texture_type, param, value);
 }
 
 //default: flip_y: true, premultiply: false
-Texture.setUploadOptions = function(options)
+Texture.setUploadOptions = function(options, gl)
 {
+	gl = gl || global.gl;
+
 	if(options) //options that are not stored in the texture should be passed again to avoid reusing unknown state
 	{
 		gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, !!(options.premultiply_alpha) );
@@ -2812,8 +2914,9 @@ Texture.setUploadOptions = function(options)
 Texture.prototype.uploadImage = function(image, options)
 {
 	this.bind();
+	var gl = this.gl;
 
-	Texture.setUploadOptions(options);
+	Texture.setUploadOptions(options, gl);
 
 	try {
 		gl.texImage2D(gl.TEXTURE_2D, 0, this.format, this.format, this.type, image);
@@ -2843,8 +2946,9 @@ Texture.prototype.uploadImage = function(image, options)
 */
 Texture.prototype.uploadData = function(data, options )
 {
+	var gl = this.gl;
 	this.bind();
-	Texture.setUploadOptions(options);
+	Texture.setUploadOptions(options, gl);
 
 	gl.texImage2D(this.texture_type, 0, this.format, this.width, this.height, 0, this.format, this.type, data);
 	if (this.minFilter && this.minFilter != gl.NEAREST && this.minFilter != gl.LINEAR) {
@@ -2871,6 +2975,7 @@ Texture.cubemap_camera_parameters = [
 */
 Texture.prototype.drawTo = function(callback, params)
 {
+	var gl = this.gl;
 	var v = gl.getViewport();
 
 	var framebuffer = gl._framebuffer = gl._framebuffer || gl.createFramebuffer();
@@ -2922,6 +3027,7 @@ Texture.prototype.drawTo = function(callback, params)
 * @param {Function} callback
 */
 Texture.drawToColorAndDepth = function(color_texture, depth_texture, callback) {
+	var gl = color_texture.gl; //static function
 
 	if(depth_texture.width != color_texture.width || depth_texture.height != color_texture.height)
 		throw("Different size between color texture and depth texture");
@@ -2953,6 +3059,7 @@ Texture.drawToColorAndDepth = function(color_texture, depth_texture, callback) {
 */
 Texture.prototype.copyTo = function(target_texture) {
 	var that = this;
+	var gl = this.gl;
 
 	//copy content
 	target_texture.drawTo(function() {
@@ -3009,8 +3116,8 @@ Texture.prototype.renderQuad = (function() {
 		pos[0] = x;	pos[1] = y;
 		size[0] = w; size[1] = h;
 
-		shader = shader || Shader.getQuadShader();
-		var mesh = Mesh.getScreenQuad();
+		shader = shader || Shader.getQuadShader(this.gl);
+		var mesh = Mesh.getScreenQuad(this.gl);
 		this.bind(0);
 		shader.uniforms({u_texture: 0, u_position: pos, u_color: white, u_size: size, u_viewport: gl.viewport_data.subarray(2,4), u_transform: identity });
 		if(uniforms)
@@ -3026,6 +3133,7 @@ Texture.prototype.renderQuad = (function() {
 */
 Texture.prototype.toCanvas = function(canvas)
 {
+	var gl = this.gl;
 	var w = this.width;
 	var h = this.height;
 	canvas = canvas || createCanvas(w,h);
@@ -3057,6 +3165,7 @@ Texture.prototype.toCanvas = function(canvas)
 Texture.prototype.applyBlur = function(offsetx, offsety, intensity, temp_texture)
 {
 	var self = this;
+	var gl = this.gl;
 	var shader = Shader.getBlurShader();
 	if(!temp_texture)
 		temp_texture = new GL.Texture(this.width, this.height, this.getProperties() );
@@ -3086,9 +3195,11 @@ Texture.prototype.applyBlur = function(offsetx, offsety, intensity, temp_texture
 * @param {Function} on_complete
 * @return {Texture} the texture
 */
-Texture.fromURL = function(url, options, on_complete) {
+Texture.fromURL = function(url, options, on_complete, gl) {
+	gl = gl || global.gl;
+
 	options = options || {};
-	var texture = options.texture || new GL.Texture(1, 1, options);
+	var texture = options.texture || new GL.Texture(1, 1, options, gl);
 
 	texture.bind();
 	Texture.setUploadOptions(options);
@@ -3101,7 +3212,7 @@ Texture.fromURL = function(url, options, on_complete) {
 	if( url.toLowerCase().indexOf(".dds") != -1)
 	{
 		var ext = gl.getExtension("WEBKIT_WEBGL_compressed_texture_s3tc") || gl.getExtension("WEBGL_compressed_texture_s3tc");
-		var new_texture = new GL.Texture(0,0, options);
+		var new_texture = new GL.Texture(0,0, options, gl);
 		DDS.loadDDSTextureEx(gl, ext, url, new_texture.handler, true, function(t) {
 			texture.texture_type = t.texture_type;
 			texture.handler = t;
@@ -3479,6 +3590,7 @@ Texture.compareFormats = function(a,b)
 
 Texture.getWhiteTexture = function()
 {
+	var gl = this.gl;
 	var tex = gl.textures[":white"];
 	if(tex)
 		return tex;
@@ -3489,6 +3601,7 @@ Texture.getWhiteTexture = function()
 
 Texture.getBlackTexture = function()
 {
+	var gl = this.gl;
 	var tex = gl.textures[":black"];
 	if(tex)
 		return tex;
@@ -3503,10 +3616,11 @@ Texture.getBlackTexture = function()
 * @param {String} fragmentSource
 * @param {Object} macros (optional) precompiler macros to be applied when compiling
 */
-function Shader(vertexSource, fragmentSource, macros)
+global.Shader = GL.Shader = function Shader(vertexSource, fragmentSource, macros)
 {
 	//used to avoid problems with resources moving between different webgl context
-	this._context_id = gl.context_id; 
+	this._context_id = global.gl.context_id; 
+	var gl = this.gl = global.gl;
 
 	//expand macros
 	var extra_code = "";
@@ -3515,8 +3629,8 @@ function Shader(vertexSource, fragmentSource, macros)
 			extra_code += "#define " + i + " " + (macros[i] ? macros[i] : "") + "\n";
 
 	this.program = gl.createProgram();
-	gl.attachShader(this.program, Shader.compileSource(gl.VERTEX_SHADER, extra_code + vertexSource));
-	gl.attachShader(this.program, Shader.compileSource(gl.FRAGMENT_SHADER, extra_code + fragmentSource));
+	gl.attachShader(this.program, Shader.compileSource(gl.VERTEX_SHADER, extra_code + vertexSource),gl);
+	gl.attachShader(this.program, Shader.compileSource(gl.FRAGMENT_SHADER, extra_code + fragmentSource),gl);
 	gl.linkProgram(this.program);
 	if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
 		throw 'link error: ' + gl.getProgramInfoLog(this.program);
@@ -3540,8 +3654,9 @@ function Shader(vertexSource, fragmentSource, macros)
 * @param {String} source the source file to compile
 * @return {WebGLHandler}
 */
-Shader.compileSource = function(type, source)
+Shader.compileSource = function(type, source, gl)
 {
+	gl = gl || global.gl;
 	var shader = gl.createShader(type);
 	gl.shaderSource(shader, source);
 	gl.compileShader(shader);
@@ -3558,6 +3673,8 @@ Shader.compileSource = function(type, source)
 */
 Shader.prototype.extractShaderInfo = function()
 {
+	var gl = this.gl;
+
 	//extract uniforms info
 	for(var i = 0, l = gl.getProgramParameter(this.program, gl.ACTIVE_UNIFORMS); i < l; ++i)
 	{
@@ -3733,7 +3850,7 @@ Shader.fromURL = function( vs_path, fs_path, on_complete )
 Shader._temp_uniform = new Float32Array(16);
 
 Shader.prototype.uniforms = function(uniforms) {
-
+	var gl = this.gl;
 	gl.useProgram(this.program);
 
 	for (var name in uniforms) {
@@ -3794,19 +3911,21 @@ Shader.prototype.drawRange = function(mesh, mode, start, length)
 */
 
 //this two variables are a hack to avoid memory allocation on drawCalls
-Shader._temp_attribs_array = new Uint8Array(16);
-Shader._temp_attribs_array_zero = new Uint8Array(16); //should be filled with zeros always
+var temp_attribs_array = new Uint8Array(16);
+var temp_attribs_array_zero = new Uint8Array(16); //should be filled with zeros always
 
 Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_start, range_length)
 {
 	if(range_length == 0) return;
 
+	var gl = this.gl;
+
 	gl.useProgram(this.program); //this could be removed assuming every shader is called with some uniforms 
 
 	// enable attributes as necessary.
 	var length = 0;
-	var attribs_in_use = Shader._temp_attribs_array; //hack to avoid garbage
-	attribs_in_use.set( Shader._temp_attribs_array_zero ); //reset
+	var attribs_in_use = temp_attribs_array; //hack to avoid garbage
+	attribs_in_use.set( temp_attribs_array_zero ); //reset
 
 	for (var name in vertexBuffers)
 	{
@@ -3993,8 +4112,9 @@ Shader.prototype.toViewport = function(uniforms)
 * Returns a shader ready to render a quad in fullscreen, use with Mesh.getScreenQuad() mesh
 * @method Shader.getScreenShader
 */
-Shader.getScreenShader = function()
+Shader.getScreenShader = function(gl)
 {
+	gl = gl || global.gl;
 	var shader = gl.shaders[":screen"];
 	if(shader)
 		return shader;
@@ -4006,8 +4126,9 @@ Shader.getScreenShader = function()
 * shader must have: u_position, u_size, u_viewport, u_transform (mat3)
 * @method Shader.getQuadShader
 */
-Shader.getQuadShader = function()
+Shader.getQuadShader = function(gl)
 {
+	gl = gl || global.gl;
 	var shader = gl.shaders[":quad"];
 	if(shader)
 		return shader;
@@ -4019,8 +4140,9 @@ Shader.getQuadShader = function()
 * shader params are: vec2 u_offset, float u_intensity
 * @method Shader.getBlurShader
 */
-Shader.getBlurShader = function()
+Shader.getBlurShader = function(gl)
 {
+	gl = gl || global.gl;
 	var shader = gl.shaders[":blur"];
 	if(shader)
 		return shader;
@@ -4053,8 +4175,9 @@ Shader.getBlurShader = function()
 * params are vec2 u_viewportSize, mat4 u_iViewprojection
 * @method Shader.getFXAAShader
 */
-Shader.getFXAAShader = function()
+Shader.getFXAAShader = function(gl)
 {
+	gl = gl || global.gl;
 	var shader = gl.shaders[":fxaa"];
 	if(shader)
 		return shader;
@@ -4119,534 +4242,490 @@ Shader.getFXAAShader = function()
 	return gl.shaders[":fxaa"] = shader;
 }
 
-//polyfill
-window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || function(callback) { setTimeout(callback, 1000 / 60); };
-
-
 /**
-* The static module that contains all the features
-* @class GL
+* creates a new WebGL canvas
+* @method create
+* @param {Object} options supported are: width, height
+* @return {gl} gl context for webgl
 */
-var GL = {
-	blockable_keys: {"Up":true,"Down":true,"Left":true,"Right":true},
+GL.create = function(options) {
+	options = options || {};
+	var canvas = null;
+	if(options.canvas)
+	{
+		if(typeof(options.canvas) == "string")
+		{
+			canvas = document.getElementById( options.canvas );
+			if(!canvas) throw("Canvas element not found: " + options.canvas );
+		}
+		else 
+			canvas = options.canvas;
+	}
+	else
+		canvas = createCanvas(  options.width || 800, options.height || 600 );
 
-	//some consts
-	LEFT_MOUSE_BUTTON: 1,
-	RIGHT_MOUSE_BUTTON: 3,
-	MIDDLE_MOUSE_BUTTON: 2,
+	if (!('alpha' in options)) options.alpha = false;
+	try { global.gl = canvas.getContext('webgl', options); } catch (e) {}
+	try { global.gl = global.gl || canvas.getContext('experimental-webgl', options); } catch (e) {}
+	if (!global.gl) { throw 'WebGL not supported'; }
 
-	last_context_id: 0,
+	var gl = global.gl;
+
+	canvas.is_webgl = true;
+	gl.context_id = this.last_context_id++;
+
+	//get some common extensions
+	gl.derivatives_supported = gl.getExtension('OES_standard_derivatives') || false ;
+	gl.depth_ext = gl.getExtension("WEBGL_depth_texture") || gl.getExtension("WEBKIT_WEBGL_depth_texture") || gl.getExtension("MOZ_WEBGL_depth_texture");
+
+	//for float textures
+	gl.float_ext = gl.getExtension("OES_texture_float");
+	gl.float_ext_linear = gl.getExtension("OES_texture_float_linear");
+	gl.half_float_ext = gl.getExtension("OES_texture_half_float");
+	gl.half_float_ext_linear = gl.getExtension("OES_texture_half_float_linear");
+	if(!gl.half_float_ext_linear)
+		gl.half_float_ext = null;
+
+	gl.HALF_FLOAT_OES = 0x8D61; 
+	if(gl.half_float_ext)
+		gl.HALF_FLOAT_OES = gl.half_float_ext.HALF_FLOAT_OES;
+	gl.max_texture_units = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
+	gl.HIGH_PRECISION_FORMAT = gl.half_float_ext ? gl.HALF_FLOAT_OES : (gl.float_ext ? gl.FLOAT : gl.UNSIGNED_BYTE); //because Firefox dont support half float
+
+	//viewport hack to retrieve it without using getParameter (which is slow)
+	gl._viewport_func = gl.viewport;
+	gl.viewport_data = new Float32Array([0,0,gl.canvas.width,gl.canvas.height]);
+	gl.viewport = function(a,b,c,d) { this.viewport_data.set([a,b,c,d]); this._viewport_func(a,b,c,d); }
+	gl.getViewport = function() { return new Float32Array( gl.viewport_data ); };
+	
+	//just some checks
+	if(typeof(glMatrix) == "undefined")
+		throw("glMatrix not found, LiteGL requires glMatrix to be included");
+
+	var last_click_time = 0;
+	gl.mouse_buttons = 0;
+
+	//some global containers, use them to reuse assets
+	gl.shaders = {};
+	gl.textures = {};
+	gl.meshes = {};
 
 	/**
-	* creates a new WebGL canvas
-	* @method create
-	* @param {Object} options supported are: width, height
-	* @return {gl} gl context for webgl
+	* sets this context as the current gl context
+	* @method gl.makeCurrent
 	*/
-	create: function(options) {
-		options = options || {};
-		var canvas = null;
-		if(options.canvas)
-		{
-			if(typeof(options.canvas) == "string")
-			{
-				canvas = document.getElementById( options.canvas );
-				if(!canvas) throw("Canvas element not found: " + options.canvas );
-			}
-			else 
-				canvas = options.canvas;
-		}
-		else
-			canvas = createCanvas(  options.width || 800, options.height || 600 );
-
-		if (!('alpha' in options)) options.alpha = false;
-		try { gl = canvas.getContext('webgl', options); } catch (e) {}
-		try { gl = gl || canvas.getContext('experimental-webgl', options); } catch (e) {}
-		if (!gl) { throw 'WebGL not supported'; }
-
-		canvas.is_webgl = true;
-		gl.context_id = this.last_context_id++;
-
-		//get some common extensions
-		gl.derivatives_supported = gl.getExtension('OES_standard_derivatives') || false ;
-		gl.depth_ext = gl.getExtension("WEBGL_depth_texture") || gl.getExtension("WEBKIT_WEBGL_depth_texture") || gl.getExtension("MOZ_WEBGL_depth_texture");
-
-		//for float textures
-		gl.float_ext = gl.getExtension("OES_texture_float");
-		gl.float_ext_linear = gl.getExtension("OES_texture_float_linear");
-		gl.half_float_ext = gl.getExtension("OES_texture_half_float");
-		gl.half_float_ext_linear = gl.getExtension("OES_texture_half_float_linear");
-		if(!gl.half_float_ext_linear)
-			gl.half_float_ext = null;
-
-		gl.HALF_FLOAT_OES = 0x8D61; 
-		if(gl.half_float_ext)
-			gl.HALF_FLOAT_OES = gl.half_float_ext.HALF_FLOAT_OES;
-		gl.max_texture_units = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
-		gl.HIGH_PRECISION_FORMAT = gl.half_float_ext ? gl.HALF_FLOAT_OES : (gl.float_ext ? gl.FLOAT : gl.UNSIGNED_BYTE); //because Firefox dont support half float
-
-		//viewport hack to retrieve it without using getParameter (which is slow)
-		gl._viewport_func = gl.viewport;
-		gl.viewport_data = new Float32Array([0,0,gl.canvas.width,gl.canvas.height]);
-		gl.viewport = function(a,b,c,d) { this.viewport_data.set([a,b,c,d]); this._viewport_func(a,b,c,d); }
-		gl.getViewport = function() { return new Float32Array( gl.viewport_data ); };
-		
-		//just some checks
-		if(typeof(glMatrix) == "undefined")
-			throw("glMatrix not found, LiteGL requires glMatrix to be included");
-
-		var last_click_time = 0;
-		gl.mouse_buttons = 0;
-
-		//some global containers, use them to reuse assets
-		gl.shaders = {};
-		gl.textures = {};
-		gl.meshes = {};
-
-		/**
-		* sets this context as the current gl context
-		* @method gl.makeCurrent
-		*/
-		gl.makeCurrent = function()
-		{
-			window.gl = this;
-		}
-
-
-		/**
-		* Launch animation loop (calls gl.onupdate and gl.ondraw every frame)
-		* @method gl.animate
-		*/
-		gl.animate = function() {
-			var post = window.requestAnimationFrame;
-			var time = getTime();
-			var context = this;
-
-			//loop only if browser tab visible
-			function loop() {
-				post(loop); //do it first, in case it crashes
-
-				var now = getTime();
-				var dt = (now - time) / 1000;
-
-				if (context.onupdate) context.onupdate(dt);
-				if (context.ondraw) context.ondraw();
-				time = now;
-			}
-			post(loop); //launch main loop
-		}	
-
-		/**
-		* Tells the system to capture mouse events on the canvas. This will trigger onmousedown, onmousemove, onmouseup, onmousewheel callbacks in the canvas.
-		* @method gl.captureMouse
-		* @param {boolean} capture_wheel capture also the mouse wheel
-		*/
-		gl.captureMouse = function(capture_wheel) {
-
-			canvas.addEventListener("mousedown", onmouse);
-			canvas.addEventListener("mousemove", onmouse);
-			if(capture_wheel)
-			{
-				canvas.addEventListener("mousewheel", onmouse, false);
-				canvas.addEventListener("wheel", onmouse, false);
-				//canvas.addEventListener("DOMMouseScroll", onmouse, false);
-			}
-			//prevent right click context menu
-			canvas.addEventListener("contextmenu", function(e) { e.preventDefault(); return false; });
-
-			canvas.addEventListener("touchstart", ontouch, true);
-			canvas.addEventListener("touchmove", ontouch, true);
-			canvas.addEventListener("touchend", ontouch, true);
-			canvas.addEventListener("touchcancel", ontouch, true);   
-
-			canvas.addEventListener('gesturestart', ongesture );
-			canvas.addEventListener('gesturechange', ongesture );
-			canvas.addEventListener('gestureend', ongesture );
-		}
-
-		function onmouse(e) {
-			var old_mouse_mask = gl.mouse_buttons;
-			GL.augmentEvent(e, canvas);
-			e.eventType = e.eventType || e.type; //type cannot be overwritten, so I make a clone to allow me to overwrite
-			var now = getTime();
-
-			if(e.eventType == "mousedown")
-			{
-				if(old_mouse_mask == 0) //no mouse button was pressed till now
-				{
-					canvas.removeEventListener("mousemove", onmouse);
-					document.addEventListener("mousemove", onmouse);
-					document.addEventListener("mouseup", onmouse);
-				}
-				last_click_time = now;
-
-				if(gl.onmousedown) gl.onmousedown(e);
-			}
-			else if(e.eventType == "mousemove" && gl.onmousemove)
-			{ 
-				//move should be propagated (otherwise other components may fail)
-				e.click_time = now - last_click_time;
-				gl.onmousemove(e); 
-				return; 
-			} 
-			else if(e.eventType == "mouseup")
-			{
-				if(gl.mouse_buttons == 0) //no more buttons pressed
-				{
-					canvas.addEventListener("mousemove", onmouse);
-					document.removeEventListener("mousemove", onmouse);
-					document.removeEventListener("mouseup", onmouse);
-				}
-				e.click_time = now - last_click_time;
-				last_click_time = now;
-
-				if(gl.onmouseup) gl.onmouseup(e);
-			}
-			else if(gl.onmousewheel && (e.eventType == "mousewheel" || e.eventType == "wheel" || e.eventType == "DOMMouseScroll"))
-			{ 
-				e.eventType = "mousewheel";
-				if(e.type == "wheel")
-					e.wheel = -e.deltaY;
-				else
-					e.wheel = (e.wheelDeltaY != null ? e.wheelDeltaY : e.detail * -60);
-				gl.onmousewheel(e);
-			}
-
-			e.stopPropagation();
-			e.preventDefault();
-			return false;
-		}
-
-		//translates touch events in mouseevents
-		function ontouch(e)
-		{
-			var touches = event.changedTouches,
-				first = touches[0],
-				type = "";
-
-			if(touches > 1)
-				return;
-
-			 switch(event.type)
-			{
-				case "touchstart": type = "mousedown"; break;
-				case "touchmove":  type = "mousemove"; break;        
-				case "touchend":   type = "mouseup"; break;
-				default: return;
-			}
-
-			var simulatedEvent = document.createEvent("MouseEvent");
-			simulatedEvent.initMouseEvent(type, true, true, window, 1,
-									  first.screenX, first.screenY,
-									  first.clientX, first.clientY, false,
-									  false, false, false, 0/*left*/, null);
-			first.target.dispatchEvent(simulatedEvent);
-			event.preventDefault();
-		}
-
-		function ongesture(e)
-		{
-			if(gl.ongesture)
-			{ 
-				e.eventType = e.type;
-				gl.ongesture(e);
-			}
-			event.preventDefault();
-		}
-
-		/**
-		* Tells the system to capture key events on the canvas. This will trigger onkey
-		* @method gl.captureKeys
-		* @param {boolean} prevent_default prevent default behaviour (like scroll on the web, etc)
-		*/
-		gl.captureKeys = function( prevent_default ) {
-			gl.keys = {};
-			document.addEventListener("keydown", function(e) { onkey(e, prevent_default); });
-			document.addEventListener("keyup", function(e) { onkey(e, prevent_default); });
-		}
-
-		function onkey(e, prevent_default)
-		{
-			//trace(e);
-			e.eventType = e.type; //type cannot be overwritten, so I make a clone to allow me to overwrite
-
-			var target_element = e.target.nodeName.toLowerCase();
-			if(target_element == "input" || target_element == "textarea" || target_element == "select")
-				return;
-
-			e.character = String.fromCharCode(e.keyCode).toLowerCase();
-			var prev_state = false;
-			var key = GL.mapKeyCode(e.keyCode);
-
-			if (!e.altKey && !e.ctrlKey && !e.metaKey) {
-				if (key) 
-					gl.keys[key] = e.type == "keydown";
-				prev_state = gl.keys[e.keyCode];
-				gl.keys[e.keyCode] = e.type == "keydown";
-			}
-
-			//avoid repetition if key stais pressed
-			if(prev_state != gl.keys[e.keyCode])
-			{
-				if(e.type == "keydown" && gl.onkeydown) gl.onkeydown(e);
-				else if(e.type == "keyup" && gl.onkeyup) gl.onkeyup(e);
-			}
-
-			if(prevent_default && (e.isChar || GL.blockable_keys[e.keyIdentifier || e.key ]) )
-				e.preventDefault();
-		}
-
-		//gamepads
-		gl.gamepads = null;
-		function onButton(e, pressed)
-		{
-			console.log(e);
-			if(pressed && gl.onbuttondown) gl.onbuttondown(e);
-			else if(!pressed && gl.onbuttonup) gl.onbuttonup(e);
-		}
-
-		/**
-		* Tells the system to capture gamepad events on the canvas. 
-		* @method gl.captureGamepads
-		*/
-		gl.captureGamepads = function()
-		{
-			var getGamepads = navigator.getGamepads || navigator.webkitGetGamepads || navigator.mozGetGamepads; 
-			if(!getGamepads) return;
-			this.gamepads = getGamepads.call(navigator);
-
-			//only in firefox
-			window.addEventListener("gamepadButtonDown", function(e) { onButton(e, true); }, false);
-			window.addEventListener("MozGamepadButtonDown", function(e) { onButton(e, true); }, false);
-			window.addEventListener("WebkitGamepadButtonDown", function(e) { onButton(e, true); }, false);
-			window.addEventListener("gamepadButtonUp", function(e) { onButton(e, false); }, false);
-			window.addEventListener("MozGamepadButtonUp", function(e) { onButton(e, false); }, false);
-			window.addEventListener("WebkitGamepadButtonUp", function(e) { onButton(e, false); }, false);
-		}
-
-		/**
-		* returns the detected gamepads on the system
-		* @method gl.getGamepads
-		*/
-		gl.getGamepads = function()
-		{
-			//gamepads
-			var getGamepads = navigator.getGamepads || navigator.webkitGetGamepads || navigator.mozGetGamepads; 
-			if(!getGamepads) return;
-			var gamepads = getGamepads.call(navigator);
-			var gamepad = null;
-			for(var i = 0; i < 4; i++)
-				if (gamepads[i])
-				{
-					gamepad = gamepads[i];
-					if(this.gamepads) //launch connected gamepads: NOT TESTED
-					{
-						if(!this.gamepads[i] && gamepads[i] && this.ongamepadconnected)
-							this.ongamepadconnected(gamepad);
-						else if(this.gamepads[i] && !gamepads[i] && this.ongamepaddisconnected)
-							this.ongamepaddisconnected(this.gamepads[i]);
-					}
-				}
-			this.gamepads = gamepads;
-			return gamepads;
-		}
-
-		/**
-		* launches de canvas in fullscreen mode
-		* @method gl.fullscreen
-		*/
-		gl.fullscreen = function()
-		{
-			var canvas = this.canvas;
-			if(canvas.requestFullScreen)
-				canvas.requestFullScreen();
-			else if(canvas.webkitRequestFullScreen)
-				canvas.webkitRequestFullScreen();
-			else if(canvas.mozRequestFullScreen)
-				canvas.mozRequestFullScreen();
-			else
-				console.error("Fullscreen not supported");
-		}
-
-		/**
-		* returns a canvas with a snapshot of an area
-		* this is safer than using the canvas itself due to internals of webgl
-		* @method gl.snapshot
-		* @param {Number} startx viewport x coordinate
-		* @param {Number} starty viewport y coordinate from bottom
-		* @param {Number} areax viewport area width
-		* @param {Number} areay viewport area height
-		* @return {Canvas} canvas
-		*/
-		gl.snapshot = function(startx, starty, areax, areay, skip_reverse)
-		{
-			var canvas = createCanvas(areax,areay);
-			var ctx = canvas.getContext("2d");
-			var pixels = ctx.getImageData(0,0,canvas.width,canvas.height);
-
-			var buffer = new Uint8Array(areax * areay * 4);
-			gl.readPixels(startx, starty, canvas.width, canvas.height, gl.RGBA,gl.UNSIGNED_BYTE, buffer);
-
-			pixels.data.set( buffer );
-			ctx.putImageData(pixels,0,0);
-
-			if(skip_reverse)
-				return canvas;
-
-			//flip image 
-			var final_canvas = createCanvas(areax,areay);
-			var ctx = final_canvas.getContext("2d");
-			ctx.translate(0,areay);
-			ctx.scale(1,-1);
-			ctx.drawImage(canvas,0,0);
-
-			return final_canvas;
-		}
-
-
-		//mini textures manager
-		var loading_textures = {};
-		/**
-		* returns a texture and caches it inside gl.textures[]
-		* @method gl.loadTexture
-		* @param {String} url
-		* @param {Object} options (same options as when creating a texture)
-		* @param {Function} callback function called once the texture is loaded
-		* @return {Texture} texture
-		*/
-		gl.loadTexture = function(url, options, on_load)
-		{
-			if(this.textures[ url ])
-				return this.textures[url];
-
-			if( loading_textures[url] )
-				return null;
-
-			var img = new Image();
-			img.url = url;
-			img.onload = function()
-			{
-				var texture = GL.Texture.fromImage(this, options);
-				texture.img = this;
-				gl.textures[this.url] = texture;
-				delete loading_textures[this.url];
-				if(on_load)
-					on_load(texture);
-			} 
-			img.src = url;
-			loading_textures[url] = true;
-			return null;
-		}
-
-		return gl;
-	},
-
-	mapKeyCode: function(code) {
-		var named = {
-			8: 'BACKSPACE',
-			9: 'TAB',
-			13: 'ENTER',
-			16: 'SHIFT',
-			27: 'ESCAPE',
-			32: 'SPACE',
-			37: 'LEFT',
-			38: 'UP',
-			39: 'RIGHT',
-			40: 'DOWN'
-		};
-		return named[code] || (code >= 65 && code <= 90 ? String.fromCharCode(code) : null);
-	},
-
-	//add useful info to the event
-	dragging: false,
-	last_pos: null,
-
-	augmentEvent: function(e, root_element)
+	gl.makeCurrent = function()
 	{
-		var offset_left = 0;
-		var offset_top = 0;
-		var b = null;
+		global.gl = this;
+	}
 
-		root_element = root_element || e.target || gl.canvas;
-		b = root_element.getBoundingClientRect();
-			
-		e.mousex = e.pageX - b.left;
-		e.mousey = e.pageY - b.top;
-		e.canvasx = e.mousex;
-		e.canvasy = b.height - e.mousey;
-		e.deltax = 0;
-		e.deltay = 0;
+	gl.execute = function(callback)
+	{
+		var old_gl = global.gl;
+		global.gl = this;
+		callback();
+		global.gl = old_gl;
+	}
+
+
+	/**
+	* Launch animation loop (calls gl.onupdate and gl.ondraw every frame)
+	* @method gl.animate
+	*/
+	gl.animate = function() {
+		var post = global.requestAnimationFrame;
+		var time = getTime();
+		var context = this;
+
+		//loop only if browser tab visible
+		function loop() {
+			post(loop); //do it first, in case it crashes
+
+			var now = getTime();
+			var dt = (now - time) / 1000;
+
+			if (context.onupdate) context.onupdate(dt);
+			if (context.ondraw) context.ondraw();
+			time = now;
+		}
+		post(loop); //launch main loop
+	}	
+
+	/**
+	* Tells the system to capture mouse events on the canvas. This will trigger onmousedown, onmousemove, onmouseup, onmousewheel callbacks in the canvas.
+	* @method gl.captureMouse
+	* @param {boolean} capture_wheel capture also the mouse wheel
+	*/
+	gl.captureMouse = function(capture_wheel) {
+
+		canvas.addEventListener("mousedown", onmouse);
+		canvas.addEventListener("mousemove", onmouse);
+		if(capture_wheel)
+		{
+			canvas.addEventListener("mousewheel", onmouse, false);
+			canvas.addEventListener("wheel", onmouse, false);
+			//canvas.addEventListener("DOMMouseScroll", onmouse, false);
+		}
+		//prevent right click context menu
+		canvas.addEventListener("contextmenu", function(e) { e.preventDefault(); return false; });
+
+		canvas.addEventListener("touchstart", ontouch, true);
+		canvas.addEventListener("touchmove", ontouch, true);
+		canvas.addEventListener("touchend", ontouch, true);
+		canvas.addEventListener("touchcancel", ontouch, true);   
+
+		canvas.addEventListener('gesturestart', ongesture );
+		canvas.addEventListener('gesturechange', ongesture );
+		canvas.addEventListener('gestureend', ongesture );
+	}
+
+	function onmouse(e) {
+		var old_mouse_mask = gl.mouse_buttons;
+		GL.augmentEvent(e, canvas);
+		e.eventType = e.eventType || e.type; //type cannot be overwritten, so I make a clone to allow me to overwrite
+		var now = getTime();
+
+		if(e.eventType == "mousedown")
+		{
+			if(old_mouse_mask == 0) //no mouse button was pressed till now
+			{
+				canvas.removeEventListener("mousemove", onmouse);
+				document.addEventListener("mousemove", onmouse);
+				document.addEventListener("mouseup", onmouse);
+			}
+			last_click_time = now;
+
+			if(gl.onmousedown) gl.onmousedown(e);
+		}
+		else if(e.eventType == "mousemove" && gl.onmousemove)
+		{ 
+			//move should be propagated (otherwise other components may fail)
+			e.click_time = now - last_click_time;
+			gl.onmousemove(e); 
+			return; 
+		} 
+		else if(e.eventType == "mouseup")
+		{
+			if(gl.mouse_buttons == 0) //no more buttons pressed
+			{
+				canvas.addEventListener("mousemove", onmouse);
+				document.removeEventListener("mousemove", onmouse);
+				document.removeEventListener("mouseup", onmouse);
+			}
+			e.click_time = now - last_click_time;
+			last_click_time = now;
+
+			if(gl.onmouseup) gl.onmouseup(e);
+		}
+		else if(gl.onmousewheel && (e.eventType == "mousewheel" || e.eventType == "wheel" || e.eventType == "DOMMouseScroll"))
+		{ 
+			e.eventType = "mousewheel";
+			if(e.type == "wheel")
+				e.wheel = -e.deltaY;
+			else
+				e.wheel = (e.wheelDeltaY != null ? e.wheelDeltaY : e.detail * -60);
+			gl.onmousewheel(e);
+		}
+
+		e.stopPropagation();
+		e.preventDefault();
+		return false;
+	}
+
+	//translates touch events in mouseevents
+	function ontouch(e)
+	{
+		var touches = event.changedTouches,
+			first = touches[0],
+			type = "";
+
+		if(touches > 1)
+			return;
+
+		 switch(event.type)
+		{
+			case "touchstart": type = "mousedown"; break;
+			case "touchmove":  type = "mousemove"; break;        
+			case "touchend":   type = "mouseup"; break;
+			default: return;
+		}
+
+		var simulatedEvent = document.createEvent("MouseEvent");
+		simulatedEvent.initMouseEvent(type, true, true, window, 1,
+								  first.screenX, first.screenY,
+								  first.clientX, first.clientY, false,
+								  false, false, false, 0/*left*/, null);
+		first.target.dispatchEvent(simulatedEvent);
+		event.preventDefault();
+	}
+
+	function ongesture(e)
+	{
+		if(gl.ongesture)
+		{ 
+			e.eventType = e.type;
+			gl.ongesture(e);
+		}
+		event.preventDefault();
+	}
+
+	/**
+	* Tells the system to capture key events on the canvas. This will trigger onkey
+	* @method gl.captureKeys
+	* @param {boolean} prevent_default prevent default behaviour (like scroll on the web, etc)
+	*/
+	gl.captureKeys = function( prevent_default ) {
+		gl.keys = {};
+		document.addEventListener("keydown", function(e) { onkey(e, prevent_default); });
+		document.addEventListener("keyup", function(e) { onkey(e, prevent_default); });
+	}
+
+	function onkey(e, prevent_default)
+	{
+		//trace(e);
+		e.eventType = e.type; //type cannot be overwritten, so I make a clone to allow me to overwrite
+
+		var target_element = e.target.nodeName.toLowerCase();
+		if(target_element == "input" || target_element == "textarea" || target_element == "select")
+			return;
+
+		e.character = String.fromCharCode(e.keyCode).toLowerCase();
+		var prev_state = false;
+		var key = GL.mapKeyCode(e.keyCode);
+
+		if (!e.altKey && !e.ctrlKey && !e.metaKey) {
+			if (key) 
+				gl.keys[key] = e.type == "keydown";
+			prev_state = gl.keys[e.keyCode];
+			gl.keys[e.keyCode] = e.type == "keydown";
+		}
+
+		//avoid repetition if key stais pressed
+		if(prev_state != gl.keys[e.keyCode])
+		{
+			if(e.type == "keydown" && gl.onkeydown) gl.onkeydown(e);
+			else if(e.type == "keyup" && gl.onkeyup) gl.onkeyup(e);
+		}
+
+		if(prevent_default && (e.isChar || GL.blockable_keys[e.keyIdentifier || e.key ]) )
+			e.preventDefault();
+	}
+
+	//gamepads
+	gl.gamepads = null;
+	function onButton(e, pressed)
+	{
+		console.log(e);
+		if(pressed && gl.onbuttondown) gl.onbuttondown(e);
+		else if(!pressed && gl.onbuttonup) gl.onbuttonup(e);
+	}
+
+	/**
+	* Tells the system to capture gamepad events on the canvas. 
+	* @method gl.captureGamepads
+	*/
+	gl.captureGamepads = function()
+	{
+		var getGamepads = navigator.getGamepads || navigator.webkitGetGamepads || navigator.mozGetGamepads; 
+		if(!getGamepads) return;
+		this.gamepads = getGamepads.call(navigator);
+
+		//only in firefox
+		window.addEventListener("gamepadButtonDown", function(e) { onButton(e, true); }, false);
+		window.addEventListener("MozGamepadButtonDown", function(e) { onButton(e, true); }, false);
+		window.addEventListener("WebkitGamepadButtonDown", function(e) { onButton(e, true); }, false);
+		window.addEventListener("gamepadButtonUp", function(e) { onButton(e, false); }, false);
+		window.addEventListener("MozGamepadButtonUp", function(e) { onButton(e, false); }, false);
+		window.addEventListener("WebkitGamepadButtonUp", function(e) { onButton(e, false); }, false);
+	}
+
+	/**
+	* returns the detected gamepads on the system
+	* @method gl.getGamepads
+	*/
+	gl.getGamepads = function()
+	{
+		//gamepads
+		var getGamepads = navigator.getGamepads || navigator.webkitGetGamepads || navigator.mozGetGamepads; 
+		if(!getGamepads) return;
+		var gamepads = getGamepads.call(navigator);
+		var gamepad = null;
+		for(var i = 0; i < 4; i++)
+			if (gamepads[i])
+			{
+				gamepad = gamepads[i];
+				if(this.gamepads) //launch connected gamepads: NOT TESTED
+				{
+					if(!this.gamepads[i] && gamepads[i] && this.ongamepadconnected)
+						this.ongamepadconnected(gamepad);
+					else if(this.gamepads[i] && !gamepads[i] && this.ongamepaddisconnected)
+						this.ongamepaddisconnected(this.gamepads[i]);
+				}
+			}
+		this.gamepads = gamepads;
+		return gamepads;
+	}
+
+	/**
+	* launches de canvas in fullscreen mode
+	* @method gl.fullscreen
+	*/
+	gl.fullscreen = function()
+	{
+		var canvas = this.canvas;
+		if(canvas.requestFullScreen)
+			canvas.requestFullScreen();
+		else if(canvas.webkitRequestFullScreen)
+			canvas.webkitRequestFullScreen();
+		else if(canvas.mozRequestFullScreen)
+			canvas.mozRequestFullScreen();
+		else
+			console.error("Fullscreen not supported");
+	}
+
+	/**
+	* returns a canvas with a snapshot of an area
+	* this is safer than using the canvas itself due to internals of webgl
+	* @method gl.snapshot
+	* @param {Number} startx viewport x coordinate
+	* @param {Number} starty viewport y coordinate from bottom
+	* @param {Number} areax viewport area width
+	* @param {Number} areay viewport area height
+	* @return {Canvas} canvas
+	*/
+	gl.snapshot = function(startx, starty, areax, areay, skip_reverse)
+	{
+		var canvas = createCanvas(areax,areay);
+		var ctx = canvas.getContext("2d");
+		var pixels = ctx.getImageData(0,0,canvas.width,canvas.height);
+
+		var buffer = new Uint8Array(areax * areay * 4);
+		gl.readPixels(startx, starty, canvas.width, canvas.height, gl.RGBA,gl.UNSIGNED_BYTE, buffer);
+
+		pixels.data.set( buffer );
+		ctx.putImageData(pixels,0,0);
+
+		if(skip_reverse)
+			return canvas;
+
+		//flip image 
+		var final_canvas = createCanvas(areax,areay);
+		var ctx = final_canvas.getContext("2d");
+		ctx.translate(0,areay);
+		ctx.scale(1,-1);
+		ctx.drawImage(canvas,0,0);
+
+		return final_canvas;
+	}
+
+
+	//mini textures manager
+	var loading_textures = {};
+	/**
+	* returns a texture and caches it inside gl.textures[]
+	* @method gl.loadTexture
+	* @param {String} url
+	* @param {Object} options (same options as when creating a texture)
+	* @param {Function} callback function called once the texture is loaded
+	* @return {Texture} texture
+	*/
+	gl.loadTexture = function(url, options, on_load)
+	{
+		if(this.textures[ url ])
+			return this.textures[url];
+
+		if( loading_textures[url] )
+			return null;
+
+		var img = new Image();
+		img.url = url;
+		img.onload = function()
+		{
+			var texture = GL.Texture.fromImage(this, options);
+			texture.img = this;
+			gl.textures[this.url] = texture;
+			delete loading_textures[this.url];
+			if(on_load)
+				on_load(texture);
+		} 
+		img.src = url;
+		loading_textures[url] = true;
+		return null;
+	}
+
+	return gl;
+}
+
+GL.mapKeyCode = function(code)
+{
+	var named = {
+		8: 'BACKSPACE',
+		9: 'TAB',
+		13: 'ENTER',
+		16: 'SHIFT',
+		27: 'ESCAPE',
+		32: 'SPACE',
+		37: 'LEFT',
+		38: 'UP',
+		39: 'RIGHT',
+		40: 'DOWN'
+	};
+	return named[code] || (code >= 65 && code <= 90 ? String.fromCharCode(code) : null);
+}
+
+//add useful info to the event
+GL.dragging = false;
+GL.last_pos = null;
+
+GL.augmentEvent = function(e, root_element)
+{
+	var offset_left = 0;
+	var offset_top = 0;
+	var b = null;
+
+	root_element = root_element || e.target || gl.canvas;
+	b = root_element.getBoundingClientRect();
 		
-		//console.log("WHICH: ",e.which," BUTTON: ",e.button, e.type);
+	e.mousex = e.pageX - b.left;
+	e.mousey = e.pageY - b.top;
+	e.canvasx = e.mousex;
+	e.canvasy = b.height - e.mousey;
+	e.deltax = 0;
+	e.deltay = 0;
+	
+	//console.log("WHICH: ",e.which," BUTTON: ",e.button, e.type);
 
-		if(e.type == "mousedown")
-		{
-			this.dragging = true;
-			gl.mouse_buttons |= (1 << e.which); //enable
-		}
-		else if (e.type == "mousemove")
-		{
-			//trace(e.mousex + " " + e.mousey);
-		}
-		else if (e.type == "mouseup")
-		{
-			gl.mouse_buttons = gl.mouse_buttons & ~(1 << e.which);
-			//console.log("BUT:", e.button, "MASK:", gl.mouse_buttons);
-			if(gl.mouse_buttons == 0)
-				this.dragging = false;
-		}
+	if(e.type == "mousedown")
+	{
+		this.dragging = true;
+		gl.mouse_buttons |= (1 << e.which); //enable
+	}
+	else if (e.type == "mousemove")
+	{
+		//trace(e.mousex + " " + e.mousey);
+	}
+	else if (e.type == "mouseup")
+	{
+		gl.mouse_buttons = gl.mouse_buttons & ~(1 << e.which);
+		//console.log("BUT:", e.button, "MASK:", gl.mouse_buttons);
+		if(gl.mouse_buttons == 0)
+			this.dragging = false;
+	}
 
-		if(this.last_pos)
-		{
-			e.deltax = e.mousex - this.last_pos[0];
-			e.deltay = e.mousey - this.last_pos[1];
-		}
+	if(this.last_pos)
+	{
+		e.deltax = e.mousex - this.last_pos[0];
+		e.deltay = e.mousey - this.last_pos[1];
+	}
 
-		this.last_pos = [e.mousex, e.mousey];
-		e.dragging = this.dragging;
-		e.buttons_mask = gl.mouse_buttons;			
+	this.last_pos = [e.mousex, e.mousey];
+	e.dragging = this.dragging;
+	e.buttons_mask = gl.mouse_buttons;			
 
-		e.leftButton = gl.mouse_buttons & (1<<GL.LEFT_MOUSE_BUTTON);
-		e.rightButton = gl.mouse_buttons & (1<<GL.RIGHT_MOUSE_BUTTON);
-		e.isButtonPressed = function(num) { return this.buttons_mask & (1<<num); }
-	},
-
-	Buffer: Buffer,
-	Mesh: Mesh,
-	Texture: Texture,
-	Shader: Shader,
-};
-
-
-//Define WEBGL ENUMS as statics
-//sometimes I need some gl enums before having the gl context, solution: define them globally because the specs says they are constant:
-
-GL.BYTE = 5120;
-GL.UNSIGNED_BYTE = 5121;
-GL.SHORT = 5122;
-GL.UNSIGNED_SHORT = 5123;
-GL.INT = 5124;
-GL.UNSIGNED_INT = 5125;
-GL.FLOAT = 5126;
-
-GL.ZERO = 0;
-GL.ONE = 1;
-GL.SRC_COLOR = 768;
-GL.ONE_MINUS_SRC_COLOR = 769;
-GL.SRC_ALPHA = 770;
-GL.ONE_MINUS_SRC_ALPHA = 771;
-GL.DST_ALPHA = 772;
-GL.ONE_MINUS_DST_ALPHA = 773;
-GL.DST_COLOR = 774;
-GL.ONE_MINUS_DST_COLOR = 775;
-GL.SRC_ALPHA_SATURATE = 776;
-GL.CONSTANT_COLOR = 32769;
-GL.ONE_MINUS_CONSTANT_COLOR = 32770;
-GL.CONSTANT_ALPHA = 32771;
-GL.ONE_MINUS_CONSTANT_ALPHA = 32772;
-
-
-
+	e.leftButton = gl.mouse_buttons & (1<<GL.LEFT_MOUSE_BUTTON);
+	e.rightButton = gl.mouse_buttons & (1<<GL.RIGHT_MOUSE_BUTTON);
+	e.isButtonPressed = function(num) { return this.buttons_mask & (1<<num); }
+}
 
 /**
 * LEvent is a lightweight events library focused in low memory footprint
@@ -4654,7 +4733,7 @@ GL.ONE_MINUS_CONSTANT_ALPHA = 32772;
 * @constructor
 */
 
-var LEvent = {
+global.LEvent = GL.LEvent = {
 	jQuery: false, //dispatch as jQuery events (enable this if you want to hook regular jQuery events to instances, they are dispatches as ":eventname" to avoid collisions)
 	//map: new Weakmap(),
 
@@ -4834,16 +4913,16 @@ var LEvent = {
 	}
 };
 /* geometric utilities */
-var CLIP_INSIDE = 0;
-var CLIP_OUTSIDE = 1;
-var CLIP_OVERLAP = 2;
+global.CLIP_INSIDE = GL.CLIP_INSIDE = 0;
+global.CLIP_OUTSIDE = GL.CLIP_OUTSIDE = 1;
+global.CLIP_OVERLAP = GL.CLIP_OVERLAP = 2;
 
 /**
 * Computational geometry algorithms, is a static class
 * @class geo
 */
 
-var geo = {
+global.geo = {
 
 	/**
 	* Returns a float4 containing the info about a plane with normal N and that passes through point P
@@ -5460,7 +5539,7 @@ var geo = {
 * The bounding box is stored as center,halfsize,min,max,radius (total of 13 floats)
 * @class BBox
 */
-var BBox = {
+global.BBox = GL.BBox = {
 	center:0,
 	halfsize:3,
 	min:6,
@@ -5706,12 +5785,12 @@ var BBox = {
 	getRadius: function(bb) { return bb[12]; }	
 }
 
-function distanceToPlane(plane, point)
+global.distanceToPlane = GL.distanceToPlane = function distanceToPlane(plane, point)
 {
 	return vec3.dot(plane,point) + plane[3];
 }
 
-function planeBoxOverlap(plane, box)
+global.planeBoxOverlap = GL.planeBoxOverlap = function planeBoxOverlap(plane, box)
 {
 	var n = plane.subarray(0,3);
 	var d = plane[3];
@@ -5740,24 +5819,7 @@ function planeBoxOverlap(plane, box)
 * @param {Mesh} mesh object containing vertices buffer (indices buffer optional)
 */
 
-function HitTest(t, hit, normal) {
-  this.t = arguments.length ? t : Number.MAX_VALUE;
-  this.hit = hit;
-  this.normal = normal;
-}
-
-HitTest.prototype = {
-  mergeWith: function(other) {
-    if (other.t > 0 && other.t < this.t) {
-      this.t = other.t;
-      this.hit = other.hit;
-      this.normal = other.normal;
-    }
-  }
-};
-
-
-function Octree(mesh)
+global.Octree = GL.Octree = function Octree(mesh)
 {
 	this.root = null;
 	this.total_depth = 0;
@@ -6117,7 +6179,7 @@ Octree.hitTestTriangle = function(origin, ray, a, b, c) {
 // This is the object used to return hit test results. If there are no
 // arguments, the constructed argument represents a hit infinitely far
 // away.
-function HitTest(t, hit, normal) {
+global.HitTest = GL.HitTest = function HitTest(t, hit, normal) {
   this.t = arguments.length ? t : Number.MAX_VALUE;
   this.hit = hit;
   this.normal = normal;
@@ -6151,7 +6213,7 @@ HitTest.prototype = {
 //       var result = GL.Raytracer.hitTestSphere(
 //       tracer.eye, ray, new GL.Vector(0, 0, 0), 1);
 
-function Raytracer(viewmatrix, projectionmatrix, viewport) {
+global.Raytracer = GL.Raytracer = function Raytracer(viewmatrix, projectionmatrix, viewport) {
   viewport = viewport || gl.getViewport(); //gl.getParameter(gl.VIEWPORT);
   var m = viewmatrix;
   this.viewport = viewport;
@@ -6285,8 +6347,6 @@ Raytracer.hitTestTriangle = function(origin, ray, a, b, c) {
 
   return null;
 };
-
-GL.Raytracer = Raytracer;
 //***** OBJ parser adapted from SpiderGL implementation *****************
 /**
 * A data buffer to be stored in the GPU
@@ -6576,3 +6636,5 @@ Mesh.parseOBJ = function(text, options)
 Mesh.parsers[".obj"] = Mesh.parseOBJ.bind( Mesh );
 
 
+//footer.js
+})(window);

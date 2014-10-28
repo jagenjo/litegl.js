@@ -12,6 +12,10 @@ Some of the main differences:
  * Better event handling (mouse position, mouse wheel, dragging)
  * Textures expanded to support Arraybuffers and Cubemaps
  * Events system to trigger events from any object
+ * Support for multiple WebGL contexts in the same page
+
+This library has been used in several projects like [Rendeer.js](https://github.com/jagenjo/rendeer.js) or [Canvas2DtoWebGL](https://github.com/jagenjo/Canvas2DtoWebGL).</p>
+
 
 Demos
 -----
