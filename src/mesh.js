@@ -3,12 +3,12 @@
 * @class Indexer
 * @constructor
 */
-function Indexer() {
+GL.Indexer = function Indexer() {
   this.unique = [];
   this.indices = [];
   this.map = {};
 }
-Indexer.prototype = {
+GL.Indexer.prototype = {
 	add: function(obj) {
     var key = JSON.stringify(obj);
     if (!(key in this.map)) {
@@ -28,9 +28,11 @@ Indexer.prototype = {
 * @param {number} spacing number of numbers per component (3 per vertex, 2 per uvs...), default 3
 * @param {enum} stream_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW 
 */
-function Buffer(target, data, spacing, stream_type) {
+global.Buffer = GL.Buffer = function Buffer(target, data, spacing, stream_type, gl) {
+	gl = gl || global.gl;
 	this.buffer = null; //webgl buffer
 	this.target = target;
+	this.gl = gl;
 
 	//optional
 	this.data = data;
@@ -45,7 +47,7 @@ function Buffer(target, data, spacing, stream_type) {
 * @method forEach
 * @param {function} callback to be called for every vertex (or whatever is contained in the buffer)
 */
-Buffer.prototype.forEach = function(callback)
+GL.Buffer.prototype.forEach = function(callback)
 {
 	var d = this.data;
 	for (var i = 0, s = this.spacing, l = d.length; i < l; i += s)
@@ -60,8 +62,9 @@ Buffer.prototype.forEach = function(callback)
 * @method upload
 * @param {number} stream_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW 
 */
-Buffer.prototype.upload = function(stream_type) { //default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW )
+GL.Buffer.prototype.upload = function(stream_type) { //default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW )
 	var spacing = this.spacing || 3; //default spacing	
+	var gl = this.gl;
 
 	if(!this.data)
 		throw("No data supplied");
@@ -93,7 +96,7 @@ Buffer.prototype.upload = function(stream_type) { //default gl.STATIC_DRAW (othe
 	gl.bufferData(this.target, data , stream_type || this.stream_type || gl.STATIC_DRAW);
 };
 //legacy
-Buffer.prototype.compile = Buffer.prototype.upload;
+GL.Buffer.prototype.compile = GL.Buffer.prototype.upload;
 
 
 /**
@@ -102,7 +105,7 @@ Buffer.prototype.compile = Buffer.prototype.upload;
 * @param {number} start offset in bytes
 * @param {number} size sizes in bytes
 */
-Buffer.prototype.uploadRange = function(start, size) {
+GL.Buffer.prototype.uploadRange = function(start, size) {
 	if(!this.data)
 		throw("No data stored in this buffer");
 
@@ -112,6 +115,7 @@ Buffer.prototype.uploadRange = function(start, size) {
 
 	var view = new Uint8Array( this.data.buffer, start, size );
 
+	var gl = this.gl;
 	gl.bindBuffer(this.target, this.buffer);
 	gl.bufferSubData(this.target, start, view );
 };
@@ -124,10 +128,14 @@ Buffer.prototype.uploadRange = function(start, size) {
 * @param {Object} vertexBuffers object with all the vertex streams
 * @param {Object} indexBuffers object with all the indices streams
 * @param {Object} options
+* @param {WebGLContext} gl [Optional] gl context where to create the mesh
 * @constructor
 */
-function Mesh(vertexbuffers, indexbuffers, options)
+global.Mesh = GL.Mesh = function Mesh(vertexbuffers, indexbuffers, options, gl)
 {
+	gl = gl || global.gl;
+	this.gl = gl;
+
 	//used to avoid problems with resources moving between different webgl context
 	this._context_id = gl.context_id; 
 
@@ -198,8 +206,12 @@ Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers, stream_type)
 		var data = vertexbuffers[i];
 		if(!data) continue;
 
-		//linearize: (transform Arrays in typed arrays)
-		if( typeof(data[0]) != "number") 
+		
+		if( data.constructor == GL.Buffer )
+		{
+			data = data.data;
+		}
+		else if( typeof(data[0]) != "number") //linearize: (transform Arrays in typed arrays)
 		{
 			var newdata = [];
 			for (var j = 0, chunk = 10000; j < data.length; j += chunk) {
@@ -238,6 +250,11 @@ Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers, stream_type)
 		{
 			var data = indexbuffers[i];
 			if(!data) continue;
+
+			if( data.constructor == GL.Buffer )
+			{
+				data = data.data;
+			}
 			if( typeof(data[0]) != "number") //linearize
 			{
 				data = [];
@@ -298,7 +315,8 @@ Mesh.prototype.createVertexBuffer = function(name, attribute, buffer_spacing, bu
 	if(!buffer_data.buffer)
 		throw("Buffer data MUST be typed array");
 
-	var buffer = this.vertexBuffers[name] = new Buffer(gl.ARRAY_BUFFER, buffer_data, buffer_spacing, stream_type);
+	//used to ensure the buffers are held in the same gl context as the mesh
+	var buffer = this.vertexBuffers[name] = new GL.Buffer(gl.ARRAY_BUFFER, buffer_data, buffer_spacing, stream_type, this.gl );
 	buffer.name = name;
 	buffer.attribute = attribute;
 
@@ -336,7 +354,8 @@ Mesh.prototype.getVertexBuffer = function(name)
 * @param {enum} stream_type gl.STATIC_DRAW, gl.DYNAMIC_DRAW, gl.STREAM_DRAW
 */
 Mesh.prototype.createIndexBuffer = function(name, buffer_data, stream_type) {
-	var buffer = this.indexBuffers[name] = new Buffer(gl.ELEMENT_ARRAY_BUFFER, buffer_data, stream_type);
+	//(target, data, spacing, stream_type, gl)
+	var buffer = this.indexBuffers[name] = new GL.Buffer(gl.ELEMENT_ARRAY_BUFFER, buffer_data, 0, stream_type, this.gl );
 	return buffer;
 }
 
@@ -383,6 +402,35 @@ Mesh.prototype.upload = function(buffer_type) {
 
 //LEGACY, plz remove
 Mesh.prototype.compile = Mesh.prototype.upload;
+
+/**
+* Creates a clone of the mesh, the datarrays are cloned too
+* @method clone
+*/
+Mesh.prototype.clone = function( gl )
+{
+	var gl = gl || global.gl;
+	var vbs = {};
+	var ibs = {};
+
+	for(var i in mesh.vertexBuffers)
+		vbs[i] = mesh.vertexBuffers[i].data;
+	for(var i in mesh.indexBuffers)
+		ibs[i] = mesh.indexBuffers[i].data;
+
+	return new GL.Mesh( vbs, ibs, undefined, gl );
+}
+
+/**
+* Creates a clone of the mesh, but the data-arrays are shared between both meshes (useful for sharing a mesh between contexts)
+* @method clone
+*/
+Mesh.prototype.cloneShared = function( gl )
+{
+	var gl = gl || global.gl;
+	return new GL.Mesh( this.vertexBuffers, this.indexBuffers, undefined, gl );
+}
+
 
 /**
 * Computes some data about the mesh
@@ -485,7 +533,7 @@ Mesh.prototype.computeWireframe = function() {
 	{
 		var data = index_buffer.data;
 
-		var indexer = new Indexer();
+		var indexer = new GL.Indexer();
 		for (var i = 0; i < data.length; i+=3) {
 		  var t = data.subarray(i,i+3);
 		  for (var j = 0; j < t.length; j++) {
@@ -1260,7 +1308,7 @@ Mesh.mergeMeshes = function(meshes)
 	return new Mesh(vertex_buffers,index_buffers);
 }
 
-//Here we store all basic mesh parsers
+//Here we store all basic mesh parsers (OBJ, STL)
 Mesh.parsers = {};
 
 /**
@@ -1268,9 +1316,10 @@ Mesh.parsers = {};
 * @method Mesh.fromOBJ
 * @param {Array} meshes array containing all the meshes
 */
-Mesh.fromURL = function(url, on_complete)
+Mesh.fromURL = function(url, on_complete, gl)
 {
-	var mesh = new GL.Mesh();
+	gl = gl || global.gl;
+	var mesh = new GL.Mesh(undefined,undefined,undefined,gl);
 	HttpRequest( url, null, function(data) {
 		var ext = url.substr(url.length - 4).toLowerCase();
 		var parser = Mesh.parsers[ ext ];
@@ -1285,14 +1334,15 @@ Mesh.fromURL = function(url, on_complete)
 }
 
 
-Mesh.getScreenQuad = function()
+Mesh.getScreenQuad = function(gl)
 {
+	gl = gl || global.gl;
 	var mesh = gl.meshes[":screen_quad"];
 	if(mesh)
 		return mesh;
 
 	var vertices = new Float32Array(18);
 	var coords = new Float32Array([0,0, 1,1, 0,1,  0,0, 1,0, 1,1 ]);
-	mesh = new GL.Mesh({ vertices: vertices, coords: coords});
+	mesh = new GL.Mesh({ vertices: vertices, coords: coords}, undefined, undefined, gl);
 	return gl.meshes[":screen_quad"] = mesh;
 }

@@ -1,10 +1,7 @@
 
-var gl;
-var DEG2RAD = 0.0174532925;
-var RAD2DEG = 57.295779578552306;
-var EPSILON = 0.000001;
-
-var global = window; //todo: change this to be common js
+global.DEG2RAD = 0.0174532925;
+global.RAD2DEG = 57.295779578552306;
+global.EPSILON = 0.000001;
 
 /**
 * Tells if one number is power of two (used for textures)
@@ -12,7 +9,7 @@ var global = window; //todo: change this to be common js
 * @param {v} number
 * @return {boolean}
 */
-function isPowerOfTwo(v)
+global.isPowerOfTwo = function isPowerOfTwo(v)
 {
 	return ((Math.log(v) / Math.log(2)) % 1) == 0;
 }
@@ -29,17 +26,17 @@ else
 
 
 
-function isFunction(obj) {
+global.isFunction = function isFunction(obj) {
   return !!(obj && obj.constructor && obj.call && obj.apply);
 }
 
-function isArray(obj) {
+global.isArray = function isArray(obj) {
   return (obj && obj.constructor === Array );
   //var str = Object.prototype.toString.call(obj);
   //return str == '[object Array]' || str == '[object Float32Array]';
 }
 
-function isNumber(obj) {
+global.isNumber = function isNumber(obj) {
   return (obj != null && obj.constructor === Number );
 }
 
@@ -52,21 +49,21 @@ function isNumber(obj) {
 */
 
 //given a regular expression, a text and a callback, it calls the function every time it finds it
-function regexMap(regex, text, callback) {
+global.regexMap = function regexMap(regex, text, callback) {
   var result;
   while ((result = regex.exec(text)) != null) {
     callback(result);
   }
 }
 
-function createCanvas(width, height) {
+global.createCanvas = function createCanvas(width, height) {
     var canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;
     return canvas;
 }
 
-function cloneCanvas(c) {
+global.cloneCanvas = function cloneCanvas(c) {
     var canvas = document.createElement('canvas');
     canvas.width = c.width;
     canvas.height = c.height;
@@ -89,7 +86,7 @@ Object.defineProperty(Array.prototype, "subarray", { value: Array.prototype.slic
 
 
 // remove all properties on obj, effectively reverting it to a new object (to reduce garbage)
-function wipeObject(obj)
+global.wipeObject = function wipeObject(obj)
 {
   for (var p in obj)
   {
@@ -99,7 +96,7 @@ function wipeObject(obj)
 };
 
 //copy methods from origin to target
-function extendClass( target, origin ) {
+global.extendClass = function extendClass( target, origin ) {
 	for(var i in origin) //copy class properties
 	{
 		if(target.hasOwnProperty(i))
@@ -131,7 +128,7 @@ function extendClass( target, origin ) {
 
 
 //simple http request
-function HttpRequest(url,params, callback, error, sync)
+global.HttpRequest = function HttpRequest(url,params, callback, error, sync)
 {
 	if(params)
 	{
@@ -186,7 +183,7 @@ Object.defineProperty( XMLHttpRequest.prototype, "fail", { enumerable: false, va
 }});
 
 
-function getFileExtension(url)
+global.getFileExtension = function getFileExtension(url)
 {
 	var question = url.indexOf("?");
 	if(question != -1)
@@ -200,7 +197,7 @@ function getFileExtension(url)
 
 //allows to pack several (text)files inside one single file (useful for shaders)
 //every file must start with \filename.ext  or /filename.ext
-function loadFileAtlas(url, callback, sync)
+global.loadFileAtlas = function loadFileAtlas(url, callback, sync)
 {
 	var deferred_callback = null;
 

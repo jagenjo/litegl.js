@@ -5,7 +5,7 @@
 // This is the object used to return hit test results. If there are no
 // arguments, the constructed argument represents a hit infinitely far
 // away.
-function HitTest(t, hit, normal) {
+global.HitTest = GL.HitTest = function HitTest(t, hit, normal) {
   this.t = arguments.length ? t : Number.MAX_VALUE;
   this.hit = hit;
   this.normal = normal;
@@ -39,7 +39,7 @@ HitTest.prototype = {
 //       var result = GL.Raytracer.hitTestSphere(
 //       tracer.eye, ray, new GL.Vector(0, 0, 0), 1);
 
-function Raytracer(viewmatrix, projectionmatrix, viewport) {
+global.Raytracer = GL.Raytracer = function Raytracer(viewmatrix, projectionmatrix, viewport) {
   viewport = viewport || gl.getViewport(); //gl.getParameter(gl.VIEWPORT);
   var m = viewmatrix;
   this.viewport = viewport;
@@ -173,5 +173,3 @@ Raytracer.hitTestTriangle = function(origin, ray, a, b, c) {
 
   return null;
 };
-
-GL.Raytracer = Raytracer;

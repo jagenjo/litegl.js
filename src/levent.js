@@ -4,7 +4,7 @@
 * @constructor
 */
 
-var LEvent = {
+global.LEvent = GL.LEvent = {
 	jQuery: false, //dispatch as jQuery events (enable this if you want to hook regular jQuery events to instances, they are dispatches as ":eventname" to avoid collisions)
 	//map: new Weakmap(),
 

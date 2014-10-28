@@ -6,10 +6,11 @@
 * @param {String} fragmentSource
 * @param {Object} macros (optional) precompiler macros to be applied when compiling
 */
-function Shader(vertexSource, fragmentSource, macros)
+global.Shader = GL.Shader = function Shader(vertexSource, fragmentSource, macros)
 {
 	//used to avoid problems with resources moving between different webgl context
-	this._context_id = gl.context_id; 
+	this._context_id = global.gl.context_id; 
+	var gl = this.gl = global.gl;
 
 	//expand macros
 	var extra_code = "";
@@ -18,8 +19,8 @@ function Shader(vertexSource, fragmentSource, macros)
 			extra_code += "#define " + i + " " + (macros[i] ? macros[i] : "") + "\n";
 
 	this.program = gl.createProgram();
-	gl.attachShader(this.program, Shader.compileSource(gl.VERTEX_SHADER, extra_code + vertexSource));
-	gl.attachShader(this.program, Shader.compileSource(gl.FRAGMENT_SHADER, extra_code + fragmentSource));
+	gl.attachShader(this.program, Shader.compileSource(gl.VERTEX_SHADER, extra_code + vertexSource),gl);
+	gl.attachShader(this.program, Shader.compileSource(gl.FRAGMENT_SHADER, extra_code + fragmentSource),gl);
 	gl.linkProgram(this.program);
 	if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
 		throw 'link error: ' + gl.getProgramInfoLog(this.program);
@@ -43,8 +44,9 @@ function Shader(vertexSource, fragmentSource, macros)
 * @param {String} source the source file to compile
 * @return {WebGLHandler}
 */
-Shader.compileSource = function(type, source)
+Shader.compileSource = function(type, source, gl)
 {
+	gl = gl || global.gl;
 	var shader = gl.createShader(type);
 	gl.shaderSource(shader, source);
 	gl.compileShader(shader);
@@ -61,6 +63,8 @@ Shader.compileSource = function(type, source)
 */
 Shader.prototype.extractShaderInfo = function()
 {
+	var gl = this.gl;
+
 	//extract uniforms info
 	for(var i = 0, l = gl.getProgramParameter(this.program, gl.ACTIVE_UNIFORMS); i < l; ++i)
 	{
@@ -236,7 +240,7 @@ Shader.fromURL = function( vs_path, fs_path, on_complete )
 Shader._temp_uniform = new Float32Array(16);
 
 Shader.prototype.uniforms = function(uniforms) {
-
+	var gl = this.gl;
 	gl.useProgram(this.program);
 
 	for (var name in uniforms) {
@@ -297,19 +301,21 @@ Shader.prototype.drawRange = function(mesh, mode, start, length)
 */
 
 //this two variables are a hack to avoid memory allocation on drawCalls
-Shader._temp_attribs_array = new Uint8Array(16);
-Shader._temp_attribs_array_zero = new Uint8Array(16); //should be filled with zeros always
+var temp_attribs_array = new Uint8Array(16);
+var temp_attribs_array_zero = new Uint8Array(16); //should be filled with zeros always
 
 Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_start, range_length)
 {
 	if(range_length == 0) return;
 
+	var gl = this.gl;
+
 	gl.useProgram(this.program); //this could be removed assuming every shader is called with some uniforms 
 
 	// enable attributes as necessary.
 	var length = 0;
-	var attribs_in_use = Shader._temp_attribs_array; //hack to avoid garbage
-	attribs_in_use.set( Shader._temp_attribs_array_zero ); //reset
+	var attribs_in_use = temp_attribs_array; //hack to avoid garbage
+	attribs_in_use.set( temp_attribs_array_zero ); //reset
 
 	for (var name in vertexBuffers)
 	{
@@ -496,8 +502,9 @@ Shader.prototype.toViewport = function(uniforms)
 * Returns a shader ready to render a quad in fullscreen, use with Mesh.getScreenQuad() mesh
 * @method Shader.getScreenShader
 */
-Shader.getScreenShader = function()
+Shader.getScreenShader = function(gl)
 {
+	gl = gl || global.gl;
 	var shader = gl.shaders[":screen"];
 	if(shader)
 		return shader;
@@ -509,8 +516,9 @@ Shader.getScreenShader = function()
 * shader must have: u_position, u_size, u_viewport, u_transform (mat3)
 * @method Shader.getQuadShader
 */
-Shader.getQuadShader = function()
+Shader.getQuadShader = function(gl)
 {
+	gl = gl || global.gl;
 	var shader = gl.shaders[":quad"];
 	if(shader)
 		return shader;
@@ -522,8 +530,9 @@ Shader.getQuadShader = function()
 * shader params are: vec2 u_offset, float u_intensity
 * @method Shader.getBlurShader
 */
-Shader.getBlurShader = function()
+Shader.getBlurShader = function(gl)
 {
+	gl = gl || global.gl;
 	var shader = gl.shaders[":blur"];
 	if(shader)
 		return shader;
@@ -556,8 +565,9 @@ Shader.getBlurShader = function()
 * params are vec2 u_viewportSize, mat4 u_iViewprojection
 * @method Shader.getFXAAShader
 */
-Shader.getFXAAShader = function()
+Shader.getFXAAShader = function(gl)
 {
+	gl = gl || global.gl;
 	var shader = gl.shaders[":fxaa"];
 	if(shader)
 		return shader;

@@ -1,14 +1,14 @@
 /* geometric utilities */
-var CLIP_INSIDE = 0;
-var CLIP_OUTSIDE = 1;
-var CLIP_OVERLAP = 2;
+global.CLIP_INSIDE = GL.CLIP_INSIDE = 0;
+global.CLIP_OUTSIDE = GL.CLIP_OUTSIDE = 1;
+global.CLIP_OVERLAP = GL.CLIP_OVERLAP = 2;
 
 /**
 * Computational geometry algorithms, is a static class
 * @class geo
 */
 
-var geo = {
+global.geo = {
 
 	/**
 	* Returns a float4 containing the info about a plane with normal N and that passes through point P
@@ -625,7 +625,7 @@ var geo = {
 * The bounding box is stored as center,halfsize,min,max,radius (total of 13 floats)
 * @class BBox
 */
-var BBox = {
+global.BBox = GL.BBox = {
 	center:0,
 	halfsize:3,
 	min:6,
@@ -871,12 +871,12 @@ var BBox = {
 	getRadius: function(bb) { return bb[12]; }	
 }
 
-function distanceToPlane(plane, point)
+global.distanceToPlane = GL.distanceToPlane = function distanceToPlane(plane, point)
 {
 	return vec3.dot(plane,point) + plane[3];
 }
 
-function planeBoxOverlap(plane, box)
+global.planeBoxOverlap = GL.planeBoxOverlap = function planeBoxOverlap(plane, box)
 {
 	var n = plane.subarray(0,3);
 	var d = plane[3];

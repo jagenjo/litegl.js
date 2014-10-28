@@ -6,24 +6,7 @@
 * @param {Mesh} mesh object containing vertices buffer (indices buffer optional)
 */
 
-function HitTest(t, hit, normal) {
-  this.t = arguments.length ? t : Number.MAX_VALUE;
-  this.hit = hit;
-  this.normal = normal;
-}
-
-HitTest.prototype = {
-  mergeWith: function(other) {
-    if (other.t > 0 && other.t < this.t) {
-      this.t = other.t;
-      this.hit = other.hit;
-      this.normal = other.normal;
-    }
-  }
-};
-
-
-function Octree(mesh)
+global.Octree = GL.Octree = function Octree(mesh)
 {
 	this.root = null;
 	this.total_depth = 0;
