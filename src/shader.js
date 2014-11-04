@@ -562,7 +562,7 @@ Shader.getBlurShader = function(gl)
 
 /**
 * Returns a shader to apply FXAA antialiasing
-* params are vec2 u_viewportSize, mat4 u_iViewprojection
+* params are vec2 u_viewportSize, mat4 u_iViewportSize
 * @method Shader.getFXAAShader
 */
 Shader.getFXAAShader = function(gl)
@@ -577,7 +577,7 @@ Shader.getFXAAShader = function(gl)
 			varying vec2 v_coord;\n\
 			uniform sampler2D u_texture;\n\
 			uniform vec2 u_viewportSize;\n\
-			uniform vec2 u_iViewprojection;\n\
+			uniform vec2 u_iViewportSize;\n\
 			#define FXAA_REDUCE_MIN   (1.0/ 128.0)\n\
 			#define FXAA_REDUCE_MUL   (1.0 / 8.0)\n\
 			#define FXAA_SPAN_MAX     8.0\n\
@@ -586,12 +586,12 @@ Shader.getFXAAShader = function(gl)
 			vec4 applyFXAA(sampler2D tex, vec2 fragCoord)\n\
 			{\n\
 				vec4 color = vec4(0.0);\n\
-				/*vec2 u_iViewprojection = vec2(1.0 / u_viewportSize.x, 1.0 / u_viewportSize.y);*/\n\
-				vec3 rgbNW = texture2D(tex, (fragCoord + vec2(-1.0, -1.0)) * u_iViewprojection).xyz;\n\
-				vec3 rgbNE = texture2D(tex, (fragCoord + vec2(1.0, -1.0)) * u_iViewprojection).xyz;\n\
-				vec3 rgbSW = texture2D(tex, (fragCoord + vec2(-1.0, 1.0)) * u_iViewprojection).xyz;\n\
-				vec3 rgbSE = texture2D(tex, (fragCoord + vec2(1.0, 1.0)) * u_iViewprojection).xyz;\n\
-				vec3 rgbM  = texture2D(tex, fragCoord  * u_iViewprojection).xyz;\n\
+				/*vec2 u_iViewportSize = vec2(1.0 / u_viewportSize.x, 1.0 / u_viewportSize.y);*/\n\
+				vec3 rgbNW = texture2D(tex, (fragCoord + vec2(-1.0, -1.0)) * u_iViewportSize).xyz;\n\
+				vec3 rgbNE = texture2D(tex, (fragCoord + vec2(1.0, -1.0)) * u_iViewportSize).xyz;\n\
+				vec3 rgbSW = texture2D(tex, (fragCoord + vec2(-1.0, 1.0)) * u_iViewportSize).xyz;\n\
+				vec3 rgbSE = texture2D(tex, (fragCoord + vec2(1.0, 1.0)) * u_iViewportSize).xyz;\n\
+				vec3 rgbM  = texture2D(tex, fragCoord  * u_iViewportSize).xyz;\n\
 				vec3 luma = vec3(0.299, 0.587, 0.114);\n\
 				float lumaNW = dot(rgbNW, luma);\n\
 				float lumaNE = dot(rgbNE, luma);\n\
@@ -608,12 +608,12 @@ Shader.getFXAAShader = function(gl)
 				float dirReduce = max((lumaNW + lumaNE + lumaSW + lumaSE) * (0.25 * FXAA_REDUCE_MUL), FXAA_REDUCE_MIN);\n\
 				\n\
 				float rcpDirMin = 1.0 / (min(abs(dir.x), abs(dir.y)) + dirReduce);\n\
-				dir = min(vec2(FXAA_SPAN_MAX, FXAA_SPAN_MAX), max(vec2(-FXAA_SPAN_MAX, -FXAA_SPAN_MAX), dir * rcpDirMin)) * u_iViewprojection;\n\
+				dir = min(vec2(FXAA_SPAN_MAX, FXAA_SPAN_MAX), max(vec2(-FXAA_SPAN_MAX, -FXAA_SPAN_MAX), dir * rcpDirMin)) * u_iViewportSize;\n\
 				\n\
-				vec3 rgbA = 0.5 * (texture2D(tex, fragCoord * u_iViewprojection + dir * (1.0 / 3.0 - 0.5)).xyz + \n\
-					texture2D(tex, fragCoord * u_iViewprojection + dir * (2.0 / 3.0 - 0.5)).xyz);\n\
-				vec3 rgbB = rgbA * 0.5 + 0.25 * (texture2D(tex, fragCoord * u_iViewprojection + dir * -0.5).xyz + \n\
-					texture2D(tex, fragCoord * u_iViewprojection + dir * 0.5).xyz);\n\
+				vec3 rgbA = 0.5 * (texture2D(tex, fragCoord * u_iViewportSize + dir * (1.0 / 3.0 - 0.5)).xyz + \n\
+					texture2D(tex, fragCoord * u_iViewportSize + dir * (2.0 / 3.0 - 0.5)).xyz);\n\
+				vec3 rgbB = rgbA * 0.5 + 0.25 * (texture2D(tex, fragCoord * u_iViewportSize + dir * -0.5).xyz + \n\
+					texture2D(tex, fragCoord * u_iViewportSize + dir * 0.5).xyz);\n\
 				\n\
 				return vec4(rgbA,1.0);\n\
 				float lumaB = dot(rgbB, luma);\n\

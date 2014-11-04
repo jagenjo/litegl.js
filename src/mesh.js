@@ -1133,7 +1133,7 @@ Mesh.cylinder = function(options) {
 /**
 * Returns a sphere mesh 
 * @method Mesh.sphere
-* @param {Object} options valid options: radius, lat, long
+* @param {Object} options valid options: radius, lat, long, hemi
 */
 Mesh.sphere = function(options) {
 	options = options || {};
@@ -1145,10 +1145,10 @@ Mesh.sphere = function(options) {
  var normalData = new Float32Array( (latitudeBands+1)*(longitudeBands+1)*3 );
  var textureCoordData = new Float32Array( (latitudeBands+1)*(longitudeBands+1)*2 );
  var indexData = new Uint16Array( latitudeBands*longitudeBands*6 );
-
+ var latRange = options.hemi ? Math.PI * 0.5 : Math.PI;
  var i = 0, iuv = 0;
  for (var latNumber = 0; latNumber <= latitudeBands; latNumber++) {
-   var theta = latNumber * Math.PI / latitudeBands;
+   var theta = latNumber * latRange / latitudeBands;
    var sinTheta = Math.sin(theta);
    var cosTheta = Math.cos(theta);
 

@@ -63,7 +63,7 @@ global.EPSILON = 0.000001;
 * @param {v} number
 * @return {boolean}
 */
-global.isPowerOfTwo = function isPowerOfTwo(v)
+global.isPowerOfTwo = GL.isPowerOfTwo = function isPowerOfTwo(v)
 {
 	return ((Math.log(v) / Math.log(2)) % 1) == 0;
 }
@@ -77,7 +77,7 @@ if(typeof(performance) != "undefined")
   global.getTime = performance.now.bind(performance);
 else
   global.getTime = Date.now.bind( Date );
-
+GL.getTime = global.getTime;
 
 
 global.isFunction = function isFunction(obj) {
@@ -110,14 +110,14 @@ global.regexMap = function regexMap(regex, text, callback) {
   }
 }
 
-global.createCanvas = function createCanvas(width, height) {
+global.createCanvas = GL.createCanvas = function createCanvas(width, height) {
     var canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;
     return canvas;
 }
 
-global.cloneCanvas = function cloneCanvas(c) {
+global.cloneCanvas = GL.cloneCanvas = function cloneCanvas(c) {
     var canvas = document.createElement('canvas');
     canvas.width = c.width;
     canvas.height = c.height;
@@ -182,7 +182,7 @@ global.extendClass = function extendClass( target, origin ) {
 
 
 //simple http request
-global.HttpRequest = function HttpRequest(url,params, callback, error, sync)
+global.HttpRequest = GL.HttpRequest = function HttpRequest(url,params, callback, error, sync)
 {
 	if(params)
 	{
@@ -251,7 +251,7 @@ global.getFileExtension = function getFileExtension(url)
 
 //allows to pack several (text)files inside one single file (useful for shaders)
 //every file must start with \filename.ext  or /filename.ext
-global.loadFileAtlas = function loadFileAtlas(url, callback, sync)
+global.loadFileAtlas = GL.loadFileAtlas = function loadFileAtlas(url, callback, sync)
 {
 	var deferred_callback = null;
 
@@ -2518,7 +2518,7 @@ Mesh.cylinder = function(options) {
 /**
 * Returns a sphere mesh 
 * @method Mesh.sphere
-* @param {Object} options valid options: radius, lat, long
+* @param {Object} options valid options: radius, lat, long, hemi
 */
 Mesh.sphere = function(options) {
 	options = options || {};
@@ -2530,10 +2530,10 @@ Mesh.sphere = function(options) {
  var normalData = new Float32Array( (latitudeBands+1)*(longitudeBands+1)*3 );
  var textureCoordData = new Float32Array( (latitudeBands+1)*(longitudeBands+1)*2 );
  var indexData = new Uint16Array( latitudeBands*longitudeBands*6 );
-
+ var latRange = options.hemi ? Math.PI * 0.5 : Math.PI;
  var i = 0, iuv = 0;
  for (var latNumber = 0; latNumber <= latitudeBands; latNumber++) {
-   var theta = latNumber * Math.PI / latitudeBands;
+   var theta = latNumber * latRange / latitudeBands;
    var sinTheta = Math.sin(theta);
    var cosTheta = Math.cos(theta);
 
@@ -3034,9 +3034,9 @@ Texture.drawToColorAndDepth = function(color_texture, depth_texture, callback) {
 
 	var v = gl.getViewport();
 
-	Texture.framebuffer = Texture.framebuffer || gl.createFramebuffer();
+	 gl._framebuffer =  gl._framebuffer || gl.createFramebuffer();
 
-	gl.bindFramebuffer(gl.FRAMEBUFFER, Texture.framebuffer);
+	gl.bindFramebuffer(gl.FRAMEBUFFER,  gl._framebuffer);
 
 	gl.viewport(0, 0, color_texture.width, color_texture.height);
 
@@ -3160,13 +3160,14 @@ Texture.prototype.toCanvas = function(canvas)
 * @param {Number} offsety scalar that multiplies the offset when fetching pixels vertically (default 1)
 * @param {Number} intensity scalar that multiplies the result (default 1)
 * @param {Texture} temp_texture blur needs a temp texture, if not supplied it will create a new one each time!
+* @param {Texture} output_texture [optional] if not passed the output is the own texture
 * @return {Texture} returns the temp_texture in case you want to reuse it
 */
-Texture.prototype.applyBlur = function(offsetx, offsety, intensity, temp_texture)
+Texture.prototype.applyBlur = function(offsetx, offsety, intensity, temp_texture, output_texture)
 {
 	var self = this;
 	var gl = this.gl;
-	var shader = Shader.getBlurShader();
+	var shader = GL.Shader.getBlurShader();
 	if(!temp_texture)
 		temp_texture = new GL.Texture(this.width, this.height, this.getProperties() );
 
@@ -3179,7 +3180,8 @@ Texture.prototype.applyBlur = function(offsetx, offsety, intensity, temp_texture
 		self.toViewport(shader, {u_intensity: intensity, u_offset: [0, offsety ] });
 	});	
 
-	this.drawTo( function() {
+	output_texture = output_texture || this;
+	output_texture.drawTo( function() {
 		temp_texture.toViewport(shader, {u_intensity: intensity, u_offset: [offsetx, 0] });
 	});	
 	return temp_texture;
@@ -3201,6 +3203,8 @@ Texture.fromURL = function(url, options, on_complete, gl) {
 	options = options || {};
 	var texture = options.texture || new GL.Texture(1, 1, options, gl);
 
+	if(url.length < 64)
+		texture.url = url;
 	texture.bind();
 	Texture.setUploadOptions(options);
 	var default_color = options.temp_color || [0,0,0,255];
@@ -3250,7 +3254,7 @@ Texture.fromImage = function(image, options) {
 	var texture = options.texture || new GL.Texture(image.width, image.height, options);
 	texture.bind();
 	texture.uploadImage(image, options);
-	if (options.minFilter && options.minFilter != gl.NEAREST && options.minFilter != gl.LINEAR) {
+	if (GL.isPowerOfTwo(texture.width) && GL.isPowerOfTwo(texture.height) && options.minFilter && options.minFilter != gl.NEAREST && options.minFilter != gl.LINEAR) {
 		texture.bind();
 		gl.generateMipmap(texture.texture_type);
 		texture.has_mipmaps = true;
@@ -4172,7 +4176,7 @@ Shader.getBlurShader = function(gl)
 
 /**
 * Returns a shader to apply FXAA antialiasing
-* params are vec2 u_viewportSize, mat4 u_iViewprojection
+* params are vec2 u_viewportSize, mat4 u_iViewportSize
 * @method Shader.getFXAAShader
 */
 Shader.getFXAAShader = function(gl)
@@ -4187,7 +4191,7 @@ Shader.getFXAAShader = function(gl)
 			varying vec2 v_coord;\n\
 			uniform sampler2D u_texture;\n\
 			uniform vec2 u_viewportSize;\n\
-			uniform vec2 u_iViewprojection;\n\
+			uniform vec2 u_iViewportSize;\n\
 			#define FXAA_REDUCE_MIN   (1.0/ 128.0)\n\
 			#define FXAA_REDUCE_MUL   (1.0 / 8.0)\n\
 			#define FXAA_SPAN_MAX     8.0\n\
@@ -4196,12 +4200,12 @@ Shader.getFXAAShader = function(gl)
 			vec4 applyFXAA(sampler2D tex, vec2 fragCoord)\n\
 			{\n\
 				vec4 color = vec4(0.0);\n\
-				/*vec2 u_iViewprojection = vec2(1.0 / u_viewportSize.x, 1.0 / u_viewportSize.y);*/\n\
-				vec3 rgbNW = texture2D(tex, (fragCoord + vec2(-1.0, -1.0)) * u_iViewprojection).xyz;\n\
-				vec3 rgbNE = texture2D(tex, (fragCoord + vec2(1.0, -1.0)) * u_iViewprojection).xyz;\n\
-				vec3 rgbSW = texture2D(tex, (fragCoord + vec2(-1.0, 1.0)) * u_iViewprojection).xyz;\n\
-				vec3 rgbSE = texture2D(tex, (fragCoord + vec2(1.0, 1.0)) * u_iViewprojection).xyz;\n\
-				vec3 rgbM  = texture2D(tex, fragCoord  * u_iViewprojection).xyz;\n\
+				/*vec2 u_iViewportSize = vec2(1.0 / u_viewportSize.x, 1.0 / u_viewportSize.y);*/\n\
+				vec3 rgbNW = texture2D(tex, (fragCoord + vec2(-1.0, -1.0)) * u_iViewportSize).xyz;\n\
+				vec3 rgbNE = texture2D(tex, (fragCoord + vec2(1.0, -1.0)) * u_iViewportSize).xyz;\n\
+				vec3 rgbSW = texture2D(tex, (fragCoord + vec2(-1.0, 1.0)) * u_iViewportSize).xyz;\n\
+				vec3 rgbSE = texture2D(tex, (fragCoord + vec2(1.0, 1.0)) * u_iViewportSize).xyz;\n\
+				vec3 rgbM  = texture2D(tex, fragCoord  * u_iViewportSize).xyz;\n\
 				vec3 luma = vec3(0.299, 0.587, 0.114);\n\
 				float lumaNW = dot(rgbNW, luma);\n\
 				float lumaNE = dot(rgbNE, luma);\n\
@@ -4218,12 +4222,12 @@ Shader.getFXAAShader = function(gl)
 				float dirReduce = max((lumaNW + lumaNE + lumaSW + lumaSE) * (0.25 * FXAA_REDUCE_MUL), FXAA_REDUCE_MIN);\n\
 				\n\
 				float rcpDirMin = 1.0 / (min(abs(dir.x), abs(dir.y)) + dirReduce);\n\
-				dir = min(vec2(FXAA_SPAN_MAX, FXAA_SPAN_MAX), max(vec2(-FXAA_SPAN_MAX, -FXAA_SPAN_MAX), dir * rcpDirMin)) * u_iViewprojection;\n\
+				dir = min(vec2(FXAA_SPAN_MAX, FXAA_SPAN_MAX), max(vec2(-FXAA_SPAN_MAX, -FXAA_SPAN_MAX), dir * rcpDirMin)) * u_iViewportSize;\n\
 				\n\
-				vec3 rgbA = 0.5 * (texture2D(tex, fragCoord * u_iViewprojection + dir * (1.0 / 3.0 - 0.5)).xyz + \n\
-					texture2D(tex, fragCoord * u_iViewprojection + dir * (2.0 / 3.0 - 0.5)).xyz);\n\
-				vec3 rgbB = rgbA * 0.5 + 0.25 * (texture2D(tex, fragCoord * u_iViewprojection + dir * -0.5).xyz + \n\
-					texture2D(tex, fragCoord * u_iViewprojection + dir * 0.5).xyz);\n\
+				vec3 rgbA = 0.5 * (texture2D(tex, fragCoord * u_iViewportSize + dir * (1.0 / 3.0 - 0.5)).xyz + \n\
+					texture2D(tex, fragCoord * u_iViewportSize + dir * (2.0 / 3.0 - 0.5)).xyz);\n\
+				vec3 rgbB = rgbA * 0.5 + 0.25 * (texture2D(tex, fragCoord * u_iViewportSize + dir * -0.5).xyz + \n\
+					texture2D(tex, fragCoord * u_iViewportSize + dir * 0.5).xyz);\n\
 				\n\
 				return vec4(rgbA,1.0);\n\
 				float lumaB = dot(rgbB, luma);\n\
@@ -4339,17 +4343,57 @@ GL.create = function(options) {
 
 		//loop only if browser tab visible
 		function loop() {
+			if(gl.destroyed) //to stop rendering once it is destroyed
+				return;
+
 			post(loop); //do it first, in case it crashes
 
 			var now = getTime();
 			var dt = (now - time) / 1000;
 
 			if (context.onupdate) context.onupdate(dt);
-			if (context.ondraw) context.ondraw();
+			if (context.ondraw)
+			{
+				//make sure the ondraw is called using this gl context (in case there is more than one)
+				var old_gl = global.gl;
+				global.gl = context;
+				//call ondraw
+				context.ondraw();
+				//restore old context
+				global.gl = old_gl;
+			}
 			time = now;
 		}
 		post(loop); //launch main loop
 	}	
+
+	//store binded to be able to remove them if destroyed
+	/*
+	var _binded_events = [];
+	function addEvent(object, type, callback)
+	{
+		_binded_events.push(object,type,callback);
+	}
+	*/
+
+	/**
+	* Destroy this WebGL context (removes also the Canvas from the DOM)
+	* @method gl.destroy
+	*/
+	gl.destroy = function() {
+		//unbind global events
+		if(onkey_handler)
+		{
+			document.removeEventListener("keydown", onkey_handler );
+			document.removeEventListener("keyup", onkey_handler );
+		}
+
+		if(this.canvas.parentNode)
+			this.canvas.parentNode.removeChild(this.canvas);
+		this.destroyed = true;
+		if(global.gl == this)
+			global.gl = null;
+	}
 
 	/**
 	* Tells the system to capture mouse events on the canvas. This will trigger onmousedown, onmousemove, onmouseup, onmousewheel callbacks in the canvas.
@@ -4474,11 +4518,17 @@ GL.create = function(options) {
 	* @method gl.captureKeys
 	* @param {boolean} prevent_default prevent default behaviour (like scroll on the web, etc)
 	*/
+	var onkey_handler = null;
 	gl.captureKeys = function( prevent_default ) {
+		if(onkey_handler) return;
 		gl.keys = {};
-		document.addEventListener("keydown", function(e) { onkey(e, prevent_default); });
-		document.addEventListener("keyup", function(e) { onkey(e, prevent_default); });
+		document.addEventListener("keydown", inner );
+		document.addEventListener("keyup", inner );
+		function inner(e) { onkey(e, prevent_default); }
+		onkey_handler = inner;
 	}
+
+
 
 	function onkey(e, prevent_default)
 	{

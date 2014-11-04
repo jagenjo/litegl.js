@@ -9,7 +9,7 @@ global.EPSILON = 0.000001;
 * @param {v} number
 * @return {boolean}
 */
-global.isPowerOfTwo = function isPowerOfTwo(v)
+global.isPowerOfTwo = GL.isPowerOfTwo = function isPowerOfTwo(v)
 {
 	return ((Math.log(v) / Math.log(2)) % 1) == 0;
 }
@@ -23,7 +23,7 @@ if(typeof(performance) != "undefined")
   global.getTime = performance.now.bind(performance);
 else
   global.getTime = Date.now.bind( Date );
-
+GL.getTime = global.getTime;
 
 
 global.isFunction = function isFunction(obj) {
@@ -56,14 +56,14 @@ global.regexMap = function regexMap(regex, text, callback) {
   }
 }
 
-global.createCanvas = function createCanvas(width, height) {
+global.createCanvas = GL.createCanvas = function createCanvas(width, height) {
     var canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;
     return canvas;
 }
 
-global.cloneCanvas = function cloneCanvas(c) {
+global.cloneCanvas = GL.cloneCanvas = function cloneCanvas(c) {
     var canvas = document.createElement('canvas');
     canvas.width = c.width;
     canvas.height = c.height;
@@ -128,7 +128,7 @@ global.extendClass = function extendClass( target, origin ) {
 
 
 //simple http request
-global.HttpRequest = function HttpRequest(url,params, callback, error, sync)
+global.HttpRequest = GL.HttpRequest = function HttpRequest(url,params, callback, error, sync)
 {
 	if(params)
 	{
@@ -197,7 +197,7 @@ global.getFileExtension = function getFileExtension(url)
 
 //allows to pack several (text)files inside one single file (useful for shaders)
 //every file must start with \filename.ext  or /filename.ext
-global.loadFileAtlas = function loadFileAtlas(url, callback, sync)
+global.loadFileAtlas = GL.loadFileAtlas = function loadFileAtlas(url, callback, sync)
 {
 	var deferred_callback = null;
 

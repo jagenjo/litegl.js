@@ -96,17 +96,57 @@ GL.create = function(options) {
 
 		//loop only if browser tab visible
 		function loop() {
+			if(gl.destroyed) //to stop rendering once it is destroyed
+				return;
+
 			post(loop); //do it first, in case it crashes
 
 			var now = getTime();
 			var dt = (now - time) / 1000;
 
 			if (context.onupdate) context.onupdate(dt);
-			if (context.ondraw) context.ondraw();
+			if (context.ondraw)
+			{
+				//make sure the ondraw is called using this gl context (in case there is more than one)
+				var old_gl = global.gl;
+				global.gl = context;
+				//call ondraw
+				context.ondraw();
+				//restore old context
+				global.gl = old_gl;
+			}
 			time = now;
 		}
 		post(loop); //launch main loop
 	}	
+
+	//store binded to be able to remove them if destroyed
+	/*
+	var _binded_events = [];
+	function addEvent(object, type, callback)
+	{
+		_binded_events.push(object,type,callback);
+	}
+	*/
+
+	/**
+	* Destroy this WebGL context (removes also the Canvas from the DOM)
+	* @method gl.destroy
+	*/
+	gl.destroy = function() {
+		//unbind global events
+		if(onkey_handler)
+		{
+			document.removeEventListener("keydown", onkey_handler );
+			document.removeEventListener("keyup", onkey_handler );
+		}
+
+		if(this.canvas.parentNode)
+			this.canvas.parentNode.removeChild(this.canvas);
+		this.destroyed = true;
+		if(global.gl == this)
+			global.gl = null;
+	}
 
 	/**
 	* Tells the system to capture mouse events on the canvas. This will trigger onmousedown, onmousemove, onmouseup, onmousewheel callbacks in the canvas.
@@ -231,11 +271,17 @@ GL.create = function(options) {
 	* @method gl.captureKeys
 	* @param {boolean} prevent_default prevent default behaviour (like scroll on the web, etc)
 	*/
+	var onkey_handler = null;
 	gl.captureKeys = function( prevent_default ) {
+		if(onkey_handler) return;
 		gl.keys = {};
-		document.addEventListener("keydown", function(e) { onkey(e, prevent_default); });
-		document.addEventListener("keyup", function(e) { onkey(e, prevent_default); });
+		document.addEventListener("keydown", inner );
+		document.addEventListener("keyup", inner );
+		function inner(e) { onkey(e, prevent_default); }
+		onkey_handler = inner;
 	}
+
+
 
 	function onkey(e, prevent_default)
 	{

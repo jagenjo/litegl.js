@@ -300,9 +300,9 @@ Texture.drawToColorAndDepth = function(color_texture, depth_texture, callback) {
 
 	var v = gl.getViewport();
 
-	Texture.framebuffer = Texture.framebuffer || gl.createFramebuffer();
+	 gl._framebuffer =  gl._framebuffer || gl.createFramebuffer();
 
-	gl.bindFramebuffer(gl.FRAMEBUFFER, Texture.framebuffer);
+	gl.bindFramebuffer(gl.FRAMEBUFFER,  gl._framebuffer);
 
 	gl.viewport(0, 0, color_texture.width, color_texture.height);
 
@@ -426,13 +426,14 @@ Texture.prototype.toCanvas = function(canvas)
 * @param {Number} offsety scalar that multiplies the offset when fetching pixels vertically (default 1)
 * @param {Number} intensity scalar that multiplies the result (default 1)
 * @param {Texture} temp_texture blur needs a temp texture, if not supplied it will create a new one each time!
+* @param {Texture} output_texture [optional] if not passed the output is the own texture
 * @return {Texture} returns the temp_texture in case you want to reuse it
 */
-Texture.prototype.applyBlur = function(offsetx, offsety, intensity, temp_texture)
+Texture.prototype.applyBlur = function(offsetx, offsety, intensity, temp_texture, output_texture)
 {
 	var self = this;
 	var gl = this.gl;
-	var shader = Shader.getBlurShader();
+	var shader = GL.Shader.getBlurShader();
 	if(!temp_texture)
 		temp_texture = new GL.Texture(this.width, this.height, this.getProperties() );
 
@@ -445,7 +446,8 @@ Texture.prototype.applyBlur = function(offsetx, offsety, intensity, temp_texture
 		self.toViewport(shader, {u_intensity: intensity, u_offset: [0, offsety ] });
 	});	
 
-	this.drawTo( function() {
+	output_texture = output_texture || this;
+	output_texture.drawTo( function() {
 		temp_texture.toViewport(shader, {u_intensity: intensity, u_offset: [offsetx, 0] });
 	});	
 	return temp_texture;
@@ -467,6 +469,8 @@ Texture.fromURL = function(url, options, on_complete, gl) {
 	options = options || {};
 	var texture = options.texture || new GL.Texture(1, 1, options, gl);
 
+	if(url.length < 64)
+		texture.url = url;
 	texture.bind();
 	Texture.setUploadOptions(options);
 	var default_color = options.temp_color || [0,0,0,255];
@@ -516,7 +520,7 @@ Texture.fromImage = function(image, options) {
 	var texture = options.texture || new GL.Texture(image.width, image.height, options);
 	texture.bind();
 	texture.uploadImage(image, options);
-	if (options.minFilter && options.minFilter != gl.NEAREST && options.minFilter != gl.LINEAR) {
+	if (GL.isPowerOfTwo(texture.width) && GL.isPowerOfTwo(texture.height) && options.minFilter && options.minFilter != gl.NEAREST && options.minFilter != gl.LINEAR) {
 		texture.bind();
 		gl.generateMipmap(texture.texture_type);
 		texture.has_mipmaps = true;
