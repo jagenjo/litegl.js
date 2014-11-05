@@ -40,12 +40,6 @@ Attach to DOM
 document.getElementById("mycontainer").appendChild( gl.canvas )
 ```
 
-Hook events
-```js
-gl.ondraw = function() { ... }
-gl.onupdate = function(dt) { ... }
-```
-
 Get user input
 ```js
 gl.captureMouse();
@@ -57,18 +51,31 @@ gl.onkey = function(e) { ... }
 
 Compile shader
 ```js
-var shader = new Shader( vertex_shader_code, fragment_shader_code);
+var shader = new GL.Shader( vertex_shader_code, fragment_shader_code );
 ```
 
 Create Mesh
 ```js
-var mesh = Mesh.cube();
+var mesh = new GL.Mesh({vertices:[-1,-1,0, 1,-1,0, 0,1,0], coords:[0,0, 1,0, 0.5,1]});
 ```
+
+Load a texture
+```js
+var texture = GL.Texture.fromURL("image.jpg", { minFilter: gl.LINEAR_MIPMAP_LINEAR });
+```
+
 
 Render
 ```js
-shader.uniforms( my_uniforms ).draw( mesh );
+gl.ondraw = function() {
+	texture.bind(0);
+	var my_uniforms = { u_texture: 0, u_color: [1,1,1,1] };
+	shader.uniforms( my_uniforms ).draw( mesh );
+}
+
+gl.animate(); //calls the requestAnimFrame constantly, which will call ondraw
 ```
+
 
 Documentation
 -------------
