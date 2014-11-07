@@ -93,6 +93,7 @@ global.Texture = GL.Texture = function Texture(width, height, options, gl) {
 //used for render to FBOs
 Texture.framebuffer = null;
 Texture.renderbuffer = null;
+Texture.loading_color = new Uint8Array([0,0,0,0]);
 
 
 Texture.prototype.getProperties = function()
@@ -108,6 +109,12 @@ Texture.prototype.getProperties = function()
 		wrapS: this.wrapS,
 		wrapT: this.wrapT
 	};
+}
+
+//textures cannot be stored in JSON
+Texture.prototype.toJSON = function()
+{
+	return "";
 }
 
 
@@ -473,7 +480,7 @@ Texture.fromURL = function(url, options, on_complete, gl) {
 		texture.url = url;
 	texture.bind();
 	Texture.setUploadOptions(options);
-	var default_color = options.temp_color || [0,0,0,255];
+	var default_color = options.temp_color || Texture.loading_color;
 	var temp_color = options.type == gl.FLOAT ? new Float32Array(default_color) : new Uint8Array(default_color);
 	gl.texImage2D(gl.TEXTURE_2D, 0, texture.format, texture.width, texture.height, 0, texture.format, texture.type, temp_color );
 	gl.bindTexture(texture.texture_type, null); //disable

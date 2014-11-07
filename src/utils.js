@@ -170,17 +170,19 @@ global.HttpRequest = GL.HttpRequest = function HttpRequest(url,params, callback,
 }
 
 //cheap simple promises
-Object.defineProperty( XMLHttpRequest.prototype, "done", { enumerable: false, value: function(callback)
-{
-  LEvent.bind(this,"done", function(e,err) { callback(err); } );
-  return this;
-}});
+if( !XMLHttpRequest.prototype.hasOwnProperty("done") )
+	Object.defineProperty( XMLHttpRequest.prototype, "done", { enumerable: false, value: function(callback)
+	{
+	  LEvent.bind(this,"done", function(e,err) { callback(err); } );
+	  return this;
+	}});
 
-Object.defineProperty( XMLHttpRequest.prototype, "fail", { enumerable: false, value: function(callback)
-{
-  LEvent.bind(this,"fail", function(e,err) { callback(err); } );
-  return this;
-}});
+if( !XMLHttpRequest.prototype.hasOwnProperty("fail") )
+	Object.defineProperty( XMLHttpRequest.prototype, "fail", { enumerable: false, value: function(callback)
+	{
+	  LEvent.bind(this,"fail", function(e,err) { callback(err); } );
+	  return this;
+	}});
 
 
 global.getFileExtension = function getFileExtension(url)
@@ -218,7 +220,7 @@ global.loadFileAtlas = GL.loadFileAtlas = function loadFileAtlas(url, callback, 
 		var files = {};
 		var file = [];
 		var filename = "";
-		for(var i in lines)
+		for(var i = 0, l = lines.length; i < l; i++)
 		{
 			var line = lines[i].trim();
 			if(!line.length)

@@ -618,3 +618,6 @@ var DDS = (function () {
     };
 
 })();
+
+if(typeof(global) != "undefined")
+	global.DDS = DDS;

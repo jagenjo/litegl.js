@@ -52,7 +52,7 @@ GL.Buffer.prototype.forEach = function(callback)
 	var d = this.data;
 	for (var i = 0, s = this.spacing, l = d.length; i < l; i += s)
 	{
-		callback(d.subarray(i,i+s));
+		callback(d.subarray(i,i+s),i);
 	}
 	return this; //to concatenate
 }
@@ -308,7 +308,7 @@ Mesh.prototype.createVertexBuffer = function(name, attribute, buffer_spacing, bu
 	{
 		var num = this.getNumVertices();
 		if(!num)
-			throw("Cannot create an empty buffer in a mesh without vertices (vertices are needed to now the size)");
+			throw("Cannot create an empty buffer in a mesh without vertices (vertices are needed to know the size)");
 		buffer_data = new Float32Array(num * buffer_spacing);
 	}
 
@@ -452,6 +452,13 @@ Mesh.prototype.generateMetadata = function()
 	metadata.indexed = !!this.metadata.faces;
 	this.metadata = metadata;
 }
+
+//Meshes cannot be stored in JSON
+Mesh.prototype.toJSON = function()
+{
+	return "";
+}
+
 
 //never tested
 /*
@@ -1161,7 +1168,7 @@ Mesh.sphere = function(options) {
      var y = cosTheta;
      var z = sinPhi * sinTheta;
      var u = 1- (longNumber / longitudeBands);
-     var v = 1 - latNumber / latitudeBands;
+     var v = (1 - latNumber / latitudeBands);
 
      vertexPositionData.set([radius * x,radius * y,radius * z],i);
      normalData.set([x,y,z],i);

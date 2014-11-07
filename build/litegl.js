@@ -224,17 +224,19 @@ global.HttpRequest = GL.HttpRequest = function HttpRequest(url,params, callback,
 }
 
 //cheap simple promises
-Object.defineProperty( XMLHttpRequest.prototype, "done", { enumerable: false, value: function(callback)
-{
-  LEvent.bind(this,"done", function(e,err) { callback(err); } );
-  return this;
-}});
+if( !XMLHttpRequest.prototype.hasOwnProperty("done") )
+	Object.defineProperty( XMLHttpRequest.prototype, "done", { enumerable: false, value: function(callback)
+	{
+	  LEvent.bind(this,"done", function(e,err) { callback(err); } );
+	  return this;
+	}});
 
-Object.defineProperty( XMLHttpRequest.prototype, "fail", { enumerable: false, value: function(callback)
-{
-  LEvent.bind(this,"fail", function(e,err) { callback(err); } );
-  return this;
-}});
+if( !XMLHttpRequest.prototype.hasOwnProperty("fail") )
+	Object.defineProperty( XMLHttpRequest.prototype, "fail", { enumerable: false, value: function(callback)
+	{
+	  LEvent.bind(this,"fail", function(e,err) { callback(err); } );
+	  return this;
+	}});
 
 
 global.getFileExtension = function getFileExtension(url)
@@ -272,7 +274,7 @@ global.loadFileAtlas = GL.loadFileAtlas = function loadFileAtlas(url, callback, 
 		var files = {};
 		var file = [];
 		var filename = "";
-		for(var i in lines)
+		for(var i = 0, l = lines.length; i < l; i++)
 		{
 			var line = lines[i].trim();
 			if(!line.length)
@@ -926,6 +928,10 @@ var DDS = (function () {
     };
 
 })();
+
+if(typeof(global) != "undefined")
+	global.DDS = DDS;
+
 /* this file adds some extra functions to gl-matrix library */
 if(typeof(glMatrix) == "undefined")
 	throw("You must include glMatrix on your project");
@@ -1437,7 +1443,7 @@ GL.Buffer.prototype.forEach = function(callback)
 	var d = this.data;
 	for (var i = 0, s = this.spacing, l = d.length; i < l; i += s)
 	{
-		callback(d.subarray(i,i+s));
+		callback(d.subarray(i,i+s),i);
 	}
 	return this; //to concatenate
 }
@@ -1693,7 +1699,7 @@ Mesh.prototype.createVertexBuffer = function(name, attribute, buffer_spacing, bu
 	{
 		var num = this.getNumVertices();
 		if(!num)
-			throw("Cannot create an empty buffer in a mesh without vertices (vertices are needed to now the size)");
+			throw("Cannot create an empty buffer in a mesh without vertices (vertices are needed to know the size)");
 		buffer_data = new Float32Array(num * buffer_spacing);
 	}
 
@@ -1837,6 +1843,13 @@ Mesh.prototype.generateMetadata = function()
 	metadata.indexed = !!this.metadata.faces;
 	this.metadata = metadata;
 }
+
+//Meshes cannot be stored in JSON
+Mesh.prototype.toJSON = function()
+{
+	return "";
+}
+
 
 //never tested
 /*
@@ -2546,7 +2559,7 @@ Mesh.sphere = function(options) {
      var y = cosTheta;
      var z = sinPhi * sinTheta;
      var u = 1- (longNumber / longitudeBands);
-     var v = 1 - latNumber / latitudeBands;
+     var v = (1 - latNumber / latitudeBands);
 
      vertexPositionData.set([radius * x,radius * y,radius * z],i);
      normalData.set([x,y,z],i);
@@ -2827,6 +2840,7 @@ global.Texture = GL.Texture = function Texture(width, height, options, gl) {
 //used for render to FBOs
 Texture.framebuffer = null;
 Texture.renderbuffer = null;
+Texture.loading_color = new Uint8Array([0,0,0,0]);
 
 
 Texture.prototype.getProperties = function()
@@ -2842,6 +2856,12 @@ Texture.prototype.getProperties = function()
 		wrapS: this.wrapS,
 		wrapT: this.wrapT
 	};
+}
+
+//textures cannot be stored in JSON
+Texture.prototype.toJSON = function()
+{
+	return "";
 }
 
 
@@ -3207,7 +3227,7 @@ Texture.fromURL = function(url, options, on_complete, gl) {
 		texture.url = url;
 	texture.bind();
 	Texture.setUploadOptions(options);
-	var default_color = options.temp_color || [0,0,0,255];
+	var default_color = options.temp_color || Texture.loading_color;
 	var temp_color = options.type == gl.FLOAT ? new Float32Array(default_color) : new Uint8Array(default_color);
 	gl.texImage2D(gl.TEXTURE_2D, 0, texture.format, texture.width, texture.height, 0, texture.format, texture.type, temp_color );
 	gl.bindTexture(texture.texture_type, null); //disable
