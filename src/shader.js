@@ -467,6 +467,19 @@ Shader.QUAD_FRAGMENT_SHADER = "\n\
 			}\n\
 			";
 
+//used to render partially a texture
+Shader.QUAD2_FRAGMENT_SHADER = "\n\
+			precision highp float;\n\
+			uniform sampler2D u_texture;\n\
+			uniform vec4 u_color;\n\
+			uniform vec4 u_texture_area;\n\
+			varying vec2 v_coord;\n\
+			void main() {\n\
+			    vec2 uv = vec2( mix(u_texture_area.x, u_texture_area.z, v_coord.x), mix(u_texture_area.y, u_texture_area.w, v_coord.y) );\n\
+				gl_FragColor = u_color * texture2D(u_texture, uv);\n\
+			}\n\
+			";
+
 Shader.PRIMITIVE2D_VERTEX_SHADER = "\n\
 			precision highp float;\n\
 			attribute vec3 a_vertex;\n\
@@ -523,6 +536,20 @@ Shader.getQuadShader = function(gl)
 	if(shader)
 		return shader;
 	return gl.shaders[":quad"] = new GL.Shader( Shader.QUAD_VERTEX_SHADER, Shader.QUAD_FRAGMENT_SHADER );
+}
+
+/**
+* Returns a shader ready to render part of a texture into the viewport
+* shader must have: u_position, u_size, u_viewport, u_transform, u_texture_area (vec4)
+* @method Shader.getPartialQuadShader
+*/
+Shader.getPartialQuadShader = function(gl)
+{
+	gl = gl || global.gl;
+	var shader = gl.shaders[":quad2"];
+	if(shader)
+		return shader;
+	return gl.shaders[":quad2"] = new GL.Shader( Shader.QUAD_VERTEX_SHADER, Shader.QUAD2_FRAGMENT_SHADER );
 }
 
 /**

@@ -359,6 +359,13 @@
                             </li>
                         
                             <li class="index-item method">
+                                <a href="#method_Shader.getPartialQuadShader">Shader.getPartialQuadShader</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
                                 <a href="#method_Shader.getQuadShader">Shader.getQuadShader</a>
 
                                 
@@ -457,7 +464,7 @@
             
         
         
-        <a href="../files/.._src_shader.js.html#l262"><code>..&#x2F;src&#x2F;shader.js:262</code></a>
+        <a href="../files/.._src_shader.js.html#l266"><code>..&#x2F;src&#x2F;shader.js:266</code></a>
         
         </p>
 
@@ -585,7 +592,7 @@
             
         
         
-        <a href="../files/.._src_shader.js.html#l289"><code>..&#x2F;src&#x2F;shader.js:289</code></a>
+        <a href="../files/.._src_shader.js.html#l293"><code>..&#x2F;src&#x2F;shader.js:293</code></a>
         
         </p>
 
@@ -755,7 +762,7 @@
             
         
         
-        <a href="../files/.._src_shader.js.html#l274"><code>..&#x2F;src&#x2F;shader.js:274</code></a>
+        <a href="../files/.._src_shader.js.html#l278"><code>..&#x2F;src&#x2F;shader.js:278</code></a>
         
         </p>
 
@@ -881,7 +888,7 @@
             
         
         
-        <a href="../files/.._src_shader.js.html#l57"><code>..&#x2F;src&#x2F;shader.js:57</code></a>
+        <a href="../files/.._src_shader.js.html#l59"><code>..&#x2F;src&#x2F;shader.js:59</code></a>
         
         </p>
 
@@ -951,7 +958,7 @@ This info is stored so it works faster during rendering.</p>
             
         
         
-        <a href="../files/.._src_shader.js.html#l119"><code>..&#x2F;src&#x2F;shader.js:119</code></a>
+        <a href="../files/.._src_shader.js.html#l123"><code>..&#x2F;src&#x2F;shader.js:123</code></a>
         
         </p>
 
@@ -1056,7 +1063,7 @@ This info is stored so it works faster during rendering.</p>
             
         
         
-        <a href="../files/.._src_shader.js.html#l108"><code>..&#x2F;src&#x2F;shader.js:108</code></a>
+        <a href="../files/.._src_shader.js.html#l112"><code>..&#x2F;src&#x2F;shader.js:112</code></a>
         
         </p>
 
@@ -1167,7 +1174,7 @@ This info is stored so it works faster during rendering.</p>
             
         
         
-        <a href="../files/.._src_shader.js.html#l37"><code>..&#x2F;src&#x2F;shader.js:37</code></a>
+        <a href="../files/.._src_shader.js.html#l38"><code>..&#x2F;src&#x2F;shader.js:38</code></a>
         
         </p>
 
@@ -1296,7 +1303,7 @@ It throws an exception if there is any error in the code</p>
             
         
         
-        <a href="../files/.._src_shader.js.html#l368"><code>..&#x2F;src&#x2F;shader.js:368</code></a>
+        <a href="../files/.._src_shader.js.html#l374"><code>..&#x2F;src&#x2F;shader.js:374</code></a>
         
         </p>
 
@@ -1433,7 +1440,7 @@ Warning: Imports are evaluated only the first inclusion, the rest are ignored to
             
         
         
-        <a href="../files/.._src_shader.js.html#l175"><code>..&#x2F;src&#x2F;shader.js:175</code></a>
+        <a href="../files/.._src_shader.js.html#l179"><code>..&#x2F;src&#x2F;shader.js:179</code></a>
         
         </p>
 
@@ -1556,7 +1563,7 @@ Warning: Imports are evaluated only the first inclusion, the rest are ignored to
             
         
         
-        <a href="../files/.._src_shader.js.html#l520"><code>..&#x2F;src&#x2F;shader.js:520</code></a>
+        <a href="../files/.._src_shader.js.html#l555"><code>..&#x2F;src&#x2F;shader.js:555</code></a>
         
         </p>
 
@@ -1612,7 +1619,7 @@ shader params are: vec2 u_offset, float u_intensity</p>
             
         
         
-        <a href="../files/.._src_shader.js.html#l554"><code>..&#x2F;src&#x2F;shader.js:554</code></a>
+        <a href="../files/.._src_shader.js.html#l590"><code>..&#x2F;src&#x2F;shader.js:590</code></a>
         
         </p>
 
@@ -1624,7 +1631,63 @@ shader params are: vec2 u_offset, float u_intensity</p>
 
     <div class="description">
         <p>Returns a shader to apply FXAA antialiasing
-params are vec2 u_viewportSize, mat4 u_iViewprojection</p>
+params are vec2 u_viewportSize, mat4 u_iViewportSize</p>
+
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="method_Shader.getPartialQuadShader" class="method item">
+    <h3 class="name"><code>Shader.getPartialQuadShader</code></h3>
+
+    
+        <span class="paren">()</span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_shader.js.html#l541"><code>..&#x2F;src&#x2F;shader.js:541</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Returns a shader ready to render part of a texture into the viewport
+shader must have: u_position, u_size, u_viewport, u_transform, u_texture_area (vec4)</p>
 
     </div>
 
@@ -1668,7 +1731,7 @@ params are vec2 u_viewportSize, mat4 u_iViewprojection</p>
             
         
         
-        <a href="../files/.._src_shader.js.html#l507"><code>..&#x2F;src&#x2F;shader.js:507</code></a>
+        <a href="../files/.._src_shader.js.html#l527"><code>..&#x2F;src&#x2F;shader.js:527</code></a>
         
         </p>
 
@@ -1724,7 +1787,7 @@ shader must have: u_position, u_size, u_viewport, u_transform (mat3)</p>
             
         
         
-        <a href="../files/.._src_shader.js.html#l495"><code>..&#x2F;src&#x2F;shader.js:495</code></a>
+        <a href="../files/.._src_shader.js.html#l514"><code>..&#x2F;src&#x2F;shader.js:514</code></a>
         
         </p>
 
@@ -1793,7 +1856,7 @@ shader must have: u_position, u_size, u_viewport, u_transform (mat3)</p>
             
         
         
-        <a href="../files/.._src_shader.js.html#l131"><code>..&#x2F;src&#x2F;shader.js:131</code></a>
+        <a href="../files/.._src_shader.js.html#l135"><code>..&#x2F;src&#x2F;shader.js:135</code></a>
         
         </p>
 
@@ -1895,7 +1958,7 @@ Used internally from extractShaderInfo to optimize calls</p>
             
         
         
-        <a href="../files/.._src_shader.js.html#l480"><code>..&#x2F;src&#x2F;shader.js:480</code></a>
+        <a href="../files/.._src_shader.js.html#l499"><code>..&#x2F;src&#x2F;shader.js:499</code></a>
         
         </p>
 
@@ -1983,7 +2046,7 @@ Used internally from extractShaderInfo to optimize calls</p>
             
         
         
-        <a href="../files/.._src_shader.js.html#l231"><code>..&#x2F;src&#x2F;shader.js:231</code></a>
+        <a href="../files/.._src_shader.js.html#l235"><code>..&#x2F;src&#x2F;shader.js:235</code></a>
         
         </p>
 

@@ -58,6 +58,23 @@ GL.Buffer.prototype.forEach = function(callback)
 }
 
 /**
+* Applies a mat4 transform to every triplets in the buffer (assuming they are points)
+* No upload is performed (to ensure efficiency in case there are several operations performed
+* @method applyTransform
+* @param {mat4} mat
+*/
+GL.Buffer.prototype.applyTransform = function(mat)
+{
+	var d = this.data;
+	for (var i = 0, s = this.spacing, l = d.length; i < l; i += s)
+	{
+		var s = d.subarray(i,i+s);
+		vec3.transformMat4(s,s,mat);
+	}
+	return this; //to concatenate
+}
+
+/**
 * Uploads the buffer data (stored in this.data) to the GPU
 * @method upload
 * @param {number} stream_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW 

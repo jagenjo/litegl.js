@@ -96,7 +96,7 @@ global.wipeObject = function wipeObject(obj)
 };
 
 //copy methods from origin to target
-global.extendClass = function extendClass( target, origin ) {
+global.extendClass = GL.extendClass = function extendClass( target, origin ) {
 	for(var i in origin) //copy class properties
 	{
 		if(target.hasOwnProperty(i))
@@ -123,12 +123,18 @@ global.extendClass = function extendClass( target, origin ) {
 			if(origin.prototype.__lookupSetter__(i))
 				target.prototype.__defineSetter__(i, origin.prototype.__lookupSetter__(i));
 		}
+
+	if(!target.hasOwnProperty("superclass")) 
+		Object.defineProperty(target, "superclass", {
+			get: function() { return origin },
+			enumerable: false
+		});	
 }
 
 
 
 //simple http request
-global.HttpRequest = GL.HttpRequest = function HttpRequest(url,params, callback, error, sync)
+global.HttpRequest = GL.request = function HttpRequest(url,params, callback, error, sync)
 {
 	if(params)
 	{

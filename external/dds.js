@@ -315,6 +315,7 @@ var DDS = (function () {
 					}
 					else
 					{
+						gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false );
 						dataLength = width * height * blockBytes;
 						byteArray = new Uint8Array(arrayBuffer, dataOffset, dataLength);
 						BGRtoRGB(byteArray);

@@ -112,10 +112,11 @@
 * @param {String} fragmentSource
 * @param {Object} macros (optional) precompiler macros to be applied when compiling
 */
-function Shader(vertexSource, fragmentSource, macros)
+global.Shader = GL.Shader = function Shader(vertexSource, fragmentSource, macros)
 {
 	//used to avoid problems with resources moving between different webgl context
-	this._context_id = gl.context_id; 
+	this._context_id = global.gl.context_id; 
+	var gl = this.gl = global.gl;
 
 	//expand macros
 	var extra_code = &quot;&quot;;
@@ -124,8 +125,8 @@ function Shader(vertexSource, fragmentSource, macros)
 			extra_code += &quot;#define &quot; + i + &quot; &quot; + (macros[i] ? macros[i] : &quot;&quot;) + &quot;\n&quot;;
 
 	this.program = gl.createProgram();
-	gl.attachShader(this.program, Shader.compileSource(gl.VERTEX_SHADER, extra_code + vertexSource));
-	gl.attachShader(this.program, Shader.compileSource(gl.FRAGMENT_SHADER, extra_code + fragmentSource));
+	gl.attachShader(this.program, Shader.compileSource(gl.VERTEX_SHADER, extra_code + vertexSource),gl);
+	gl.attachShader(this.program, Shader.compileSource(gl.FRAGMENT_SHADER, extra_code + fragmentSource),gl);
 	gl.linkProgram(this.program);
 	if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
 		throw &#x27;link error: &#x27; + gl.getProgramInfoLog(this.program);
@@ -149,8 +150,9 @@ function Shader(vertexSource, fragmentSource, macros)
 * @param {String} source the source file to compile
 * @return {WebGLHandler}
 */
-Shader.compileSource = function(type, source)
+Shader.compileSource = function(type, source, gl)
 {
+	gl = gl || global.gl;
 	var shader = gl.createShader(type);
 	gl.shaderSource(shader, source);
 	gl.compileShader(shader);
@@ -167,6 +169,8 @@ Shader.compileSource = function(type, source)
 */
 Shader.prototype.extractShaderInfo = function()
 {
+	var gl = this.gl;
+
 	//extract uniforms info
 	for(var i = 0, l = gl.getProgramParameter(this.program, gl.ACTIVE_UNIFORMS); i &lt; l; ++i)
 	{
@@ -342,7 +346,7 @@ Shader.fromURL = function( vs_path, fs_path, on_complete )
 Shader._temp_uniform = new Float32Array(16);
 
 Shader.prototype.uniforms = function(uniforms) {
-
+	var gl = this.gl;
 	gl.useProgram(this.program);
 
 	for (var name in uniforms) {
@@ -403,19 +407,21 @@ Shader.prototype.drawRange = function(mesh, mode, start, length)
 */
 
 //this two variables are a hack to avoid memory allocation on drawCalls
-Shader._temp_attribs_array = new Uint8Array(16);
-Shader._temp_attribs_array_zero = new Uint8Array(16); //should be filled with zeros always
+var temp_attribs_array = new Uint8Array(16);
+var temp_attribs_array_zero = new Uint8Array(16); //should be filled with zeros always
 
 Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_start, range_length)
 {
 	if(range_length == 0) return;
 
+	var gl = this.gl;
+
 	gl.useProgram(this.program); //this could be removed assuming every shader is called with some uniforms 
 
 	// enable attributes as necessary.
 	var length = 0;
-	var attribs_in_use = Shader._temp_attribs_array; //hack to avoid garbage
-	attribs_in_use.set( Shader._temp_attribs_array_zero ); //reset
+	var attribs_in_use = temp_attribs_array; //hack to avoid garbage
+	attribs_in_use.set( temp_attribs_array_zero ); //reset
 
 	for (var name in vertexBuffers)
 	{
@@ -567,6 +573,19 @@ Shader.QUAD_FRAGMENT_SHADER = &quot;\n\
 			}\n\
 			&quot;;
 
+//used to render partially a texture
+Shader.QUAD2_FRAGMENT_SHADER = &quot;\n\
+			precision highp float;\n\
+			uniform sampler2D u_texture;\n\
+			uniform vec4 u_color;\n\
+			uniform vec4 u_texture_area;\n\
+			varying vec2 v_coord;\n\
+			void main() {\n\
+			    vec2 uv = vec2( mix(u_texture_area.x, u_texture_area.z, v_coord.x), mix(u_texture_area.y, u_texture_area.w, v_coord.y) );\n\
+				gl_FragColor = u_color * texture2D(u_texture, uv);\n\
+			}\n\
+			&quot;;
+
 Shader.PRIMITIVE2D_VERTEX_SHADER = &quot;\n\
 			precision highp float;\n\
 			attribute vec3 a_vertex;\n\
@@ -602,8 +621,9 @@ Shader.prototype.toViewport = function(uniforms)
 * Returns a shader ready to render a quad in fullscreen, use with Mesh.getScreenQuad() mesh
 * @method Shader.getScreenShader
 */
-Shader.getScreenShader = function()
+Shader.getScreenShader = function(gl)
 {
+	gl = gl || global.gl;
 	var shader = gl.shaders[&quot;:screen&quot;];
 	if(shader)
 		return shader;
@@ -615,8 +635,9 @@ Shader.getScreenShader = function()
 * shader must have: u_position, u_size, u_viewport, u_transform (mat3)
 * @method Shader.getQuadShader
 */
-Shader.getQuadShader = function()
+Shader.getQuadShader = function(gl)
 {
+	gl = gl || global.gl;
 	var shader = gl.shaders[&quot;:quad&quot;];
 	if(shader)
 		return shader;
@@ -624,12 +645,27 @@ Shader.getQuadShader = function()
 }
 
 /**
+* Returns a shader ready to render part of a texture into the viewport
+* shader must have: u_position, u_size, u_viewport, u_transform, u_texture_area (vec4)
+* @method Shader.getPartialQuadShader
+*/
+Shader.getPartialQuadShader = function(gl)
+{
+	gl = gl || global.gl;
+	var shader = gl.shaders[&quot;:quad2&quot;];
+	if(shader)
+		return shader;
+	return gl.shaders[&quot;:quad2&quot;] = new GL.Shader( Shader.QUAD_VERTEX_SHADER, Shader.QUAD2_FRAGMENT_SHADER );
+}
+
+/**
 * Returns a shader used to apply gaussian blur to one texture in one axis (you should use it twice to get a gaussian blur)
 * shader params are: vec2 u_offset, float u_intensity
 * @method Shader.getBlurShader
 */
-Shader.getBlurShader = function()
+Shader.getBlurShader = function(gl)
 {
+	gl = gl || global.gl;
 	var shader = gl.shaders[&quot;:blur&quot;];
 	if(shader)
 		return shader;
@@ -659,11 +695,12 @@ Shader.getBlurShader = function()
 
 /**
 * Returns a shader to apply FXAA antialiasing
-* params are vec2 u_viewportSize, mat4 u_iViewprojection
+* params are vec2 u_viewportSize, mat4 u_iViewportSize
 * @method Shader.getFXAAShader
 */
-Shader.getFXAAShader = function()
+Shader.getFXAAShader = function(gl)
 {
+	gl = gl || global.gl;
 	var shader = gl.shaders[&quot;:fxaa&quot;];
 	if(shader)
 		return shader;
@@ -673,7 +710,7 @@ Shader.getFXAAShader = function()
 			varying vec2 v_coord;\n\
 			uniform sampler2D u_texture;\n\
 			uniform vec2 u_viewportSize;\n\
-			uniform vec2 u_iViewprojection;\n\
+			uniform vec2 u_iViewportSize;\n\
 			#define FXAA_REDUCE_MIN   (1.0/ 128.0)\n\
 			#define FXAA_REDUCE_MUL   (1.0 / 8.0)\n\
 			#define FXAA_SPAN_MAX     8.0\n\
@@ -682,12 +719,12 @@ Shader.getFXAAShader = function()
 			vec4 applyFXAA(sampler2D tex, vec2 fragCoord)\n\
 			{\n\
 				vec4 color = vec4(0.0);\n\
-				/*vec2 u_iViewprojection = vec2(1.0 / u_viewportSize.x, 1.0 / u_viewportSize.y);*/\n\
-				vec3 rgbNW = texture2D(tex, (fragCoord + vec2(-1.0, -1.0)) * u_iViewprojection).xyz;\n\
-				vec3 rgbNE = texture2D(tex, (fragCoord + vec2(1.0, -1.0)) * u_iViewprojection).xyz;\n\
-				vec3 rgbSW = texture2D(tex, (fragCoord + vec2(-1.0, 1.0)) * u_iViewprojection).xyz;\n\
-				vec3 rgbSE = texture2D(tex, (fragCoord + vec2(1.0, 1.0)) * u_iViewprojection).xyz;\n\
-				vec3 rgbM  = texture2D(tex, fragCoord  * u_iViewprojection).xyz;\n\
+				/*vec2 u_iViewportSize = vec2(1.0 / u_viewportSize.x, 1.0 / u_viewportSize.y);*/\n\
+				vec3 rgbNW = texture2D(tex, (fragCoord + vec2(-1.0, -1.0)) * u_iViewportSize).xyz;\n\
+				vec3 rgbNE = texture2D(tex, (fragCoord + vec2(1.0, -1.0)) * u_iViewportSize).xyz;\n\
+				vec3 rgbSW = texture2D(tex, (fragCoord + vec2(-1.0, 1.0)) * u_iViewportSize).xyz;\n\
+				vec3 rgbSE = texture2D(tex, (fragCoord + vec2(1.0, 1.0)) * u_iViewportSize).xyz;\n\
+				vec3 rgbM  = texture2D(tex, fragCoord  * u_iViewportSize).xyz;\n\
 				vec3 luma = vec3(0.299, 0.587, 0.114);\n\
 				float lumaNW = dot(rgbNW, luma);\n\
 				float lumaNE = dot(rgbNE, luma);\n\
@@ -704,12 +741,12 @@ Shader.getFXAAShader = function()
 				float dirReduce = max((lumaNW + lumaNE + lumaSW + lumaSE) * (0.25 * FXAA_REDUCE_MUL), FXAA_REDUCE_MIN);\n\
 				\n\
 				float rcpDirMin = 1.0 / (min(abs(dir.x), abs(dir.y)) + dirReduce);\n\
-				dir = min(vec2(FXAA_SPAN_MAX, FXAA_SPAN_MAX), max(vec2(-FXAA_SPAN_MAX, -FXAA_SPAN_MAX), dir * rcpDirMin)) * u_iViewprojection;\n\
+				dir = min(vec2(FXAA_SPAN_MAX, FXAA_SPAN_MAX), max(vec2(-FXAA_SPAN_MAX, -FXAA_SPAN_MAX), dir * rcpDirMin)) * u_iViewportSize;\n\
 				\n\
-				vec3 rgbA = 0.5 * (texture2D(tex, fragCoord * u_iViewprojection + dir * (1.0 / 3.0 - 0.5)).xyz + \n\
-					texture2D(tex, fragCoord * u_iViewprojection + dir * (2.0 / 3.0 - 0.5)).xyz);\n\
-				vec3 rgbB = rgbA * 0.5 + 0.25 * (texture2D(tex, fragCoord * u_iViewprojection + dir * -0.5).xyz + \n\
-					texture2D(tex, fragCoord * u_iViewprojection + dir * 0.5).xyz);\n\
+				vec3 rgbA = 0.5 * (texture2D(tex, fragCoord * u_iViewportSize + dir * (1.0 / 3.0 - 0.5)).xyz + \n\
+					texture2D(tex, fragCoord * u_iViewportSize + dir * (2.0 / 3.0 - 0.5)).xyz);\n\
+				vec3 rgbB = rgbA * 0.5 + 0.25 * (texture2D(tex, fragCoord * u_iViewportSize + dir * -0.5).xyz + \n\
+					texture2D(tex, fragCoord * u_iViewportSize + dir * 0.5).xyz);\n\
 				\n\
 				return vec4(rgbA,1.0);\n\
 				float lumaB = dot(rgbB, luma);\n\

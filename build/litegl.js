@@ -150,7 +150,7 @@ global.wipeObject = function wipeObject(obj)
 };
 
 //copy methods from origin to target
-global.extendClass = function extendClass( target, origin ) {
+global.extendClass = GL.extendClass = function extendClass( target, origin ) {
 	for(var i in origin) //copy class properties
 	{
 		if(target.hasOwnProperty(i))
@@ -177,12 +177,18 @@ global.extendClass = function extendClass( target, origin ) {
 			if(origin.prototype.__lookupSetter__(i))
 				target.prototype.__defineSetter__(i, origin.prototype.__lookupSetter__(i));
 		}
+
+	if(!target.hasOwnProperty("superclass")) 
+		Object.defineProperty(target, "superclass", {
+			get: function() { return origin },
+			enumerable: false
+		});	
 }
 
 
 
 //simple http request
-global.HttpRequest = GL.HttpRequest = function HttpRequest(url,params, callback, error, sync)
+global.HttpRequest = GL.request = function HttpRequest(url,params, callback, error, sync)
 {
 	if(params)
 	{
@@ -625,6 +631,7 @@ var DDS = (function () {
 					}
 					else
 					{
+						gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false );
 						dataLength = width * height * blockBytes;
 						byteArray = new Uint8Array(arrayBuffer, dataOffset, dataLength);
 						BGRtoRGB(byteArray);
@@ -1444,6 +1451,23 @@ GL.Buffer.prototype.forEach = function(callback)
 	for (var i = 0, s = this.spacing, l = d.length; i < l; i += s)
 	{
 		callback(d.subarray(i,i+s),i);
+	}
+	return this; //to concatenate
+}
+
+/**
+* Applies a mat4 transform to every triplets in the buffer (assuming they are points)
+* No upload is performed (to ensure efficiency in case there are several operations performed
+* @method applyTransform
+* @param {mat4} mat
+*/
+GL.Buffer.prototype.applyTransform = function(mat)
+{
+	var d = this.data;
+	for (var i = 0, s = this.spacing, l = d.length; i < l; i += s)
+	{
+		var s = d.subarray(i,i+s);
+		vec3.transformMat4(s,s,mat);
 	}
 	return this; //to concatenate
 }
@@ -2749,14 +2773,15 @@ Mesh.getScreenQuad = function(gl)
 * Texture class to upload images to the GPU, default is gl.TEXTURE_2D, gl.RGBAof gl.UNSIGNED_BYTE with filter gl.LINEAR, and gl.CLAMP_TO_EDGE
 	There is a list of options
 	==========================
-	- texture_type: gl.TEXTURE_2D, gl.TEXTURE_CUBE_MAP
-	- format: gl.RGB, gl.RGBA, gl.DEPTH_COMPONENT
-	- type: gl.UNSIGNED_BYTE, gl.UNSIGNED_SHORT, gl.HALF_FLOAT_OES, gl.FLOAT
-	- filter: filtering for mag and min: gl.NEAREST or gl.LINEAR
-	- magFilter: magnifying filter: gl.NEAREST, gl.LINEAR
-	- minFilter: minifying filter: gl.NEAREST, gl.LINEAR, gl.LINEAR_MIPMAP_LINEAR
-	- premultiply_alpha: multiplies alpha channel by every color channel
-	- wrap: texture wrapping: gl.CLAMP_TO_EDGE, gl.REPEAT, gl.MIRROR
+	- texture_type: gl.TEXTURE_2D, gl.TEXTURE_CUBE_MAP, default gl.TEXTURE_2D
+	- format: gl.RGB, gl.RGBA, gl.DEPTH_COMPONENT, default gl.RGBA
+	- type: gl.UNSIGNED_BYTE, gl.UNSIGNED_SHORT, gl.HALF_FLOAT_OES, gl.FLOAT, default gl.UNSIGNED_BYTE
+	- filter: filtering for mag and min: gl.NEAREST or gl.LINEAR, default gl.NEAREST
+	- magFilter: magnifying filter: gl.NEAREST, gl.LINEAR, default gl.NEAREST
+	- minFilter: minifying filter: gl.NEAREST, gl.LINEAR, gl.LINEAR_MIPMAP_LINEAR, default gl.NEAREST
+	- wrap: texture wrapping: gl.CLAMP_TO_EDGE, gl.REPEAT, gl.MIRROR, default gl.CLAMP_TO_EDGE
+	- premultiply_alpha : multiply the color by the alpha value, default FALSE
+	- no_flip : do not flip in Y, default TRUE
 
 * @class Texture
 * @param {number} width texture width (any supported but Power of Two allows to have mipmaps), 0 means no memory reserved till its filled
@@ -2907,7 +2932,13 @@ Texture.prototype.setParameter = function(param,value) {
 	this.gl.texParameteri(this.texture_type, param, value);
 }
 
-//default: flip_y: true, premultiply: false
+/**
+* Unbinds the texture 
+* @method Texture.setUploadOptions
+* @param {Object} options a list of options to upload the texture
+* - premultiply_alpha : multiply the color by the alpha value, default FALSE
+* - no_flip : do not flip in Y, default TRUE
+*/
 Texture.setUploadOptions = function(options, gl)
 {
 	gl = gl || global.gl;
@@ -4101,6 +4132,19 @@ Shader.QUAD_FRAGMENT_SHADER = "\n\
 			}\n\
 			";
 
+//used to render partially a texture
+Shader.QUAD2_FRAGMENT_SHADER = "\n\
+			precision highp float;\n\
+			uniform sampler2D u_texture;\n\
+			uniform vec4 u_color;\n\
+			uniform vec4 u_texture_area;\n\
+			varying vec2 v_coord;\n\
+			void main() {\n\
+			    vec2 uv = vec2( mix(u_texture_area.x, u_texture_area.z, v_coord.x), mix(u_texture_area.y, u_texture_area.w, v_coord.y) );\n\
+				gl_FragColor = u_color * texture2D(u_texture, uv);\n\
+			}\n\
+			";
+
 Shader.PRIMITIVE2D_VERTEX_SHADER = "\n\
 			precision highp float;\n\
 			attribute vec3 a_vertex;\n\
@@ -4157,6 +4201,20 @@ Shader.getQuadShader = function(gl)
 	if(shader)
 		return shader;
 	return gl.shaders[":quad"] = new GL.Shader( Shader.QUAD_VERTEX_SHADER, Shader.QUAD_FRAGMENT_SHADER );
+}
+
+/**
+* Returns a shader ready to render part of a texture into the viewport
+* shader must have: u_position, u_size, u_viewport, u_transform, u_texture_area (vec4)
+* @method Shader.getPartialQuadShader
+*/
+Shader.getPartialQuadShader = function(gl)
+{
+	gl = gl || global.gl;
+	var shader = gl.shaders[":quad2"];
+	if(shader)
+		return shader;
+	return gl.shaders[":quad2"] = new GL.Shader( Shader.QUAD_VERTEX_SHADER, Shader.QUAD2_FRAGMENT_SHADER );
 }
 
 /**
@@ -4722,6 +4780,52 @@ GL.create = function(options) {
 		loading_textures[url] = true;
 		return null;
 	}
+
+	/**
+	* draws a texture to the viewport
+	* @method gl.drawTexture
+	* @param {Texture} texture
+	* @param {number} x in viewport coordinates 
+	* @param {number} y in viewport coordinates 
+	* @param {number} w in viewport coordinates 
+	* @param {number} h in viewport coordinates 
+	* @param {number} tx texture x in texture coordinates
+	* @param {number} ty texture y in texture coordinates
+	* @param {number} tw texture width in texture coordinates
+	* @param {number} th texture height in texture coordinates
+	*/
+	gl.drawTexture = (function() {
+		//static variables: less garbage
+		var identity = mat3.create();
+		var pos = vec2.create();
+		var size = vec2.create();
+		var area = vec4.create();
+		var white = vec4.fromValues(1,1,1,1);
+
+		return (function(texture, x,y, w,h, tx,ty, tw,th, shader, uniforms)
+		{
+			pos[0] = x;	pos[1] = y;
+			size[0] = w; size[1] = h;
+
+			if(tx === undefined) tx = 0;
+			if(ty === undefined) ty = 0;
+			if(tw === undefined) tw = 1;
+			if(th === undefined) th = 1;
+
+			area[0] = tx / texture.width;
+			area[1] = ty / texture.height;
+			area[2] = (tx + tw) / texture.width;
+			area[3] = (ty + th) / texture.height;
+
+			shader = shader || Shader.getPartialQuadShader(this);
+			var mesh = Mesh.getScreenQuad(this);
+			texture.bind(0);
+			shader.uniforms({u_texture: 0, u_position: pos, u_color: white, u_size: size, u_texture_area: area, u_viewport: gl.viewport_data.subarray(2,4), u_transform: identity });
+			if(uniforms)
+				shader.uniforms(uniforms);
+			shader.draw( mesh, gl.TRIANGLES );
+		});
+	})();
 
 	return gl;
 }

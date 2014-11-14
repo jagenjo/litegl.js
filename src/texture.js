@@ -2,14 +2,15 @@
 * Texture class to upload images to the GPU, default is gl.TEXTURE_2D, gl.RGBAof gl.UNSIGNED_BYTE with filter gl.LINEAR, and gl.CLAMP_TO_EDGE
 	There is a list of options
 	==========================
-	- texture_type: gl.TEXTURE_2D, gl.TEXTURE_CUBE_MAP
-	- format: gl.RGB, gl.RGBA, gl.DEPTH_COMPONENT
-	- type: gl.UNSIGNED_BYTE, gl.UNSIGNED_SHORT, gl.HALF_FLOAT_OES, gl.FLOAT
-	- filter: filtering for mag and min: gl.NEAREST or gl.LINEAR
-	- magFilter: magnifying filter: gl.NEAREST, gl.LINEAR
-	- minFilter: minifying filter: gl.NEAREST, gl.LINEAR, gl.LINEAR_MIPMAP_LINEAR
-	- premultiply_alpha: multiplies alpha channel by every color channel
-	- wrap: texture wrapping: gl.CLAMP_TO_EDGE, gl.REPEAT, gl.MIRROR
+	- texture_type: gl.TEXTURE_2D, gl.TEXTURE_CUBE_MAP, default gl.TEXTURE_2D
+	- format: gl.RGB, gl.RGBA, gl.DEPTH_COMPONENT, default gl.RGBA
+	- type: gl.UNSIGNED_BYTE, gl.UNSIGNED_SHORT, gl.HALF_FLOAT_OES, gl.FLOAT, default gl.UNSIGNED_BYTE
+	- filter: filtering for mag and min: gl.NEAREST or gl.LINEAR, default gl.NEAREST
+	- magFilter: magnifying filter: gl.NEAREST, gl.LINEAR, default gl.NEAREST
+	- minFilter: minifying filter: gl.NEAREST, gl.LINEAR, gl.LINEAR_MIPMAP_LINEAR, default gl.NEAREST
+	- wrap: texture wrapping: gl.CLAMP_TO_EDGE, gl.REPEAT, gl.MIRROR, default gl.CLAMP_TO_EDGE
+	- premultiply_alpha : multiply the color by the alpha value, default FALSE
+	- no_flip : do not flip in Y, default TRUE
 
 * @class Texture
 * @param {number} width texture width (any supported but Power of Two allows to have mipmaps), 0 means no memory reserved till its filled
@@ -160,7 +161,13 @@ Texture.prototype.setParameter = function(param,value) {
 	this.gl.texParameteri(this.texture_type, param, value);
 }
 
-//default: flip_y: true, premultiply: false
+/**
+* Unbinds the texture 
+* @method Texture.setUploadOptions
+* @param {Object} options a list of options to upload the texture
+* - premultiply_alpha : multiply the color by the alpha value, default FALSE
+* - no_flip : do not flip in Y, default TRUE
+*/
 Texture.setUploadOptions = function(options, gl)
 {
 	gl = gl || global.gl;

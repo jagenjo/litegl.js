@@ -105,12 +105,9 @@
 <div class="file">
     <pre class="code prettyprint linenums">
 
-var gl;
-var DEG2RAD = 0.0174532925;
-var RAD2DEG = 57.295779578552306;
-var EPSILON = 0.000001;
-
-var global = window; //todo: change this to be common js
+global.DEG2RAD = 0.0174532925;
+global.RAD2DEG = 57.295779578552306;
+global.EPSILON = 0.000001;
 
 /**
 * Tells if one number is power of two (used for textures)
@@ -118,7 +115,7 @@ var global = window; //todo: change this to be common js
 * @param {v} number
 * @return {boolean}
 */
-function isPowerOfTwo(v)
+global.isPowerOfTwo = GL.isPowerOfTwo = function isPowerOfTwo(v)
 {
 	return ((Math.log(v) / Math.log(2)) % 1) == 0;
 }
@@ -132,20 +129,20 @@ if(typeof(performance) != &quot;undefined&quot;)
   global.getTime = performance.now.bind(performance);
 else
   global.getTime = Date.now.bind( Date );
+GL.getTime = global.getTime;
 
 
-
-function isFunction(obj) {
+global.isFunction = function isFunction(obj) {
   return !!(obj &amp;&amp; obj.constructor &amp;&amp; obj.call &amp;&amp; obj.apply);
 }
 
-function isArray(obj) {
+global.isArray = function isArray(obj) {
   return (obj &amp;&amp; obj.constructor === Array );
   //var str = Object.prototype.toString.call(obj);
   //return str == &#x27;[object Array]&#x27; || str == &#x27;[object Float32Array]&#x27;;
 }
 
-function isNumber(obj) {
+global.isNumber = function isNumber(obj) {
   return (obj != null &amp;&amp; obj.constructor === Number );
 }
 
@@ -158,21 +155,21 @@ function isNumber(obj) {
 */
 
 //given a regular expression, a text and a callback, it calls the function every time it finds it
-function regexMap(regex, text, callback) {
+global.regexMap = function regexMap(regex, text, callback) {
   var result;
   while ((result = regex.exec(text)) != null) {
     callback(result);
   }
 }
 
-function createCanvas(width, height) {
+global.createCanvas = GL.createCanvas = function createCanvas(width, height) {
     var canvas = document.createElement(&#x27;canvas&#x27;);
     canvas.width = width;
     canvas.height = height;
     return canvas;
 }
 
-function cloneCanvas(c) {
+global.cloneCanvas = GL.cloneCanvas = function cloneCanvas(c) {
     var canvas = document.createElement(&#x27;canvas&#x27;);
     canvas.width = c.width;
     canvas.height = c.height;
@@ -195,7 +192,7 @@ Object.defineProperty(Array.prototype, &quot;subarray&quot;, { value: Array.prot
 
 
 // remove all properties on obj, effectively reverting it to a new object (to reduce garbage)
-function wipeObject(obj)
+global.wipeObject = function wipeObject(obj)
 {
   for (var p in obj)
   {
@@ -205,7 +202,7 @@ function wipeObject(obj)
 };
 
 //copy methods from origin to target
-function extendClass( target, origin ) {
+global.extendClass = GL.extendClass = function extendClass( target, origin ) {
 	for(var i in origin) //copy class properties
 	{
 		if(target.hasOwnProperty(i))
@@ -232,12 +229,18 @@ function extendClass( target, origin ) {
 			if(origin.prototype.__lookupSetter__(i))
 				target.prototype.__defineSetter__(i, origin.prototype.__lookupSetter__(i));
 		}
+
+	if(!target.hasOwnProperty(&quot;superclass&quot;)) 
+		Object.defineProperty(target, &quot;superclass&quot;, {
+			get: function() { return origin },
+			enumerable: false
+		});	
 }
 
 
 
 //simple http request
-function HttpRequest(url,params, callback, error, sync)
+global.HttpRequest = GL.request = function HttpRequest(url,params, callback, error, sync)
 {
 	if(params)
 	{
@@ -279,20 +282,22 @@ function HttpRequest(url,params, callback, error, sync)
 }
 
 //cheap simple promises
-Object.defineProperty( XMLHttpRequest.prototype, &quot;done&quot;, { enumerable: false, value: function(callback)
-{
-  LEvent.bind(this,&quot;done&quot;, function(e,err) { callback(err); } );
-  return this;
-}});
+if( !XMLHttpRequest.prototype.hasOwnProperty(&quot;done&quot;) )
+	Object.defineProperty( XMLHttpRequest.prototype, &quot;done&quot;, { enumerable: false, value: function(callback)
+	{
+	  LEvent.bind(this,&quot;done&quot;, function(e,err) { callback(err); } );
+	  return this;
+	}});
 
-Object.defineProperty( XMLHttpRequest.prototype, &quot;fail&quot;, { enumerable: false, value: function(callback)
-{
-  LEvent.bind(this,&quot;fail&quot;, function(e,err) { callback(err); } );
-  return this;
-}});
+if( !XMLHttpRequest.prototype.hasOwnProperty(&quot;fail&quot;) )
+	Object.defineProperty( XMLHttpRequest.prototype, &quot;fail&quot;, { enumerable: false, value: function(callback)
+	{
+	  LEvent.bind(this,&quot;fail&quot;, function(e,err) { callback(err); } );
+	  return this;
+	}});
 
 
-function getFileExtension(url)
+global.getFileExtension = function getFileExtension(url)
 {
 	var question = url.indexOf(&quot;?&quot;);
 	if(question != -1)
@@ -306,7 +311,7 @@ function getFileExtension(url)
 
 //allows to pack several (text)files inside one single file (useful for shaders)
 //every file must start with \filename.ext  or /filename.ext
-function loadFileAtlas(url, callback, sync)
+global.loadFileAtlas = GL.loadFileAtlas = function loadFileAtlas(url, callback, sync)
 {
 	var deferred_callback = null;
 
@@ -327,7 +332,7 @@ function loadFileAtlas(url, callback, sync)
 		var files = {};
 		var file = [];
 		var filename = &quot;&quot;;
-		for(var i in lines)
+		for(var i = 0, l = lines.length; i &lt; l; i++)
 		{
 			var line = lines[i].trim();
 			if(!line.length)

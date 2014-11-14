@@ -456,6 +456,52 @@ GL.create = function(options) {
 		return null;
 	}
 
+	/**
+	* draws a texture to the viewport
+	* @method gl.drawTexture
+	* @param {Texture} texture
+	* @param {number} x in viewport coordinates 
+	* @param {number} y in viewport coordinates 
+	* @param {number} w in viewport coordinates 
+	* @param {number} h in viewport coordinates 
+	* @param {number} tx texture x in texture coordinates
+	* @param {number} ty texture y in texture coordinates
+	* @param {number} tw texture width in texture coordinates
+	* @param {number} th texture height in texture coordinates
+	*/
+	gl.drawTexture = (function() {
+		//static variables: less garbage
+		var identity = mat3.create();
+		var pos = vec2.create();
+		var size = vec2.create();
+		var area = vec4.create();
+		var white = vec4.fromValues(1,1,1,1);
+
+		return (function(texture, x,y, w,h, tx,ty, tw,th, shader, uniforms)
+		{
+			pos[0] = x;	pos[1] = y;
+			size[0] = w; size[1] = h;
+
+			if(tx === undefined) tx = 0;
+			if(ty === undefined) ty = 0;
+			if(tw === undefined) tw = 1;
+			if(th === undefined) th = 1;
+
+			area[0] = tx / texture.width;
+			area[1] = ty / texture.height;
+			area[2] = (tx + tw) / texture.width;
+			area[3] = (ty + th) / texture.height;
+
+			shader = shader || Shader.getPartialQuadShader(this);
+			var mesh = Mesh.getScreenQuad(this);
+			texture.bind(0);
+			shader.uniforms({u_texture: 0, u_position: pos, u_color: white, u_size: size, u_texture_area: area, u_viewport: gl.viewport_data.subarray(2,4), u_transform: identity });
+			if(uniforms)
+				shader.uniforms(uniforms);
+			shader.draw( mesh, gl.TRIANGLES );
+		});
+	})();
+
 	return gl;
 }
 

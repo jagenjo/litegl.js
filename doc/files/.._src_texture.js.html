@@ -108,14 +108,15 @@
 * Texture class to upload images to the GPU, default is gl.TEXTURE_2D, gl.RGBAof gl.UNSIGNED_BYTE with filter gl.LINEAR, and gl.CLAMP_TO_EDGE
 	There is a list of options
 	==========================
-	- texture_type: gl.TEXTURE_2D, gl.TEXTURE_CUBE_MAP
-	- format: gl.RGB, gl.RGBA, gl.DEPTH_COMPONENT
-	- type: gl.UNSIGNED_BYTE, gl.UNSIGNED_SHORT, gl.HALF_FLOAT_OES, gl.FLOAT
-	- filter: filtering for mag and min: gl.NEAREST or gl.LINEAR
-	- magFilter: magnifying filter: gl.NEAREST, gl.LINEAR
-	- minFilter: minifying filter: gl.NEAREST, gl.LINEAR, gl.LINEAR_MIPMAP_LINEAR
-	- premultiply_alpha: multiplies alpha channel by every color channel
-	- wrap: texture wrapping: gl.CLAMP_TO_EDGE, gl.REPEAT, gl.MIRROR
+	- texture_type: gl.TEXTURE_2D, gl.TEXTURE_CUBE_MAP, default gl.TEXTURE_2D
+	- format: gl.RGB, gl.RGBA, gl.DEPTH_COMPONENT, default gl.RGBA
+	- type: gl.UNSIGNED_BYTE, gl.UNSIGNED_SHORT, gl.HALF_FLOAT_OES, gl.FLOAT, default gl.UNSIGNED_BYTE
+	- filter: filtering for mag and min: gl.NEAREST or gl.LINEAR, default gl.NEAREST
+	- magFilter: magnifying filter: gl.NEAREST, gl.LINEAR, default gl.NEAREST
+	- minFilter: minifying filter: gl.NEAREST, gl.LINEAR, gl.LINEAR_MIPMAP_LINEAR, default gl.NEAREST
+	- wrap: texture wrapping: gl.CLAMP_TO_EDGE, gl.REPEAT, gl.MIRROR, default gl.CLAMP_TO_EDGE
+	- premultiply_alpha : multiply the color by the alpha value, default FALSE
+	- no_flip : do not flip in Y, default TRUE
 
 * @class Texture
 * @param {number} width texture width (any supported but Power of Two allows to have mipmaps), 0 means no memory reserved till its filled
@@ -124,9 +125,11 @@
 * @constructor
 */
 
-function Texture(width, height, options) {
+global.Texture = GL.Texture = function Texture(width, height, options, gl) {
 	options = options || {};
 	//used to avoid problems with resources moving between different webgl context
+	gl = gl || global.gl;
+	this.gl = gl;
 	this._context_id = gl.context_id; 
 
 	width = parseInt(width); 
@@ -197,6 +200,7 @@ function Texture(width, height, options) {
 //used for render to FBOs
 Texture.framebuffer = null;
 Texture.renderbuffer = null;
+Texture.loading_color = new Uint8Array([0,0,0,0]);
 
 
 Texture.prototype.getProperties = function()
@@ -212,6 +216,12 @@ Texture.prototype.getProperties = function()
 		wrapS: this.wrapS,
 		wrapT: this.wrapT
 	};
+}
+
+//textures cannot be stored in JSON
+Texture.prototype.toJSON = function()
+{
+	return &quot;&quot;;
 }
 
 
@@ -232,6 +242,7 @@ Texture.isDepthSupported = function()
 */
 Texture.prototype.bind = function(unit) {
 	if(unit == undefined) unit = 0;
+	var gl = this.gl;
 	gl.activeTexture(gl.TEXTURE0 + unit);
 	gl.bindTexture(this.texture_type, this.handler);
 	return unit;
@@ -246,18 +257,27 @@ Texture.prototype.bind = function(unit) {
 Texture.prototype.unbind = function(unit) {
 	if(unit === undefined)
 		unit = 0;
+	var gl = this.gl;
 	gl.activeTexture(gl.TEXTURE0 + unit );
 	gl.bindTexture(this.texture_type, null);
 }
 
 
 Texture.prototype.setParameter = function(param,value) {
-	gl.texParameteri(this.texture_type, param, value);
+	this.gl.texParameteri(this.texture_type, param, value);
 }
 
-//default: flip_y: true, premultiply: false
-Texture.setUploadOptions = function(options)
+/**
+* Unbinds the texture 
+* @method Texture.setUploadOptions
+* @param {Object} options a list of options to upload the texture
+* - premultiply_alpha : multiply the color by the alpha value, default FALSE
+* - no_flip : do not flip in Y, default TRUE
+*/
+Texture.setUploadOptions = function(options, gl)
 {
+	gl = gl || global.gl;
+
 	if(options) //options that are not stored in the texture should be passed again to avoid reusing unknown state
 	{
 		gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, !!(options.premultiply_alpha) );
@@ -280,8 +300,9 @@ Texture.setUploadOptions = function(options)
 Texture.prototype.uploadImage = function(image, options)
 {
 	this.bind();
+	var gl = this.gl;
 
-	Texture.setUploadOptions(options);
+	Texture.setUploadOptions(options, gl);
 
 	try {
 		gl.texImage2D(gl.TEXTURE_2D, 0, this.format, this.format, this.type, image);
@@ -311,8 +332,9 @@ Texture.prototype.uploadImage = function(image, options)
 */
 Texture.prototype.uploadData = function(data, options )
 {
+	var gl = this.gl;
 	this.bind();
-	Texture.setUploadOptions(options);
+	Texture.setUploadOptions(options, gl);
 
 	gl.texImage2D(this.texture_type, 0, this.format, this.width, this.height, 0, this.format, this.type, data);
 	if (this.minFilter &amp;&amp; this.minFilter != gl.NEAREST &amp;&amp; this.minFilter != gl.LINEAR) {
@@ -339,6 +361,7 @@ Texture.cubemap_camera_parameters = [
 */
 Texture.prototype.drawTo = function(callback, params)
 {
+	var gl = this.gl;
 	var v = gl.getViewport();
 
 	var framebuffer = gl._framebuffer = gl._framebuffer || gl.createFramebuffer();
@@ -390,15 +413,16 @@ Texture.prototype.drawTo = function(callback, params)
 * @param {Function} callback
 */
 Texture.drawToColorAndDepth = function(color_texture, depth_texture, callback) {
+	var gl = color_texture.gl; //static function
 
 	if(depth_texture.width != color_texture.width || depth_texture.height != color_texture.height)
 		throw(&quot;Different size between color texture and depth texture&quot;);
 
 	var v = gl.getViewport();
 
-	Texture.framebuffer = Texture.framebuffer || gl.createFramebuffer();
+	 gl._framebuffer =  gl._framebuffer || gl.createFramebuffer();
 
-	gl.bindFramebuffer(gl.FRAMEBUFFER, Texture.framebuffer);
+	gl.bindFramebuffer(gl.FRAMEBUFFER,  gl._framebuffer);
 
 	gl.viewport(0, 0, color_texture.width, color_texture.height);
 
@@ -421,6 +445,7 @@ Texture.drawToColorAndDepth = function(color_texture, depth_texture, callback) {
 */
 Texture.prototype.copyTo = function(target_texture) {
 	var that = this;
+	var gl = this.gl;
 
 	//copy content
 	target_texture.drawTo(function() {
@@ -477,8 +502,8 @@ Texture.prototype.renderQuad = (function() {
 		pos[0] = x;	pos[1] = y;
 		size[0] = w; size[1] = h;
 
-		shader = shader || Shader.getQuadShader();
-		var mesh = Mesh.getScreenQuad();
+		shader = shader || Shader.getQuadShader(this.gl);
+		var mesh = Mesh.getScreenQuad(this.gl);
 		this.bind(0);
 		shader.uniforms({u_texture: 0, u_position: pos, u_color: white, u_size: size, u_viewport: gl.viewport_data.subarray(2,4), u_transform: identity });
 		if(uniforms)
@@ -494,6 +519,7 @@ Texture.prototype.renderQuad = (function() {
 */
 Texture.prototype.toCanvas = function(canvas)
 {
+	var gl = this.gl;
 	var w = this.width;
 	var h = this.height;
 	canvas = canvas || createCanvas(w,h);
@@ -520,12 +546,14 @@ Texture.prototype.toCanvas = function(canvas)
 * @param {Number} offsety scalar that multiplies the offset when fetching pixels vertically (default 1)
 * @param {Number} intensity scalar that multiplies the result (default 1)
 * @param {Texture} temp_texture blur needs a temp texture, if not supplied it will create a new one each time!
+* @param {Texture} output_texture [optional] if not passed the output is the own texture
 * @return {Texture} returns the temp_texture in case you want to reuse it
 */
-Texture.prototype.applyBlur = function(offsetx, offsety, intensity, temp_texture)
+Texture.prototype.applyBlur = function(offsetx, offsety, intensity, temp_texture, output_texture)
 {
 	var self = this;
-	var shader = Shader.getBlurShader();
+	var gl = this.gl;
+	var shader = GL.Shader.getBlurShader();
 	if(!temp_texture)
 		temp_texture = new GL.Texture(this.width, this.height, this.getProperties() );
 
@@ -538,7 +566,8 @@ Texture.prototype.applyBlur = function(offsetx, offsety, intensity, temp_texture
 		self.toViewport(shader, {u_intensity: intensity, u_offset: [0, offsety ] });
 	});	
 
-	this.drawTo( function() {
+	output_texture = output_texture || this;
+	output_texture.drawTo( function() {
 		temp_texture.toViewport(shader, {u_intensity: intensity, u_offset: [offsetx, 0] });
 	});	
 	return temp_texture;
@@ -554,13 +583,17 @@ Texture.prototype.applyBlur = function(offsetx, offsety, intensity, temp_texture
 * @param {Function} on_complete
 * @return {Texture} the texture
 */
-Texture.fromURL = function(url, options, on_complete) {
-	options = options || {};
-	var texture = options.texture || new GL.Texture(1, 1, options);
+Texture.fromURL = function(url, options, on_complete, gl) {
+	gl = gl || global.gl;
 
+	options = options || {};
+	var texture = options.texture || new GL.Texture(1, 1, options, gl);
+
+	if(url.length &lt; 64)
+		texture.url = url;
 	texture.bind();
 	Texture.setUploadOptions(options);
-	var default_color = options.temp_color || [0,0,0,255];
+	var default_color = options.temp_color || Texture.loading_color;
 	var temp_color = options.type == gl.FLOAT ? new Float32Array(default_color) : new Uint8Array(default_color);
 	gl.texImage2D(gl.TEXTURE_2D, 0, texture.format, texture.width, texture.height, 0, texture.format, texture.type, temp_color );
 	gl.bindTexture(texture.texture_type, null); //disable
@@ -569,7 +602,7 @@ Texture.fromURL = function(url, options, on_complete) {
 	if( url.toLowerCase().indexOf(&quot;.dds&quot;) != -1)
 	{
 		var ext = gl.getExtension(&quot;WEBKIT_WEBGL_compressed_texture_s3tc&quot;) || gl.getExtension(&quot;WEBGL_compressed_texture_s3tc&quot;);
-		var new_texture = new GL.Texture(0,0, options);
+		var new_texture = new GL.Texture(0,0, options, gl);
 		DDS.loadDDSTextureEx(gl, ext, url, new_texture.handler, true, function(t) {
 			texture.texture_type = t.texture_type;
 			texture.handler = t;
@@ -607,7 +640,7 @@ Texture.fromImage = function(image, options) {
 	var texture = options.texture || new GL.Texture(image.width, image.height, options);
 	texture.bind();
 	texture.uploadImage(image, options);
-	if (options.minFilter &amp;&amp; options.minFilter != gl.NEAREST &amp;&amp; options.minFilter != gl.LINEAR) {
+	if (GL.isPowerOfTwo(texture.width) &amp;&amp; GL.isPowerOfTwo(texture.height) &amp;&amp; options.minFilter &amp;&amp; options.minFilter != gl.NEAREST &amp;&amp; options.minFilter != gl.LINEAR) {
 		texture.bind();
 		gl.generateMipmap(texture.texture_type);
 		texture.has_mipmaps = true;
@@ -947,6 +980,7 @@ Texture.compareFormats = function(a,b)
 
 Texture.getWhiteTexture = function()
 {
+	var gl = this.gl;
 	var tex = gl.textures[&quot;:white&quot;];
 	if(tex)
 		return tex;
@@ -957,6 +991,7 @@ Texture.getWhiteTexture = function()
 
 Texture.getBlackTexture = function()
 {
+	var gl = this.gl;
 	var tex = gl.textures[&quot;:black&quot;];
 	if(tex)
 		return tex;
