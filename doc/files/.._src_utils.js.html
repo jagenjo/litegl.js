@@ -47,6 +47,8 @@
             
                 <li><a href="../classes/geo.html">geo</a></li>
             
+                <li><a href="../classes/gl.html">gl</a></li>
+            
                 <li><a href="../classes/GL.html">GL</a></li>
             
                 <li><a href="../classes/Indexer.html">Indexer</a></li>
@@ -184,6 +186,18 @@ String.prototype.replaceAll = function(words){
 	for(var i in words)
 		str = str.split(i).join(words[i]);
     return str;
+};
+
+//used for hashing keys
+String.prototype.hashCode = function(){
+    var hash = 0, i, c, l;
+    if (this.length == 0) return hash;
+    for (i = 0, l = this.length; i &lt; l; ++i) {
+        c  = this.charCodeAt(i);
+        hash  = ((hash&lt;&lt;5)-hash)+c;
+        hash |= 0; // Convert to 32bit integer
+    }
+    return hash;
 };
 
 //avoid errors when Typed array is expected and regular array is found

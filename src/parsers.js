@@ -118,13 +118,21 @@ Mesh.parseOBJ = function(text, options)
 						return false;
 					}
 
-					/*
-					//pos = Math.abs(pos); tex = Math.abs(tex); nor = Math.abs(nor);
-					if(pos < 0) pos = positions.length/3 + pos - negative_offset;
-					if(tex < 0) tex = texcoords.length/2 + tex - negative_offset;
-					if(nor < 0) nor = normals.length/3 + nor - negative_offset;
-					*/
+					if(i > 3 && skip_indices) //break polygon in triangles
+					{
+						//first
+						var pl = positionsArray.length;
+						positionsArray.push( positionsArray[pl - (i-3)*9], positionsArray[pl - (i-3)*9 + 1], positionsArray[pl - (i-3)*9 + 2]);
+						positionsArray.push( positionsArray[pl - 3], positionsArray[pl - 2], positionsArray[pl - 1]);
+						pl = texcoordsArray.length;
+						texcoordsArray.push( texcoordsArray[pl - (i-3)*6], texcoordsArray[pl - (i-3)*6 + 1]);
+						texcoordsArray.push( texcoordsArray[pl - 2], texcoordsArray[pl - 1]);
+						pl = normalsArray.length;
+						normalsArray.push( normalsArray[pl - (i-3)*9], normalsArray[pl - (i-3)*9 + 1], normalsArray[pl - (i-3)*9 + 2]);
+						normalsArray.push( normalsArray[pl - 3], normalsArray[pl - 2], normalsArray[pl - 1]);
+					}
 
+					//add new vertex
 					x = 0.0;
 					y = 0.0;
 					z = 0.0;
@@ -134,10 +142,9 @@ Mesh.parseOBJ = function(text, options)
 						y = positions[pos*3+1];
 						z = positions[pos*3+2];
 					}
-
 					positionsArray.push(x,y,z);
-					//positionsArray.push([x,y,z]);
 
+					//add new texture coordinate
 					x = 0.0;
 					y = 0.0;
 					if ((tex * 2 + 1) < texcoords.length) {
@@ -146,8 +153,8 @@ Mesh.parseOBJ = function(text, options)
 						y = texcoords[tex*2+1];
 					}
 					texcoordsArray.push(x,y);
-					//texcoordsArray.push([x,y]);
 
+					//add new normal
 					x = 0.0;
 					y = 0.0;
 					z = 1.0;
@@ -161,7 +168,6 @@ Mesh.parseOBJ = function(text, options)
 						}
 						
 						normalsArray.push(x,y,z);
-						//normalsArray.push([x,y,z]);
 					}
 
 					//Save the string "10/10/10" and tells which index represents it in the arrays

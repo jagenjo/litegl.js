@@ -1344,6 +1344,8 @@ Mesh.fromURL = function(url, on_complete, gl)
 {
 	gl = gl || global.gl;
 	var mesh = new GL.Mesh(undefined,undefined,undefined,gl);
+	mesh.ready = false;
+
 	HttpRequest( url, null, function(data) {
 		var ext = url.substr(url.length - 4).toLowerCase();
 		var parser = Mesh.parsers[ ext ];
@@ -1351,8 +1353,12 @@ Mesh.fromURL = function(url, on_complete, gl)
 			parser.call(null, data, {mesh: mesh});
 		else
 			throw("Mesh.fromURL: no parser found for format " + ext);
+		delete mesh["ready"];
 		if(on_complete)
 			on_complete(mesh);
+	}, function(err){
+		if(on_complete)
+			on_complete(null);
 	});
 	return mesh;
 }

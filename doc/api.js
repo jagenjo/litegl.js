@@ -10,7 +10,8 @@ YUI.add("yuidoc-meta", function(Y) {
         "Octree",
         "Shader",
         "Texture",
-        "geo"
+        "geo",
+        "gl"
     ],
     "modules": [],
     "allModules": []

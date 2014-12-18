@@ -360,7 +360,7 @@ Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_
 	if (length && (!indexBuffer || indexBuffer.buffer)) {
 	  if (indexBuffer) {
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer.buffer);
-		gl.drawElements(mode, length, gl.UNSIGNED_SHORT, offset);
+		gl.drawElements(mode, length, indexBuffer.buffer.gl_type, offset); //gl.UNSIGNED_SHORT
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 	  } else {
 		gl.drawArrays(mode, offset, length);
@@ -427,6 +427,16 @@ Shader.SCREEN_FRAGMENT_SHADER = "\n\
 			}\n\
 			";
 
+Shader.SCREEN_COLORED_FRAGMENT_SHADER = "\n\
+			precision highp float;\n\
+			uniform sampler2D u_texture;\n\
+			uniform vec4 u_color;\n\
+			varying vec2 v_coord;\n\
+			void main() {\n\
+				gl_FragColor = u_color * texture2D(u_texture, v_coord);\n\
+			}\n\
+			";
+
 Shader.SCREEN_FLAT_FRAGMENT_SHADER = "\n\
 			precision highp float;\n\
 			uniform vec4 u_color;\n\
@@ -475,7 +485,7 @@ Shader.QUAD2_FRAGMENT_SHADER = "\n\
 			uniform vec4 u_texture_area;\n\
 			varying vec2 v_coord;\n\
 			void main() {\n\
-			    vec2 uv = vec2( mix(u_texture_area.x, u_texture_area.z, v_coord.x), mix(u_texture_area.y, u_texture_area.w, v_coord.y) );\n\
+			    vec2 uv = vec2( mix(u_texture_area.x, u_texture_area.z, v_coord.x), 1.0 - mix(u_texture_area.w, u_texture_area.y, v_coord.y) );\n\
 				gl_FragColor = u_color * texture2D(u_texture, uv);\n\
 			}\n\
 			";
@@ -522,6 +532,19 @@ Shader.getScreenShader = function(gl)
 	if(shader)
 		return shader;
 	return gl.shaders[":screen"] = new GL.Shader( Shader.SCREEN_VERTEX_SHADER, Shader.SCREEN_FRAGMENT_SHADER );
+}
+
+/**
+* Returns a shader ready to render a quad in fullscreen, allows color, use with Mesh.getScreenQuad() mesh
+* @method Shader.getColoredScreenShader
+*/
+Shader.getColoredScreenShader = function(gl)
+{
+	gl = gl || global.gl;
+	var shader = gl.shaders[":colored_screen"];
+	if(shader)
+		return shader;
+	return gl.shaders[":colored_screen"] = new GL.Shader( Shader.SCREEN_VERTEX_SHADER, Shader.SCREEN_COLORED_FRAGMENT_SHADER );
 }
 
 /**

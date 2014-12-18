@@ -4,7 +4,9 @@
         "../src/core.js": {
             "name": "../src/core.js",
             "modules": {},
-            "classes": {},
+            "classes": {
+                "gl": 1
+            },
             "fors": {},
             "namespaces": {}
         },
@@ -99,6 +101,18 @@
     },
     "modules": {},
     "classes": {
+        "gl": {
+            "name": "gl",
+            "shortname": "gl",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "../src/core.js",
+            "line": 29,
+            "description": "the webgl context returned by GL.create, its a WebGLRenderingContext with some extra methods added"
+        },
         "geo": {
             "name": "geo",
             "shortname": "geo",
@@ -317,7 +331,7 @@
         {
             "file": "../src/core.js",
             "line": 2,
-            "description": "creates a new WebGL canvas",
+            "description": "creates a new WebGL context (it can create the canvas or use an existing one)",
             "itemtype": "method",
             "name": "create",
             "params": [
@@ -331,38 +345,53 @@
                 "description": "gl context for webgl",
                 "type": "Gl"
             },
-            "class": "geo"
+            "class": "gl"
         },
         {
             "file": "../src/core.js",
-            "line": 70,
-            "description": "sets this context as the current gl context",
+            "line": 74,
+            "description": "sets this context as the current global gl context (in case you have more than one)",
             "itemtype": "method",
-            "name": "gl.makeCurrent",
-            "class": "geo"
+            "name": "makeCurrent",
+            "class": "gl"
         },
         {
             "file": "../src/core.js",
-            "line": 88,
-            "description": "Launch animation loop (calls gl.onupdate and gl.ondraw every frame)",
+            "line": 83,
+            "description": "executes callback inside this webgl context",
             "itemtype": "method",
-            "name": "gl.animate",
-            "class": "geo"
+            "name": "execute",
+            "params": [
+                {
+                    "name": "callback",
+                    "description": "",
+                    "type": "Function"
+                }
+            ],
+            "class": "gl"
         },
         {
             "file": "../src/core.js",
-            "line": 132,
+            "line": 97,
+            "description": "Launch animation loop (calls gl.onupdate and gl.ondraw every frame)\nexample: gl.ondraw = function(){ ... }   or  gl.onupdate = function(dt) { ... }",
+            "itemtype": "method",
+            "name": "animate",
+            "class": "gl"
+        },
+        {
+            "file": "../src/core.js",
+            "line": 142,
             "description": "Destroy this WebGL context (removes also the Canvas from the DOM)",
             "itemtype": "method",
-            "name": "gl.destroy",
-            "class": "geo"
+            "name": "destroy",
+            "class": "gl"
         },
         {
             "file": "../src/core.js",
-            "line": 151,
-            "description": "Tells the system to capture mouse events on the canvas. This will trigger onmousedown, onmousemove, onmouseup, onmousewheel callbacks in the canvas.",
+            "line": 161,
+            "description": "Tells the system to capture mouse events on the canvas. \nThis will trigger onmousedown, onmousemove, onmouseup, onmousewheel callbacks assigned in the gl context\nexample: gl.onmousedown = function(e){ ... }\nThe event is a regular MouseEvent with some extra parameters",
             "itemtype": "method",
-            "name": "gl.captureMouse",
+            "name": "captureMouse",
             "params": [
                 {
                     "name": "capture_wheel",
@@ -370,14 +399,14 @@
                     "type": "Boolean"
                 }
             ],
-            "class": "geo"
+            "class": "gl"
         },
         {
             "file": "../src/core.js",
-            "line": 269,
+            "line": 282,
             "description": "Tells the system to capture key events on the canvas. This will trigger onkey",
             "itemtype": "method",
-            "name": "gl.captureKeys",
+            "name": "captureKeys",
             "params": [
                 {
                     "name": "prevent_default",
@@ -385,38 +414,38 @@
                     "type": "Boolean"
                 }
             ],
-            "class": "geo"
+            "class": "gl"
         },
         {
             "file": "../src/core.js",
-            "line": 326,
+            "line": 339,
             "description": "Tells the system to capture gamepad events on the canvas.",
             "itemtype": "method",
-            "name": "gl.captureGamepads",
-            "class": "geo"
+            "name": "captureGamepads",
+            "class": "gl"
         },
         {
             "file": "../src/core.js",
-            "line": 345,
+            "line": 358,
             "description": "returns the detected gamepads on the system",
             "itemtype": "method",
-            "name": "gl.getGamepads",
-            "class": "geo"
+            "name": "getGamepads",
+            "class": "gl"
         },
         {
             "file": "../src/core.js",
-            "line": 372,
+            "line": 385,
             "description": "launches de canvas in fullscreen mode",
             "itemtype": "method",
-            "name": "gl.fullscreen",
-            "class": "geo"
+            "name": "fullscreen",
+            "class": "gl"
         },
         {
             "file": "../src/core.js",
-            "line": 389,
+            "line": 402,
             "description": "returns a canvas with a snapshot of an area\nthis is safer than using the canvas itself due to internals of webgl",
             "itemtype": "method",
-            "name": "gl.snapshot",
+            "name": "snapshot",
             "params": [
                 {
                     "name": "startx",
@@ -443,14 +472,14 @@
                 "description": "canvas",
                 "type": "Canvas"
             },
-            "class": "geo"
+            "class": "gl"
         },
         {
             "file": "../src/core.js",
-            "line": 427,
+            "line": 440,
             "description": "returns a texture and caches it inside gl.textures[]",
             "itemtype": "method",
-            "name": "gl.loadTexture",
+            "name": "loadTexture",
             "params": [
                 {
                     "name": "url",
@@ -472,14 +501,14 @@
                 "description": "texture",
                 "type": "Texture"
             },
-            "class": "geo"
+            "class": "gl"
         },
         {
             "file": "../src/core.js",
-            "line": 459,
+            "line": 472,
             "description": "draws a texture to the viewport",
             "itemtype": "method",
-            "name": "gl.drawTexture",
+            "name": "drawTexture",
             "params": [
                 {
                     "name": "texture",
@@ -527,7 +556,15 @@
                     "type": "Number"
                 }
             ],
-            "class": "geo"
+            "class": "gl"
+        },
+        {
+            "file": "../src/core.js",
+            "line": 520,
+            "description": "use it to reset the the initial gl state",
+            "itemtype": "method",
+            "name": "gl.reset",
+            "class": "gl"
         },
         {
             "file": "../src/geo.js",
@@ -2352,7 +2389,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 499,
+            "line": 509,
             "description": "Renders a fullscreen quad with this shader applied",
             "itemtype": "method",
             "name": "toViewport",
@@ -2367,7 +2404,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 514,
+            "line": 524,
             "description": "Returns a shader ready to render a quad in fullscreen, use with Mesh.getScreenQuad() mesh",
             "itemtype": "method",
             "name": "Shader.getScreenShader",
@@ -2375,7 +2412,15 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 527,
+            "line": 537,
+            "description": "Returns a shader ready to render a quad in fullscreen, allows color, use with Mesh.getScreenQuad() mesh",
+            "itemtype": "method",
+            "name": "Shader.getColoredScreenShader",
+            "class": "Shader"
+        },
+        {
+            "file": "../src/shader.js",
+            "line": 550,
             "description": "Returns a shader ready to render a quad with transform, use with Mesh.getScreenQuad() mesh\nshader must have: u_position, u_size, u_viewport, u_transform (mat3)",
             "itemtype": "method",
             "name": "Shader.getQuadShader",
@@ -2383,7 +2428,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 541,
+            "line": 564,
             "description": "Returns a shader ready to render part of a texture into the viewport\nshader must have: u_position, u_size, u_viewport, u_transform, u_texture_area (vec4)",
             "itemtype": "method",
             "name": "Shader.getPartialQuadShader",
@@ -2391,7 +2436,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 555,
+            "line": 578,
             "description": "Returns a shader used to apply gaussian blur to one texture in one axis (you should use it twice to get a gaussian blur)\nshader params are: vec2 u_offset, float u_intensity",
             "itemtype": "method",
             "name": "Shader.getBlurShader",
@@ -2399,7 +2444,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 590,
+            "line": 613,
             "description": "Returns a shader to apply FXAA antialiasing\nparams are vec2 u_viewportSize, mat4 u_iViewportSize",
             "itemtype": "method",
             "name": "Shader.getFXAAShader",
@@ -2523,7 +2568,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 302,
+            "line": 351,
             "description": "Similar to drawTo but it also stores the depth in a depth texture",
             "itemtype": "method",
             "name": "drawToColorAndDepth",
@@ -2548,7 +2593,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 335,
+            "line": 384,
             "description": "Copy content of one texture into another",
             "itemtype": "method",
             "name": "copyTo",
@@ -2563,7 +2608,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 362,
+            "line": 411,
             "description": "Render texture in a quad to full viewport size",
             "itemtype": "method",
             "name": "toViewport",
@@ -2583,7 +2628,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 379,
+            "line": 428,
             "description": "Render texture in a quad of specified area",
             "itemtype": "method",
             "name": "renderQuad",
@@ -2613,7 +2658,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 409,
+            "line": 458,
             "description": "Copy texture content to a canvas",
             "itemtype": "method",
             "name": "toCanvas",
@@ -2628,7 +2673,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 436,
+            "line": 485,
             "description": "Applies a blur filter of one pixel to the texture (be careful using it, it is slow)",
             "itemtype": "method",
             "name": "applyBlur",
@@ -2667,7 +2712,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 472,
+            "line": 521,
             "description": "Loads and uploads a texture from a url",
             "itemtype": "method",
             "name": "Texture.fromURL",
@@ -2696,7 +2741,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 524,
+            "line": 573,
             "description": "Create a texture from an Image",
             "itemtype": "method",
             "name": "Texture.fromImage",
@@ -2720,7 +2765,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 546,
+            "line": 595,
             "description": "Create a texture from a Video",
             "itemtype": "method",
             "name": "Texture.fromVideo",
@@ -2744,7 +2789,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 568,
+            "line": 617,
             "description": "Create a clone of a texture",
             "itemtype": "method",
             "name": "Texture.fromTexture",
@@ -2768,7 +2813,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 582,
+            "line": 631,
             "description": "Create a texture from an ArrayBuffer containing the pixels",
             "itemtype": "method",
             "name": "Texture.fromTexture",
@@ -2802,7 +2847,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 617,
+            "line": 666,
             "description": "Create a texture from an ArrayBuffer containing the pixels",
             "itemtype": "method",
             "name": "Texture.fromDDSInMemory",
@@ -2826,7 +2871,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 639,
+            "line": 688,
             "description": "Create a generative texture from a shader ( must GL.Shader.getScreenShader as reference for the shader )",
             "itemtype": "method",
             "name": "Texture.fromShader",
@@ -2860,7 +2905,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 664,
+            "line": 713,
             "description": "Create a cubemap texture from a set of 6 images",
             "itemtype": "method",
             "name": "Texture.cubemapFromImages",
@@ -2884,7 +2929,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 705,
+            "line": 754,
             "description": "Create a cubemap texture from a single image that contains all six images arranged vertically",
             "itemtype": "method",
             "name": "Texture.cubemapFromImage",
@@ -2908,7 +2953,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 735,
+            "line": 784,
             "description": "Create a cubemap texture from a single image url that contains the six images in vertical",
             "itemtype": "method",
             "name": "Texture.cubemapFromURL",
@@ -2932,10 +2977,22 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 772,
+            "line": 821,
+            "description": "returns an ArrayBuffer with the pixels in the texture, they are fliped in Y",
+            "itemtype": "method",
+            "name": "getPixels",
+            "return": {
+                "description": "the data",
+                "type": "ArrayBuffer"
+            },
+            "class": "Texture"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 861,
             "description": "returns a Blob containing all the data from the texture",
             "itemtype": "method",
-            "name": "Texture.toBlob",
+            "name": "toBlob",
             "return": {
                 "description": "the blob containing the data",
                 "type": "Blob"
@@ -2944,10 +3001,17 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 825,
+            "line": 917,
             "description": "returns a base64 String containing all the data from the texture",
             "itemtype": "method",
-            "name": "Texture.toBase64",
+            "name": "toBase64",
+            "params": [
+                {
+                    "name": "flip_y",
+                    "description": "if you want to flip vertically the image, WebGL saves the images upside down",
+                    "type": "Boolean"
+                }
+            ],
             "return": {
                 "description": "the data in base64 format",
                 "type": "String"
@@ -2956,7 +3020,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 853,
+            "line": 959,
             "description": "generates some basic metadata about the image",
             "itemtype": "method",
             "name": "generateMetadata",

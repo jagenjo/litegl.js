@@ -47,6 +47,8 @@
             
                 <li><a href="../classes/geo.html">geo</a></li>
             
+                <li><a href="../classes/gl.html">gl</a></li>
+            
                 <li><a href="../classes/GL.html">GL</a></li>
             
                 <li><a href="../classes/Indexer.html">Indexer</a></li>
@@ -533,6 +535,16 @@ Shader.SCREEN_FRAGMENT_SHADER = &quot;\n\
 			}\n\
 			&quot;;
 
+Shader.SCREEN_COLORED_FRAGMENT_SHADER = &quot;\n\
+			precision highp float;\n\
+			uniform sampler2D u_texture;\n\
+			uniform vec4 u_color;\n\
+			varying vec2 v_coord;\n\
+			void main() {\n\
+				gl_FragColor = u_color * texture2D(u_texture, v_coord);\n\
+			}\n\
+			&quot;;
+
 Shader.SCREEN_FLAT_FRAGMENT_SHADER = &quot;\n\
 			precision highp float;\n\
 			uniform vec4 u_color;\n\
@@ -581,7 +593,7 @@ Shader.QUAD2_FRAGMENT_SHADER = &quot;\n\
 			uniform vec4 u_texture_area;\n\
 			varying vec2 v_coord;\n\
 			void main() {\n\
-			    vec2 uv = vec2( mix(u_texture_area.x, u_texture_area.z, v_coord.x), mix(u_texture_area.y, u_texture_area.w, v_coord.y) );\n\
+			    vec2 uv = vec2( mix(u_texture_area.x, u_texture_area.z, v_coord.x), 1.0 - mix(u_texture_area.w, u_texture_area.y, v_coord.y) );\n\
 				gl_FragColor = u_color * texture2D(u_texture, uv);\n\
 			}\n\
 			&quot;;
@@ -628,6 +640,19 @@ Shader.getScreenShader = function(gl)
 	if(shader)
 		return shader;
 	return gl.shaders[&quot;:screen&quot;] = new GL.Shader( Shader.SCREEN_VERTEX_SHADER, Shader.SCREEN_FRAGMENT_SHADER );
+}
+
+/**
+* Returns a shader ready to render a quad in fullscreen, allows color, use with Mesh.getScreenQuad() mesh
+* @method Shader.getColoredScreenShader
+*/
+Shader.getColoredScreenShader = function(gl)
+{
+	gl = gl || global.gl;
+	var shader = gl.shaders[&quot;:colored_screen&quot;];
+	if(shader)
+		return shader;
+	return gl.shaders[&quot;:colored_screen&quot;] = new GL.Shader( Shader.SCREEN_VERTEX_SHADER, Shader.SCREEN_COLORED_FRAGMENT_SHADER );
 }
 
 /**

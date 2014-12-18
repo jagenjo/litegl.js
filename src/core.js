@@ -1,6 +1,6 @@
 
 /**
-* creates a new WebGL canvas
+* creates a new WebGL context (it can create the canvas or use an existing one)
 * @method create
 * @param {Object} options supported are: width, height
 * @return {gl} gl context for webgl
@@ -26,28 +26,37 @@ GL.create = function(options) {
 	try { global.gl = global.gl || canvas.getContext('experimental-webgl', options); } catch (e) {}
 	if (!global.gl) { throw 'WebGL not supported'; }
 
+	/**
+	* the webgl context returned by GL.create, its a WebGLRenderingContext with some extra methods added
+	* @class gl
+	*/
 	var gl = global.gl;
 
 	canvas.is_webgl = true;
 	gl.context_id = this.last_context_id++;
 
 	//get some common extensions
-	gl.derivatives_supported = gl.getExtension('OES_standard_derivatives') || false ;
-	gl.depth_ext = gl.getExtension("WEBGL_depth_texture") || gl.getExtension("WEBKIT_WEBGL_depth_texture") || gl.getExtension("MOZ_WEBGL_depth_texture");
+	gl.extensions = {};
+	gl.extensions["OES_standard_derivatives"] = gl.derivatives_supported = gl.getExtension('OES_standard_derivatives') || false;
+	gl.extensions["WEBGL_depth_texture"] = gl.getExtension("WEBGL_depth_texture") || gl.getExtension("WEBKIT_WEBGL_depth_texture") || gl.getExtension("MOZ_WEBGL_depth_texture");
+	gl.extensions["OES_element_index_uint"] = gl.getExtension("OES_element_index_uint");
+	gl.extensions["WEBGL_draw_buffers"] = gl.getExtension("WEBGL_draw_buffers");
 
 	//for float textures
-	gl.float_ext = gl.getExtension("OES_texture_float");
-	gl.float_ext_linear = gl.getExtension("OES_texture_float_linear");
-	gl.half_float_ext = gl.getExtension("OES_texture_half_float");
-	gl.half_float_ext_linear = gl.getExtension("OES_texture_half_float_linear");
-	if(!gl.half_float_ext_linear)
-		gl.half_float_ext = null;
+	gl.extensions["OES_texture_float_linear"] = gl.getExtension("OES_texture_float_linear");
+	if(gl.extensions["OES_texture_float_linear"])
+		gl.extensions["OES_texture_float"] = gl.getExtension("OES_texture_float");
+
+	gl.extensions["OES_texture_half_float_linear"] = gl.getExtension("OES_texture_half_float_linear");
+	if(gl.extensions["OES_texture_half_float_linear"])
+		gl.extensions["OES_texture_half_float"] = gl.getExtension("OES_texture_half_float");
 
 	gl.HALF_FLOAT_OES = 0x8D61; 
-	if(gl.half_float_ext)
-		gl.HALF_FLOAT_OES = gl.half_float_ext.HALF_FLOAT_OES;
+	if(gl.extensions["OES_texture_half_float"])
+		gl.HALF_FLOAT_OES = gl.extensions["OES_texture_half_float"].HALF_FLOAT_OES;
+	gl.HIGH_PRECISION_FORMAT = gl.extensions["OES_texture_half_float"] ? gl.HALF_FLOAT_OES : (gl.extensions["OES_texture_float"] ? gl.FLOAT : gl.UNSIGNED_BYTE); //because Firefox dont support half float
+
 	gl.max_texture_units = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
-	gl.HIGH_PRECISION_FORMAT = gl.half_float_ext ? gl.HALF_FLOAT_OES : (gl.float_ext ? gl.FLOAT : gl.UNSIGNED_BYTE); //because Firefox dont support half float
 
 	//viewport hack to retrieve it without using getParameter (which is slow)
 	gl._viewport_func = gl.viewport;
@@ -68,14 +77,19 @@ GL.create = function(options) {
 	gl.meshes = {};
 
 	/**
-	* sets this context as the current gl context
-	* @method gl.makeCurrent
+	* sets this context as the current global gl context (in case you have more than one)
+	* @method makeCurrent
 	*/
 	gl.makeCurrent = function()
 	{
 		global.gl = this;
 	}
 
+	/**
+	* executes callback inside this webgl context
+	* @method execute
+	* @param {Function} callback
+	*/
 	gl.execute = function(callback)
 	{
 		var old_gl = global.gl;
@@ -87,7 +101,8 @@ GL.create = function(options) {
 
 	/**
 	* Launch animation loop (calls gl.onupdate and gl.ondraw every frame)
-	* @method gl.animate
+	* example: gl.ondraw = function(){ ... }   or  gl.onupdate = function(dt) { ... }
+	* @method animate
 	*/
 	gl.animate = function() {
 		var post = global.requestAnimationFrame;
@@ -131,7 +146,7 @@ GL.create = function(options) {
 
 	/**
 	* Destroy this WebGL context (removes also the Canvas from the DOM)
-	* @method gl.destroy
+	* @method destroy
 	*/
 	gl.destroy = function() {
 		//unbind global events
@@ -149,8 +164,11 @@ GL.create = function(options) {
 	}
 
 	/**
-	* Tells the system to capture mouse events on the canvas. This will trigger onmousedown, onmousemove, onmouseup, onmousewheel callbacks in the canvas.
-	* @method gl.captureMouse
+	* Tells the system to capture mouse events on the canvas. 
+	* This will trigger onmousedown, onmousemove, onmouseup, onmousewheel callbacks assigned in the gl context
+	* example: gl.onmousedown = function(e){ ... }
+	* The event is a regular MouseEvent with some extra parameters
+	* @method captureMouse
 	* @param {boolean} capture_wheel capture also the mouse wheel
 	*/
 	gl.captureMouse = function(capture_wheel) {
@@ -268,7 +286,7 @@ GL.create = function(options) {
 
 	/**
 	* Tells the system to capture key events on the canvas. This will trigger onkey
-	* @method gl.captureKeys
+	* @method captureKeys
 	* @param {boolean} prevent_default prevent default behaviour (like scroll on the web, etc)
 	*/
 	var onkey_handler = null;
@@ -325,7 +343,7 @@ GL.create = function(options) {
 
 	/**
 	* Tells the system to capture gamepad events on the canvas. 
-	* @method gl.captureGamepads
+	* @method captureGamepads
 	*/
 	gl.captureGamepads = function()
 	{
@@ -344,7 +362,7 @@ GL.create = function(options) {
 
 	/**
 	* returns the detected gamepads on the system
-	* @method gl.getGamepads
+	* @method getGamepads
 	*/
 	gl.getGamepads = function()
 	{
@@ -371,7 +389,7 @@ GL.create = function(options) {
 
 	/**
 	* launches de canvas in fullscreen mode
-	* @method gl.fullscreen
+	* @method fullscreen
 	*/
 	gl.fullscreen = function()
 	{
@@ -389,7 +407,7 @@ GL.create = function(options) {
 	/**
 	* returns a canvas with a snapshot of an area
 	* this is safer than using the canvas itself due to internals of webgl
-	* @method gl.snapshot
+	* @method snapshot
 	* @param {Number} startx viewport x coordinate
 	* @param {Number} starty viewport y coordinate from bottom
 	* @param {Number} areax viewport area width
@@ -426,7 +444,7 @@ GL.create = function(options) {
 	var loading_textures = {};
 	/**
 	* returns a texture and caches it inside gl.textures[]
-	* @method gl.loadTexture
+	* @method loadTexture
 	* @param {String} url
 	* @param {Object} options (same options as when creating a texture)
 	* @param {Function} callback function called once the texture is loaded
@@ -458,7 +476,7 @@ GL.create = function(options) {
 
 	/**
 	* draws a texture to the viewport
-	* @method gl.drawTexture
+	* @method drawTexture
 	* @param {Texture} texture
 	* @param {number} x in viewport coordinates 
 	* @param {number} y in viewport coordinates 
@@ -480,12 +498,14 @@ GL.create = function(options) {
 		return (function(texture, x,y, w,h, tx,ty, tw,th, shader, uniforms)
 		{
 			pos[0] = x;	pos[1] = y;
+			if(w === undefined) w = texture.width;
+			if(h === undefined) h = texture.height;
 			size[0] = w; size[1] = h;
 
 			if(tx === undefined) tx = 0;
 			if(ty === undefined) ty = 0;
-			if(tw === undefined) tw = 1;
-			if(th === undefined) th = 1;
+			if(tw === undefined) tw = texture.width;
+			if(th === undefined) th = texture.height;
 
 			area[0] = tx / texture.width;
 			area[1] = ty / texture.height;
@@ -495,12 +515,33 @@ GL.create = function(options) {
 			shader = shader || Shader.getPartialQuadShader(this);
 			var mesh = Mesh.getScreenQuad(this);
 			texture.bind(0);
-			shader.uniforms({u_texture: 0, u_position: pos, u_color: white, u_size: size, u_texture_area: area, u_viewport: gl.viewport_data.subarray(2,4), u_transform: identity });
+			shader.uniforms({u_texture: 0, u_position: pos, u_color: white, u_size: size, u_texture_area: area, u_viewport: this.viewport_data.subarray(2,4), u_transform: identity });
 			if(uniforms)
 				shader.uniforms(uniforms);
 			shader.draw( mesh, gl.TRIANGLES );
 		});
 	})();
+
+	/**
+	* use it to reset the the initial gl state
+	* @method gl.reset
+	*/
+	gl.reset = function()
+	{
+		//viewport
+		gl.viewport(0,0, this.canvas.width, this.canvas.height );
+
+		//flags
+		gl.disable( gl.BLEND );
+		gl.disable( gl.CULL_FACE );
+		gl.disable( gl.DEPTH_TEST );
+		gl.frontFace( gl.CCW );
+
+		//texture
+		gl._current_texture_drawto = null;
+		gl._current_fbo_color = null;
+		gl._current_fbo_depth = null;
+	}
 
 	return gl;
 }

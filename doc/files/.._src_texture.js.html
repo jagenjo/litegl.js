@@ -47,6 +47,8 @@
             
                 <li><a href="../classes/geo.html">geo</a></li>
             
+                <li><a href="../classes/gl.html">gl</a></li>
+            
                 <li><a href="../classes/GL.html">GL</a></li>
             
                 <li><a href="../classes/Indexer.html">Indexer</a></li>
@@ -345,12 +347,12 @@ Texture.prototype.uploadData = function(data, options )
 }
 
 Texture.cubemap_camera_parameters = [
-	{ dir: vec3.fromValues(1,0,0), 	up: vec3.fromValues(0,-1,0) }, //positive X
-	{ dir: vec3.fromValues(-1,0,0), up: vec3.fromValues(0,-1,0) }, //negative X
-	{ dir: vec3.fromValues(0,1,0), 	up: vec3.fromValues(0,0,1) }, //positive Y
-	{ dir: vec3.fromValues(0,-1,0), up: vec3.fromValues(0,0,-1) }, //negative Y
-	{ dir: vec3.fromValues(0,0,1), 	up: vec3.fromValues(0,-1,0) }, //positive Z
-	{ dir: vec3.fromValues(0,0,-1), up: vec3.fromValues(0,-1,0) } //negative Z
+	{ type:&quot;posX&quot;, dir: vec3.fromValues(1,0,0), 	up: vec3.fromValues(0,-1,0) }, //positive X
+	{ type:&quot;negX&quot;, dir: vec3.fromValues(-1,0,0),	up: vec3.fromValues(0,-1,0) }, //negative X
+	{ type:&quot;posY&quot;, dir: vec3.fromValues(0,1,0), 	up: vec3.fromValues(0,0,1) }, //positive Y
+	{ type:&quot;negY&quot;, dir: vec3.fromValues(0,-1,0),	up: vec3.fromValues(0,0,-1) }, //negative Y
+	{ type:&quot;posZ&quot;, dir: vec3.fromValues(0,0,1), 	up: vec3.fromValues(0,-1,0) }, //positive Z
+	{ type:&quot;negZ&quot;, dir: vec3.fromValues(0,0,-1),	up: vec3.fromValues(0,-1,0) } //negative Z
 ];
 
 /**
@@ -362,41 +364,90 @@ Texture.cubemap_camera_parameters = [
 Texture.prototype.drawTo = function(callback, params)
 {
 	var gl = this.gl;
-	var v = gl.getViewport();
-
-	var framebuffer = gl._framebuffer = gl._framebuffer || gl.createFramebuffer();
-	var renderbuffer = gl._renderbuffer = gl._renderbuffer || gl.createRenderbuffer();
 
 	if(this.format == gl.DEPTH_COMPONENT)
 		throw(&quot;cannot use drawTo in depth textures, use Texture.drawToColorAndDepth&quot;);
 
+	var v = gl.getViewport();
+
+	var framebuffer = gl._framebuffer = gl._framebuffer || gl.createFramebuffer();
 	gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer );
-	gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer );
+
+	//this code allows to reuse old renderbuffers instead of creating and destroying them for every frame
+	var renderbuffer = null;
+	//var renderbuffer = gl._renderbuffer = gl._renderbuffer || gl.createRenderbuffer();
+	if(!gl._renderbuffers_pool)
+		gl._renderbuffers_pool = {};
+	var key = this.width + &quot;:&quot; + this.height;
+	if(!gl._renderbuffers_pool[ key ])
+	{
+		gl._renderbuffers_pool[ key ] = renderbuffer = gl.createRenderbuffer();
+		renderbuffer.width = this.width;
+		renderbuffer.height = this.height;
+		gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer );
+		gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.width, this.height);
+	}
+	else
+	{
+		renderbuffer = gl._renderbuffers_pool[ key ];
+		gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer );
+	}
+
 
 	//create to store depth
+	/*
 	if (this.width != renderbuffer.width || this.height != renderbuffer.height ) {
 	  renderbuffer.width = this.width;
 	  renderbuffer.height = this.height;
 	  gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.width, this.height);
 	}
+	*/
 
 	gl.viewport(0, 0, this.width, this.height);
 
-	if(this.texture_type == gl.TEXTURE_2D)
-	{
-		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.handler, 0);
-		gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
-		callback(this, params);
-	}
-	else if(this.texture_type == gl.TEXTURE_CUBE_MAP)
-	{
-		for(var i = 0; i &lt; 6; i++)
+	if(gl._current_texture_drawto)
+		throw(&quot;Texture.drawTo: Cannot use drawTo from inside another drawTo&quot;);
+
+	gl._current_texture_drawto = this;
+	gl._current_fbo_color = framebuffer;
+	gl._current_fbo_depth = renderbuffer;
+
+	//try
+	//{
+		if(this.texture_type == gl.TEXTURE_2D)
 		{
-			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X+i, this.handler, 0);
+			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.handler, 0);
 			gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
-			callback(this,i, params);
+			callback(this, params);
 		}
+		else if(this.texture_type == gl.TEXTURE_CUBE_MAP)
+		{
+			for(var i = 0; i &lt; 6; i++)
+			{
+				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X+i, this.handler, 0);
+				gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
+				callback(this,i, params);
+			}
+		}
+	/*
 	}
+	catch (err)
+	{
+		//clean stuff
+		gl._current_texture_drawto = null;
+		gl._current_fbo_color = null;
+		gl._current_fbo_depth = null;
+		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+		gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+		gl.viewport(v[0], v[1], v[2], v[3]);
+		console.trace();
+		throw(err);
+	}
+	*/
+
+	gl._current_texture_drawto = null;
+	gl._current_fbo_color = null;
+	gl._current_fbo_depth = null;
 
 	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 	gl.bindRenderbuffer(gl.RENDERBUFFER, null);
@@ -876,8 +927,48 @@ Texture.cubemapFromURL = function(url, options, on_complete) {
 };
 
 /**
+* returns an ArrayBuffer with the pixels in the texture, they are fliped in Y
+* @method getPixels
+* @return {ArrayBuffer} the data
+*/
+Texture.prototype.getPixels = function()
+{
+	var gl = this.gl;
+	var v = gl.getViewport();
+
+	var framebuffer = gl.createFramebuffer();
+	var renderbuffer = gl.createRenderbuffer();
+	if(this.format == gl.DEPTH_COMPONENT)
+		throw(&quot;cannot use getPixels in depth textures&quot;);
+
+	gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer );
+	gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer );
+
+	//create to store depth
+	renderbuffer.width = this.width;
+	renderbuffer.height = this.height;
+	gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.width, this.height);
+
+	gl.viewport(0, 0, this.width, this.height);
+	if(this.texture_type != gl.TEXTURE_2D)
+		throw(&quot;getPixels only work with texture2D&quot;);
+
+	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.handler, 0);
+	gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
+
+	var buffer = new Uint8Array( this.width * this.height * 4);
+	gl.readPixels(0,0, this.width, this.height, gl.RGBA, gl.UNSIGNED_BYTE, buffer);
+
+	gl.bindFramebuffer(gl.FRAMEBUFFER, gl._current_fbo_color );
+	gl.bindRenderbuffer(gl.RENDERBUFFER, gl._current_fbo_depth );
+
+	gl.viewport(v[0], v[1], v[2], v[3]);
+	return buffer;
+}
+
+/**
 * returns a Blob containing all the data from the texture
-* @method Texture.toBlob
+* @method toBlob
 * @return {Blob} the blob containing the data
 */
 Texture.prototype.toBlob = function()
@@ -903,10 +994,13 @@ Texture.prototype.toBlob = function()
 	}
 
 	//Read pixels form WebGL
+	var buffer = this.getPixels();
+	/*
 	var buffer = new Uint8Array(w*h*4);
 	this.drawTo( function() {
 		gl.readPixels(0,0,w,h,gl.RGBA,gl.UNSIGNED_BYTE,buffer);
 	});
+	*/
 
 	//dump to canvas
 	var canvas = createCanvas(w,h);
@@ -930,19 +1024,23 @@ Texture.prototype.toBlob = function()
 
 /**
 * returns a base64 String containing all the data from the texture
-* @method Texture.toBase64
+* @method toBase64
+* @param {boolean} flip_y if you want to flip vertically the image, WebGL saves the images upside down
 * @return {String} the data in base64 format
 */
-Texture.prototype.toBase64 = function()
+Texture.prototype.toBase64 = function( flip_y )
 {
 	var w = this.width;
 	var h = this.height;
 
 	//Read pixels form WebGL
+	var buffer = this.getPixels();
+	/*
 	var buffer = new Uint8Array(w*h*4);
 	this.drawTo( function() {
 		gl.readPixels(0,0,w,h,gl.RGBA,gl.UNSIGNED_BYTE,buffer);
 	});
+	*/
 
 	//dump to canvas
 	var canvas = createCanvas(w,h);
@@ -950,6 +1048,16 @@ Texture.prototype.toBase64 = function()
 	var pixels = ctx.getImageData(0,0,w,h);
 	pixels.data.set( buffer );
 	ctx.putImageData(pixels,0,0);
+
+	if(flip_y)
+	{
+		var temp_canvas = createCanvas(w,h);
+		var temp_ctx = temp_canvas.getContext(&quot;2d&quot;);
+		temp_ctx.translate(0,h);
+		temp_ctx.scale(1,-1);
+		temp_ctx.drawImage( canvas, 0, 0);
+		canvas = temp_canvas;
+	}
 
 	//create an image
 	var img = canvas.toDataURL(&quot;image/png&quot;); //base64 string

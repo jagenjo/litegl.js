@@ -80,6 +80,18 @@ String.prototype.replaceAll = function(words){
     return str;
 };
 
+//used for hashing keys
+String.prototype.hashCode = function(){
+    var hash = 0, i, c, l;
+    if (this.length == 0) return hash;
+    for (i = 0, l = this.length; i < l; ++i) {
+        c  = this.charCodeAt(i);
+        hash  = ((hash<<5)-hash)+c;
+        hash |= 0; // Convert to 32bit integer
+    }
+    return hash;
+};
+
 //avoid errors when Typed array is expected and regular array is found
 //Array.prototype.subarray = Array.prototype.slice;
 Object.defineProperty(Array.prototype, "subarray", { value: Array.prototype.slice, enumerable: false });
