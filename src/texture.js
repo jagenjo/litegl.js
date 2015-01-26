@@ -102,7 +102,7 @@ global.Texture = GL.Texture = function Texture(width, height, options, gl) {
 Texture.framebuffer = null;
 Texture.renderbuffer = null;
 Texture.loading_color = new Uint8Array([0,0,0,0]);
-
+Texture.use_renderbuffer_pool = true; //should improve performance
 
 Texture.prototype.getProperties = function()
 {
@@ -275,31 +275,42 @@ Texture.prototype.drawTo = function(callback, params)
 
 	//this code allows to reuse old renderbuffers instead of creating and destroying them for every frame
 	var renderbuffer = null;
-	//var renderbuffer = gl._renderbuffer = gl._renderbuffer || gl.createRenderbuffer();
-	if(!gl._renderbuffers_pool)
-		gl._renderbuffers_pool = {};
-	//generate unique key for this renderbuffer
-	var key = this.width + ":" + this.height;
 
-	//reuse or create new one
-	if( gl._renderbuffers_pool[ key ] ) //Reuse old
+	if( Texture.use_renderbuffer_pool ) //create a renderbuffer pool
 	{
-		renderbuffer = gl._renderbuffers_pool[ key ];
-		renderbuffer.time = now;
-		gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer );
+		if(!gl._renderbuffers_pool)
+			gl._renderbuffers_pool = {};
+		//generate unique key for this renderbuffer
+		var key = this.width + ":" + this.height;
+
+		//reuse or create new one
+		if( gl._renderbuffers_pool[ key ] ) //Reuse old
+		{
+			renderbuffer = gl._renderbuffers_pool[ key ];
+			renderbuffer.time = now;
+			gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer );
+		}
+		else
+		{
+			//create temporary buffer
+			gl._renderbuffers_pool[ key ] = renderbuffer = gl.createRenderbuffer();
+			renderbuffer.time = now;
+			renderbuffer.width = this.width;
+			renderbuffer.height = this.height;
+			gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer );
+
+			//destroy after one minute 
+			setTimeout( inner_check_destroy.bind(renderbuffer), 1000*60 );
+		}
 	}
 	else
 	{
-		//create temporary buffer
-		gl._renderbuffers_pool[ key ] = renderbuffer = gl.createRenderbuffer();
-		renderbuffer.time = now;
+		renderbuffer = gl._renderbuffer = gl._renderbuffer || gl.createRenderbuffer();
 		renderbuffer.width = this.width;
 		renderbuffer.height = this.height;
 		gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer );
-
-		//destroy after one minute 
-		setTimeout( inner_check_destroy.bind(renderbuffer), 1000*60 );
 	}
+
 
 	//bind buffer
 	gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.width, this.height);
@@ -330,8 +341,8 @@ Texture.prototype.drawTo = function(callback, params)
 
 	gl.viewport(0, 0, this.width, this.height);
 
-	if(gl._current_texture_drawto)
-		throw("Texture.drawTo: Cannot use drawTo from inside another drawTo");
+	//if(gl._current_texture_drawto)
+	//	throw("Texture.drawTo: Cannot use drawTo from inside another drawTo");
 
 	gl._current_texture_drawto = this;
 	gl._current_fbo_color = framebuffer;
@@ -349,9 +360,12 @@ Texture.prototype.drawTo = function(callback, params)
 		}
 		else if(this.texture_type == gl.TEXTURE_CUBE_MAP)
 		{
+			var faces = [ gl.TEXTURE_CUBE_MAP_POSITIVE_X, gl.TEXTURE_CUBE_MAP_NEGATIVE_X, gl.TEXTURE_CUBE_MAP_POSITIVE_Y, gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, gl.TEXTURE_CUBE_MAP_POSITIVE_Z, gl.TEXTURE_CUBE_MAP_NEGATIVE_Z ];
+
 			for(var i = 0; i < 6; i++)
 			{
-				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X+i, this.handler, 0);
+				var face_enum = faces[i];
+				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, face_enum, this.handler, 0);
 				gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
 				callback(this,i, params);
 			}

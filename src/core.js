@@ -340,6 +340,13 @@ GL.create = function(options) {
 		if(pressed && gl.onbuttondown) gl.onbuttondown(e);
 		else if(!pressed && gl.onbuttonup) gl.onbuttonup(e);
 	}
+	
+	function onGamepad(e)
+	{
+		console.log(e);
+		if(gl.ongamepad) 
+			gl.ongamepad(e);
+	}
 
 	/**
 	* Tells the system to capture gamepad events on the canvas. 
@@ -358,6 +365,9 @@ GL.create = function(options) {
 		window.addEventListener("gamepadButtonUp", function(e) { onButton(e, false); }, false);
 		window.addEventListener("MozGamepadButtonUp", function(e) { onButton(e, false); }, false);
 		window.addEventListener("WebkitGamepadButtonUp", function(e) { onButton(e, false); }, false);
+
+		window.addEventListener("gamepadconnected", onGamepad, false);
+		window.addEventListener("gamepaddisconnected", onGamepad, false);
 	}
 
 	/**
@@ -382,6 +392,37 @@ GL.create = function(options) {
 					else if(this.gamepads[i] && !gamepads[i] && this.ongamepaddisconnected)
 						this.ongamepaddisconnected(this.gamepads[i]);
 				}
+				//xbox controller mapping
+				var xbox = { axes:[], buttons:{}, hat: ""};
+				xbox.axes["lx"] = gamepad.axes[0];
+				xbox.axes["ly"] = gamepad.axes[1];
+				xbox.axes["rx"] = gamepad.axes[2];
+				xbox.axes["ry"] = gamepad.axes[3];
+				for(var i = 0; i < gamepad.buttons.length; i++)
+				{
+					switch(i) //I use a switch to ensure that a player with another gamepad could play
+					{
+						case 0: xbox.buttons["a"] = gamepad.buttons[i].pressed; break;
+						case 1: xbox.buttons["b"] = gamepad.buttons[i].pressed; break;
+						case 2: xbox.buttons["x"] = gamepad.buttons[i].pressed; break;
+						case 3: xbox.buttons["y"] = gamepad.buttons[i].pressed; break;
+						case 4: xbox.buttons["lb"] = gamepad.buttons[i].pressed; break;
+						case 5: xbox.buttons["rb"] = gamepad.buttons[i].pressed; break;
+						case 6: xbox.buttons["lt"] = gamepad.buttons[i].pressed; break;
+						case 7: xbox.buttons["rt"] = gamepad.buttons[i].pressed; break;
+						case 8: xbox.buttons["back"] = gamepad.buttons[i].pressed; break;
+						case 9: xbox.buttons["start"] = gamepad.buttons[i].pressed; break;
+						case 10: xbox.buttons["ls"] = gamepad.buttons[i].pressed; break;
+						case 11: xbox.buttons["rs"] = gamepad.buttons[i].pressed; break;
+						case 12: if( gamepad.buttons[i].pressed) xbox.hat += "up"; break;
+						case 13: if( gamepad.buttons[i].pressed) xbox.hat += "down"; break;
+						case 14: if( gamepad.buttons[i].pressed) xbox.hat += "left"; break;
+						case 15: if( gamepad.buttons[i].pressed) xbox.hat += "right"; break;
+						case 16: xbox.buttons["home"] = gamepad.buttons[i].pressed; break;
+						default:
+					}
+				}
+				gamepad.xbox = xbox;
 			}
 		this.gamepads = gamepads;
 		return gamepads;

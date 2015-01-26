@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
 
-<title>litegl.js: DDS example</title>
+<title>litegl.js: Render to Texture example</title>
 	<link rel="stylesheet" type="text/css" href="style.css" />
 	<style type='text/css'>
 		html, body { margin: 0; padding: 0; }
@@ -24,14 +24,17 @@
 
 	//build the mesh
 	var mesh = GL.Mesh.cube({size:10});
-	var texture = GL.Texture.fromURL("skybox_dxt1.dds",{temp_color:[80,120,40,255], minFilter: gl.NEAREST});
+	var sphere = GL.Mesh.sphere({size:100});
+	var texture = new GL.Texture(512,512, { magFilter: gl.LINEAR });
 
 	//create basic matrices for cameras and transformation
 	var persp = mat4.create();
 	var view = mat4.create();
 	var model = mat4.create();
+	var model2 = mat4.create();
 	var mvp = mat4.create();
 	var temp = mat4.create();
+	var identity = mat4.create();
 
 	//get mouse actions
 	gl.captureMouse();
@@ -43,9 +46,9 @@
 
 	//set the camera position
 	mat4.perspective(persp, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 0.1, 1000);
-	mat4.lookAt(view, [0,30,30],[0,0,0], [0,1,0]);
+	mat4.lookAt(view, [0,20,20],[0,0,0], [0,1,0]);
 
-	//basic phong shader
+	//basic shader
 	var shader = new Shader('\
 			precision highp float;\
 			attribute vec3 a_vertex;\
@@ -64,43 +67,29 @@
 			precision highp float;\
 			varying vec3 v_normal;\
 			varying vec2 v_coord;\
-			uniform vec3 u_lightvector;\
 			uniform vec4 u_color;\
 			uniform sampler2D u_texture;\
 			void main() {\
 			  vec3 N = normalize(v_normal);\
-			  vec4 color = u_color * texture2D( u_texture, v_coord);\
-			  gl_FragColor = color * max(0.0, dot(u_lightvector,N));\
+			  gl_FragColor = u_color * texture2D( u_texture, v_coord);\
 			}\
 		');
 
-	var cubemap_shader = new Shader('\
+	var flat_shader = new Shader('\
 			precision highp float;\
 			attribute vec3 a_vertex;\
-			attribute vec3 a_normal;\
-			varying vec3 v_pos;\
-			varying vec3 v_normal;\
 			uniform mat4 u_mvp;\
-			uniform mat4 u_model;\
 			void main() {\
-				v_pos = a_vertex.xyz;\
-				v_normal = (u_model * vec4(a_normal,0.0)).xyz;\
 				gl_Position = u_mvp * vec4(a_vertex,1.0);\
+				gl_PointSize = 4.0;\
 			}\
 			', '\
 			precision highp float;\
-			varying vec3 v_normal;\
-			varying vec3 v_pos;\
-			uniform vec3 u_lightvector;\
 			uniform vec4 u_color;\
-			uniform samplerCube u_texture;\
 			void main() {\
-			  vec3 N = normalize(v_normal);\
-			  vec4 color = u_color * textureCube( u_texture, v_pos );\
-			  gl_FragColor = vec4(0.2) + color * max(0.0, dot(u_lightvector,N));\
+			  gl_FragColor = u_color;\
 			}\
 		');
-
 
 	//generic gl flags and settings
 	gl.clearColor(0.1,0.1,0.1,1);
@@ -109,19 +98,34 @@
 	//rendering loop
 	gl.ondraw = function()
 	{
-		gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
 
+		//render something in the texture
+		texture.drawTo(function(){
+			gl.clearColor(0.1,0.3,0.4,1);
+			//gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
+
+			//create modelview and projection matrices
+			mat4.multiply(temp,view,model2);
+			mat4.multiply(mvp,persp,temp);
+
+			flat_shader.uniforms({
+				u_color: [Math.sin( GL.getTime() * 0.001 ),0.3,0.1,1],
+				u_model: model2,
+				u_mvp: mvp
+			}).draw(sphere, gl.POINTS);
+		});
+
+		gl.clearColor(0.1,0.1,0.1,1);
+		gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
 		//create modelview and projection matrices
 		mat4.multiply(temp,view,model);
 		mat4.multiply(mvp,persp,temp);
-		texture.bind(0);
 
 		//render mesh using the shader
-		cubemap_shader.uniforms({
+		shader.uniforms({
 			u_color: [1,1,1,1],
-			u_lightvector: vec3.normalize(vec3.create(),[1,1,1]),
 			u_model: model,
-			u_texture: 0,
+			u_texture: texture.bind(0),
 			u_mvp: mvp
 		}).draw(mesh);
 	};
@@ -131,6 +135,7 @@
 	{
 		//rotate cube
 		mat4.rotateY(model,model,dt*0.2);
+		mat4.rotate(model2,model2,dt*0.1,[0,1, Math.sin( GL.getTime() * 0.001 ) ]);
 	};
 	
 	</script>

@@ -298,14 +298,14 @@ Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers, stream_type)
 * @method createVertexBuffer
 * @param {String} name "vertices","normals"...
 * @param {String} attribute name of the stream in the shader "a_vertex","a_normal",... [optional, if omitted is used the common_buffers]
-* @param {number} spacing components per vertex [optioanl, if ommited is used the common_buffers, otherwise 3]
+* @param {number} spacing components per vertex [optional, if ommited is used the common_buffers, if not found then uses 3 ]
 * @param {ArrayBufferView} buffer_data the data in typed array format [optional, if ommited it created an empty array of getNumVertices() * spacing]
 * @param {enum} stream_type [optional, default = gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW ) ]
 */
 
 Mesh.prototype.createVertexBuffer = function(name, attribute, buffer_spacing, buffer_data, stream_type ) {
 
-	var common = Mesh.common_buffers[name]; //generinc info about buffers with this name
+	var common = Mesh.common_buffers[name]; //generic info about a buffer with the same name
 
 	if (!attribute && common)
 		attribute = common.attribute;
@@ -877,36 +877,38 @@ Mesh.plane = function(options) {
 	var normals = [];
 
 	var N = vec3.fromValues(0,0,1);
-	if(xz) N.set([0,1,0]);
+	if(xz) 
+		N.set([0,1,0]);
 
 	for (var y = 0; y <= detailY; y++) {
-	var t = y / detailY;
-	for (var x = 0; x <= detailX; x++) {
-	  var s = x / detailX;
-	  if(xz)
-		  vertices.push((2 * s - 1) * width, 0, (2 * t - 1) * width);
-	  else
-		  vertices.push((2 * s - 1) * width, (2 * t - 1) * height, 0);
-	  if (coords) coords.push(s, t);
-	  if (normals) normals.push(N[0],N[1],N[2]);
-	  if (x < detailX && y < detailY) {
-		var i = x + y * (detailX + 1);
-		if(xz) //horizontal
-		{
-			triangles.push(i + 1, i, i + detailX + 1);
-			triangles.push(i + 1, i + detailX + 1, i + detailX + 2);
+		var t = y / detailY;
+		for (var x = 0; x <= detailX; x++) {
+		  var s = x / detailX;
+		  if(xz)
+			  vertices.push((2 * s - 1) * width, 0, (2 * t - 1) * width);
+		  else
+			  vertices.push((2 * s - 1) * width, (2 * t - 1) * height, 0);
+		  if (coords) coords.push(s, t);
+		  if (normals) normals.push(N[0],N[1],N[2]);
+		  if (x < detailX && y < detailY) {
+			var i = x + y * (detailX + 1);
+			if(xz) //horizontal
+			{
+				triangles.push(i + 1, i, i + detailX + 1);
+				triangles.push(i + 1, i + detailX + 1, i + detailX + 2);
+			}
+			else //vertical
+			{
+				triangles.push(i, i + 1, i + detailX + 1);
+				triangles.push(i + detailX + 1, i + 1, i + detailX + 2);
+			}
+		  }
 		}
-		else //vertical
-		{
-			triangles.push(i, i + 1, i + detailX + 1);
-			triangles.push(i + detailX + 1, i + 1, i + detailX + 2);
-		}
-	  }
-	}
 	}
 
 	var bounding = BBox.fromCenterHalfsize( [0,0,0], xz ? [width,0,height] : [width,height,0] );
-	return GL.Mesh.load( {vertices:vertices, normals: normals, coords: coords, triangles: triangles }, { bounding: bounding });
+	var mesh_info = {vertices:vertices, normals: normals, coords: coords, triangles: triangles };
+	return GL.Mesh.load( mesh_info, { bounding: bounding });
 };
 
 /**
@@ -1157,13 +1159,13 @@ Mesh.cylinder = function(options) {
 /**
 * Returns a sphere mesh 
 * @method Mesh.sphere
-* @param {Object} options valid options: radius, lat, long, hemi
+* @param {Object} options valid options: radius, lat, long, subdivisions, hemi
 */
 Mesh.sphere = function(options) {
 	options = options || {};
 	var radius = options.radius || options.size || 1;
-	var latitudeBands = options.lat || 16;
-	var longitudeBands = options["long"] || 16;
+	var latitudeBands = options.lat || options.subdivisions || 16;
+	var longitudeBands = options["long"] || options.subdivisions || 16;
 
  var vertexPositionData = new Float32Array( (latitudeBands+1)*(longitudeBands+1)*3 );
  var normalData = new Float32Array( (latitudeBands+1)*(longitudeBands+1)*3 );

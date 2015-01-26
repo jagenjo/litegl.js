@@ -1747,14 +1747,14 @@ Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers, stream_type)
 * @method createVertexBuffer
 * @param {String} name "vertices","normals"...
 * @param {String} attribute name of the stream in the shader "a_vertex","a_normal",... [optional, if omitted is used the common_buffers]
-* @param {number} spacing components per vertex [optioanl, if ommited is used the common_buffers, otherwise 3]
+* @param {number} spacing components per vertex [optional, if ommited is used the common_buffers, if not found then uses 3 ]
 * @param {ArrayBufferView} buffer_data the data in typed array format [optional, if ommited it created an empty array of getNumVertices() * spacing]
 * @param {enum} stream_type [optional, default = gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW ) ]
 */
 
 Mesh.prototype.createVertexBuffer = function(name, attribute, buffer_spacing, buffer_data, stream_type ) {
 
-	var common = Mesh.common_buffers[name]; //generinc info about buffers with this name
+	var common = Mesh.common_buffers[name]; //generic info about a buffer with the same name
 
 	if (!attribute && common)
 		attribute = common.attribute;
@@ -2326,36 +2326,38 @@ Mesh.plane = function(options) {
 	var normals = [];
 
 	var N = vec3.fromValues(0,0,1);
-	if(xz) N.set([0,1,0]);
+	if(xz) 
+		N.set([0,1,0]);
 
 	for (var y = 0; y <= detailY; y++) {
-	var t = y / detailY;
-	for (var x = 0; x <= detailX; x++) {
-	  var s = x / detailX;
-	  if(xz)
-		  vertices.push((2 * s - 1) * width, 0, (2 * t - 1) * width);
-	  else
-		  vertices.push((2 * s - 1) * width, (2 * t - 1) * height, 0);
-	  if (coords) coords.push(s, t);
-	  if (normals) normals.push(N[0],N[1],N[2]);
-	  if (x < detailX && y < detailY) {
-		var i = x + y * (detailX + 1);
-		if(xz) //horizontal
-		{
-			triangles.push(i + 1, i, i + detailX + 1);
-			triangles.push(i + 1, i + detailX + 1, i + detailX + 2);
+		var t = y / detailY;
+		for (var x = 0; x <= detailX; x++) {
+		  var s = x / detailX;
+		  if(xz)
+			  vertices.push((2 * s - 1) * width, 0, (2 * t - 1) * width);
+		  else
+			  vertices.push((2 * s - 1) * width, (2 * t - 1) * height, 0);
+		  if (coords) coords.push(s, t);
+		  if (normals) normals.push(N[0],N[1],N[2]);
+		  if (x < detailX && y < detailY) {
+			var i = x + y * (detailX + 1);
+			if(xz) //horizontal
+			{
+				triangles.push(i + 1, i, i + detailX + 1);
+				triangles.push(i + 1, i + detailX + 1, i + detailX + 2);
+			}
+			else //vertical
+			{
+				triangles.push(i, i + 1, i + detailX + 1);
+				triangles.push(i + detailX + 1, i + 1, i + detailX + 2);
+			}
+		  }
 		}
-		else //vertical
-		{
-			triangles.push(i, i + 1, i + detailX + 1);
-			triangles.push(i + detailX + 1, i + 1, i + detailX + 2);
-		}
-	  }
-	}
 	}
 
 	var bounding = BBox.fromCenterHalfsize( [0,0,0], xz ? [width,0,height] : [width,height,0] );
-	return GL.Mesh.load( {vertices:vertices, normals: normals, coords: coords, triangles: triangles }, { bounding: bounding });
+	var mesh_info = {vertices:vertices, normals: normals, coords: coords, triangles: triangles };
+	return GL.Mesh.load( mesh_info, { bounding: bounding });
 };
 
 /**
@@ -2606,13 +2608,13 @@ Mesh.cylinder = function(options) {
 /**
 * Returns a sphere mesh 
 * @method Mesh.sphere
-* @param {Object} options valid options: radius, lat, long, hemi
+* @param {Object} options valid options: radius, lat, long, subdivisions, hemi
 */
 Mesh.sphere = function(options) {
 	options = options || {};
 	var radius = options.radius || options.size || 1;
-	var latitudeBands = options.lat || 16;
-	var longitudeBands = options["long"] || 16;
+	var latitudeBands = options.lat || options.subdivisions || 16;
+	var longitudeBands = options["long"] || options.subdivisions || 16;
 
  var vertexPositionData = new Float32Array( (latitudeBands+1)*(longitudeBands+1)*3 );
  var normalData = new Float32Array( (latitudeBands+1)*(longitudeBands+1)*3 );
@@ -2930,7 +2932,7 @@ global.Texture = GL.Texture = function Texture(width, height, options, gl) {
 Texture.framebuffer = null;
 Texture.renderbuffer = null;
 Texture.loading_color = new Uint8Array([0,0,0,0]);
-
+Texture.use_renderbuffer_pool = true; //should improve performance
 
 Texture.prototype.getProperties = function()
 {
@@ -3103,31 +3105,42 @@ Texture.prototype.drawTo = function(callback, params)
 
 	//this code allows to reuse old renderbuffers instead of creating and destroying them for every frame
 	var renderbuffer = null;
-	//var renderbuffer = gl._renderbuffer = gl._renderbuffer || gl.createRenderbuffer();
-	if(!gl._renderbuffers_pool)
-		gl._renderbuffers_pool = {};
-	//generate unique key for this renderbuffer
-	var key = this.width + ":" + this.height;
 
-	//reuse or create new one
-	if( gl._renderbuffers_pool[ key ] ) //Reuse old
+	if( Texture.use_renderbuffer_pool ) //create a renderbuffer pool
 	{
-		renderbuffer = gl._renderbuffers_pool[ key ];
-		renderbuffer.time = now;
-		gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer );
+		if(!gl._renderbuffers_pool)
+			gl._renderbuffers_pool = {};
+		//generate unique key for this renderbuffer
+		var key = this.width + ":" + this.height;
+
+		//reuse or create new one
+		if( gl._renderbuffers_pool[ key ] ) //Reuse old
+		{
+			renderbuffer = gl._renderbuffers_pool[ key ];
+			renderbuffer.time = now;
+			gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer );
+		}
+		else
+		{
+			//create temporary buffer
+			gl._renderbuffers_pool[ key ] = renderbuffer = gl.createRenderbuffer();
+			renderbuffer.time = now;
+			renderbuffer.width = this.width;
+			renderbuffer.height = this.height;
+			gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer );
+
+			//destroy after one minute 
+			setTimeout( inner_check_destroy.bind(renderbuffer), 1000*60 );
+		}
 	}
 	else
 	{
-		//create temporary buffer
-		gl._renderbuffers_pool[ key ] = renderbuffer = gl.createRenderbuffer();
-		renderbuffer.time = now;
+		renderbuffer = gl._renderbuffer = gl._renderbuffer || gl.createRenderbuffer();
 		renderbuffer.width = this.width;
 		renderbuffer.height = this.height;
 		gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer );
-
-		//destroy after one minute 
-		setTimeout( inner_check_destroy.bind(renderbuffer), 1000*60 );
 	}
+
 
 	//bind buffer
 	gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.width, this.height);
@@ -3158,8 +3171,8 @@ Texture.prototype.drawTo = function(callback, params)
 
 	gl.viewport(0, 0, this.width, this.height);
 
-	if(gl._current_texture_drawto)
-		throw("Texture.drawTo: Cannot use drawTo from inside another drawTo");
+	//if(gl._current_texture_drawto)
+	//	throw("Texture.drawTo: Cannot use drawTo from inside another drawTo");
 
 	gl._current_texture_drawto = this;
 	gl._current_fbo_color = framebuffer;
@@ -3177,9 +3190,12 @@ Texture.prototype.drawTo = function(callback, params)
 		}
 		else if(this.texture_type == gl.TEXTURE_CUBE_MAP)
 		{
+			var faces = [ gl.TEXTURE_CUBE_MAP_POSITIVE_X, gl.TEXTURE_CUBE_MAP_NEGATIVE_X, gl.TEXTURE_CUBE_MAP_POSITIVE_Y, gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, gl.TEXTURE_CUBE_MAP_POSITIVE_Z, gl.TEXTURE_CUBE_MAP_NEGATIVE_Z ];
+
 			for(var i = 0; i < 6; i++)
 			{
-				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X+i, this.handler, 0);
+				var face_enum = faces[i];
+				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, face_enum, this.handler, 0);
 				gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
 				callback(this,i, params);
 			}
@@ -4890,6 +4906,13 @@ GL.create = function(options) {
 		if(pressed && gl.onbuttondown) gl.onbuttondown(e);
 		else if(!pressed && gl.onbuttonup) gl.onbuttonup(e);
 	}
+	
+	function onGamepad(e)
+	{
+		console.log(e);
+		if(gl.ongamepad) 
+			gl.ongamepad(e);
+	}
 
 	/**
 	* Tells the system to capture gamepad events on the canvas. 
@@ -4908,6 +4931,9 @@ GL.create = function(options) {
 		window.addEventListener("gamepadButtonUp", function(e) { onButton(e, false); }, false);
 		window.addEventListener("MozGamepadButtonUp", function(e) { onButton(e, false); }, false);
 		window.addEventListener("WebkitGamepadButtonUp", function(e) { onButton(e, false); }, false);
+
+		window.addEventListener("gamepadconnected", onGamepad, false);
+		window.addEventListener("gamepaddisconnected", onGamepad, false);
 	}
 
 	/**
@@ -4932,6 +4958,37 @@ GL.create = function(options) {
 					else if(this.gamepads[i] && !gamepads[i] && this.ongamepaddisconnected)
 						this.ongamepaddisconnected(this.gamepads[i]);
 				}
+				//xbox controller mapping
+				var xbox = { axes:[], buttons:{}, hat: ""};
+				xbox.axes["lx"] = gamepad.axes[0];
+				xbox.axes["ly"] = gamepad.axes[1];
+				xbox.axes["rx"] = gamepad.axes[2];
+				xbox.axes["ry"] = gamepad.axes[3];
+				for(var i = 0; i < gamepad.buttons.length; i++)
+				{
+					switch(i) //I use a switch to ensure that a player with another gamepad could play
+					{
+						case 0: xbox.buttons["a"] = gamepad.buttons[i].pressed; break;
+						case 1: xbox.buttons["b"] = gamepad.buttons[i].pressed; break;
+						case 2: xbox.buttons["x"] = gamepad.buttons[i].pressed; break;
+						case 3: xbox.buttons["y"] = gamepad.buttons[i].pressed; break;
+						case 4: xbox.buttons["lb"] = gamepad.buttons[i].pressed; break;
+						case 5: xbox.buttons["rb"] = gamepad.buttons[i].pressed; break;
+						case 6: xbox.buttons["lt"] = gamepad.buttons[i].pressed; break;
+						case 7: xbox.buttons["rt"] = gamepad.buttons[i].pressed; break;
+						case 8: xbox.buttons["back"] = gamepad.buttons[i].pressed; break;
+						case 9: xbox.buttons["start"] = gamepad.buttons[i].pressed; break;
+						case 10: xbox.buttons["ls"] = gamepad.buttons[i].pressed; break;
+						case 11: xbox.buttons["rs"] = gamepad.buttons[i].pressed; break;
+						case 12: if( gamepad.buttons[i].pressed) xbox.hat += "up"; break;
+						case 13: if( gamepad.buttons[i].pressed) xbox.hat += "down"; break;
+						case 14: if( gamepad.buttons[i].pressed) xbox.hat += "left"; break;
+						case 15: if( gamepad.buttons[i].pressed) xbox.hat += "right"; break;
+						case 16: xbox.buttons["home"] = gamepad.buttons[i].pressed; break;
+						default:
+					}
+				}
+				gamepad.xbox = xbox;
 			}
 		this.gamepads = gamepads;
 		return gamepads;
