@@ -313,6 +313,8 @@ GL.create = function(options) {
 		e.character = String.fromCharCode(e.keyCode).toLowerCase();
 		var prev_state = false;
 		var key = GL.mapKeyCode(e.keyCode);
+		if(!key) //this key doesnt look like an special key
+			key = e.character;
 
 		if (!e.altKey && !e.ctrlKey && !e.metaKey) {
 			if (key) 
@@ -321,7 +323,7 @@ GL.create = function(options) {
 			gl.keys[e.keyCode] = e.type == "keydown";
 		}
 
-		//avoid repetition if key stais pressed
+		//avoid repetition if key stays pressed
 		if(prev_state != gl.keys[e.keyCode])
 		{
 			if(e.type == "keydown" && gl.onkeydown) gl.onkeydown(e);

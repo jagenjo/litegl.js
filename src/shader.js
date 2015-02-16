@@ -268,10 +268,12 @@ Shader.prototype.uniforms = function(uniforms) {
 * @method draw
 * @param {Mesh} mesh
 * @param {number} mode could be gl.LINES, gl.POINTS, gl.TRIANGLES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN
+* @param {String} index_buffer_name the name of the index buffer, if not provided triangles will be assumed
 */
-Shader.prototype.draw = function(mesh, mode) {
+Shader.prototype.draw = function(mesh, mode, index_buffer_name ) {
+	index_buffer_name = index_buffer_name || (mode == gl.LINES ? 'lines' : 'triangles');
 	this.drawBuffers(mesh.vertexBuffers,
-	  mesh.indexBuffers[mode == gl.LINES ? 'lines' : 'triangles'],
+	  mesh.indexBuffers[ index_buffer_name ],
 	  arguments.length < 2 ? gl.TRIANGLES : mode);
 }
 
@@ -282,11 +284,14 @@ Shader.prototype.draw = function(mesh, mode) {
 * @param {number} mode could be gl.LINES, gl.POINTS, gl.TRIANGLES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN
 * @param {number} start first primitive to render
 * @param {number} length number of primitives to render
+* @param {String} index_buffer_name the name of the index buffer, if not provided triangles will be assumed
 */
-Shader.prototype.drawRange = function(mesh, mode, start, length)
+Shader.prototype.drawRange = function(mesh, mode, start, length, index_buffer_name )
 {
+	index_buffer_name = index_buffer_name || (mode == gl.LINES ? 'lines' : 'triangles');
+
 	this.drawBuffers(mesh.vertexBuffers,
-	  mesh.indexBuffers[mode == gl.LINES ? 'lines' : 'triangles'],
+	  mesh.indexBuffers[ index_buffer_name ],
 	  mode, start, length);
 }
 

@@ -40,6 +40,58 @@ global.isNumber = function isNumber(obj) {
   return (obj != null && obj.constructor === Number );
 }
 
+/**
+* clone one object recursively, only allows objects containing number,strings,typed-arrays or other objects
+* @method cloneObject
+* @param {Object} object 
+* @param {Object} target if omited an empty object is created
+* @return {Object}
+*/
+global.cloneObject = GL.cloneObject = function(o, t)
+{
+	if(o.constructor !== Object)
+		throw("cloneObject only can clone pure javascript objects, not classes");
+
+	t = t || {};
+
+	for(var i in o)
+	{
+		var v = o[i];
+		if(v === null)
+		{
+			t[i] = null;
+			continue;
+		}
+
+		switch(v.constructor)
+		{
+			case Int8Array:
+			case Uint8Array:
+			case Int16Array:
+			case Uint16Array:
+			case Int32Array:
+			case Uint32Array:
+			case Float32Array:
+			case Float64Array:
+				t[i] = new v.constructor(v);
+				break;
+			case Boolean:
+			case Number:
+			case String:
+				t[i] = v;
+				break;
+			case Array:
+				t[i] = v.concat(); //content is not cloned
+				break;
+			case Object:
+				t[i] = GL.cloneObject(v);
+				break;
+		}
+	}
+
+	return t;
+}
+
 
 /* SLOW because accepts booleans
 function isNumber(obj) {
@@ -70,6 +122,16 @@ global.cloneCanvas = GL.cloneCanvas = function cloneCanvas(c) {
     var ctx = canvas.getContext("2d");
     ctx.drawImage(c,0,0);
     return canvas;
+}
+
+Image.prototype.getPixels = function()
+{
+    var canvas = document.createElement('canvas');
+    canvas.width = this.width;
+    canvas.height = this.height;
+    var ctx = canvas.getContext("2d");
+    ctx.drawImage(this,0,0);
+	return ctx.getImageData(0, 0, this.width, this.height).data;
 }
 
 

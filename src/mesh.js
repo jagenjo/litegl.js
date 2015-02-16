@@ -949,7 +949,7 @@ Mesh.cube = function(options) {
 
 	var buffers = {};
 	//[[-1,1,-1],[-1,-1,+1],[-1,1,1],[-1,1,-1],[-1,-1,-1],[-1,-1,+1],[1,1,-1],[1,1,1],[1,-1,+1],[1,1,-1],[1,-1,+1],[1,-1,-1],[-1,1,1],[1,-1,1],[1,1,1],[-1,1,1],[-1,-1,1],[1,-1,1],[-1,1,-1],[1,1,-1],[1,-1,-1],[-1,1,-1],[1,-1,-1],[-1,-1,-1],[-1,1,-1],[1,1,1],[1,1,-1],[-1,1,-1],[-1,1,1],[1,1,1],[-1,-1,-1],[1,-1,-1],[1,-1,1],[-1,-1,-1],[1,-1,1],[-1,-1,1]]
-	buffers.vertices = new Float32Array([-1,1,-1,-1,-1,+1,-1,1,1,-1,1,-1,-1,-1,-1,-1,-1,+1,1,1,-1,1,1,1,1,-1,+1,1,1,-1,1,-1,+1,1,-1,-1,-1,1,1,1,-1,1,1,1,1,-1,1,1,-1,-1,1,1,-1,1,-1,1,-1,1,1,-1,1,-1,-1,-1,1,-1,1,-1,-1,-1,-1,-1,-1,1,-1,1,1,1,1,1,-1,-1,1,-1,-1,1,1,1,1,1,-1,-1,-1,1,-1,-1,1,-1,1,-1,-1,-1,1,-1,1,-1,-1,1]);
+	buffers.vertices = new Float32Array([-1,1,-1,-1,-1,+1, -1,1,1,-1,1,-1, -1,-1,-1,-1,-1,+1, 1,1,-1,1,1,1,1,-1,+1,1,1,-1,1,-1,+1,1,-1,-1,-1,1,1,1,-1,1,1,1,1,-1,1,1,-1,-1,1,1,-1,1,-1,1,-1,1,1,-1,1,-1,-1,-1,1,-1,1,-1,-1,-1,-1,-1,-1,1,-1,1,1,1,1,1,-1,-1,1,-1,-1,1,1,1,1,1,-1,-1,-1,1,-1,-1,1,-1,1,-1,-1,-1,1,-1,1,-1,-1,1]);
 	//for(var i in options.vertices) for(var j in options.vertices[i]) options.vertices[i][j] *= size;
 	for(var i = 0, l = buffers.vertices.length; i < l; ++i) buffers.vertices[i] *= size;
 
@@ -957,6 +957,9 @@ Mesh.cube = function(options) {
 	//[[0,1],[1,0],[1,1],[0,1],[0,0],[1,0],[1,1],[0,1],[0,0],[1,1],[0,0],[1,0],[0,1],[1,0],[1,1],[0,1],[0,0],[1,0],[1,1],[0,1],[0,0],[1,1],[0,0],[1,0],[0,1],[1,0],[1,1],[0,1],[0,0],[1,0],[1,1],[0,1],[0,0],[1,1],[0,0],[1,0]];
 	buffers.normals = new Float32Array([-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0]);
 	buffers.coords = new Float32Array([0,1,1,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,0,1,1,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,0,1,1,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0]);
+
+	if(options.wireframe)
+		buffers.wireframe = new Uint16Array([0,2, 2,5, 5,4, 4,0,   6,7, 7,10, 10,11, 11,6, 0,6, 2,7, 5,10, 4,11  ]);
 
 	options.bounding = BBox.fromCenterHalfsize( [0,0,0], [size,size,size] );
 
@@ -993,6 +996,9 @@ Mesh.box = function(options) {
 	//[[0,1],[1,0],[1,1],[0,1],[0,0],[1,0],[1,1],[0,1],[0,0],[1,1],[0,0],[1,0],[0,1],[1,0],[1,1],[0,1],[0,0],[1,0],[1,1],[0,1],[0,0],[1,1],[0,0],[1,0],[0,1],[1,0],[1,1],[0,1],[0,0],[1,0],[1,1],[0,1],[0,0],[1,1],[0,0],[1,0]];
 	buffers.normals = new Float32Array([-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0]);
 	buffers.coords = new Float32Array([0,1,1,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,0,1,1,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,0,1,1,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0]);
+
+	if(options.wireframe)
+		buffers.wireframe = new Uint16Array([0,2, 2,5, 5,4, 4,0,   6,7, 7,10, 10,11, 11,6, 0,6, 2,7, 5,10, 4,11  ]);
 
 	options.bounding = BBox.fromCenterHalfsize( [0,0,0], [sizex,sizey,sizez] );
 
@@ -1091,7 +1097,22 @@ Mesh.circle = function(options) {
 	}
 
 	options.bounding = BBox.fromCenterHalfsize( [0,0,0], xz ? [size,0,size] : [size,size,0] );
-	return Mesh.load( {vertices: vertices, normals: normals, coords: coords, triangles: triangles}, options );
+
+	var buffers = {vertices: vertices, normals: normals, coords: coords, triangles: triangles};
+
+	if(options.wireframe)
+	{
+		var wireframe = new Uint16Array(slices*2);
+		for(var i = 0; i < slices; i++)
+		{
+			wireframe[i*2] = i;
+			wireframe[i*2+1] = i+1;
+		}
+		wireframe[0] = slices;
+		buffers.wireframe = wireframe;
+	}
+
+	return Mesh.load( buffers, options );
 }
 
 /**
@@ -1167,47 +1188,52 @@ Mesh.sphere = function(options) {
 	var latitudeBands = options.lat || options.subdivisions || 16;
 	var longitudeBands = options["long"] || options.subdivisions || 16;
 
- var vertexPositionData = new Float32Array( (latitudeBands+1)*(longitudeBands+1)*3 );
- var normalData = new Float32Array( (latitudeBands+1)*(longitudeBands+1)*3 );
- var textureCoordData = new Float32Array( (latitudeBands+1)*(longitudeBands+1)*2 );
- var indexData = new Uint16Array( latitudeBands*longitudeBands*6 );
- var latRange = options.hemi ? Math.PI * 0.5 : Math.PI;
- var i = 0, iuv = 0;
- for (var latNumber = 0; latNumber <= latitudeBands; latNumber++) {
-   var theta = latNumber * latRange / latitudeBands;
-   var sinTheta = Math.sin(theta);
-   var cosTheta = Math.cos(theta);
+	var vertexPositionData = new Float32Array( (latitudeBands+1)*(longitudeBands+1)*3 );
+	var normalData = new Float32Array( (latitudeBands+1)*(longitudeBands+1)*3 );
+	var textureCoordData = new Float32Array( (latitudeBands+1)*(longitudeBands+1)*2 );
+	var indexData = new Uint16Array( latitudeBands*longitudeBands*6 );
+	var latRange = options.hemi ? Math.PI * 0.5 : Math.PI;
 
-   for (var longNumber = 0; longNumber <= longitudeBands; longNumber++) {
-     var phi = longNumber * 2 * Math.PI / longitudeBands;
-     var sinPhi = Math.sin(phi);
-     var cosPhi = Math.cos(phi);
+	var i = 0, iuv = 0;
+	for (var latNumber = 0; latNumber <= latitudeBands; latNumber++)
+	{
+		var theta = latNumber * latRange / latitudeBands;
+		var sinTheta = Math.sin(theta);
+		var cosTheta = Math.cos(theta);
 
-     var x = cosPhi * sinTheta;
-     var y = cosTheta;
-     var z = sinPhi * sinTheta;
-     var u = 1- (longNumber / longitudeBands);
-     var v = (1 - latNumber / latitudeBands);
+		for (var longNumber = 0; longNumber <= longitudeBands; longNumber++)
+		{
+			var phi = longNumber * 2 * Math.PI / longitudeBands;
+			var sinPhi = Math.sin(phi);
+			var cosPhi = Math.cos(phi);
 
-     vertexPositionData.set([radius * x,radius * y,radius * z],i);
-     normalData.set([x,y,z],i);
-     textureCoordData.set([u,v], iuv );
-	 i += 3;
-	 iuv += 2;
-   }
- }
+			var x = cosPhi * sinTheta;
+			var y = cosTheta;
+			var z = sinPhi * sinTheta;
+			var u = 1- (longNumber / longitudeBands);
+			var v = (1 - latNumber / latitudeBands);
 
- i=0;
- for (var latNumber = 0; latNumber < latitudeBands; latNumber++) {
-   for (var longNumber = 0; longNumber < longitudeBands; longNumber++) {
-     var first = (latNumber * (longitudeBands + 1)) + longNumber;
-     var second = first + longitudeBands + 1;
+			vertexPositionData.set([radius * x,radius * y,radius * z],i);
+			normalData.set([x,y,z],i);
+			textureCoordData.set([u,v], iuv );
+			i += 3;
+			iuv += 2;
+		}
+	}
 
-     indexData.set([second,first,first + 1], i);
-     indexData.set([second + 1,second,first + 1], i+3);
-	 i += 6;
-   }
- }
+	i=0;
+	for (var latNumber = 0; latNumber < latitudeBands; latNumber++)
+	{
+		for (var longNumber = 0; longNumber < longitudeBands; longNumber++)
+		{
+			var first = (latNumber * (longitudeBands + 1)) + longNumber;
+			var second = first + longitudeBands + 1;
+
+			indexData.set([second,first,first + 1], i);
+			indexData.set([second + 1,second,first + 1], i+3);
+			i += 6;
+		}
+	}
 
 	var buffers = {
 		vertices: vertexPositionData,
@@ -1215,6 +1241,31 @@ Mesh.sphere = function(options) {
 		coords: textureCoordData,
 		triangles: indexData
 	};
+
+	if(options.wireframe)
+	{
+		var wireframe = new Uint16Array(longitudeBands*latitudeBands*4);
+		var pos = 0;
+		for(var i = 0; i < latitudeBands; i++)
+		{
+			for(var j = 0; j < longitudeBands; j++)
+			{
+				wireframe[pos] = i*(longitudeBands+1) + j;
+				wireframe[pos + 1] = i*(longitudeBands+1) + j + 1;
+				pos += 2;
+			}
+			wireframe[pos - longitudeBands*2] = i*(longitudeBands+1) + j;
+		}
+
+		for(var i = 0; i < longitudeBands; i++)
+		for(var j = 0; j < latitudeBands; j++)
+		{
+			wireframe[pos] = j*(longitudeBands+1) + i;
+			wireframe[pos + 1] = (j+1)*(longitudeBands+1) + i;
+			pos += 2;
+		}
+		buffers.wireframe = wireframe;
+	}
 
 	options.bounding = BBox.fromCenterHalfsize( [0,0,0], [radius,radius,radius], radius );
 	return Mesh.load(buffers, options);

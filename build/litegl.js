@@ -94,6 +94,58 @@ global.isNumber = function isNumber(obj) {
   return (obj != null && obj.constructor === Number );
 }
 
+/**
+* clone one object recursively, only allows objects containing number,strings,typed-arrays or other objects
+* @method cloneObject
+* @param {Object} object 
+* @param {Object} target if omited an empty object is created
+* @return {Object}
+*/
+global.cloneObject = GL.cloneObject = function(o, t)
+{
+	if(o.constructor !== Object)
+		throw("cloneObject only can clone pure javascript objects, not classes");
+
+	t = t || {};
+
+	for(var i in o)
+	{
+		var v = o[i];
+		if(v === null)
+		{
+			t[i] = null;
+			continue;
+		}
+
+		switch(v.constructor)
+		{
+			case Int8Array:
+			case Uint8Array:
+			case Int16Array:
+			case Uint16Array:
+			case Int32Array:
+			case Uint32Array:
+			case Float32Array:
+			case Float64Array:
+				t[i] = new v.constructor(v);
+				break;
+			case Boolean:
+			case Number:
+			case String:
+				t[i] = v;
+				break;
+			case Array:
+				t[i] = v.concat(); //content is not cloned
+				break;
+			case Object:
+				t[i] = GL.cloneObject(v);
+				break;
+		}
+	}
+
+	return t;
+}
+
 
 /* SLOW because accepts booleans
 function isNumber(obj) {
@@ -124,6 +176,16 @@ global.cloneCanvas = GL.cloneCanvas = function cloneCanvas(c) {
     var ctx = canvas.getContext("2d");
     ctx.drawImage(c,0,0);
     return canvas;
+}
+
+Image.prototype.getPixels = function()
+{
+    var canvas = document.createElement('canvas');
+    canvas.width = this.width;
+    canvas.height = this.height;
+    var ctx = canvas.getContext("2d");
+    ctx.drawImage(this,0,0);
+	return ctx.getImageData(0, 0, this.width, this.height).data;
 }
 
 
@@ -2398,7 +2460,7 @@ Mesh.cube = function(options) {
 
 	var buffers = {};
 	//[[-1,1,-1],[-1,-1,+1],[-1,1,1],[-1,1,-1],[-1,-1,-1],[-1,-1,+1],[1,1,-1],[1,1,1],[1,-1,+1],[1,1,-1],[1,-1,+1],[1,-1,-1],[-1,1,1],[1,-1,1],[1,1,1],[-1,1,1],[-1,-1,1],[1,-1,1],[-1,1,-1],[1,1,-1],[1,-1,-1],[-1,1,-1],[1,-1,-1],[-1,-1,-1],[-1,1,-1],[1,1,1],[1,1,-1],[-1,1,-1],[-1,1,1],[1,1,1],[-1,-1,-1],[1,-1,-1],[1,-1,1],[-1,-1,-1],[1,-1,1],[-1,-1,1]]
-	buffers.vertices = new Float32Array([-1,1,-1,-1,-1,+1,-1,1,1,-1,1,-1,-1,-1,-1,-1,-1,+1,1,1,-1,1,1,1,1,-1,+1,1,1,-1,1,-1,+1,1,-1,-1,-1,1,1,1,-1,1,1,1,1,-1,1,1,-1,-1,1,1,-1,1,-1,1,-1,1,1,-1,1,-1,-1,-1,1,-1,1,-1,-1,-1,-1,-1,-1,1,-1,1,1,1,1,1,-1,-1,1,-1,-1,1,1,1,1,1,-1,-1,-1,1,-1,-1,1,-1,1,-1,-1,-1,1,-1,1,-1,-1,1]);
+	buffers.vertices = new Float32Array([-1,1,-1,-1,-1,+1, -1,1,1,-1,1,-1, -1,-1,-1,-1,-1,+1, 1,1,-1,1,1,1,1,-1,+1,1,1,-1,1,-1,+1,1,-1,-1,-1,1,1,1,-1,1,1,1,1,-1,1,1,-1,-1,1,1,-1,1,-1,1,-1,1,1,-1,1,-1,-1,-1,1,-1,1,-1,-1,-1,-1,-1,-1,1,-1,1,1,1,1,1,-1,-1,1,-1,-1,1,1,1,1,1,-1,-1,-1,1,-1,-1,1,-1,1,-1,-1,-1,1,-1,1,-1,-1,1]);
 	//for(var i in options.vertices) for(var j in options.vertices[i]) options.vertices[i][j] *= size;
 	for(var i = 0, l = buffers.vertices.length; i < l; ++i) buffers.vertices[i] *= size;
 
@@ -2406,6 +2468,9 @@ Mesh.cube = function(options) {
 	//[[0,1],[1,0],[1,1],[0,1],[0,0],[1,0],[1,1],[0,1],[0,0],[1,1],[0,0],[1,0],[0,1],[1,0],[1,1],[0,1],[0,0],[1,0],[1,1],[0,1],[0,0],[1,1],[0,0],[1,0],[0,1],[1,0],[1,1],[0,1],[0,0],[1,0],[1,1],[0,1],[0,0],[1,1],[0,0],[1,0]];
 	buffers.normals = new Float32Array([-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0]);
 	buffers.coords = new Float32Array([0,1,1,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,0,1,1,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,0,1,1,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0]);
+
+	if(options.wireframe)
+		buffers.wireframe = new Uint16Array([0,2, 2,5, 5,4, 4,0,   6,7, 7,10, 10,11, 11,6, 0,6, 2,7, 5,10, 4,11  ]);
 
 	options.bounding = BBox.fromCenterHalfsize( [0,0,0], [size,size,size] );
 
@@ -2442,6 +2507,9 @@ Mesh.box = function(options) {
 	//[[0,1],[1,0],[1,1],[0,1],[0,0],[1,0],[1,1],[0,1],[0,0],[1,1],[0,0],[1,0],[0,1],[1,0],[1,1],[0,1],[0,0],[1,0],[1,1],[0,1],[0,0],[1,1],[0,0],[1,0],[0,1],[1,0],[1,1],[0,1],[0,0],[1,0],[1,1],[0,1],[0,0],[1,1],[0,0],[1,0]];
 	buffers.normals = new Float32Array([-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,-1,0]);
 	buffers.coords = new Float32Array([0,1,1,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,0,1,1,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,0,1,1,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0]);
+
+	if(options.wireframe)
+		buffers.wireframe = new Uint16Array([0,2, 2,5, 5,4, 4,0,   6,7, 7,10, 10,11, 11,6, 0,6, 2,7, 5,10, 4,11  ]);
 
 	options.bounding = BBox.fromCenterHalfsize( [0,0,0], [sizex,sizey,sizez] );
 
@@ -2540,7 +2608,22 @@ Mesh.circle = function(options) {
 	}
 
 	options.bounding = BBox.fromCenterHalfsize( [0,0,0], xz ? [size,0,size] : [size,size,0] );
-	return Mesh.load( {vertices: vertices, normals: normals, coords: coords, triangles: triangles}, options );
+
+	var buffers = {vertices: vertices, normals: normals, coords: coords, triangles: triangles};
+
+	if(options.wireframe)
+	{
+		var wireframe = new Uint16Array(slices*2);
+		for(var i = 0; i < slices; i++)
+		{
+			wireframe[i*2] = i;
+			wireframe[i*2+1] = i+1;
+		}
+		wireframe[0] = slices;
+		buffers.wireframe = wireframe;
+	}
+
+	return Mesh.load( buffers, options );
 }
 
 /**
@@ -2616,47 +2699,52 @@ Mesh.sphere = function(options) {
 	var latitudeBands = options.lat || options.subdivisions || 16;
 	var longitudeBands = options["long"] || options.subdivisions || 16;
 
- var vertexPositionData = new Float32Array( (latitudeBands+1)*(longitudeBands+1)*3 );
- var normalData = new Float32Array( (latitudeBands+1)*(longitudeBands+1)*3 );
- var textureCoordData = new Float32Array( (latitudeBands+1)*(longitudeBands+1)*2 );
- var indexData = new Uint16Array( latitudeBands*longitudeBands*6 );
- var latRange = options.hemi ? Math.PI * 0.5 : Math.PI;
- var i = 0, iuv = 0;
- for (var latNumber = 0; latNumber <= latitudeBands; latNumber++) {
-   var theta = latNumber * latRange / latitudeBands;
-   var sinTheta = Math.sin(theta);
-   var cosTheta = Math.cos(theta);
+	var vertexPositionData = new Float32Array( (latitudeBands+1)*(longitudeBands+1)*3 );
+	var normalData = new Float32Array( (latitudeBands+1)*(longitudeBands+1)*3 );
+	var textureCoordData = new Float32Array( (latitudeBands+1)*(longitudeBands+1)*2 );
+	var indexData = new Uint16Array( latitudeBands*longitudeBands*6 );
+	var latRange = options.hemi ? Math.PI * 0.5 : Math.PI;
 
-   for (var longNumber = 0; longNumber <= longitudeBands; longNumber++) {
-     var phi = longNumber * 2 * Math.PI / longitudeBands;
-     var sinPhi = Math.sin(phi);
-     var cosPhi = Math.cos(phi);
+	var i = 0, iuv = 0;
+	for (var latNumber = 0; latNumber <= latitudeBands; latNumber++)
+	{
+		var theta = latNumber * latRange / latitudeBands;
+		var sinTheta = Math.sin(theta);
+		var cosTheta = Math.cos(theta);
 
-     var x = cosPhi * sinTheta;
-     var y = cosTheta;
-     var z = sinPhi * sinTheta;
-     var u = 1- (longNumber / longitudeBands);
-     var v = (1 - latNumber / latitudeBands);
+		for (var longNumber = 0; longNumber <= longitudeBands; longNumber++)
+		{
+			var phi = longNumber * 2 * Math.PI / longitudeBands;
+			var sinPhi = Math.sin(phi);
+			var cosPhi = Math.cos(phi);
 
-     vertexPositionData.set([radius * x,radius * y,radius * z],i);
-     normalData.set([x,y,z],i);
-     textureCoordData.set([u,v], iuv );
-	 i += 3;
-	 iuv += 2;
-   }
- }
+			var x = cosPhi * sinTheta;
+			var y = cosTheta;
+			var z = sinPhi * sinTheta;
+			var u = 1- (longNumber / longitudeBands);
+			var v = (1 - latNumber / latitudeBands);
 
- i=0;
- for (var latNumber = 0; latNumber < latitudeBands; latNumber++) {
-   for (var longNumber = 0; longNumber < longitudeBands; longNumber++) {
-     var first = (latNumber * (longitudeBands + 1)) + longNumber;
-     var second = first + longitudeBands + 1;
+			vertexPositionData.set([radius * x,radius * y,radius * z],i);
+			normalData.set([x,y,z],i);
+			textureCoordData.set([u,v], iuv );
+			i += 3;
+			iuv += 2;
+		}
+	}
 
-     indexData.set([second,first,first + 1], i);
-     indexData.set([second + 1,second,first + 1], i+3);
-	 i += 6;
-   }
- }
+	i=0;
+	for (var latNumber = 0; latNumber < latitudeBands; latNumber++)
+	{
+		for (var longNumber = 0; longNumber < longitudeBands; longNumber++)
+		{
+			var first = (latNumber * (longitudeBands + 1)) + longNumber;
+			var second = first + longitudeBands + 1;
+
+			indexData.set([second,first,first + 1], i);
+			indexData.set([second + 1,second,first + 1], i+3);
+			i += 6;
+		}
+	}
 
 	var buffers = {
 		vertices: vertexPositionData,
@@ -2664,6 +2752,31 @@ Mesh.sphere = function(options) {
 		coords: textureCoordData,
 		triangles: indexData
 	};
+
+	if(options.wireframe)
+	{
+		var wireframe = new Uint16Array(longitudeBands*latitudeBands*4);
+		var pos = 0;
+		for(var i = 0; i < latitudeBands; i++)
+		{
+			for(var j = 0; j < longitudeBands; j++)
+			{
+				wireframe[pos] = i*(longitudeBands+1) + j;
+				wireframe[pos + 1] = i*(longitudeBands+1) + j + 1;
+				pos += 2;
+			}
+			wireframe[pos - longitudeBands*2] = i*(longitudeBands+1) + j;
+		}
+
+		for(var i = 0; i < longitudeBands; i++)
+		for(var j = 0; j < latitudeBands; j++)
+		{
+			wireframe[pos] = j*(longitudeBands+1) + i;
+			wireframe[pos + 1] = (j+1)*(longitudeBands+1) + i;
+			pos += 2;
+		}
+		buffers.wireframe = wireframe;
+	}
 
 	options.bounding = BBox.fromCenterHalfsize( [0,0,0], [radius,radius,radius], radius );
 	return Mesh.load(buffers, options);
@@ -3190,12 +3303,10 @@ Texture.prototype.drawTo = function(callback, params)
 		}
 		else if(this.texture_type == gl.TEXTURE_CUBE_MAP)
 		{
-			var faces = [ gl.TEXTURE_CUBE_MAP_POSITIVE_X, gl.TEXTURE_CUBE_MAP_NEGATIVE_X, gl.TEXTURE_CUBE_MAP_POSITIVE_Y, gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, gl.TEXTURE_CUBE_MAP_POSITIVE_Z, gl.TEXTURE_CUBE_MAP_NEGATIVE_Z ];
-
+			//var faces = [ gl.TEXTURE_CUBE_MAP_POSITIVE_X, gl.TEXTURE_CUBE_MAP_NEGATIVE_X, gl.TEXTURE_CUBE_MAP_POSITIVE_Y, gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, gl.TEXTURE_CUBE_MAP_POSITIVE_Z, gl.TEXTURE_CUBE_MAP_NEGATIVE_Z ];
 			for(var i = 0; i < 6; i++)
 			{
-				var face_enum = faces[i];
-				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, face_enum, this.handler, 0);
+				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,  gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, this.handler, 0);
 				gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
 				callback(this,i, params);
 			}
@@ -3225,6 +3336,103 @@ Texture.prototype.drawTo = function(callback, params)
 	gl.viewport(v[0], v[1], v[2], v[3]);
 
 	return this;
+}
+
+/**
+* Static version of drawTo meant to be used with several buffers
+* @method drawToColorAndDepth
+* @param {Texture} color_texture
+* @param {Texture} depth_texture
+* @param {Function} callback
+*/
+Texture.drawTo = function(textures, callback)
+{
+	var depth_texture = null;
+	var w = -1,
+		h = -1,
+		type = null;
+	var color_textures = 0;
+	for(var i = 0; i < textures.length; i++)
+	{
+		var t = textures[i];
+		if(t.type == gl.DEPTH_COMPONENT)
+			depth_texture = t;
+		if(w == -1) 
+			w = t.width;
+		else if(w != t.width)
+			throw("Cannot use Texture.drawTo if textures have different dimensions");
+		if(h == -1) 
+			h = t.height;
+		else if(h != t.height)
+			throw("Cannot use Texture.drawTo if textures have different dimensions");
+		if(type == null)
+			type =  t.type;
+		else if (type != t.type && t.type == gl.DEPTH_COMPONENT)
+			throw("Cannot use Texture.drawTo if textures have different data type, all must have the same type");
+		color_textures += 1;
+	}
+
+	if(!color_textures)
+		throw("you must pass one color texture at least");
+
+	var v = gl.getViewport();
+	gl._framebuffer =  gl._framebuffer || gl.createFramebuffer();
+	gl.bindFramebuffer(gl.FRAMEBUFFER,  gl._framebuffer);
+
+	gl.viewport(0, 0, w, h);
+	var ext = gl.extensions["WEBGL_draw_buffers"];
+	if(!ext && color_textures > 1)
+		throw("Rendering to several textures not supported");
+
+	var renderbuffer = null;
+	if( !depth_texture )
+	{
+		renderbuffer = gl._renderbuffer = gl._renderbuffer || gl.createRenderbuffer();
+		renderbuffer.width = w;
+		renderbuffer.height = h;
+		gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer );
+	}
+
+
+	var slot = 0;
+	var order = []; //draw_buffers request the use of an array with the order of the attachments
+	for(var i = 0; i < textures.length; i++)
+	{
+		var t = textures[i];
+		if(t.type == gl.DEPTH_COMPONENT)
+			continue;
+		if(color_textures == 1)
+		{
+			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t.handler, 0);
+			break;
+		}
+
+		var att = ext.COLOR_ATTACHMENT0_WEBGL + slot;
+		gl.framebufferTexture2D(gl.FRAMEBUFFER, att, gl.TEXTURE_2D, t.handler, 0);
+		order.push(att);
+		slot++;
+	}
+
+	if( depth_texture )
+		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT,  gl.TEXTURE_2D, depth_texture.handler, 0);
+	else //create a temporary renderbuffer
+	{
+		gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, w, h);
+		gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer );
+	}
+
+	var complete = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+	if(complete !== gl.FRAMEBUFFER_COMPLETE)
+		throw("FBO not complete: " + complete);
+
+	if(color_textures > 1)
+		ext.drawBuffersWEBGL( order );
+
+	callback();
+
+	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+	gl.viewport(v[0], v[1], v[2], v[3]);
 }
 
 /**
@@ -4151,10 +4359,12 @@ Shader.prototype.uniforms = function(uniforms) {
 * @method draw
 * @param {Mesh} mesh
 * @param {number} mode could be gl.LINES, gl.POINTS, gl.TRIANGLES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN
+* @param {String} index_buffer_name the name of the index buffer, if not provided triangles will be assumed
 */
-Shader.prototype.draw = function(mesh, mode) {
+Shader.prototype.draw = function(mesh, mode, index_buffer_name ) {
+	index_buffer_name = index_buffer_name || (mode == gl.LINES ? 'lines' : 'triangles');
 	this.drawBuffers(mesh.vertexBuffers,
-	  mesh.indexBuffers[mode == gl.LINES ? 'lines' : 'triangles'],
+	  mesh.indexBuffers[ index_buffer_name ],
 	  arguments.length < 2 ? gl.TRIANGLES : mode);
 }
 
@@ -4165,11 +4375,14 @@ Shader.prototype.draw = function(mesh, mode) {
 * @param {number} mode could be gl.LINES, gl.POINTS, gl.TRIANGLES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN
 * @param {number} start first primitive to render
 * @param {number} length number of primitives to render
+* @param {String} index_buffer_name the name of the index buffer, if not provided triangles will be assumed
 */
-Shader.prototype.drawRange = function(mesh, mode, start, length)
+Shader.prototype.drawRange = function(mesh, mode, start, length, index_buffer_name )
 {
+	index_buffer_name = index_buffer_name || (mode == gl.LINES ? 'lines' : 'triangles');
+
 	this.drawBuffers(mesh.vertexBuffers,
-	  mesh.indexBuffers[mode == gl.LINES ? 'lines' : 'triangles'],
+	  mesh.indexBuffers[ index_buffer_name ],
 	  mode, start, length);
 }
 
@@ -4879,6 +5092,8 @@ GL.create = function(options) {
 		e.character = String.fromCharCode(e.keyCode).toLowerCase();
 		var prev_state = false;
 		var key = GL.mapKeyCode(e.keyCode);
+		if(!key) //this key doesnt look like an special key
+			key = e.character;
 
 		if (!e.altKey && !e.ctrlKey && !e.metaKey) {
 			if (key) 
@@ -4887,7 +5102,7 @@ GL.create = function(options) {
 			gl.keys[e.keyCode] = e.type == "keydown";
 		}
 
-		//avoid repetition if key stais pressed
+		//avoid repetition if key stays pressed
 		if(prev_state != gl.keys[e.keyCode])
 		{
 			if(e.type == "keydown" && gl.onkeydown) gl.onkeydown(e);
