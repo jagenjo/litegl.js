@@ -33,7 +33,8 @@ Octree.prototype.buildFromMesh = function(mesh)
 
 	var vertices = mesh.getBuffer("vertices").data;
 	var triangles = mesh.getIndexBuffer("triangles");
-	if(triangles) triangles = triangles.data; //get the internal data
+	if(triangles) 
+		triangles = triangles.data; //get the internal data
 
 	var root = this.computeAABB(vertices);
 	this.root = root;

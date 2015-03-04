@@ -135,28 +135,46 @@ Image.prototype.getPixels = function()
 }
 
 
+if(!String.prototype.hasOwnProperty("replaceAll")) 
+	Object.defineProperty(String.prototype, "replaceAll", {
+		get: function(words){
+			var str = this;
+			for(var i in words)
+				str = str.split(i).join(words[i]);
+			return str;
+		},
+		enumerable: false
+	});	
+
+/*
 String.prototype.replaceAll = function(words){
 	var str = this;
 	for(var i in words)
 		str = str.split(i).join(words[i]);
     return str;
 };
+*/
 
 //used for hashing keys
-String.prototype.hashCode = function(){
-    var hash = 0, i, c, l;
-    if (this.length == 0) return hash;
-    for (i = 0, l = this.length; i < l; ++i) {
-        c  = this.charCodeAt(i);
-        hash  = ((hash<<5)-hash)+c;
-        hash |= 0; // Convert to 32bit integer
-    }
-    return hash;
-};
+if(!String.prototype.hasOwnProperty("hashCode")) 
+	Object.defineProperty(String.prototype, "hashCode", {
+		value: function(){
+			var hash = 0, i, c, l;
+			if (this.length == 0) return hash;
+			for (i = 0, l = this.length; i < l; ++i) {
+				c  = this.charCodeAt(i);
+				hash  = ((hash<<5)-hash)+c;
+				hash |= 0; // Convert to 32bit integer
+			}
+			return hash;
+		},
+		enumerable: false
+	});	
 
 //avoid errors when Typed array is expected and regular array is found
 //Array.prototype.subarray = Array.prototype.slice;
-Object.defineProperty(Array.prototype, "subarray", { value: Array.prototype.slice, enumerable: false });
+if(!Array.prototype.hasOwnProperty("subarray"))
+	Object.defineProperty(Array.prototype, "subarray", { value: Array.prototype.slice, enumerable: false });
 
 
 // remove all properties on obj, effectively reverting it to a new object (to reduce garbage)

@@ -221,8 +221,8 @@ Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers, stream_type)
 	for(var i in vertexbuffers)
 	{
 		var data = vertexbuffers[i];
-		if(!data) continue;
-
+		if(!data) 
+			continue;
 		
 		if( data.constructor == GL.Buffer )
 		{
@@ -430,10 +430,16 @@ Mesh.prototype.clone = function( gl )
 	var vbs = {};
 	var ibs = {};
 
-	for(var i in mesh.vertexBuffers)
-		vbs[i] = mesh.vertexBuffers[i].data;
-	for(var i in mesh.indexBuffers)
-		ibs[i] = mesh.indexBuffers[i].data;
+	for(var i in this.vertexBuffers)
+	{
+		var b = this.vertexBuffers[i];
+		vbs[i] = new b.data.constructor( b.data ); //clone
+	}
+	for(var i in this.indexBuffers)
+	{
+		var b = this.indexBuffers[i];
+		ibs[i] = new b.data.constructor( b.data ); //clone
+	}
 
 	return new GL.Mesh( vbs, ibs, undefined, gl );
 }

@@ -27,7 +27,7 @@
 		var mesh = GL.Mesh.fromURL("man.obj");
 
 		//create basic matrices for cameras and transformation
-		var persp = mat4.create();
+		var proj = mat4.create();
 		var view = mat4.create();
 		var model = mat4.create();
 		var mvp = mat4.create();
@@ -42,7 +42,7 @@
 		}
 
 		//set the camera position
-		mat4.perspective(persp, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 0.1, 1000);
+		mat4.perspective(proj, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 0.1, 1000);
 		mat4.lookAt(view, [0,100,250],[0,100,0], [0,1,0]);
 
 		//basic phong shader
@@ -52,9 +52,9 @@
 				attribute vec3 a_normal;\
 				varying vec3 v_normal;\
 				uniform mat4 u_mvp;\
-				uniform mat4 u_modelt;\
+				uniform mat4 u_model;\
 				void main() {\
-					v_normal = (u_modelt * vec4(a_normal,1.0)).xyz;\
+					v_normal = (u_model * vec4(a_normal,0.0)).xyz;\
 					gl_Position = u_mvp * vec4(a_vertex,1.0);\
 				}\
 				', '\
@@ -80,17 +80,14 @@
 
 			//create modelview and projection matrices
 			mat4.multiply(temp,view,model);
-			mat4.multiply(mvp,persp,temp);
-
-			//compute rotation matrix for normals
-			var modelt = mat4.toRotationMat4(mat4.create(), model);
+			mat4.multiply(mvp,proj,temp);
 
 			//render mesh using the shader
 			if(mesh)
 				shader.uniforms({
 					u_color: [1,1,1,1],
 					u_lightvector: vec3.normalize(vec3.create(),[1,1,1]),
-					u_modelt: modelt,
+					u_model: model,
 					u_mvp: mvp
 				}).draw(mesh);
 		};

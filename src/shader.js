@@ -271,9 +271,9 @@ Shader.prototype.uniforms = function(uniforms) {
 * @param {String} index_buffer_name the name of the index buffer, if not provided triangles will be assumed
 */
 Shader.prototype.draw = function(mesh, mode, index_buffer_name ) {
-	index_buffer_name = index_buffer_name || (mode == gl.LINES ? 'lines' : 'triangles');
+	index_buffer_name = index_buffer_name === undefined ? (mode == gl.LINES ? 'lines' : 'triangles') : index_buffer_name;
 	this.drawBuffers(mesh.vertexBuffers,
-	  mesh.indexBuffers[ index_buffer_name ],
+	  index_buffer_name ? mesh.indexBuffers[ index_buffer_name ] : null,
 	  arguments.length < 2 ? gl.TRIANGLES : mode);
 }
 
@@ -288,10 +288,10 @@ Shader.prototype.draw = function(mesh, mode, index_buffer_name ) {
 */
 Shader.prototype.drawRange = function(mesh, mode, start, length, index_buffer_name )
 {
-	index_buffer_name = index_buffer_name || (mode == gl.LINES ? 'lines' : 'triangles');
+	index_buffer_name = index_buffer_name === undefined ? (mode == gl.LINES ? 'lines' : 'triangles') : index_buffer_name;
 
 	this.drawBuffers(mesh.vertexBuffers,
-	  mesh.indexBuffers[ index_buffer_name ],
+	  index_buffer_name ? mesh.indexBuffers[ index_buffer_name ] : null,
 	  mode, start, length);
 }
 

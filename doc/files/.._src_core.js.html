@@ -144,22 +144,28 @@ GL.create = function(options) {
 	gl.context_id = this.last_context_id++;
 
 	//get some common extensions
-	gl.derivatives_supported = gl.getExtension(&#x27;OES_standard_derivatives&#x27;) || false ;
-	gl.depth_ext = gl.getExtension(&quot;WEBGL_depth_texture&quot;) || gl.getExtension(&quot;WEBKIT_WEBGL_depth_texture&quot;) || gl.getExtension(&quot;MOZ_WEBGL_depth_texture&quot;);
+	gl.extensions = {};
+	gl.extensions[&quot;OES_standard_derivatives&quot;] = gl.derivatives_supported = gl.getExtension(&#x27;OES_standard_derivatives&#x27;) || false;
+	gl.extensions[&quot;WEBGL_depth_texture&quot;] = gl.getExtension(&quot;WEBGL_depth_texture&quot;) || gl.getExtension(&quot;WEBKIT_WEBGL_depth_texture&quot;) || gl.getExtension(&quot;MOZ_WEBGL_depth_texture&quot;);
+	gl.extensions[&quot;OES_element_index_uint&quot;] = gl.getExtension(&quot;OES_element_index_uint&quot;);
+	gl.extensions[&quot;WEBGL_draw_buffers&quot;] = gl.getExtension(&quot;WEBGL_draw_buffers&quot;);
+	gl.extensions[&quot;EXT_shader_texture_lod&quot;] = gl.getExtension(&quot;EXT_shader_texture_lod&quot;);
 
 	//for float textures
-	gl.float_ext = gl.getExtension(&quot;OES_texture_float&quot;);
-	gl.float_ext_linear = gl.getExtension(&quot;OES_texture_float_linear&quot;);
-	gl.half_float_ext = gl.getExtension(&quot;OES_texture_half_float&quot;);
-	gl.half_float_ext_linear = gl.getExtension(&quot;OES_texture_half_float_linear&quot;);
-	if(!gl.half_float_ext_linear)
-		gl.half_float_ext = null;
+	gl.extensions[&quot;OES_texture_float_linear&quot;] = gl.getExtension(&quot;OES_texture_float_linear&quot;);
+	if(gl.extensions[&quot;OES_texture_float_linear&quot;])
+		gl.extensions[&quot;OES_texture_float&quot;] = gl.getExtension(&quot;OES_texture_float&quot;);
+
+	gl.extensions[&quot;OES_texture_half_float_linear&quot;] = gl.getExtension(&quot;OES_texture_half_float_linear&quot;);
+	if(gl.extensions[&quot;OES_texture_half_float_linear&quot;])
+		gl.extensions[&quot;OES_texture_half_float&quot;] = gl.getExtension(&quot;OES_texture_half_float&quot;);
 
 	gl.HALF_FLOAT_OES = 0x8D61; 
-	if(gl.half_float_ext)
-		gl.HALF_FLOAT_OES = gl.half_float_ext.HALF_FLOAT_OES;
+	if(gl.extensions[&quot;OES_texture_half_float&quot;])
+		gl.HALF_FLOAT_OES = gl.extensions[&quot;OES_texture_half_float&quot;].HALF_FLOAT_OES;
+	gl.HIGH_PRECISION_FORMAT = gl.extensions[&quot;OES_texture_half_float&quot;] ? gl.HALF_FLOAT_OES : (gl.extensions[&quot;OES_texture_float&quot;] ? gl.FLOAT : gl.UNSIGNED_BYTE); //because Firefox dont support half float
+
 	gl.max_texture_units = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
-	gl.HIGH_PRECISION_FORMAT = gl.half_float_ext ? gl.HALF_FLOAT_OES : (gl.float_ext ? gl.FLOAT : gl.UNSIGNED_BYTE); //because Firefox dont support half float
 
 	//viewport hack to retrieve it without using getParameter (which is slow)
 	gl._viewport_func = gl.viewport;
@@ -308,8 +314,9 @@ GL.create = function(options) {
 			if(old_mouse_mask == 0) //no mouse button was pressed till now
 			{
 				canvas.removeEventListener(&quot;mousemove&quot;, onmouse);
-				document.addEventListener(&quot;mousemove&quot;, onmouse);
-				document.addEventListener(&quot;mouseup&quot;, onmouse);
+				var doc = canvas.ownerDocument;
+				doc.addEventListener(&quot;mousemove&quot;, onmouse);
+				doc.addEventListener(&quot;mouseup&quot;, onmouse);
 			}
 			last_click_time = now;
 
@@ -327,8 +334,9 @@ GL.create = function(options) {
 			if(gl.mouse_buttons == 0) //no more buttons pressed
 			{
 				canvas.addEventListener(&quot;mousemove&quot;, onmouse);
-				document.removeEventListener(&quot;mousemove&quot;, onmouse);
-				document.removeEventListener(&quot;mouseup&quot;, onmouse);
+				var doc = canvas.ownerDocument;
+				doc.removeEventListener(&quot;mousemove&quot;, onmouse);
+				doc.removeEventListener(&quot;mouseup&quot;, onmouse);
 			}
 			e.click_time = now - last_click_time;
 			last_click_time = now;
@@ -416,6 +424,8 @@ GL.create = function(options) {
 		e.character = String.fromCharCode(e.keyCode).toLowerCase();
 		var prev_state = false;
 		var key = GL.mapKeyCode(e.keyCode);
+		if(!key) //this key doesnt look like an special key
+			key = e.character;
 
 		if (!e.altKey &amp;&amp; !e.ctrlKey &amp;&amp; !e.metaKey) {
 			if (key) 
@@ -424,7 +434,7 @@ GL.create = function(options) {
 			gl.keys[e.keyCode] = e.type == &quot;keydown&quot;;
 		}
 
-		//avoid repetition if key stais pressed
+		//avoid repetition if key stays pressed
 		if(prev_state != gl.keys[e.keyCode])
 		{
 			if(e.type == &quot;keydown&quot; &amp;&amp; gl.onkeydown) gl.onkeydown(e);
@@ -442,6 +452,13 @@ GL.create = function(options) {
 		console.log(e);
 		if(pressed &amp;&amp; gl.onbuttondown) gl.onbuttondown(e);
 		else if(!pressed &amp;&amp; gl.onbuttonup) gl.onbuttonup(e);
+	}
+	
+	function onGamepad(e)
+	{
+		console.log(e);
+		if(gl.ongamepad) 
+			gl.ongamepad(e);
 	}
 
 	/**
@@ -461,6 +478,9 @@ GL.create = function(options) {
 		window.addEventListener(&quot;gamepadButtonUp&quot;, function(e) { onButton(e, false); }, false);
 		window.addEventListener(&quot;MozGamepadButtonUp&quot;, function(e) { onButton(e, false); }, false);
 		window.addEventListener(&quot;WebkitGamepadButtonUp&quot;, function(e) { onButton(e, false); }, false);
+
+		window.addEventListener(&quot;gamepadconnected&quot;, onGamepad, false);
+		window.addEventListener(&quot;gamepaddisconnected&quot;, onGamepad, false);
 	}
 
 	/**
@@ -485,6 +505,37 @@ GL.create = function(options) {
 					else if(this.gamepads[i] &amp;&amp; !gamepads[i] &amp;&amp; this.ongamepaddisconnected)
 						this.ongamepaddisconnected(this.gamepads[i]);
 				}
+				//xbox controller mapping
+				var xbox = { axes:[], buttons:{}, hat: &quot;&quot;};
+				xbox.axes[&quot;lx&quot;] = gamepad.axes[0];
+				xbox.axes[&quot;ly&quot;] = gamepad.axes[1];
+				xbox.axes[&quot;rx&quot;] = gamepad.axes[2];
+				xbox.axes[&quot;ry&quot;] = gamepad.axes[3];
+				for(var i = 0; i &lt; gamepad.buttons.length; i++)
+				{
+					switch(i) //I use a switch to ensure that a player with another gamepad could play
+					{
+						case 0: xbox.buttons[&quot;a&quot;] = gamepad.buttons[i].pressed; break;
+						case 1: xbox.buttons[&quot;b&quot;] = gamepad.buttons[i].pressed; break;
+						case 2: xbox.buttons[&quot;x&quot;] = gamepad.buttons[i].pressed; break;
+						case 3: xbox.buttons[&quot;y&quot;] = gamepad.buttons[i].pressed; break;
+						case 4: xbox.buttons[&quot;lb&quot;] = gamepad.buttons[i].pressed; break;
+						case 5: xbox.buttons[&quot;rb&quot;] = gamepad.buttons[i].pressed; break;
+						case 6: xbox.buttons[&quot;lt&quot;] = gamepad.buttons[i].pressed; break;
+						case 7: xbox.buttons[&quot;rt&quot;] = gamepad.buttons[i].pressed; break;
+						case 8: xbox.buttons[&quot;back&quot;] = gamepad.buttons[i].pressed; break;
+						case 9: xbox.buttons[&quot;start&quot;] = gamepad.buttons[i].pressed; break;
+						case 10: xbox.buttons[&quot;ls&quot;] = gamepad.buttons[i].pressed; break;
+						case 11: xbox.buttons[&quot;rs&quot;] = gamepad.buttons[i].pressed; break;
+						case 12: if( gamepad.buttons[i].pressed) xbox.hat += &quot;up&quot;; break;
+						case 13: if( gamepad.buttons[i].pressed) xbox.hat += &quot;down&quot;; break;
+						case 14: if( gamepad.buttons[i].pressed) xbox.hat += &quot;left&quot;; break;
+						case 15: if( gamepad.buttons[i].pressed) xbox.hat += &quot;right&quot;; break;
+						case 16: xbox.buttons[&quot;home&quot;] = gamepad.buttons[i].pressed; break;
+						default:
+					}
+				}
+				gamepad.xbox = xbox;
 			}
 		this.gamepads = gamepads;
 		return gamepads;

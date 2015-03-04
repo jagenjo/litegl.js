@@ -189,28 +189,46 @@ Image.prototype.getPixels = function()
 }
 
 
+if(!String.prototype.hasOwnProperty("replaceAll")) 
+	Object.defineProperty(String.prototype, "replaceAll", {
+		get: function(words){
+			var str = this;
+			for(var i in words)
+				str = str.split(i).join(words[i]);
+			return str;
+		},
+		enumerable: false
+	});	
+
+/*
 String.prototype.replaceAll = function(words){
 	var str = this;
 	for(var i in words)
 		str = str.split(i).join(words[i]);
     return str;
 };
+*/
 
 //used for hashing keys
-String.prototype.hashCode = function(){
-    var hash = 0, i, c, l;
-    if (this.length == 0) return hash;
-    for (i = 0, l = this.length; i < l; ++i) {
-        c  = this.charCodeAt(i);
-        hash  = ((hash<<5)-hash)+c;
-        hash |= 0; // Convert to 32bit integer
-    }
-    return hash;
-};
+if(!String.prototype.hasOwnProperty("hashCode")) 
+	Object.defineProperty(String.prototype, "hashCode", {
+		value: function(){
+			var hash = 0, i, c, l;
+			if (this.length == 0) return hash;
+			for (i = 0, l = this.length; i < l; ++i) {
+				c  = this.charCodeAt(i);
+				hash  = ((hash<<5)-hash)+c;
+				hash |= 0; // Convert to 32bit integer
+			}
+			return hash;
+		},
+		enumerable: false
+	});	
 
 //avoid errors when Typed array is expected and regular array is found
 //Array.prototype.subarray = Array.prototype.slice;
-Object.defineProperty(Array.prototype, "subarray", { value: Array.prototype.slice, enumerable: false });
+if(!Array.prototype.hasOwnProperty("subarray"))
+	Object.defineProperty(Array.prototype, "subarray", { value: Array.prototype.slice, enumerable: false });
 
 
 // remove all properties on obj, effectively reverting it to a new object (to reduce garbage)
@@ -1732,8 +1750,8 @@ Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers, stream_type)
 	for(var i in vertexbuffers)
 	{
 		var data = vertexbuffers[i];
-		if(!data) continue;
-
+		if(!data) 
+			continue;
 		
 		if( data.constructor == GL.Buffer )
 		{
@@ -1941,10 +1959,16 @@ Mesh.prototype.clone = function( gl )
 	var vbs = {};
 	var ibs = {};
 
-	for(var i in mesh.vertexBuffers)
-		vbs[i] = mesh.vertexBuffers[i].data;
-	for(var i in mesh.indexBuffers)
-		ibs[i] = mesh.indexBuffers[i].data;
+	for(var i in this.vertexBuffers)
+	{
+		var b = this.vertexBuffers[i];
+		vbs[i] = new b.data.constructor( b.data ); //clone
+	}
+	for(var i in this.indexBuffers)
+	{
+		var b = this.indexBuffers[i];
+		ibs[i] = new b.data.constructor( b.data ); //clone
+	}
 
 	return new GL.Mesh( vbs, ibs, undefined, gl );
 }
@@ -4362,9 +4386,9 @@ Shader.prototype.uniforms = function(uniforms) {
 * @param {String} index_buffer_name the name of the index buffer, if not provided triangles will be assumed
 */
 Shader.prototype.draw = function(mesh, mode, index_buffer_name ) {
-	index_buffer_name = index_buffer_name || (mode == gl.LINES ? 'lines' : 'triangles');
+	index_buffer_name = index_buffer_name === undefined ? (mode == gl.LINES ? 'lines' : 'triangles') : index_buffer_name;
 	this.drawBuffers(mesh.vertexBuffers,
-	  mesh.indexBuffers[ index_buffer_name ],
+	  index_buffer_name ? mesh.indexBuffers[ index_buffer_name ] : null,
 	  arguments.length < 2 ? gl.TRIANGLES : mode);
 }
 
@@ -4379,10 +4403,10 @@ Shader.prototype.draw = function(mesh, mode, index_buffer_name ) {
 */
 Shader.prototype.drawRange = function(mesh, mode, start, length, index_buffer_name )
 {
-	index_buffer_name = index_buffer_name || (mode == gl.LINES ? 'lines' : 'triangles');
+	index_buffer_name = index_buffer_name === undefined ? (mode == gl.LINES ? 'lines' : 'triangles') : index_buffer_name;
 
 	this.drawBuffers(mesh.vertexBuffers,
-	  mesh.indexBuffers[ index_buffer_name ],
+	  index_buffer_name ? mesh.indexBuffers[ index_buffer_name ] : null,
 	  mode, start, length);
 }
 
@@ -4820,6 +4844,7 @@ GL.create = function(options) {
 	gl.extensions["WEBGL_depth_texture"] = gl.getExtension("WEBGL_depth_texture") || gl.getExtension("WEBKIT_WEBGL_depth_texture") || gl.getExtension("MOZ_WEBGL_depth_texture");
 	gl.extensions["OES_element_index_uint"] = gl.getExtension("OES_element_index_uint");
 	gl.extensions["WEBGL_draw_buffers"] = gl.getExtension("WEBGL_draw_buffers");
+	gl.extensions["EXT_shader_texture_lod"] = gl.getExtension("EXT_shader_texture_lod");
 
 	//for float textures
 	gl.extensions["OES_texture_float_linear"] = gl.getExtension("OES_texture_float_linear");
@@ -4984,8 +5009,9 @@ GL.create = function(options) {
 			if(old_mouse_mask == 0) //no mouse button was pressed till now
 			{
 				canvas.removeEventListener("mousemove", onmouse);
-				document.addEventListener("mousemove", onmouse);
-				document.addEventListener("mouseup", onmouse);
+				var doc = canvas.ownerDocument;
+				doc.addEventListener("mousemove", onmouse);
+				doc.addEventListener("mouseup", onmouse);
 			}
 			last_click_time = now;
 
@@ -5003,8 +5029,9 @@ GL.create = function(options) {
 			if(gl.mouse_buttons == 0) //no more buttons pressed
 			{
 				canvas.addEventListener("mousemove", onmouse);
-				document.removeEventListener("mousemove", onmouse);
-				document.removeEventListener("mouseup", onmouse);
+				var doc = canvas.ownerDocument;
+				doc.removeEventListener("mousemove", onmouse);
+				doc.removeEventListener("mouseup", onmouse);
 			}
 			e.click_time = now - last_click_time;
 			last_click_time = now;
@@ -6558,7 +6585,8 @@ Octree.prototype.buildFromMesh = function(mesh)
 
 	var vertices = mesh.getBuffer("vertices").data;
 	var triangles = mesh.getIndexBuffer("triangles");
-	if(triangles) triangles = triangles.data; //get the internal data
+	if(triangles) 
+		triangles = triangles.data; //get the internal data
 
 	var root = this.computeAABB(vertices);
 	this.root = root;

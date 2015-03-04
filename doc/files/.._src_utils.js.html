@@ -148,6 +148,58 @@ global.isNumber = function isNumber(obj) {
   return (obj != null &amp;&amp; obj.constructor === Number );
 }
 
+/**
+* clone one object recursively, only allows objects containing number,strings,typed-arrays or other objects
+* @method cloneObject
+* @param {Object} object 
+* @param {Object} target if omited an empty object is created
+* @return {Object}
+*/
+global.cloneObject = GL.cloneObject = function(o, t)
+{
+	if(o.constructor !== Object)
+		throw(&quot;cloneObject only can clone pure javascript objects, not classes&quot;);
+
+	t = t || {};
+
+	for(var i in o)
+	{
+		var v = o[i];
+		if(v === null)
+		{
+			t[i] = null;
+			continue;
+		}
+
+		switch(v.constructor)
+		{
+			case Int8Array:
+			case Uint8Array:
+			case Int16Array:
+			case Uint16Array:
+			case Int32Array:
+			case Uint32Array:
+			case Float32Array:
+			case Float64Array:
+				t[i] = new v.constructor(v);
+				break;
+			case Boolean:
+			case Number:
+			case String:
+				t[i] = v;
+				break;
+			case Array:
+				t[i] = v.concat(); //content is not cloned
+				break;
+			case Object:
+				t[i] = GL.cloneObject(v);
+				break;
+		}
+	}
+
+	return t;
+}
+
 
 /* SLOW because accepts booleans
 function isNumber(obj) {
@@ -180,29 +232,57 @@ global.cloneCanvas = GL.cloneCanvas = function cloneCanvas(c) {
     return canvas;
 }
 
+Image.prototype.getPixels = function()
+{
+    var canvas = document.createElement(&#x27;canvas&#x27;);
+    canvas.width = this.width;
+    canvas.height = this.height;
+    var ctx = canvas.getContext(&quot;2d&quot;);
+    ctx.drawImage(this,0,0);
+	return ctx.getImageData(0, 0, this.width, this.height).data;
+}
 
+
+if(!String.prototype.hasOwnProperty(&quot;replaceAll&quot;)) 
+	Object.defineProperty(String.prototype, &quot;replaceAll&quot;, {
+		get: function(words){
+			var str = this;
+			for(var i in words)
+				str = str.split(i).join(words[i]);
+			return str;
+		},
+		enumerable: false
+	});	
+
+/*
 String.prototype.replaceAll = function(words){
 	var str = this;
 	for(var i in words)
 		str = str.split(i).join(words[i]);
     return str;
 };
+*/
 
 //used for hashing keys
-String.prototype.hashCode = function(){
-    var hash = 0, i, c, l;
-    if (this.length == 0) return hash;
-    for (i = 0, l = this.length; i &lt; l; ++i) {
-        c  = this.charCodeAt(i);
-        hash  = ((hash&lt;&lt;5)-hash)+c;
-        hash |= 0; // Convert to 32bit integer
-    }
-    return hash;
-};
+if(!String.prototype.hasOwnProperty(&quot;hashCode&quot;)) 
+	Object.defineProperty(String.prototype, &quot;hashCode&quot;, {
+		value: function(){
+			var hash = 0, i, c, l;
+			if (this.length == 0) return hash;
+			for (i = 0, l = this.length; i &lt; l; ++i) {
+				c  = this.charCodeAt(i);
+				hash  = ((hash&lt;&lt;5)-hash)+c;
+				hash |= 0; // Convert to 32bit integer
+			}
+			return hash;
+		},
+		enumerable: false
+	});	
 
 //avoid errors when Typed array is expected and regular array is found
 //Array.prototype.subarray = Array.prototype.slice;
-Object.defineProperty(Array.prototype, &quot;subarray&quot;, { value: Array.prototype.slice, enumerable: false });
+if(!Array.prototype.hasOwnProperty(&quot;subarray&quot;))
+	Object.defineProperty(Array.prototype, &quot;subarray&quot;, { value: Array.prototype.slice, enumerable: false });
 
 
 // remove all properties on obj, effectively reverting it to a new object (to reduce garbage)

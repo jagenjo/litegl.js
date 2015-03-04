@@ -41,6 +41,7 @@ GL.create = function(options) {
 	gl.extensions["WEBGL_depth_texture"] = gl.getExtension("WEBGL_depth_texture") || gl.getExtension("WEBKIT_WEBGL_depth_texture") || gl.getExtension("MOZ_WEBGL_depth_texture");
 	gl.extensions["OES_element_index_uint"] = gl.getExtension("OES_element_index_uint");
 	gl.extensions["WEBGL_draw_buffers"] = gl.getExtension("WEBGL_draw_buffers");
+	gl.extensions["EXT_shader_texture_lod"] = gl.getExtension("EXT_shader_texture_lod");
 
 	//for float textures
 	gl.extensions["OES_texture_float_linear"] = gl.getExtension("OES_texture_float_linear");
@@ -205,8 +206,9 @@ GL.create = function(options) {
 			if(old_mouse_mask == 0) //no mouse button was pressed till now
 			{
 				canvas.removeEventListener("mousemove", onmouse);
-				document.addEventListener("mousemove", onmouse);
-				document.addEventListener("mouseup", onmouse);
+				var doc = canvas.ownerDocument;
+				doc.addEventListener("mousemove", onmouse);
+				doc.addEventListener("mouseup", onmouse);
 			}
 			last_click_time = now;
 
@@ -224,8 +226,9 @@ GL.create = function(options) {
 			if(gl.mouse_buttons == 0) //no more buttons pressed
 			{
 				canvas.addEventListener("mousemove", onmouse);
-				document.removeEventListener("mousemove", onmouse);
-				document.removeEventListener("mouseup", onmouse);
+				var doc = canvas.ownerDocument;
+				doc.removeEventListener("mousemove", onmouse);
+				doc.removeEventListener("mouseup", onmouse);
 			}
 			e.click_time = now - last_click_time;
 			last_click_time = now;

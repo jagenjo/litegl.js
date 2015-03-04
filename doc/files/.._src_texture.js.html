@@ -129,34 +129,41 @@
 
 global.Texture = GL.Texture = function Texture(width, height, options, gl) {
 	options = options || {};
+
 	//used to avoid problems with resources moving between different webgl context
 	gl = gl || global.gl;
 	this.gl = gl;
 	this._context_id = gl.context_id; 
 
+	//round sizes
 	width = parseInt(width); 
 	height = parseInt(height);
+
+	//create texture handler
 	this.handler = gl.createTexture();
+
+	//set settings
 	this.width = width;
 	this.height = height;
 	this.format = options.format || gl.RGBA; //(if gl.DEPTH_COMPONENT remember format: gl.UNSIGNED_SHORT)
-	this.type = options.type || gl.UNSIGNED_BYTE; //gl.UNSIGNED_SHORT
-	this.texture_type = options.texture_type || gl.TEXTURE_2D; //gl.TEXTURE_CUBE_MAP
+	this.type = options.type || gl.UNSIGNED_BYTE; //gl.UNSIGNED_SHORT or gl.HIGH_PRECISION_FORMAT
+	this.texture_type = options.texture_type || gl.TEXTURE_2D; //or gl.TEXTURE_CUBE_MAP
 	this.magFilter = options.magFilter || options.filter || gl.LINEAR;
 	this.minFilter = options.minFilter || options.filter || gl.LINEAR;
 	this.wrapS = options.wrap || options.wrapS || gl.CLAMP_TO_EDGE;
 	this.wrapT = options.wrap || options.wrapT || gl.CLAMP_TO_EDGE;
 
+	//precompute the max amount of texture units
 	if(!Texture.MAX_TEXTURE_IMAGE_UNITS)
 		Texture.MAX_TEXTURE_IMAGE_UNITS = gl.getParameter( gl.MAX_TEXTURE_IMAGE_UNITS );
 
 	this.has_mipmaps = false;
 
-	if(this.format == gl.DEPTH_COMPONENT &amp;&amp; !gl.depth_ext)
+	if(this.format == gl.DEPTH_COMPONENT &amp;&amp; !gl.extensions[&quot;WEBGL_depth_texture&quot;])
 		throw(&quot;Depth Texture not supported&quot;);
-	if(this.type == gl.FLOAT &amp;&amp; !gl.float_ext)
+	if(this.type == gl.FLOAT &amp;&amp; !gl.extensions[&quot;OES_texture_float&quot;])
 		throw(&quot;Float Texture not supported&quot;);
-	if(this.type == gl.HALF_FLOAT_OES &amp;&amp; !gl.half_float_ext)
+	if(this.type == gl.HALF_FLOAT_OES &amp;&amp; !gl.extensions[&quot;OES_texture_half_float&quot;])
 		throw(&quot;Half Float Texture not supported&quot;);
 	if(( (this.minFilter != gl.NEAREST &amp;&amp; this.minFilter != gl.LINEAR) || this.wrapS != gl.CLAMP_TO_EDGE || this.wrapT != gl.CLAMP_TO_EDGE) &amp;&amp; (!isPowerOfTwo(this.width) || !isPowerOfTwo(this.height)))
 	{
@@ -203,7 +210,7 @@ global.Texture = GL.Texture = function Texture(width, height, options, gl) {
 Texture.framebuffer = null;
 Texture.renderbuffer = null;
 Texture.loading_color = new Uint8Array([0,0,0,0]);
-
+Texture.use_renderbuffer_pool = true; //should improve performance
 
 Texture.prototype.getProperties = function()
 {
@@ -369,28 +376,65 @@ Texture.prototype.drawTo = function(callback, params)
 		throw(&quot;cannot use drawTo in depth textures, use Texture.drawToColorAndDepth&quot;);
 
 	var v = gl.getViewport();
+	var now = GL.getTime();
 
 	var framebuffer = gl._framebuffer = gl._framebuffer || gl.createFramebuffer();
 	gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer );
 
 	//this code allows to reuse old renderbuffers instead of creating and destroying them for every frame
 	var renderbuffer = null;
-	//var renderbuffer = gl._renderbuffer = gl._renderbuffer || gl.createRenderbuffer();
-	if(!gl._renderbuffers_pool)
-		gl._renderbuffers_pool = {};
-	var key = this.width + &quot;:&quot; + this.height;
-	if(!gl._renderbuffers_pool[ key ])
+
+	if( Texture.use_renderbuffer_pool ) //create a renderbuffer pool
 	{
-		gl._renderbuffers_pool[ key ] = renderbuffer = gl.createRenderbuffer();
-		renderbuffer.width = this.width;
-		renderbuffer.height = this.height;
-		gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer );
-		gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.width, this.height);
+		if(!gl._renderbuffers_pool)
+			gl._renderbuffers_pool = {};
+		//generate unique key for this renderbuffer
+		var key = this.width + &quot;:&quot; + this.height;
+
+		//reuse or create new one
+		if( gl._renderbuffers_pool[ key ] ) //Reuse old
+		{
+			renderbuffer = gl._renderbuffers_pool[ key ];
+			renderbuffer.time = now;
+			gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer );
+		}
+		else
+		{
+			//create temporary buffer
+			gl._renderbuffers_pool[ key ] = renderbuffer = gl.createRenderbuffer();
+			renderbuffer.time = now;
+			renderbuffer.width = this.width;
+			renderbuffer.height = this.height;
+			gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer );
+
+			//destroy after one minute 
+			setTimeout( inner_check_destroy.bind(renderbuffer), 1000*60 );
+		}
 	}
 	else
 	{
-		renderbuffer = gl._renderbuffers_pool[ key ];
+		renderbuffer = gl._renderbuffer = gl._renderbuffer || gl.createRenderbuffer();
+		renderbuffer.width = this.width;
+		renderbuffer.height = this.height;
 		gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer );
+	}
+
+
+	//bind buffer
+	gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.width, this.height);
+
+
+	//clears memory from unused buffer
+	function inner_check_destroy()
+	{
+		if( GL.getTime() - this.time &gt;= 1000*60 )
+		{
+			console.log(&quot;Buffer cleared&quot;);
+			gl.deleteRenderbuffer( gl._renderbuffers_pool[ key ] );
+			delete gl._renderbuffers_pool[ key ];
+		}
+		else
+			setTimeout( inner_check_destroy.bind(this), 1000*60 );
 	}
 
 
@@ -405,12 +449,14 @@ Texture.prototype.drawTo = function(callback, params)
 
 	gl.viewport(0, 0, this.width, this.height);
 
-	if(gl._current_texture_drawto)
-		throw(&quot;Texture.drawTo: Cannot use drawTo from inside another drawTo&quot;);
+	//if(gl._current_texture_drawto)
+	//	throw(&quot;Texture.drawTo: Cannot use drawTo from inside another drawTo&quot;);
 
 	gl._current_texture_drawto = this;
 	gl._current_fbo_color = framebuffer;
 	gl._current_fbo_depth = renderbuffer;
+
+
 
 	//try
 	//{
@@ -422,9 +468,10 @@ Texture.prototype.drawTo = function(callback, params)
 		}
 		else if(this.texture_type == gl.TEXTURE_CUBE_MAP)
 		{
+			//var faces = [ gl.TEXTURE_CUBE_MAP_POSITIVE_X, gl.TEXTURE_CUBE_MAP_NEGATIVE_X, gl.TEXTURE_CUBE_MAP_POSITIVE_Y, gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, gl.TEXTURE_CUBE_MAP_POSITIVE_Z, gl.TEXTURE_CUBE_MAP_NEGATIVE_Z ];
 			for(var i = 0; i &lt; 6; i++)
 			{
-				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X+i, this.handler, 0);
+				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,  gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, this.handler, 0);
 				gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
 				callback(this,i, params);
 			}
@@ -457,6 +504,103 @@ Texture.prototype.drawTo = function(callback, params)
 }
 
 /**
+* Static version of drawTo meant to be used with several buffers
+* @method drawToColorAndDepth
+* @param {Texture} color_texture
+* @param {Texture} depth_texture
+* @param {Function} callback
+*/
+Texture.drawTo = function(textures, callback)
+{
+	var depth_texture = null;
+	var w = -1,
+		h = -1,
+		type = null;
+	var color_textures = 0;
+	for(var i = 0; i &lt; textures.length; i++)
+	{
+		var t = textures[i];
+		if(t.type == gl.DEPTH_COMPONENT)
+			depth_texture = t;
+		if(w == -1) 
+			w = t.width;
+		else if(w != t.width)
+			throw(&quot;Cannot use Texture.drawTo if textures have different dimensions&quot;);
+		if(h == -1) 
+			h = t.height;
+		else if(h != t.height)
+			throw(&quot;Cannot use Texture.drawTo if textures have different dimensions&quot;);
+		if(type == null)
+			type =  t.type;
+		else if (type != t.type &amp;&amp; t.type == gl.DEPTH_COMPONENT)
+			throw(&quot;Cannot use Texture.drawTo if textures have different data type, all must have the same type&quot;);
+		color_textures += 1;
+	}
+
+	if(!color_textures)
+		throw(&quot;you must pass one color texture at least&quot;);
+
+	var v = gl.getViewport();
+	gl._framebuffer =  gl._framebuffer || gl.createFramebuffer();
+	gl.bindFramebuffer(gl.FRAMEBUFFER,  gl._framebuffer);
+
+	gl.viewport(0, 0, w, h);
+	var ext = gl.extensions[&quot;WEBGL_draw_buffers&quot;];
+	if(!ext &amp;&amp; color_textures &gt; 1)
+		throw(&quot;Rendering to several textures not supported&quot;);
+
+	var renderbuffer = null;
+	if( !depth_texture )
+	{
+		renderbuffer = gl._renderbuffer = gl._renderbuffer || gl.createRenderbuffer();
+		renderbuffer.width = w;
+		renderbuffer.height = h;
+		gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer );
+	}
+
+
+	var slot = 0;
+	var order = []; //draw_buffers request the use of an array with the order of the attachments
+	for(var i = 0; i &lt; textures.length; i++)
+	{
+		var t = textures[i];
+		if(t.type == gl.DEPTH_COMPONENT)
+			continue;
+		if(color_textures == 1)
+		{
+			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t.handler, 0);
+			break;
+		}
+
+		var att = ext.COLOR_ATTACHMENT0_WEBGL + slot;
+		gl.framebufferTexture2D(gl.FRAMEBUFFER, att, gl.TEXTURE_2D, t.handler, 0);
+		order.push(att);
+		slot++;
+	}
+
+	if( depth_texture )
+		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT,  gl.TEXTURE_2D, depth_texture.handler, 0);
+	else //create a temporary renderbuffer
+	{
+		gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, w, h);
+		gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer );
+	}
+
+	var complete = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+	if(complete !== gl.FRAMEBUFFER_COMPLETE)
+		throw(&quot;FBO not complete: &quot; + complete);
+
+	if(color_textures &gt; 1)
+		ext.drawBuffersWEBGL( order );
+
+	callback();
+
+	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+	gl.viewport(v[0], v[1], v[2], v[3]);
+}
+
+/**
 * Similar to drawTo but it also stores the depth in a depth texture
 * @method drawToColorAndDepth
 * @param {Texture} color_texture
@@ -478,7 +622,7 @@ Texture.drawToColorAndDepth = function(color_texture, depth_texture, callback) {
 	gl.viewport(0, 0, color_texture.width, color_texture.height);
 
 	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, color_texture.handler, 0);
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depth_texture.handler, 0);
+	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT,  gl.TEXTURE_2D, depth_texture.handler, 0);
 
 	callback();
 
@@ -563,32 +707,6 @@ Texture.prototype.renderQuad = (function() {
 	});
 })();
 
-/**
-* Copy texture content to a canvas
-* @method toCanvas
-* @param {Canvas} canvas must have the same size, if different the canvas will be resized
-*/
-Texture.prototype.toCanvas = function(canvas)
-{
-	var gl = this.gl;
-	var w = this.width;
-	var h = this.height;
-	canvas = canvas || createCanvas(w,h);
-	if(canvas.width != w) canvas.width = w;
-	if(canvas.height != h) canvas.height = h;
-
-	var buffer = new Uint8Array(w*h*4);
-	this.drawTo( function() {
-		gl.readPixels(0,0,w,h,gl.RGBA,gl.UNSIGNED_BYTE,buffer);
-	});
-
-	var ctx = canvas.getContext(&quot;2d&quot;);
-	var pixels = ctx.getImageData(0,0,w,h);
-	pixels.data.set( buffer );
-	ctx.putImageData(pixels,0,0);
-
-	return canvas;
-}
 
 /**
 * Applies a blur filter of one pixel to the texture (be careful using it, it is slow)
@@ -657,7 +775,7 @@ Texture.fromURL = function(url, options, on_complete, gl) {
 		DDS.loadDDSTextureEx(gl, ext, url, new_texture.handler, true, function(t) {
 			texture.texture_type = t.texture_type;
 			texture.handler = t;
-			texture.ready = true;
+			delete texture[&quot;ready&quot;]; //texture.ready = true;
 		});
 	}
 	else
@@ -669,9 +787,14 @@ Texture.fromURL = function(url, options, on_complete, gl) {
 		{
 			options.texture = texture;
 			GL.Texture.fromImage(this, options);
-			texture.ready = true;
+			delete texture[&quot;ready&quot;]; //texture.ready = true;
 			if(on_complete)
 				on_complete(texture);
+		}
+		image.onerror = function()
+		{
+			if(on_complete)
+				on_complete(null);
 		}
 	}
 
@@ -964,6 +1087,31 @@ Texture.prototype.getPixels = function()
 
 	gl.viewport(v[0], v[1], v[2], v[3]);
 	return buffer;
+}
+
+
+/**
+* Copy texture content to a canvas
+* @method toCanvas
+* @param {Canvas} canvas must have the same size, if different the canvas will be resized
+*/
+Texture.prototype.toCanvas = function(canvas)
+{
+	var gl = this.gl;
+	var w = this.width;
+	var h = this.height;
+	canvas = canvas || createCanvas(w,h);
+	if(canvas.width != w) canvas.width = w;
+	if(canvas.height != h) canvas.height = h;
+
+	var buffer = this.getPixels();
+
+	var ctx = canvas.getContext(&quot;2d&quot;);
+	var pixels = ctx.getImageData(0,0,w,h);
+	pixels.data.set( buffer );
+	ctx.putImageData(pixels,0,0);
+
+	return canvas;
 }
 
 /**
