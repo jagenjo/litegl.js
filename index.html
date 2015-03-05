@@ -1,0 +1,125 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Litegl.js by jagenjo</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Litegl.js</h1>
+        <p>Light Javascript WebGL library for handling Context, Meshes, Textures and Shaders. Relies on glMatrix 2.0</p>
+
+        <p class="view"><a href="https://github.com/jagenjo/litegl.js">View the Project on GitHub <small>jagenjo/litegl.js</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/jagenjo/litegl.js/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/jagenjo/litegl.js/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/jagenjo/litegl.js">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a id="litegljs" class="anchor" href="#litegljs" aria-hidden="true"><span class="octicon octicon-link"></span></a>litegl.js</h1>
+
+<p>Litegl.js is a library that wraps WebGL to make it more user-friendly by creating classes for managing different items like Buffer, Mesh, Texture, Shader and other common aspects of any WebGL applications.
+It is a fork from <a href="https://github.com/evanw/lightgl.js/">LightGL.js</a> by <a href="http://madebyevan.com">Evan Wallace</a>, but some major changes have been made.
+Some of the main differences:</p>
+
+<ul>
+<li>Matrices have been replaced by glMatrix</li>
+<li>Meshes are forced to be stored in ArrayBuffer formats</li>
+<li>Meshes support range rendering with offset</li>
+<li>Removed fixed pipeline behaviour</li>
+<li>Better event handling (mouse position, mouse wheel, dragging)</li>
+<li>Textures expanded to support Arraybuffers and Cubemaps</li>
+<li>Events system to trigger events from any object</li>
+<li>Support for multiple WebGL contexts in the same page</li>
+</ul>
+
+<p>This library has been used in several projects like <a href="https://github.com/jagenjo/rendeer.js">Rendeer.js</a> or <a href="https://github.com/jagenjo/Canvas2DtoWebGL">Canvas2DtoWebGL</a>.</p>
+
+<h2>
+<a id="demos" class="anchor" href="#demos" aria-hidden="true"><span class="octicon octicon-link"></span></a>Demos</h2>
+
+<p>Demos are included in the Examples folder but you can check them in <a href="http://tamats.com/webglstudio/litegl/#examples">this website</a>.</p>
+
+<h2>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span class="octicon octicon-link"></span></a>Usage</h2>
+
+<p>Include the library and dependencies</p>
+
+<div class="highlight highlight-html"><pre>&lt;<span class="pl-ent">script</span> <span class="pl-e">src</span>=<span class="pl-s1"><span class="pl-pds">"</span>js/gl-matrix-min.js<span class="pl-pds">"</span></span>&gt;&lt;/<span class="pl-ent">script</span>&gt;
+&lt;<span class="pl-ent">script</span> <span class="pl-e">src</span>=<span class="pl-s1"><span class="pl-pds">"</span>js/litegl.js<span class="pl-pds">"</span></span>&gt;&lt;/<span class="pl-ent">script</span>&gt;</pre></div>
+
+<p>Create the context</p>
+
+<div class="highlight highlight-js"><pre><span class="pl-s">var</span> gl <span class="pl-k">=</span> GL.create({width<span class="pl-k">:</span><span class="pl-c1">800</span>, height<span class="pl-k">:</span><span class="pl-c1">600</span>});</pre></div>
+
+<p>Attach to DOM</p>
+
+<div class="highlight highlight-js"><pre><span class="pl-s3">document</span>.<span class="pl-s3">getElementById</span>(<span class="pl-s1"><span class="pl-pds">"</span>mycontainer<span class="pl-pds">"</span></span>).<span class="pl-s3">appendChild</span>( gl.canvas )</pre></div>
+
+<p>Get user input</p>
+
+<div class="highlight highlight-js"><pre>gl.captureMouse();
+<span class="pl-s3">gl</span>.<span class="pl-en">onmousedown</span> <span class="pl-k">=</span> <span class="pl-st">function</span>(<span class="pl-vpf">e</span>) { ... }
+
+gl.captureKeys();
+<span class="pl-s3">gl</span>.<span class="pl-en">onkey</span> <span class="pl-k">=</span> <span class="pl-st">function</span>(<span class="pl-vpf">e</span>) { ... }</pre></div>
+
+<p>Compile shader</p>
+
+<div class="highlight highlight-js"><pre><span class="pl-s">var</span> shader <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">GL.Shader</span>( vertex_shader_code, fragment_shader_code );</pre></div>
+
+<p>Create Mesh</p>
+
+<div class="highlight highlight-js"><pre><span class="pl-s">var</span> mesh <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">GL.Mesh</span>({vertices<span class="pl-k">:</span>[<span class="pl-k">-</span><span class="pl-c1">1</span>,<span class="pl-k">-</span><span class="pl-c1">1</span>,<span class="pl-c1">0</span>, <span class="pl-c1">1</span>,<span class="pl-k">-</span><span class="pl-c1">1</span>,<span class="pl-c1">0</span>, <span class="pl-c1">0</span>,<span class="pl-c1">1</span>,<span class="pl-c1">0</span>], coords<span class="pl-k">:</span>[<span class="pl-c1">0</span>,<span class="pl-c1">0</span>, <span class="pl-c1">1</span>,<span class="pl-c1">0</span>, <span class="pl-c1">0.5</span>,<span class="pl-c1">1</span>]});</pre></div>
+
+<p>Load a texture</p>
+
+<div class="highlight highlight-js"><pre><span class="pl-s">var</span> texture <span class="pl-k">=</span> GL.Texture.fromURL(<span class="pl-s1"><span class="pl-pds">"</span>image.jpg<span class="pl-pds">"</span></span>, { minFilter<span class="pl-k">:</span> gl.LINEAR_MIPMAP_LINEAR });</pre></div>
+
+<p>Render</p>
+
+<div class="highlight highlight-js"><pre><span class="pl-s3">gl</span>.<span class="pl-en">ondraw</span> <span class="pl-k">=</span> <span class="pl-st">function</span>() {
+    texture.bind(<span class="pl-c1">0</span>);
+    <span class="pl-s">var</span> my_uniforms <span class="pl-k">=</span> { u_texture<span class="pl-k">:</span> <span class="pl-c1">0</span>, u_color<span class="pl-k">:</span> [<span class="pl-c1">1</span>,<span class="pl-c1">1</span>,<span class="pl-c1">1</span>,<span class="pl-c1">1</span>] };
+    shader.uniforms( my_uniforms ).draw( mesh );
+}
+
+gl.animate(); <span class="pl-c">//calls the requestAnimFrame constantly, which will call ondraw</span></pre></div>
+
+<h2>
+<a id="documentation" class="anchor" href="#documentation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Documentation</h2>
+
+<p>The doc folder contains the documentation. For info about <a href="glMatrix">http://glmatrix.com</a> check the documentation in its website.</p>
+
+<h2>
+<a id="utils" class="anchor" href="#utils" aria-hidden="true"><span class="octicon octicon-link"></span></a>Utils</h2>
+
+<p>It includes several commands in the utils folder to generate doc, check errors and build minifyed version.</p>
+
+<h2>
+<a id="feedback" class="anchor" href="#feedback" aria-hidden="true"><span class="octicon octicon-link"></span></a>Feedback</h2>
+
+<p>You can write any feedback to <a href="mailto:javi.agenjo@gmail.com">javi.agenjo@gmail.com</a></p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/jagenjo">jagenjo</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
