@@ -64,9 +64,11 @@ Shader.compileSource = function(type, source, gl)
 Shader.prototype.extractShaderInfo = function()
 {
 	var gl = this.gl;
+	
+	var l = gl.getProgramParameter(this.program, gl.ACTIVE_UNIFORMS);
 
 	//extract uniforms info
-	for(var i = 0, l = gl.getProgramParameter(this.program, gl.ACTIVE_UNIFORMS); i < l; ++i)
+	for(var i = 0; i < l; ++i)
 	{
 		var data = gl.getActiveUniform( this.program, i);
 		if(!data) break;
@@ -243,25 +245,30 @@ Shader.prototype.uniforms = function(uniforms) {
 	var gl = this.gl;
 	gl.useProgram(this.program);
 
-	for (var name in uniforms) {
-		var info = this.uniformInfo[name];
-		if (!info)
-			continue;
+	for (var name in uniforms)
+		this._assing_uniform(uniforms, name, gl );
 
-		var value = uniforms[name];
-		if(value == null) 
-			continue;
-
-		if(value.constructor === Array)
-			value = new Float32Array(value);  //garbage...
-
-		if(info.is_matrix)
-			info.func.call( gl, info.loc, false, value );
-		else
-			info.func.call( gl, info.loc, value );
-	}
 	return this;
 }//uniforms
+
+Shader.prototype._assing_uniform = function(uniforms, name, gl)
+{
+	var info = this.uniformInfo[name];
+	if (!info)
+		return;
+
+	var value = uniforms[name];
+	if(value == null) 
+		return;
+
+	if(value.constructor === Array)
+		value = new Float32Array(value);  //garbage generated...
+
+	if(info.is_matrix)
+		info.func.call( gl, info.loc, false, value );
+	else
+		info.func.call( gl, info.loc, value );
+}
 
 /**
 * Renders a mesh using this shader, remember to use the function uniforms before to enable the shader

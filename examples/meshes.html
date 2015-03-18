@@ -26,12 +26,12 @@
 
 	//build the mesh
 	var objects = [];
-	for(var i = 0; i < 9; i++)
+	for(var i = 0; i < 10; i++)
 	{
 		var object = {};
 		object.primitive = gl.TRIANGLES;
 		object.model = mat4.create();
-		mat4.translate( object.model, object.model, [-8 + i * 2, 0, 0] );
+		mat4.translate( object.model, object.model, [ (i%5) * 3 - 5.5, 0, ((i/5)|0) * -4 + 2] );
 		objects.push(object);
 	}
 
@@ -45,6 +45,7 @@
 	objects[7].mesh = GL.Mesh.cylinder({radius:0.5});
 	objects[8].mesh = GL.Mesh.grid({size:1});
 	objects[8].primitive = gl.LINES;
+	objects[9].mesh = GL.Mesh.icosahedron({size:1,subdivisions:1});
 
 	//create basic matrices for cameras and transformation
 	var proj = mat4.create();

@@ -634,6 +634,7 @@ global.BBox = GL.BBox = {
 	data_length: 13,
 	
 	corners: new Float32Array([1,1,1,  1,1,-1,  1,-1,1,  1,-1,-1,  -1,1,1,  -1,1,-1,  -1,-1,1,  -1,-1,-1 ]),
+	tmp_corners: new Float32Array(24), //to avoid GC
 
 	/**
 	* create an empty bbox
@@ -737,10 +738,10 @@ global.BBox = GL.BBox = {
 		var max = bb.subarray(9,12);
 
 		min.set( points.subarray(0,3) );
-		max.set( points.subarray(0,3) );
+		max.set( min );
 
 		var v = 0;
-		for(var i = 3; i < points.length; i+=3)
+		for(var i = 3, l = points.length; i < l; i+=3)
 		{
 			v = points.subarray(i,i+3);
 			vec3.min( min, v, min);
@@ -817,9 +818,10 @@ global.BBox = GL.BBox = {
 	*/
 	transformMat4: function(out, bb, mat)
 	{
-		var center = bb.subarray(0,3);
+		var center = bb; //.subarray(0,3); AVOID GC
 		var halfsize = bb.subarray(3,6);
-		var corners = new Float32Array( this.corners );
+		var corners = this.tmp_corners;
+		corners.set( this.corners );
 
 		for(var i = 0; i < 8; ++i)		
 		{
@@ -842,7 +844,7 @@ global.BBox = GL.BBox = {
 	*/
 	getCorners: function(bb, result)
 	{
-		var center = bb.subarray(0,3);
+		var center = bb; //.subarray(0,3); AVOID GC
 		var halfsize = bb.subarray(3,6);
 
 		var corners = null;
@@ -878,15 +880,16 @@ global.distanceToPlane = GL.distanceToPlane = function distanceToPlane(plane, po
 
 global.planeBoxOverlap = GL.planeBoxOverlap = function planeBoxOverlap(plane, box)
 {
-	var n = plane.subarray(0,3);
+	var n = plane; //.subarray(0,3); 
 	var d = plane[3];
-	var center = box.subarray(0,3);
-	var halfsize = box.subarray(3,6);
+	//hack, to avoif GC I use indices directly
+	var center = box; //.subarray(0,3);
+	var halfsize = box; //.subarray(3,6);
 
 	var tmp = vec3.fromValues(
-		Math.abs( halfsize[0] * n[0]),
-		Math.abs( halfsize[1] * n[1]),
-		Math.abs( halfsize[2] * n[2])
+		Math.abs( halfsize[3] * n[0] ),
+		Math.abs( halfsize[4] * n[1] ),
+		Math.abs( halfsize[5] * n[2] )
 	);
 
 	var radius = tmp[0]+tmp[1]+tmp[2];

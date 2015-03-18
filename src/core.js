@@ -61,8 +61,8 @@ GL.create = function(options) {
 
 	//viewport hack to retrieve it without using getParameter (which is slow)
 	gl._viewport_func = gl.viewport;
-	gl.viewport_data = new Float32Array([0,0,gl.canvas.width,gl.canvas.height]);
-	gl.viewport = function(a,b,c,d) { this.viewport_data.set([a,b,c,d]); this._viewport_func(a,b,c,d); }
+	gl.viewport_data = new Int16Array([0,0,gl.canvas.width,gl.canvas.height]); //32000 max viewport, I guess its fine
+	gl.viewport = function(a,b,c,d) { var v = this.viewport_data; v[0] = a|0; v[1] = b|0; v[2] = c|0; v[3] = d|0; this._viewport_func(a,b,c,d); }
 	gl.getViewport = function() { return new Float32Array( gl.viewport_data ); };
 	
 	//just some checks
@@ -180,7 +180,7 @@ GL.create = function(options) {
 		{
 			canvas.addEventListener("mousewheel", onmouse, false);
 			canvas.addEventListener("wheel", onmouse, false);
-			//canvas.addEventListener("DOMMouseScroll", onmouse, false);
+			//canvas.addEventListener("DOMMouseScroll", onmouse, false); //deprecated or non-standard
 		}
 		//prevent right click context menu
 		canvas.addEventListener("contextmenu", function(e) { e.preventDefault(); return false; });

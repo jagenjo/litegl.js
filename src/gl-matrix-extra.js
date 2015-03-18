@@ -434,7 +434,8 @@ quat.fromEuler = function(out, vec) {
 	var x = (C2 * S3 + C1 * S3 + S1 * S2 * C3) / (4.0 * w);
 	var y = (S1 * C2 + S1 * C3 + C1 * S2 * S3) / (4.0 * w);
 	var z = (-S1 * S3 + C1 * S2 * C3 + S2) /(4.0 * w);
-	return quat.set(out, x,y,z,w );
+	quat.set(out, x,y,z,w );
+	return out;
 };
 
 //not tested

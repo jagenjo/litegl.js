@@ -5,6 +5,7 @@
 
 ../src/gl-matrix-extra.js
 ../src/mesh.js
+../src/primitives.js
 ../src/texture.js
 ../src/shader.js
 ../src/core.js

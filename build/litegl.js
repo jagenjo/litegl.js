@@ -1467,7 +1467,8 @@ quat.fromEuler = function(out, vec) {
 	var x = (C2 * S3 + C1 * S3 + S1 * S2 * C3) / (4.0 * w);
 	var y = (S1 * C2 + S1 * C3 + C1 * S2 * S3) / (4.0 * w);
 	var z = (-S1 * S3 + C1 * S2 * C3 + S2) /(4.0 * w);
-	return quat.set(out, x,y,z,w );
+	quat.set(out, x,y,z,w );
+	return out;
 };
 
 //not tested
@@ -2116,11 +2117,13 @@ Mesh.prototype.computeWireframe = function() {
 /**
 * Creates a stream with the normals
 * @method computeNormals
+* @param {enum} stream_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW)
 */
-Mesh.prototype.computeNormals = function() {
+Mesh.prototype.computeNormals = function( stream_type  ) {
 	var vertices = this.vertexBuffers["vertices"].data;
 	var num_vertices = vertices.length / 3;
 
+	//create because it is faster than filling it with zeros (till the .fill method is introduced)
 	var normals = new Float32Array( vertices.length );
 
 	var triangles = null;
@@ -2180,7 +2183,16 @@ Mesh.prototype.computeNormals = function() {
 		vec3.normalize(n,n);
 	}
 
-	this.createVertexBuffer('normals', Mesh.common_buffers["normals"].attribute, 3, normals );
+	var normals_buffer = this.vertexBuffers["normals"];
+
+	if(normals_buffer)
+	{
+		normals_buffer.data = normals;
+		normals_buffer.upload( stream_type );
+	}
+	else
+		return this.createVertexBuffer('normals', Mesh.common_buffers["normals"].attribute, 3, normals );
+	return normals_buffer;
 }
 
 
@@ -2390,6 +2402,129 @@ Mesh.load = function(buffers, options, output_mesh) {
 }
 
 /**
+* Returns a mesh with all the meshes merged
+* @method Mesh.mergeMeshes
+* @param {Array} meshes array containing all the meshes
+*/
+Mesh.mergeMeshes = function(meshes)
+{
+	var vertex_buffers = {};
+	var index_buffers = {};
+
+	var main_mesh = meshes[0];
+	var offsets = [];
+
+	//vertex buffers
+	for(var i in main_mesh.vertexBuffers)
+	{
+		var buffer = main_mesh.vertexBuffers[i];
+
+		//compute size
+		var total_size = buffer.data.length;
+		for(var j = 1; j < meshes.length; ++j)
+		{
+			if(!meshes[j].vertexBuffers[i])
+				throw("cannot merge with different amount of buffers");
+			total_size += meshes[j].vertexBuffers[i].data.length;
+		}
+
+		//compact
+		var data = new Float32Array(total_size);
+		var pos = 0;
+		for(var j = 0; j < meshes.length; ++j)
+		{
+			offsets[j] = pos;
+			data.set( meshes[j].vertexBuffers[i].data, pos );
+			pos += meshes[j].vertexBuffers[i].data.length;
+		}
+
+		vertex_buffers[i] = data;
+	}
+
+	//index buffers
+	for(var i in main_mesh.indexBuffers)
+	{
+		var buffer = main_mesh.indexBuffers[i];
+
+		//compute size
+		var total_size = buffer.data.length;
+		for(var j = 1; j < meshes.length; ++j)
+		{
+			if(!meshes[j].indexBuffers[i])
+				throw("cannot merge with different amount of buffers");
+			total_size += meshes[j].indexBuffers[i].data.length;
+		}
+
+		//remap
+		var data = new buffer.constructor(total_size);
+		var pos = 0;
+		for(var j = 0; j < meshes.length; ++j)
+		{
+			var b = meshes[j].indexBuffers[i].data;
+			if(j == 0)
+				data.set( b, pos );
+			else
+			{
+				var offset = offsets[j];
+				for(var k = 0, l = b.length; k < l; k++)
+					data[k + pos] = b[k] + offset;
+			}
+			pos += meshes[j].indexBuffers[i].data.length;
+		}
+
+		index_buffers[i] = data;
+	}
+
+	return new Mesh(vertex_buffers,index_buffers);
+}
+
+//Here we store all basic mesh parsers (OBJ, STL)
+Mesh.parsers = {};
+
+/**
+* Returns am empty mesh and loads a mesh and parses it using the Mesh.parsers, by default only OBJ is supported
+* @method Mesh.fromOBJ
+* @param {Array} meshes array containing all the meshes
+*/
+Mesh.fromURL = function(url, on_complete, gl)
+{
+	gl = gl || global.gl;
+	var mesh = new GL.Mesh(undefined,undefined,undefined,gl);
+	mesh.ready = false;
+
+	HttpRequest( url, null, function(data) {
+		var ext = url.substr(url.length - 4).toLowerCase();
+		var parser = Mesh.parsers[ ext ];
+		if(parser)
+			parser.call(null, data, {mesh: mesh});
+		else
+			throw("Mesh.fromURL: no parser found for format " + ext);
+		delete mesh["ready"];
+		if(on_complete)
+			on_complete(mesh);
+	}, function(err){
+		if(on_complete)
+			on_complete(null);
+	});
+	return mesh;
+}
+
+
+Mesh.getScreenQuad = function(gl)
+{
+	gl = gl || global.gl;
+	var mesh = gl.meshes[":screen_quad"];
+	if(mesh)
+		return mesh;
+
+	var vertices = new Float32Array(18);
+	var coords = new Float32Array([0,0, 1,1, 0,1,  0,0, 1,0, 1,1 ]);
+	mesh = new GL.Mesh({ vertices: vertices, coords: coords}, undefined, undefined, gl);
+	return gl.meshes[":screen_quad"] = mesh;
+}
+
+
+/**
 * Returns a planar mesh (you can choose how many subdivisions)
 * @method Mesh.plane
 * @param {Object} options valid options: detail, detailX, detailY, size, width, heigth, xz (horizontal plane)
@@ -2420,7 +2555,7 @@ Mesh.plane = function(options) {
 		for (var x = 0; x <= detailX; x++) {
 		  var s = x / detailX;
 		  if(xz)
-			  vertices.push((2 * s - 1) * width, 0, (2 * t - 1) * width);
+			  vertices.push((2 * s - 1) * width, 0, (2 * t - 1) * height);
 		  else
 			  vertices.push((2 * s - 1) * width, (2 * t - 1) * height, 0);
 		  if (coords) coords.push(s, t);
@@ -2843,128 +2978,82 @@ Mesh.grid = function(options)
 	return new GL.Mesh({vertices: vertexPositionData});
 }
 
-/**
-* Returns a mesh with all the meshes merged
-* @method Mesh.mergeMeshes
-* @param {Array} meshes array containing all the meshes
-*/
-Mesh.mergeMeshes = function(meshes)
-{
-	var vertex_buffers = {};
-	var index_buffers = {};
-
-	var main_mesh = meshes[0];
-	var offsets = [];
-
-	//vertex buffers
-	for(var i in main_mesh.vertexBuffers)
-	{
-		var buffer = main_mesh.vertexBuffers[i];
-
-		//compute size
-		var total_size = buffer.data.length;
-		for(var j = 1; j < meshes.length; ++j)
-		{
-			if(!meshes[j].vertexBuffers[i])
-				throw("cannot merge with different amount of buffers");
-			total_size += meshes[j].vertexBuffers[i].data.length;
-		}
-
-		//compact
-		var data = new Float32Array(total_size);
-		var pos = 0;
-		for(var j = 0; j < meshes.length; ++j)
-		{
-			offsets[j] = pos;
-			data.set( meshes[j].vertexBuffers[i].data, pos );
-			pos += meshes[j].vertexBuffers[i].data.length;
-		}
-
-		vertex_buffers[i] = data;
-	}
-
-	//index buffers
-	for(var i in main_mesh.indexBuffers)
-	{
-		var buffer = main_mesh.indexBuffers[i];
-
-		//compute size
-		var total_size = buffer.data.length;
-		for(var j = 1; j < meshes.length; ++j)
-		{
-			if(!meshes[j].indexBuffers[i])
-				throw("cannot merge with different amount of buffers");
-			total_size += meshes[j].indexBuffers[i].data.length;
-		}
-
-		//remap
-		var data = new buffer.constructor(total_size);
-		var pos = 0;
-		for(var j = 0; j < meshes.length; ++j)
-		{
-			var b = meshes[j].indexBuffers[i].data;
-			if(j == 0)
-				data.set( b, pos );
-			else
-			{
-				var offset = offsets[j];
-				for(var k = 0, l = b.length; k < l; k++)
-					data[k + pos] = b[k] + offset;
-			}
-			pos += meshes[j].indexBuffers[i].data.length;
-		}
-
-		index_buffers[i] = data;
-	}
-
-	return new Mesh(vertex_buffers,index_buffers);
-}
-
-//Here we store all basic mesh parsers (OBJ, STL)
-Mesh.parsers = {};
 
 /**
-* Returns am empty mesh and loads a mesh and parses it using the Mesh.parsers, by default only OBJ is supported
-* @method Mesh.fromOBJ
-* @param {Array} meshes array containing all the meshes
+* Returns a icosahedron mesh (useful to create spheres by subdivision)
+* @method Mesh.icosahedron
+* @param {Object} options valid options: radius, subdivisions (max: 6)
 */
-Mesh.fromURL = function(url, on_complete, gl)
-{
-	gl = gl || global.gl;
-	var mesh = new GL.Mesh(undefined,undefined,undefined,gl);
-	mesh.ready = false;
+Mesh.icosahedron = function(options) {
+	options = options || {};
+	var radius = options.radius || options.size || 1;
+	var subdivisions = options.subdivisions === undefined ? 0 : options.subdivisions;
+	if(subdivisions > 6) //dangerous
+		subdivisions = 6;
 
-	HttpRequest( url, null, function(data) {
-		var ext = url.substr(url.length - 4).toLowerCase();
-		var parser = Mesh.parsers[ ext ];
-		if(parser)
-			parser.call(null, data, {mesh: mesh});
-		else
-			throw("Mesh.fromURL: no parser found for format " + ext);
-		delete mesh["ready"];
-		if(on_complete)
-			on_complete(mesh);
-	}, function(err){
-		if(on_complete)
-			on_complete(null);
-	});
-	return mesh;
+	var t = (1.0 + Math.sqrt(5)) / 2.0;
+	var vertices = [-1,t,0, 1,t,0, -1,-t,0, 1,-t,0,
+					0,-1,t, 0,1,t, 0,-1,-t, 0,1,-t,
+					t,0,-1, t,0,1, -t,0,-1, -t,0,1];
+	var normals = [];
+	var indices = [0,11,5, 0,5,1, 0,1,7, 0,7,10, 0,10,11, 1,5,9, 5,11,4, 11,10,2, 10,7,6, 7,1,8, 3,9,4, 3,4,2, 3,2,6, 3,6,8, 3,8,9, 4,9,5, 2,4,11, 6,2,10, 8,6,7, 9,8,1 ];
+
+	//normalize
+	var l = vertices.length;
+	for(var i = 0; i < l; i+=3)
+	{
+		var mod = Math.sqrt( vertices[i]*vertices[i] + vertices[i+1]*vertices[i+1] + vertices[i+2]*vertices[i+2] );
+		normals.push( vertices[i] / mod, vertices[i+1] / mod, vertices[i+2] / mod );
+		vertices[i] *= radius/mod;
+		vertices[i+1] *= radius/mod;
+		vertices[i+2] *= radius/mod;
+	}
+
+	var middles = {};
+
+	//A,B = index of vertex in vertex array
+	function middlePoint( A, B )
+	{
+		var key = indices[A] < indices[B] ? indices[A] + ":"+indices[B] : indices[B]+":"+indices[A];
+		var r = middles[key];
+		if(r)
+			return r;
+		var index = vertices.length / 3;
+		vertices.push(( vertices[ indices[A]*3] + vertices[ indices[B]*3   ]) * 0.5,
+					(vertices[ indices[A]*3+1] + vertices[ indices[B]*3+1 ]) * 0.5,
+					(vertices[ indices[A]*3+2] + vertices[ indices[B]*3+2 ]) * 0.5);
+
+		var mod = Math.sqrt( vertices[index*3]*vertices[index*3] + vertices[index*3+1]*vertices[index*3+1] + vertices[index*3+2]*vertices[index*3+2] );
+		normals.push( vertices[index*3] / mod, vertices[index*3+1] / mod, vertices[index*3+2] / mod );
+		vertices[index*3] *= radius/mod;
+		vertices[index*3+1] *= radius/mod;
+		vertices[index*3+2] *= radius/mod;
+
+		middles[key] = index;
+		return index;
+	}
+
+	for (var iR = 0; iR < subdivisions; ++iR )
+	{
+		var new_indices = [];
+		var l = indices.length;
+		for(var i = 0; i < l; i+=3)
+		{
+			var MA = middlePoint( i, i+1 );
+			var MB = middlePoint( i+1, i+2);
+			var MC = middlePoint( i+2, i);
+			new_indices.push(indices[i], MA, MC);
+			new_indices.push(indices[i+1], MB, MA);
+			new_indices.push(indices[i+2], MC, MB);
+			new_indices.push(MA, MB, MC);
+		}
+		indices = new_indices;
+	}
+
+	options.bounding = BBox.fromCenterHalfsize( [0,0,0], [radius,radius,radius], radius );
+
+	return new GL.Mesh.load({vertices: vertices, normals: normals, triangles: indices},options);
 }
-
-
-Mesh.getScreenQuad = function(gl)
-{
-	gl = gl || global.gl;
-	var mesh = gl.meshes[":screen_quad"];
-	if(mesh)
-		return mesh;
-
-	var vertices = new Float32Array(18);
-	var coords = new Float32Array([0,0, 1,1, 0,1,  0,0, 1,0, 1,1 ]);
-	mesh = new GL.Mesh({ vertices: vertices, coords: coords}, undefined, undefined, gl);
-	return gl.meshes[":screen_quad"] = mesh;
-}
-
 /**
 * Texture class to upload images to the GPU, default is gl.TEXTURE_2D, gl.RGBAof gl.UNSIGNED_BYTE with filter gl.LINEAR, and gl.CLAMP_TO_EDGE
 	There is a list of options
@@ -4179,9 +4268,11 @@ Shader.compileSource = function(type, source, gl)
 Shader.prototype.extractShaderInfo = function()
 {
 	var gl = this.gl;
+	
+	var l = gl.getProgramParameter(this.program, gl.ACTIVE_UNIFORMS);
 
 	//extract uniforms info
-	for(var i = 0, l = gl.getProgramParameter(this.program, gl.ACTIVE_UNIFORMS); i < l; ++i)
+	for(var i = 0; i < l; ++i)
 	{
 		var data = gl.getActiveUniform( this.program, i);
 		if(!data) break;
@@ -4358,25 +4449,30 @@ Shader.prototype.uniforms = function(uniforms) {
 	var gl = this.gl;
 	gl.useProgram(this.program);
 
-	for (var name in uniforms) {
-		var info = this.uniformInfo[name];
-		if (!info)
-			continue;
+	for (var name in uniforms)
+		this._assing_uniform(uniforms, name, gl );
 
-		var value = uniforms[name];
-		if(value == null) 
-			continue;
-
-		if(value.constructor === Array)
-			value = new Float32Array(value);  //garbage...
-
-		if(info.is_matrix)
-			info.func.call( gl, info.loc, false, value );
-		else
-			info.func.call( gl, info.loc, value );
-	}
 	return this;
 }//uniforms
+
+Shader.prototype._assing_uniform = function(uniforms, name, gl)
+{
+	var info = this.uniformInfo[name];
+	if (!info)
+		return;
+
+	var value = uniforms[name];
+	if(value == null) 
+		return;
+
+	if(value.constructor === Array)
+		value = new Float32Array(value);  //garbage generated...
+
+	if(info.is_matrix)
+		info.func.call( gl, info.loc, false, value );
+	else
+		info.func.call( gl, info.loc, value );
+}
 
 /**
 * Renders a mesh using this shader, remember to use the function uniforms before to enable the shader
@@ -4864,8 +4960,8 @@ GL.create = function(options) {
 
 	//viewport hack to retrieve it without using getParameter (which is slow)
 	gl._viewport_func = gl.viewport;
-	gl.viewport_data = new Float32Array([0,0,gl.canvas.width,gl.canvas.height]);
-	gl.viewport = function(a,b,c,d) { this.viewport_data.set([a,b,c,d]); this._viewport_func(a,b,c,d); }
+	gl.viewport_data = new Int16Array([0,0,gl.canvas.width,gl.canvas.height]); //32000 max viewport, I guess its fine
+	gl.viewport = function(a,b,c,d) { var v = this.viewport_data; v[0] = a|0; v[1] = b|0; v[2] = c|0; v[3] = d|0; this._viewport_func(a,b,c,d); }
 	gl.getViewport = function() { return new Float32Array( gl.viewport_data ); };
 	
 	//just some checks
@@ -4983,7 +5079,7 @@ GL.create = function(options) {
 		{
 			canvas.addEventListener("mousewheel", onmouse, false);
 			canvas.addEventListener("wheel", onmouse, false);
-			//canvas.addEventListener("DOMMouseScroll", onmouse, false);
+			//canvas.addEventListener("DOMMouseScroll", onmouse, false); //deprecated or non-standard
 		}
 		//prevent right click context menu
 		canvas.addEventListener("contextmenu", function(e) { e.preventDefault(); return false; });
@@ -6287,6 +6383,7 @@ global.BBox = GL.BBox = {
 	data_length: 13,
 	
 	corners: new Float32Array([1,1,1,  1,1,-1,  1,-1,1,  1,-1,-1,  -1,1,1,  -1,1,-1,  -1,-1,1,  -1,-1,-1 ]),
+	tmp_corners: new Float32Array(24), //to avoid GC
 
 	/**
 	* create an empty bbox
@@ -6390,10 +6487,10 @@ global.BBox = GL.BBox = {
 		var max = bb.subarray(9,12);
 
 		min.set( points.subarray(0,3) );
-		max.set( points.subarray(0,3) );
+		max.set( min );
 
 		var v = 0;
-		for(var i = 3; i < points.length; i+=3)
+		for(var i = 3, l = points.length; i < l; i+=3)
 		{
 			v = points.subarray(i,i+3);
 			vec3.min( min, v, min);
@@ -6470,9 +6567,10 @@ global.BBox = GL.BBox = {
 	*/
 	transformMat4: function(out, bb, mat)
 	{
-		var center = bb.subarray(0,3);
+		var center = bb; //.subarray(0,3); AVOID GC
 		var halfsize = bb.subarray(3,6);
-		var corners = new Float32Array( this.corners );
+		var corners = this.tmp_corners;
+		corners.set( this.corners );
 
 		for(var i = 0; i < 8; ++i)		
 		{
@@ -6495,7 +6593,7 @@ global.BBox = GL.BBox = {
 	*/
 	getCorners: function(bb, result)
 	{
-		var center = bb.subarray(0,3);
+		var center = bb; //.subarray(0,3); AVOID GC
 		var halfsize = bb.subarray(3,6);
 
 		var corners = null;
@@ -6531,15 +6629,16 @@ global.distanceToPlane = GL.distanceToPlane = function distanceToPlane(plane, po
 
 global.planeBoxOverlap = GL.planeBoxOverlap = function planeBoxOverlap(plane, box)
 {
-	var n = plane.subarray(0,3);
+	var n = plane; //.subarray(0,3); 
 	var d = plane[3];
-	var center = box.subarray(0,3);
-	var halfsize = box.subarray(3,6);
+	//hack, to avoif GC I use indices directly
+	var center = box; //.subarray(0,3);
+	var halfsize = box; //.subarray(3,6);
 
 	var tmp = vec3.fromValues(
-		Math.abs( halfsize[0] * n[0]),
-		Math.abs( halfsize[1] * n[1]),
-		Math.abs( halfsize[2] * n[2])
+		Math.abs( halfsize[3] * n[0] ),
+		Math.abs( halfsize[4] * n[1] ),
+		Math.abs( halfsize[5] * n[2] )
 	);
 
 	var radius = tmp[0]+tmp[1]+tmp[2];
