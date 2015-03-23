@@ -202,6 +202,57 @@ mat4.projectVec3 = function(out, m, a)
 	return out;
 };
 
+
+//from https://github.com/hughsk/from-3d-to-2d/blob/master/index.js
+vec3.project = function(out, vec,  mvp, viewport) {
+	viewport = viewport || gl.viewport_data;
+
+	var m = mvp;
+
+	var ix = vec[0];
+	var iy = vec[1];
+	var iz = vec[2];
+
+	var ox = m[0] * ix + m[4] * iy + m[8] * iz + m[12]
+	var oy = m[1] * ix + m[5] * iy + m[9] * iz + m[13]
+	var ow = m[3] * ix + m[7] * iy + m[11] * iz + m[15]
+
+	var projx =     (ox / ow + 1) / 2;
+	var projy = 1 - (oy / ow + 1) / 2;
+
+	out[0] = projx * viewport[2] + viewport[0];
+	out[1] = projy * viewport[3] + viewport[1];
+	out[2] = ow;
+	return out;
+};
+
+var unprojectMat = mat4.create();
+var unprojectVec = vec4.create();
+
+vec3.unproject = function (out, vec, viewprojection, viewport) {
+
+	var m = unprojectMat;
+	var v = unprojectVec;
+	
+	v[0] = (vec[0] - viewport[0]) * 2.0 / viewport[2] - 1.0;
+	v[1] = (vec[1] - viewport[1]) * 2.0 / viewport[3] - 1.0;
+	v[2] = 2.0 * vec[2] - 1.0;
+	v[3] = 1.0;
+	
+	if(!mat4.invert(m,viewprojection)) 
+		return null;
+	
+	vec4.transformMat4(v, v, m);
+	if(v[3] === 0.0) 
+		return null;
+
+	out[0] = v[0] / v[3];
+	out[1] = v[1] / v[3];
+	out[2] = v[2] / v[3];
+	
+	return out;
+};
+
 //without translation
 mat4.rotateVec3 = function(out, m, a) {
     var x = a[0], y = a[1], z = a[2];
@@ -285,69 +336,6 @@ mat4.scaleAndAdd = function(out, mat, mat2, v)
 	out[12] = mat[12] + mat2[12] * v;  out[13] = mat[13] + mat2[13] * v; 	out[14] = mat[14] + mat2[14] * v; 	out[15] = mat[15] + mat2[15] * v;
 	return out;
 }
-
-vec3.project = function(out, vec,  mvp, viewport) {
-	viewport = viewport || [0,0,gl.canvas.width, gl.canvas.height];
-
-	//*
-	//from https://github.com/hughsk/from-3d-to-2d/blob/master/index.js
-	var m = mvp;
-
-	var ix = vec[0];
-	var iy = vec[1];
-	var iz = vec[2];
-
-	var ox = m[0] * ix + m[4] * iy + m[8] * iz + m[12]
-	var oy = m[1] * ix + m[5] * iy + m[9] * iz + m[13]
-	var ow = m[3] * ix + m[7] * iy + m[11] * iz + m[15]
-
-	var projx =     (ox / ow + 1) / 2;
-	var projy = 1 - (oy / ow + 1) / 2;
-
-	out[0] = projx * viewport[2] + viewport[0];
-	out[1] = projy * viewport[3] + viewport[1];
-	out[2] = ow;
-	return out;
-
-	/*
-	//var point = projection.transformPoint(modelview.transformPoint(new Vector(objX, objY, objZ)));
-	//var point = projection.transformPoint( modelview.transformPoint( vec3.create(objX, objY, objZ)));
-	var pos = vec3.clone(obj);
-	mat4.multiplyVec3(pos, modelview, pos );
-	mat4.multiplyVec3(pos, projection, pos);
-	return vec3.set( out,
-	  viewport[0] + viewport[2] * (point[0] * 0.5 + 0.5),
-	  viewport[1] + viewport[3] * (point[1] * 0.5 + 0.5),
-	  point[2] * 0.5 + 0.5
-	);
-	*/
-};
-
-var unprojectMat = mat4.create();
-var unprojectVec = vec4.create();
-
-vec3.unproject = function (out, vec, view, proj, viewport) {
-
-	var m = unprojectMat;
-	var v = unprojectVec;
-	
-	v[0] = (vec[0] - viewport[0]) * 2.0 / viewport[2] - 1.0;
-	v[1] = (vec[1] - viewport[1]) * 2.0 / viewport[3] - 1.0;
-	v[2] = 2.0 * vec[2] - 1.0;
-	v[3] = 1.0;
-	
-	mat4.multiply(m, proj, view);
-	if(!mat4.invert(m,m)) { return null; }
-	
-	vec4.transformMat4(v, v, m);
-	if(v[3] === 0.0) { return null; }
-
-	out[0] = v[0] / v[3];
-	out[1] = v[1] / v[3];
-	out[2] = v[2] / v[3];
-	
-	return out;
-};
 
 /*
 quat.toEuler = function(out, quat) {

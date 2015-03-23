@@ -53,7 +53,7 @@ global.LEvent = GL.LEvent = {
 		if(!instance.hasOwnProperty(name)) 
 			return;
 
-		for(var i, l = instance[name].length; i < l; ++i)
+		for(var i = 0, l = instance[name].length; i < l; ++i)
 		{
 			var v = instance[name][i];
 			if(v[0] === callback && v[1] === target_instance)

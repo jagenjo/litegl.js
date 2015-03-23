@@ -103,7 +103,7 @@ Raytracer.hitTestBox = function(origin, ray, min, max, model) {
   var tNear = vec3.maxValue(t1);
   var tFar = vec3.minValue(t2);
 
-  if (tNear > 0 && tNear < tFar) {
+  if (tNear > 0 && tNear <= tFar) {
     var epsilon = 1.0e-6;
 	var hit = vec3.scale( _hittest_v3.subarray(21,24), ray, tNear);
 	vec3.add( hit, origin, hit );
