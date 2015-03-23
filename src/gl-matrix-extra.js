@@ -182,6 +182,9 @@ mat4.multiplyVec3 = function(out, m, a) {
     return out;
 };
 
+//from https://github.com/hughsk/from-3d-to-2d/blob/master/index.js
+//m should be a projection matrix (or a VP or MVP)
+//projects vector from 3D to 2D and returns the value in normalized screen space
 mat4.projectVec3 = function(out, m, a)
 {
 	var ix = a[0];
@@ -197,37 +200,7 @@ mat4.projectVec3 = function(out, m, a)
 	out[1] = (oy / ow + 1) / 2;
 	out[2] = (oz / ow + 1) / 2;
 	return out;
-
-	/*
-	mat4.multiplyVec3( out, m, a );
-	out[0] /= out[2];
-	out[1] /= out[2];
-	return out;
-	*/
-	
-	/* this doesnt work 
-    var x = a[0], y = a[1], z = a[2];
-	var w = m[3] + m[7] + m[11] + m[14];
-    out[0] = (m[0] * x + m[4] * y + m[8] * z + m[12]) / w;
-    out[1] = (m[1] * x + m[5] * y + m[9] * z + m[13]) / w;
-    out[2] = (m[2] * x + m[6] * y + m[10] * z + m[14]) / w;
-	return out;
-	*/
 };
-
-
-/*
-mat4.projectVec3 = function(out, m, a) {
-   var x = a[0], y = a[1], z = a[2];
-   var v = vec3.fromValues(
-      m[0] * x + m[1] * y + m[2] * z + m[3],
-      m[4] * x + m[5] * y + m[6] * z + m[7],
-      m[8] * x + m[9] * y + m[10] * z + m[11]
-    );
-   
-   return vec3.scale(v,v,1.0 / (m[12] * v[0] + m[13] * v[1] + m[14] * v[2] + m[15]) );
-};
-*/
 
 //without translation
 mat4.rotateVec3 = function(out, m, a) {

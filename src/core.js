@@ -2,7 +2,7 @@
 /**
 * creates a new WebGL context (it can create the canvas or use an existing one)
 * @method create
-* @param {Object} options supported are: width, height
+* @param {Object} options supported are: width, height, canvas
 * @return {gl} gl context for webgl
 */
 GL.create = function(options) {
@@ -61,7 +61,7 @@ GL.create = function(options) {
 
 	//viewport hack to retrieve it without using getParameter (which is slow)
 	gl._viewport_func = gl.viewport;
-	gl.viewport_data = new Int16Array([0,0,gl.canvas.width,gl.canvas.height]); //32000 max viewport, I guess its fine
+	gl.viewport_data = new Float32Array([0,0,gl.canvas.width,gl.canvas.height]); //32000 max viewport, I guess its fine
 	gl.viewport = function(a,b,c,d) { var v = this.viewport_data; v[0] = a|0; v[1] = b|0; v[2] = c|0; v[3] = d|0; this._viewport_func(a,b,c,d); }
 	gl.getViewport = function() { return new Float32Array( gl.viewport_data ); };
 	
@@ -118,9 +118,11 @@ GL.create = function(options) {
 			post(loop); //do it first, in case it crashes
 
 			var now = getTime();
-			var dt = (now - time) / 1000;
+			var dt = (now - time) * 0.001;
 
-			if (context.onupdate) context.onupdate(dt);
+			if (context.onupdate) 
+				context.onupdate(dt);
+			LEvent.trigger(gl,"update",dt);
 			if (context.ondraw)
 			{
 				//make sure the ondraw is called using this gl context (in case there is more than one)
@@ -128,6 +130,7 @@ GL.create = function(options) {
 				global.gl = context;
 				//call ondraw
 				context.ondraw();
+				LEvent.trigger(gl,"draw");
 				//restore old context
 				global.gl = old_gl;
 			}
@@ -212,13 +215,17 @@ GL.create = function(options) {
 			}
 			last_click_time = now;
 
-			if(gl.onmousedown) gl.onmousedown(e);
+			if(gl.onmousedown)
+				gl.onmousedown(e);
+			LEvent.trigger(gl,"mousedown");
 		}
-		else if(e.eventType == "mousemove" && gl.onmousemove)
+		else if(e.eventType == "mousemove")
 		{ 
 			//move should be propagated (otherwise other components may fail)
 			e.click_time = now - last_click_time;
-			gl.onmousemove(e); 
+			if(gl.onmousemove)
+				gl.onmousemove(e); 
+			LEvent.trigger(gl,"mousemove",e);
 			return; 
 		} 
 		else if(e.eventType == "mouseup")
@@ -233,16 +240,20 @@ GL.create = function(options) {
 			e.click_time = now - last_click_time;
 			last_click_time = now;
 
-			if(gl.onmouseup) gl.onmouseup(e);
+			if(gl.onmouseup)
+				gl.onmouseup(e);
+			LEvent.trigger(gl,"mouseup",e);
 		}
-		else if(gl.onmousewheel && (e.eventType == "mousewheel" || e.eventType == "wheel" || e.eventType == "DOMMouseScroll"))
+		else if((e.eventType == "mousewheel" || e.eventType == "wheel" || e.eventType == "DOMMouseScroll"))
 		{ 
 			e.eventType = "mousewheel";
 			if(e.type == "wheel")
 				e.wheel = -e.deltaY;
 			else
 				e.wheel = (e.wheelDeltaY != null ? e.wheelDeltaY : e.detail * -60);
-			gl.onmousewheel(e);
+			if(gl.onmousewheel)
+				gl.onmousewheel(e);
+			LEvent.trigger(gl,e.eventType,e);
 		}
 
 		e.stopPropagation();
@@ -294,7 +305,8 @@ GL.create = function(options) {
 	*/
 	var onkey_handler = null;
 	gl.captureKeys = function( prevent_default ) {
-		if(onkey_handler) return;
+		if(onkey_handler) 
+			return;
 		gl.keys = {};
 		document.addEventListener("keydown", inner );
 		document.addEventListener("keyup", inner );
@@ -329,8 +341,11 @@ GL.create = function(options) {
 		//avoid repetition if key stays pressed
 		if(prev_state != gl.keys[e.keyCode])
 		{
-			if(e.type == "keydown" && gl.onkeydown) gl.onkeydown(e);
-			else if(e.type == "keyup" && gl.onkeyup) gl.onkeyup(e);
+			if(e.type == "keydown" && gl.onkeydown) 
+				gl.onkeydown(e);
+			else if(e.type == "keyup" && gl.onkeyup) 
+				gl.onkeyup(e);
+			LEvent.trigger(gl, e.type, e);
 		}
 
 		if(prevent_default && (e.isChar || GL.blockable_keys[e.keyIdentifier || e.key ]) )
@@ -344,6 +359,7 @@ GL.create = function(options) {
 		console.log(e);
 		if(pressed && gl.onbuttondown) gl.onbuttondown(e);
 		else if(!pressed && gl.onbuttonup) gl.onbuttonup(e);
+		LEvent.trigger(gl, pressed ? "buttondown" : "buttonup", e );
 	}
 	
 	function onGamepad(e)

@@ -191,7 +191,7 @@ Image.prototype.getPixels = function()
 
 if(!String.prototype.hasOwnProperty("replaceAll")) 
 	Object.defineProperty(String.prototype, "replaceAll", {
-		get: function(words){
+		value: function(words){
 			var str = this;
 			for(var i in words)
 				str = str.split(i).join(words[i]);
@@ -1215,6 +1215,9 @@ mat4.multiplyVec3 = function(out, m, a) {
     return out;
 };
 
+//from https://github.com/hughsk/from-3d-to-2d/blob/master/index.js
+//m should be a projection matrix (or a VP or MVP)
+//projects vector from 3D to 2D and returns the value in normalized screen space
 mat4.projectVec3 = function(out, m, a)
 {
 	var ix = a[0];
@@ -1230,37 +1233,7 @@ mat4.projectVec3 = function(out, m, a)
 	out[1] = (oy / ow + 1) / 2;
 	out[2] = (oz / ow + 1) / 2;
 	return out;
-
-	/*
-	mat4.multiplyVec3( out, m, a );
-	out[0] /= out[2];
-	out[1] /= out[2];
-	return out;
-	*/
-	
-	/* this doesnt work 
-    var x = a[0], y = a[1], z = a[2];
-	var w = m[3] + m[7] + m[11] + m[14];
-    out[0] = (m[0] * x + m[4] * y + m[8] * z + m[12]) / w;
-    out[1] = (m[1] * x + m[5] * y + m[9] * z + m[13]) / w;
-    out[2] = (m[2] * x + m[6] * y + m[10] * z + m[14]) / w;
-	return out;
-	*/
 };
-
-
-/*
-mat4.projectVec3 = function(out, m, a) {
-   var x = a[0], y = a[1], z = a[2];
-   var v = vec3.fromValues(
-      m[0] * x + m[1] * y + m[2] * z + m[3],
-      m[4] * x + m[5] * y + m[6] * z + m[7],
-      m[8] * x + m[9] * y + m[10] * z + m[11]
-    );
-   
-   return vec3.scale(v,v,1.0 / (m[12] * v[0] + m[13] * v[1] + m[14] * v[2] + m[15]) );
-};
-*/
 
 //without translation
 mat4.rotateVec3 = function(out, m, a) {
@@ -4901,7 +4874,7 @@ Shader.getFXAAShader = function(gl)
 /**
 * creates a new WebGL context (it can create the canvas or use an existing one)
 * @method create
-* @param {Object} options supported are: width, height
+* @param {Object} options supported are: width, height, canvas
 * @return {gl} gl context for webgl
 */
 GL.create = function(options) {
@@ -4960,7 +4933,7 @@ GL.create = function(options) {
 
 	//viewport hack to retrieve it without using getParameter (which is slow)
 	gl._viewport_func = gl.viewport;
-	gl.viewport_data = new Int16Array([0,0,gl.canvas.width,gl.canvas.height]); //32000 max viewport, I guess its fine
+	gl.viewport_data = new Float32Array([0,0,gl.canvas.width,gl.canvas.height]); //32000 max viewport, I guess its fine
 	gl.viewport = function(a,b,c,d) { var v = this.viewport_data; v[0] = a|0; v[1] = b|0; v[2] = c|0; v[3] = d|0; this._viewport_func(a,b,c,d); }
 	gl.getViewport = function() { return new Float32Array( gl.viewport_data ); };
 	
@@ -5017,9 +4990,11 @@ GL.create = function(options) {
 			post(loop); //do it first, in case it crashes
 
 			var now = getTime();
-			var dt = (now - time) / 1000;
+			var dt = (now - time) * 0.001;
 
-			if (context.onupdate) context.onupdate(dt);
+			if (context.onupdate) 
+				context.onupdate(dt);
+			LEvent.trigger(gl,"update",dt);
 			if (context.ondraw)
 			{
 				//make sure the ondraw is called using this gl context (in case there is more than one)
@@ -5027,6 +5002,7 @@ GL.create = function(options) {
 				global.gl = context;
 				//call ondraw
 				context.ondraw();
+				LEvent.trigger(gl,"draw");
 				//restore old context
 				global.gl = old_gl;
 			}
@@ -5111,13 +5087,17 @@ GL.create = function(options) {
 			}
 			last_click_time = now;
 
-			if(gl.onmousedown) gl.onmousedown(e);
+			if(gl.onmousedown)
+				gl.onmousedown(e);
+			LEvent.trigger(gl,"mousedown");
 		}
-		else if(e.eventType == "mousemove" && gl.onmousemove)
+		else if(e.eventType == "mousemove")
 		{ 
 			//move should be propagated (otherwise other components may fail)
 			e.click_time = now - last_click_time;
-			gl.onmousemove(e); 
+			if(gl.onmousemove)
+				gl.onmousemove(e); 
+			LEvent.trigger(gl,"mousemove",e);
 			return; 
 		} 
 		else if(e.eventType == "mouseup")
@@ -5132,16 +5112,20 @@ GL.create = function(options) {
 			e.click_time = now - last_click_time;
 			last_click_time = now;
 
-			if(gl.onmouseup) gl.onmouseup(e);
+			if(gl.onmouseup)
+				gl.onmouseup(e);
+			LEvent.trigger(gl,"mouseup",e);
 		}
-		else if(gl.onmousewheel && (e.eventType == "mousewheel" || e.eventType == "wheel" || e.eventType == "DOMMouseScroll"))
+		else if((e.eventType == "mousewheel" || e.eventType == "wheel" || e.eventType == "DOMMouseScroll"))
 		{ 
 			e.eventType = "mousewheel";
 			if(e.type == "wheel")
 				e.wheel = -e.deltaY;
 			else
 				e.wheel = (e.wheelDeltaY != null ? e.wheelDeltaY : e.detail * -60);
-			gl.onmousewheel(e);
+			if(gl.onmousewheel)
+				gl.onmousewheel(e);
+			LEvent.trigger(gl,e.eventType,e);
 		}
 
 		e.stopPropagation();
@@ -5193,7 +5177,8 @@ GL.create = function(options) {
 	*/
 	var onkey_handler = null;
 	gl.captureKeys = function( prevent_default ) {
-		if(onkey_handler) return;
+		if(onkey_handler) 
+			return;
 		gl.keys = {};
 		document.addEventListener("keydown", inner );
 		document.addEventListener("keyup", inner );
@@ -5228,8 +5213,11 @@ GL.create = function(options) {
 		//avoid repetition if key stays pressed
 		if(prev_state != gl.keys[e.keyCode])
 		{
-			if(e.type == "keydown" && gl.onkeydown) gl.onkeydown(e);
-			else if(e.type == "keyup" && gl.onkeyup) gl.onkeyup(e);
+			if(e.type == "keydown" && gl.onkeydown) 
+				gl.onkeydown(e);
+			else if(e.type == "keyup" && gl.onkeyup) 
+				gl.onkeyup(e);
+			LEvent.trigger(gl, e.type, e);
 		}
 
 		if(prevent_default && (e.isChar || GL.blockable_keys[e.keyIdentifier || e.key ]) )
@@ -5243,6 +5231,7 @@ GL.create = function(options) {
 		console.log(e);
 		if(pressed && gl.onbuttondown) gl.onbuttondown(e);
 		else if(!pressed && gl.onbuttonup) gl.onbuttonup(e);
+		LEvent.trigger(gl, pressed ? "buttondown" : "buttonup", e );
 	}
 	
 	function onGamepad(e)
@@ -5580,15 +5569,19 @@ global.LEvent = GL.LEvent = {
 	* @param {function} callback function to call when the event is triggered
 	* @param {Object} target_instance [Optional] instance to call the function (use this instead of .bind method to help removing events)
 	**/
-	bind: function( instance, event_name, callback, target_instance )
+	bind: function( instance, event_type, callback, target_instance )
 	{
-		if(!instance) throw("cannot bind event to null");
-		if(!callback) throw("cannot bind to null callback");
-		if(instance.constructor === String ) throw("cannot bind event to a string");
-		if(instance.hasOwnProperty("__on_" + event_name))
-			instance["__on_" + event_name].push([callback,target_instance]);
+		if(!instance) 
+			throw("cannot bind event to null");
+		if(!callback) 
+			throw("cannot bind to null callback");
+		if(instance.constructor === String ) 
+			throw("cannot bind event to a string");
+		var name = "__on_" + event_type;
+		if(instance.hasOwnProperty(name))
+			instance[name].push([callback,target_instance]);
 		else
-			instance["__on_" + event_name] = [[callback,target_instance]];
+			instance[name] = [[callback,target_instance]];
 	},
 
 	/**
@@ -5599,25 +5592,32 @@ global.LEvent = GL.LEvent = {
 	* @param {function} callback function that was binded
 	* @param {Object} target_instance [Optional] target_instance that was binded
 	**/
-	unbind: function( instance, event_name, callback, target_instance )
+	unbind: function( instance, event_type, callback, target_instance )
 	{
-		if(!instance) throw("cannot unbind event to null");
-		if(!callback) throw("cannot unbind from null callback");
-		if(instance.constructor === String ) throw("cannot bind event to a string");
-		if(!instance.hasOwnProperty("__on_" + event_name)) return;
+		if(!instance) 
+			throw("cannot unbind event to null");
+		if(!callback) 
+			throw("cannot unbind from null callback");
+		if(instance.constructor === String ) 
+			throw("cannot bind event to a string");
 
-		for(var i in instance["__on_" + event_name])
+		var name = "__on_" + event_type;
+
+		if(!instance.hasOwnProperty(name)) 
+			return;
+
+		for(var i, l = instance[name].length; i < l; ++i)
 		{
-			var v = instance["__on_" + event_name][i];
+			var v = instance[name][i];
 			if(v[0] === callback && v[1] === target_instance)
 			{
-				instance["__on_" + event_name].splice( i, 1);
+				instance[name].splice( i, 1);
 				break;
 			}
 		}
 
-		if (instance["__on_" + event_name].length == 0)
-			delete instance["__on_" + event_name];
+		if (instance[name].length == 0)
+			delete instance[name];
 	},
 
 	/**
@@ -5628,7 +5628,8 @@ global.LEvent = GL.LEvent = {
 	**/
 	unbindAll: function(instance, target_instance)
 	{
-		if(!instance) throw("cannot unbind events in null");
+		if(!instance) 
+			throw("cannot unbind events in null");
 		if(!target_instance) //remove all
 		{
 			//two passes, to avoid deleting and reading at the same time
@@ -5672,12 +5673,14 @@ global.LEvent = GL.LEvent = {
 	* @param {function} callback the callback
 	* @param {Object} target_instance [Optional] instance binded to callback
 	**/
-	isBind: function( instance, event_name, callback, target_instance )
+	isBind: function( instance, event_type, callback, target_instance )
 	{
-		if(!instance || !instance.hasOwnProperty("__on_" + event_name)) return false;
-		for(var i in instance["__on_" + event_name])
+		var name = "__on_" + event_type;
+		if(!instance || !instance.hasOwnProperty(name)) 
+			return false;
+		for(var i = 0, l = instance[name].length; i < l; ++i)
 		{
-			var v = instance["__on_" + event_name][i];
+			var v = instance[name][i];
 			if(v[0] === callback && v[1] === target_instance)
 				return true;
 		}
@@ -5694,20 +5697,26 @@ global.LEvent = GL.LEvent = {
 	**/
 	trigger: function( instance, event_type, params, skip_jquery )
 	{
-		if(!instance) throw("cannot trigger event from null");
-		if(instance.constructor === String ) throw("cannot bind event to a string");
+		if(!instance) 
+			throw("cannot trigger event from null");
+		if(instance.constructor === String ) 
+			throw("cannot bind event to a string");
 
 		//if(typeof(event) == "string")
 		//	event = { type: event, target: instance, stopPropagation: LEvent._stopPropagation };
 		//var event_type = event.type;
 
 		//you can resend the events as jQuery events, but to avoid collisions with system events, we use ":" at the begining
-		if(LEvent.jQuery && !skip_jquery) $(instance).trigger( ":" + event_type, params );
+		if(LEvent.jQuery && !skip_jquery)
+			$(instance).trigger( ":" + event_type, params );
 
-		if(!instance.hasOwnProperty("__on_" + event_type)) return;
-		for(var i in instance["__on_" + event_type])
+		var name = "__on_" + event_type;
+		if(!instance.hasOwnProperty(name)) 
+			return;
+		var inst = instance[name];
+		for(var i = 0, l = inst.length; i < l; ++i)
 		{
-			var v = instance["__on_" + event_type][i];
+			var v = inst[i];
 			if( v[0].call(v[1], event_type, params) == false)// || event.stop)
 				break; //stopPropagation
 		}
@@ -5723,24 +5732,28 @@ global.LEvent = GL.LEvent = {
 	**/
 	triggerArray: function( instances, event_type, params, skip_jquery )
 	{
-		for(var i in instances)
+		for(var i = 0, l = instances.length; i < l; ++i)
 		{
 			var instance = instances[i];
-			if(!instance) throw("cannot trigger event from null");
-			if(instance.constructor === String ) throw("cannot bind event to a string");
+			if(!instance) 
+				throw("cannot trigger event from null");
+			if(instance.constructor === String ) 
+				throw("cannot bind event to a string");
 
 			//if(typeof(event) == "string")
 			//	event = { type: event, target: instance, stopPropagation: LEvent._stopPropagation };
 			//var event_type = event.type;
 
 			//you can resend the events as jQuery events, but to avoid collisions with system events, we use ":" at the begining
-			if(LEvent.jQuery && !skip_jquery) $(instance).trigger( ":" + event_type, params );
+			if(LEvent.jQuery && !skip_jquery) 
+				$(instance).trigger( ":" + event_type, params );
 
-			if(!instance.hasOwnProperty("__on_" + event_type)) 
+			var name = "__on_" + event_type;
+			if(!instance.hasOwnProperty(name)) 
 				continue;
-			for(var i in instance["__on_" + event_type])
+			for(var j = 0, l = instance[name].length; j < l; ++j)
 			{
-				var v = instance["__on_" + event_type][i];
+				var v = instance[name][j];
 				if( v[0].call(v[1], event_type, params) == false)// || event.stop)
 					break; //stopPropagation
 			}
