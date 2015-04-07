@@ -124,15 +124,19 @@ global.LEvent = GL.LEvent = {
 	* @param {function} callback function to call when the event is triggered
 	* @param {Object} target_instance [Optional] instance to call the function (use this instead of .bind method to help removing events)
 	**/
-	bind: function( instance, event_name, callback, target_instance )
+	bind: function( instance, event_type, callback, target_instance )
 	{
-		if(!instance) throw(&quot;cannot bind event to null&quot;);
-		if(!callback) throw(&quot;cannot bind to null callback&quot;);
-		if(instance.constructor === String ) throw(&quot;cannot bind event to a string&quot;);
-		if(instance.hasOwnProperty(&quot;__on_&quot; + event_name))
-			instance[&quot;__on_&quot; + event_name].push([callback,target_instance]);
+		if(!instance) 
+			throw(&quot;cannot bind event to null&quot;);
+		if(!callback) 
+			throw(&quot;cannot bind to null callback&quot;);
+		if(instance.constructor === String ) 
+			throw(&quot;cannot bind event to a string&quot;);
+		var name = &quot;__on_&quot; + event_type;
+		if(instance.hasOwnProperty(name))
+			instance[name].push([callback,target_instance]);
 		else
-			instance[&quot;__on_&quot; + event_name] = [[callback,target_instance]];
+			instance[name] = [[callback,target_instance]];
 	},
 
 	/**
@@ -143,25 +147,32 @@ global.LEvent = GL.LEvent = {
 	* @param {function} callback function that was binded
 	* @param {Object} target_instance [Optional] target_instance that was binded
 	**/
-	unbind: function( instance, event_name, callback, target_instance )
+	unbind: function( instance, event_type, callback, target_instance )
 	{
-		if(!instance) throw(&quot;cannot unbind event to null&quot;);
-		if(!callback) throw(&quot;cannot unbind from null callback&quot;);
-		if(instance.constructor === String ) throw(&quot;cannot bind event to a string&quot;);
-		if(!instance.hasOwnProperty(&quot;__on_&quot; + event_name)) return;
+		if(!instance) 
+			throw(&quot;cannot unbind event to null&quot;);
+		if(!callback) 
+			throw(&quot;cannot unbind from null callback&quot;);
+		if(instance.constructor === String ) 
+			throw(&quot;cannot bind event to a string&quot;);
 
-		for(var i in instance[&quot;__on_&quot; + event_name])
+		var name = &quot;__on_&quot; + event_type;
+
+		if(!instance.hasOwnProperty(name)) 
+			return;
+
+		for(var i = 0, l = instance[name].length; i &lt; l; ++i)
 		{
-			var v = instance[&quot;__on_&quot; + event_name][i];
+			var v = instance[name][i];
 			if(v[0] === callback &amp;&amp; v[1] === target_instance)
 			{
-				instance[&quot;__on_&quot; + event_name].splice( i, 1);
+				instance[name].splice( i, 1);
 				break;
 			}
 		}
 
-		if (instance[&quot;__on_&quot; + event_name].length == 0)
-			delete instance[&quot;__on_&quot; + event_name];
+		if (instance[name].length == 0)
+			delete instance[name];
 	},
 
 	/**
@@ -172,7 +183,8 @@ global.LEvent = GL.LEvent = {
 	**/
 	unbindAll: function(instance, target_instance)
 	{
-		if(!instance) throw(&quot;cannot unbind events in null&quot;);
+		if(!instance) 
+			throw(&quot;cannot unbind events in null&quot;);
 		if(!target_instance) //remove all
 		{
 			//two passes, to avoid deleting and reading at the same time
@@ -216,12 +228,14 @@ global.LEvent = GL.LEvent = {
 	* @param {function} callback the callback
 	* @param {Object} target_instance [Optional] instance binded to callback
 	**/
-	isBind: function( instance, event_name, callback, target_instance )
+	isBind: function( instance, event_type, callback, target_instance )
 	{
-		if(!instance || !instance.hasOwnProperty(&quot;__on_&quot; + event_name)) return false;
-		for(var i in instance[&quot;__on_&quot; + event_name])
+		var name = &quot;__on_&quot; + event_type;
+		if(!instance || !instance.hasOwnProperty(name)) 
+			return false;
+		for(var i = 0, l = instance[name].length; i &lt; l; ++i)
 		{
-			var v = instance[&quot;__on_&quot; + event_name][i];
+			var v = instance[name][i];
 			if(v[0] === callback &amp;&amp; v[1] === target_instance)
 				return true;
 		}
@@ -238,20 +252,26 @@ global.LEvent = GL.LEvent = {
 	**/
 	trigger: function( instance, event_type, params, skip_jquery )
 	{
-		if(!instance) throw(&quot;cannot trigger event from null&quot;);
-		if(instance.constructor === String ) throw(&quot;cannot bind event to a string&quot;);
+		if(!instance) 
+			throw(&quot;cannot trigger event from null&quot;);
+		if(instance.constructor === String ) 
+			throw(&quot;cannot bind event to a string&quot;);
 
 		//if(typeof(event) == &quot;string&quot;)
 		//	event = { type: event, target: instance, stopPropagation: LEvent._stopPropagation };
 		//var event_type = event.type;
 
 		//you can resend the events as jQuery events, but to avoid collisions with system events, we use &quot;:&quot; at the begining
-		if(LEvent.jQuery &amp;&amp; !skip_jquery) $(instance).trigger( &quot;:&quot; + event_type, params );
+		if(LEvent.jQuery &amp;&amp; !skip_jquery)
+			$(instance).trigger( &quot;:&quot; + event_type, params );
 
-		if(!instance.hasOwnProperty(&quot;__on_&quot; + event_type)) return;
-		for(var i in instance[&quot;__on_&quot; + event_type])
+		var name = &quot;__on_&quot; + event_type;
+		if(!instance.hasOwnProperty(name)) 
+			return;
+		var inst = instance[name];
+		for(var i = 0, l = inst.length; i &lt; l; ++i)
 		{
-			var v = instance[&quot;__on_&quot; + event_type][i];
+			var v = inst[i];
 			if( v[0].call(v[1], event_type, params) == false)// || event.stop)
 				break; //stopPropagation
 		}
@@ -267,24 +287,28 @@ global.LEvent = GL.LEvent = {
 	**/
 	triggerArray: function( instances, event_type, params, skip_jquery )
 	{
-		for(var i in instances)
+		for(var i = 0, l = instances.length; i &lt; l; ++i)
 		{
 			var instance = instances[i];
-			if(!instance) throw(&quot;cannot trigger event from null&quot;);
-			if(instance.constructor === String ) throw(&quot;cannot bind event to a string&quot;);
+			if(!instance) 
+				throw(&quot;cannot trigger event from null&quot;);
+			if(instance.constructor === String ) 
+				throw(&quot;cannot bind event to a string&quot;);
 
 			//if(typeof(event) == &quot;string&quot;)
 			//	event = { type: event, target: instance, stopPropagation: LEvent._stopPropagation };
 			//var event_type = event.type;
 
 			//you can resend the events as jQuery events, but to avoid collisions with system events, we use &quot;:&quot; at the begining
-			if(LEvent.jQuery &amp;&amp; !skip_jquery) $(instance).trigger( &quot;:&quot; + event_type, params );
+			if(LEvent.jQuery &amp;&amp; !skip_jquery) 
+				$(instance).trigger( &quot;:&quot; + event_type, params );
 
-			if(!instance.hasOwnProperty(&quot;__on_&quot; + event_type)) 
+			var name = &quot;__on_&quot; + event_type;
+			if(!instance.hasOwnProperty(name)) 
 				continue;
-			for(var i in instance[&quot;__on_&quot; + event_type])
+			for(var j = 0, l = instance[name].length; j &lt; l; ++j)
 			{
-				var v = instance[&quot;__on_&quot; + event_type][i];
+				var v = instance[name][j];
 				if( v[0].call(v[1], event_type, params) == false)// || event.stop)
 					break; //stopPropagation
 			}

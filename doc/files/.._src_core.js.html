@@ -110,7 +110,7 @@
 /**
 * creates a new WebGL context (it can create the canvas or use an existing one)
 * @method create
-* @param {Object} options supported are: width, height
+* @param {Object} options supported are: width, height, canvas
 * @return {gl} gl context for webgl
 */
 GL.create = function(options) {
@@ -169,9 +169,10 @@ GL.create = function(options) {
 
 	//viewport hack to retrieve it without using getParameter (which is slow)
 	gl._viewport_func = gl.viewport;
-	gl.viewport_data = new Float32Array([0,0,gl.canvas.width,gl.canvas.height]);
-	gl.viewport = function(a,b,c,d) { this.viewport_data.set([a,b,c,d]); this._viewport_func(a,b,c,d); }
+	gl.viewport_data = new Float32Array([0,0,gl.canvas.width,gl.canvas.height]); //32000 max viewport, I guess its fine
+	gl.viewport = function(a,b,c,d) { var v = this.viewport_data; v[0] = a|0; v[1] = b|0; v[2] = c|0; v[3] = d|0; this._viewport_func(a,b,c,d); }
 	gl.getViewport = function() { return new Float32Array( gl.viewport_data ); };
+	gl.setViewport = function(v) { gl.viewport_data.set(v); this._viewport_func(v[0],v[1],v[2],v[3]); };
 	
 	//just some checks
 	if(typeof(glMatrix) == &quot;undefined&quot;)
@@ -226,9 +227,11 @@ GL.create = function(options) {
 			post(loop); //do it first, in case it crashes
 
 			var now = getTime();
-			var dt = (now - time) / 1000;
+			var dt = (now - time) * 0.001;
 
-			if (context.onupdate) context.onupdate(dt);
+			if (context.onupdate) 
+				context.onupdate(dt);
+			LEvent.trigger(gl,&quot;update&quot;,dt);
 			if (context.ondraw)
 			{
 				//make sure the ondraw is called using this gl context (in case there is more than one)
@@ -236,6 +239,7 @@ GL.create = function(options) {
 				global.gl = context;
 				//call ondraw
 				context.ondraw();
+				LEvent.trigger(gl,&quot;draw&quot;);
 				//restore old context
 				global.gl = old_gl;
 			}
@@ -272,6 +276,16 @@ GL.create = function(options) {
 			global.gl = null;
 	}
 
+	var mouse = gl.mouse = {
+		left_button: false,
+		middle_button: false,
+		right_button: false,
+		x:0,
+		y:0,
+		deltax: 0,
+		deltay: 0
+	};
+
 	/**
 	* Tells the system to capture mouse events on the canvas. 
 	* This will trigger onmousedown, onmousemove, onmouseup, onmousewheel callbacks assigned in the gl context
@@ -288,7 +302,7 @@ GL.create = function(options) {
 		{
 			canvas.addEventListener(&quot;mousewheel&quot;, onmouse, false);
 			canvas.addEventListener(&quot;wheel&quot;, onmouse, false);
-			//canvas.addEventListener(&quot;DOMMouseScroll&quot;, onmouse, false);
+			//canvas.addEventListener(&quot;DOMMouseScroll&quot;, onmouse, false); //deprecated or non-standard
 		}
 		//prevent right click context menu
 		canvas.addEventListener(&quot;contextmenu&quot;, function(e) { e.preventDefault(); return false; });
@@ -309,8 +323,21 @@ GL.create = function(options) {
 		e.eventType = e.eventType || e.type; //type cannot be overwritten, so I make a clone to allow me to overwrite
 		var now = getTime();
 
+		//gl.mouse info
+		mouse.dragging = e.dragging;
+		mouse.x = e.canvasx;
+		mouse.y = e.canvasy;
+		mouse.left_button = gl.mouse_buttons &amp; (1&lt;&lt;GL.LEFT_MOUSE_BUTTON);
+		mouse.right_button = gl.mouse_buttons &amp; (1&lt;&lt;GL.RIGHT_MOUSE_BUTTON);
+		//console.log(e.eventType, e.mousex, e.mousey, e.deltax, e.deltay );
+
 		if(e.eventType == &quot;mousedown&quot;)
 		{
+			if(e.leftButton)
+				mouse.left_button = true;
+			if(e.rightButton)
+				mouse.right_button = true;
+
 			if(old_mouse_mask == 0) //no mouse button was pressed till now
 			{
 				canvas.removeEventListener(&quot;mousemove&quot;, onmouse);
@@ -320,14 +347,15 @@ GL.create = function(options) {
 			}
 			last_click_time = now;
 
-			if(gl.onmousedown) gl.onmousedown(e);
+			if(gl.onmousedown)
+				gl.onmousedown(e);
+			LEvent.trigger(gl,&quot;mousedown&quot;);
 		}
-		else if(e.eventType == &quot;mousemove&quot; &amp;&amp; gl.onmousemove)
+		else if(e.eventType == &quot;mousemove&quot;)
 		{ 
-			//move should be propagated (otherwise other components may fail)
-			e.click_time = now - last_click_time;
-			gl.onmousemove(e); 
-			return; 
+			if(gl.onmousemove)
+				gl.onmousemove(e); 
+			LEvent.trigger(gl,&quot;mousemove&quot;,e);
 		} 
 		else if(e.eventType == &quot;mouseup&quot;)
 		{
@@ -341,17 +369,24 @@ GL.create = function(options) {
 			e.click_time = now - last_click_time;
 			last_click_time = now;
 
-			if(gl.onmouseup) gl.onmouseup(e);
+			if(gl.onmouseup)
+				gl.onmouseup(e);
+			LEvent.trigger(gl,&quot;mouseup&quot;,e);
 		}
-		else if(gl.onmousewheel &amp;&amp; (e.eventType == &quot;mousewheel&quot; || e.eventType == &quot;wheel&quot; || e.eventType == &quot;DOMMouseScroll&quot;))
+		else if((e.eventType == &quot;mousewheel&quot; || e.eventType == &quot;wheel&quot; || e.eventType == &quot;DOMMouseScroll&quot;))
 		{ 
 			e.eventType = &quot;mousewheel&quot;;
 			if(e.type == &quot;wheel&quot;)
 				e.wheel = -e.deltaY;
 			else
 				e.wheel = (e.wheelDeltaY != null ? e.wheelDeltaY : e.detail * -60);
-			gl.onmousewheel(e);
+			if(gl.onmousewheel)
+				gl.onmousewheel(e);
+			LEvent.trigger(gl, &quot;mousewheel&quot;, e);
 		}
+
+		if(gl.onmouse)
+			gl.onmouse(e);
 
 		e.stopPropagation();
 		e.preventDefault();
@@ -395,6 +430,8 @@ GL.create = function(options) {
 		event.preventDefault();
 	}
 
+	var keys = gl.keys = {};
+
 	/**
 	* Tells the system to capture key events on the canvas. This will trigger onkey
 	* @method captureKeys
@@ -402,7 +439,8 @@ GL.create = function(options) {
 	*/
 	var onkey_handler = null;
 	gl.captureKeys = function( prevent_default ) {
-		if(onkey_handler) return;
+		if(onkey_handler) 
+			return;
 		gl.keys = {};
 		document.addEventListener(&quot;keydown&quot;, inner );
 		document.addEventListener(&quot;keyup&quot;, inner );
@@ -418,7 +456,7 @@ GL.create = function(options) {
 		e.eventType = e.type; //type cannot be overwritten, so I make a clone to allow me to overwrite
 
 		var target_element = e.target.nodeName.toLowerCase();
-		if(target_element == &quot;input&quot; || target_element == &quot;textarea&quot; || target_element == &quot;select&quot;)
+		if(target_element === &quot;input&quot; || target_element === &quot;textarea&quot; || target_element === &quot;select&quot;)
 			return;
 
 		e.character = String.fromCharCode(e.keyCode).toLowerCase();
@@ -437,9 +475,15 @@ GL.create = function(options) {
 		//avoid repetition if key stays pressed
 		if(prev_state != gl.keys[e.keyCode])
 		{
-			if(e.type == &quot;keydown&quot; &amp;&amp; gl.onkeydown) gl.onkeydown(e);
-			else if(e.type == &quot;keyup&quot; &amp;&amp; gl.onkeyup) gl.onkeyup(e);
+			if(e.type == &quot;keydown&quot; &amp;&amp; gl.onkeydown) 
+				gl.onkeydown(e);
+			else if(e.type == &quot;keyup&quot; &amp;&amp; gl.onkeyup) 
+				gl.onkeyup(e);
+			LEvent.trigger(gl, e.type, e);
 		}
+
+		if(gl.onkey)
+			gl.onkey(e);
 
 		if(prevent_default &amp;&amp; (e.isChar || GL.blockable_keys[e.keyIdentifier || e.key ]) )
 			e.preventDefault();
@@ -450,8 +494,13 @@ GL.create = function(options) {
 	function onButton(e, pressed)
 	{
 		console.log(e);
-		if(pressed &amp;&amp; gl.onbuttondown) gl.onbuttondown(e);
-		else if(!pressed &amp;&amp; gl.onbuttonup) gl.onbuttonup(e);
+		if(pressed &amp;&amp; gl.onbuttondown)
+			gl.onbuttondown(e);
+		else if(!pressed &amp;&amp; gl.onbuttonup)
+			gl.onbuttonup(e);
+		if(gl.onbutton)
+			gl.onbutton(e);
+		LEvent.trigger(gl, pressed ? &quot;buttondown&quot; : &quot;buttonup&quot;, e );
 	}
 	
 	function onGamepad(e)
@@ -719,7 +768,7 @@ GL.mapKeyCode = function(code)
 
 //add useful info to the event
 GL.dragging = false;
-GL.last_pos = null;
+GL.last_pos = [0,0];
 
 GL.augmentEvent = function(e, root_element)
 {
@@ -738,7 +787,6 @@ GL.augmentEvent = function(e, root_element)
 	e.deltay = 0;
 	
 	//console.log(&quot;WHICH: &quot;,e.which,&quot; BUTTON: &quot;,e.button, e.type);
-
 	if(e.type == &quot;mousedown&quot;)
 	{
 		this.dragging = true;
@@ -746,7 +794,6 @@ GL.augmentEvent = function(e, root_element)
 	}
 	else if (e.type == &quot;mousemove&quot;)
 	{
-		//trace(e.mousex + &quot; &quot; + e.mousey);
 	}
 	else if (e.type == &quot;mouseup&quot;)
 	{
@@ -756,13 +803,11 @@ GL.augmentEvent = function(e, root_element)
 			this.dragging = false;
 	}
 
-	if(this.last_pos)
-	{
-		e.deltax = e.mousex - this.last_pos[0];
-		e.deltay = e.mousey - this.last_pos[1];
-	}
+	e.deltax = e.mousex - this.last_pos[0];
+	e.deltay = e.mousey - this.last_pos[1];
+	this.last_pos[0] = e.mousex;
+	this.last_pos[1] = e.mousey;
 
-	this.last_pos = [e.mousex, e.mousey];
 	e.dragging = this.dragging;
 	e.buttons_mask = gl.mouse_buttons;			
 

@@ -2,28 +2,24 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-<!--
-<meta property="og:title" content="GameEditor" />
-<meta property="og:description" content="GameEditor for simple games" />
-<meta property="og:image" content="" />
--->
 
 <title>litegl.js: texture example</title>
 	<link rel="stylesheet" type="text/css" href="style.css" />
 	<style type='text/css'>
-		body { background-color: #DDD;}
-		h1 { color: #777; background-color: #CCC; }
+		html, body { background-color: #DDD; margin: 0; padding: 0; width: 100%; height: 100%;}
 	</style>
 	<script type="text/javascript" src="../external/gl-matrix.js"></script>
 	<script type="text/javascript" src="../build/litegl.js"></script>
 	<script type="text/javascript">
-	
+		
 	function init()
 	{
 		//create the rendering context
-		var gl = GL.create({width:1000,height:500});
-		var container = document.querySelector("#content");
+		var container = document.body;
+
+		var gl = GL.create({width: container.offsetWidth, height: container.offsetHeight});
 		container.appendChild(gl.canvas);
+		gl.animate();
 
 		//build the mesh
 		var mesh = GL.Mesh.cube({size:10});
@@ -111,22 +107,12 @@
 			//rotate cube
 			mat4.rotateY(model,model,dt*0.2);
 		};
-
-		gl.animate();
 	}	
 	
 	</script>
 </head>
 <body>
-
-<div id="wrap">
-	<div id="main">
-		<h1>Texture DEMO</h1>
-		<div id="content"></div>
-	</div>
-</div>
-
-<script>init();</script>
+	<script>init();</script>
 </body>
 </html>
 

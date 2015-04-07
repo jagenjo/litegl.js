@@ -251,6 +251,20 @@ Shader.prototype.uniforms = function(uniforms) {
 	return this;
 }//uniforms
 
+Shader.prototype.uniformsArray = function(array) {
+	var gl = this.gl;
+	gl.useProgram(this.program);
+
+	for(var i = 0, l = array.length; i < l; ++i)
+	{
+		var uniforms = array[i];
+		for (var name in uniforms)
+			this._assing_uniform(uniforms, name, gl );
+	}
+
+	return this;
+}
+
 Shader.prototype._assing_uniform = function(uniforms, name, gl)
 {
 	var info = this.uniformInfo[name];
@@ -439,6 +453,24 @@ Shader.SCREEN_FRAGMENT_SHADER = "\n\
 			}\n\
 			";
 
+//used in createFX
+Shader.SCREEN_FRAGMENT_FX = "\n\
+			precision highp float;\n\
+			uniform sampler2D u_texture;\n\
+			varying vec2 v_coord;\n\
+			#ifdef FX_UNIFORMS\n\
+				FX_UNIFORMS\n\
+			#endif\n\
+			void main() {\n\
+				vec2 uv = v_coord;\n\
+				vec4 color = texture2D(u_texture, uv);\n\
+				#ifdef FX_CODE\n\
+					FX_CODE ;\n\
+				#endif\n\
+				gl_FragColor = color;\n\
+			}\n\
+			";
+
 Shader.SCREEN_COLORED_FRAGMENT_SHADER = "\n\
 			precision highp float;\n\
 			uniform sampler2D u_texture;\n\
@@ -468,13 +500,13 @@ Shader.QUAD_VERTEX_SHADER = "\n\
 			uniform vec2 u_viewport;\n\
 			uniform mat3 u_transform;\n\
 			void main() { \n\
-				v_coord = vec2(a_coord.x, 1.0 - a_coord.y); \n\
+				v_coord = vec2(a_coord.x, a_coord.y); \n\
 				vec3 pos = vec3(u_position + a_coord * u_size, 1.0);\n\
 				pos = u_transform * pos;\n\
 				pos.z = 0.0;\n\
 				//normalize\n\
 				pos.x = (2.0 * pos.x / u_viewport.x) - 1.0;\n\
-				pos.y = -((2.0 * pos.y / u_viewport.y) - 1.0);\n\
+				pos.y = ((2.0 * pos.y / u_viewport.y) - 1.0);\n\
 				gl_Position = vec4(pos, 1.0); \n\
 			}\n\
 			";
@@ -518,6 +550,38 @@ Shader.PRIMITIVE2D_VERTEX_SHADER = "\n\
 			}\n\
 			";
 
+Shader.FLAT_VERTEX_SHADER = "\n\
+			precision highp float;\n\
+			attribute vec3 a_vertex;\n\
+			uniform mat4 u_mvp;\n\
+			void main() { \n\
+				gl_Position = u_mvp * vec4(a_vertex,1.0); \n\
+			}\n\
+			";
+
+Shader.FLAT_FRAGMENT_SHADER = "\n\
+			precision highp float;\n\
+			uniform vec4 u_color;\n\
+			void main() {\n\
+				gl_FragColor = u_color;\n\
+			}\n\
+			";
+
+/**
+* Allows to create a simple shader meant to be used to process a texture, instead of having to define the generic Vertex & Fragment Shader code
+* @method Shader.createFX
+* @param {string} code string containg code, like "color = color * 2.0;"
+* @param {string} [uniforms=null] string containg extra uniforms, like "uniform vec3 u_pos;"
+*/
+Shader.createFX = function(code, uniforms)
+{
+	var macros = {
+		FX_CODE: code,
+		FX_UNIFORMS: uniforms || ""
+	}
+	return new GL.Shader( GL.Shader.SCREEN_VERTEX_SHADER, GL.Shader.SCREEN_FRAGMENT_FX, macros );
+}
+
 /**
 * Renders a fullscreen quad with this shader applied
 * @method toViewport
@@ -525,7 +589,7 @@ Shader.PRIMITIVE2D_VERTEX_SHADER = "\n\
 */
 Shader.prototype.toViewport = function(uniforms)
 {
-	var mesh = Mesh.getScreenQuad();
+	var mesh = GL.Mesh.getScreenQuad();
 	if(uniforms)
 		this.uniforms(uniforms);
 	this.draw( mesh );
@@ -534,7 +598,8 @@ Shader.prototype.toViewport = function(uniforms)
 //Now some common shaders everybody needs
 
 /**
-* Returns a shader ready to render a quad in fullscreen, use with Mesh.getScreenQuad() mesh
+* Returns a shader ready to render a textured quad in fullscreen, use with Mesh.getScreenQuad() mesh
+* shader params sampler2D u_texture
 * @method Shader.getScreenShader
 */
 Shader.getScreenShader = function(gl)
@@ -543,11 +608,13 @@ Shader.getScreenShader = function(gl)
 	var shader = gl.shaders[":screen"];
 	if(shader)
 		return shader;
-	return gl.shaders[":screen"] = new GL.Shader( Shader.SCREEN_VERTEX_SHADER, Shader.SCREEN_FRAGMENT_SHADER );
+	shader = gl.shaders[":screen"] = new GL.Shader( Shader.SCREEN_VERTEX_SHADER, Shader.SCREEN_FRAGMENT_SHADER );
+	return shader.uniforms({u_texture:0}); //do it the first time so I dont have to do it every time
 }
 
 /**
-* Returns a shader ready to render a quad in fullscreen, allows color, use with Mesh.getScreenQuad() mesh
+* Returns a shader ready to render a colored textured quad in fullscreen, use with Mesh.getScreenQuad() mesh
+* shader params vec4 u_color and sampler2D u_texture
 * @method Shader.getColoredScreenShader
 */
 Shader.getColoredScreenShader = function(gl)
@@ -556,7 +623,8 @@ Shader.getColoredScreenShader = function(gl)
 	var shader = gl.shaders[":colored_screen"];
 	if(shader)
 		return shader;
-	return gl.shaders[":colored_screen"] = new GL.Shader( Shader.SCREEN_VERTEX_SHADER, Shader.SCREEN_COLORED_FRAGMENT_SHADER );
+	shader = gl.shaders[":colored_screen"] = new GL.Shader( Shader.SCREEN_VERTEX_SHADER, Shader.SCREEN_COLORED_FRAGMENT_SHADER );
+	return shader.uniforms({u_texture:0, u_color: vec4.fromValues(1,1,1,1) }); //do it the first time so I dont have to do it every time
 }
 
 /**
@@ -622,6 +690,56 @@ Shader.getBlurShader = function(gl)
 	return gl.shaders[":blur"] = shader;
 }
 
+Shader.FXAA_FUNC = "\n\
+	uniform vec2 u_viewportSize;\n\
+	uniform vec2 u_iViewportSize;\n\
+	#define FXAA_REDUCE_MIN   (1.0/ 128.0)\n\
+	#define FXAA_REDUCE_MUL   (1.0 / 8.0)\n\
+	#define FXAA_SPAN_MAX     8.0\n\
+	\n\
+	/* from mitsuhiko/webgl-meincraft based on the code on geeks3d.com */\n\
+	vec4 applyFXAA(sampler2D tex, vec2 fragCoord)\n\
+	{\n\
+		vec4 color = vec4(0.0);\n\
+		/*vec2 u_iViewportSize = vec2(1.0 / u_viewportSize.x, 1.0 / u_viewportSize.y);*/\n\
+		vec3 rgbNW = texture2D(tex, (fragCoord + vec2(-1.0, -1.0)) * u_iViewportSize).xyz;\n\
+		vec3 rgbNE = texture2D(tex, (fragCoord + vec2(1.0, -1.0)) * u_iViewportSize).xyz;\n\
+		vec3 rgbSW = texture2D(tex, (fragCoord + vec2(-1.0, 1.0)) * u_iViewportSize).xyz;\n\
+		vec3 rgbSE = texture2D(tex, (fragCoord + vec2(1.0, 1.0)) * u_iViewportSize).xyz;\n\
+		vec3 rgbM  = texture2D(tex, fragCoord  * u_iViewportSize).xyz;\n\
+		vec3 luma = vec3(0.299, 0.587, 0.114);\n\
+		float lumaNW = dot(rgbNW, luma);\n\
+		float lumaNE = dot(rgbNE, luma);\n\
+		float lumaSW = dot(rgbSW, luma);\n\
+		float lumaSE = dot(rgbSE, luma);\n\
+		float lumaM  = dot(rgbM,  luma);\n\
+		float lumaMin = min(lumaM, min(min(lumaNW, lumaNE), min(lumaSW, lumaSE)));\n\
+		float lumaMax = max(lumaM, max(max(lumaNW, lumaNE), max(lumaSW, lumaSE)));\n\
+		\n\
+		vec2 dir;\n\
+		dir.x = -((lumaNW + lumaNE) - (lumaSW + lumaSE));\n\
+		dir.y =  ((lumaNW + lumaSW) - (lumaNE + lumaSE));\n\
+		\n\
+		float dirReduce = max((lumaNW + lumaNE + lumaSW + lumaSE) * (0.25 * FXAA_REDUCE_MUL), FXAA_REDUCE_MIN);\n\
+		\n\
+		float rcpDirMin = 1.0 / (min(abs(dir.x), abs(dir.y)) + dirReduce);\n\
+		dir = min(vec2(FXAA_SPAN_MAX, FXAA_SPAN_MAX), max(vec2(-FXAA_SPAN_MAX, -FXAA_SPAN_MAX), dir * rcpDirMin)) * u_iViewportSize;\n\
+		\n\
+		vec3 rgbA = 0.5 * (texture2D(tex, fragCoord * u_iViewportSize + dir * (1.0 / 3.0 - 0.5)).xyz + \n\
+			texture2D(tex, fragCoord * u_iViewportSize + dir * (2.0 / 3.0 - 0.5)).xyz);\n\
+		vec3 rgbB = rgbA * 0.5 + 0.25 * (texture2D(tex, fragCoord * u_iViewportSize + dir * -0.5).xyz + \n\
+			texture2D(tex, fragCoord * u_iViewportSize + dir * 0.5).xyz);\n\
+		\n\
+		return vec4(rgbA,1.0);\n\
+		float lumaB = dot(rgbB, luma);\n\
+		if ((lumaB < lumaMin) || (lumaB > lumaMax))\n\
+			color = vec4(rgbA, 1.0);\n\
+		else\n\
+			color = vec4(rgbB, 1.0);\n\
+		return color;\n\
+	}\n\
+";
+
 /**
 * Returns a shader to apply FXAA antialiasing
 * params are vec2 u_viewportSize, mat4 u_iViewportSize
@@ -638,53 +756,7 @@ Shader.getFXAAShader = function(gl)
 			precision highp float;\n\
 			varying vec2 v_coord;\n\
 			uniform sampler2D u_texture;\n\
-			uniform vec2 u_viewportSize;\n\
-			uniform vec2 u_iViewportSize;\n\
-			#define FXAA_REDUCE_MIN   (1.0/ 128.0)\n\
-			#define FXAA_REDUCE_MUL   (1.0 / 8.0)\n\
-			#define FXAA_SPAN_MAX     8.0\n\
-			\n\
-			/* from mitsuhiko/webgl-meincraft based on the code on geeks3d.com */\n\
-			vec4 applyFXAA(sampler2D tex, vec2 fragCoord)\n\
-			{\n\
-				vec4 color = vec4(0.0);\n\
-				/*vec2 u_iViewportSize = vec2(1.0 / u_viewportSize.x, 1.0 / u_viewportSize.y);*/\n\
-				vec3 rgbNW = texture2D(tex, (fragCoord + vec2(-1.0, -1.0)) * u_iViewportSize).xyz;\n\
-				vec3 rgbNE = texture2D(tex, (fragCoord + vec2(1.0, -1.0)) * u_iViewportSize).xyz;\n\
-				vec3 rgbSW = texture2D(tex, (fragCoord + vec2(-1.0, 1.0)) * u_iViewportSize).xyz;\n\
-				vec3 rgbSE = texture2D(tex, (fragCoord + vec2(1.0, 1.0)) * u_iViewportSize).xyz;\n\
-				vec3 rgbM  = texture2D(tex, fragCoord  * u_iViewportSize).xyz;\n\
-				vec3 luma = vec3(0.299, 0.587, 0.114);\n\
-				float lumaNW = dot(rgbNW, luma);\n\
-				float lumaNE = dot(rgbNE, luma);\n\
-				float lumaSW = dot(rgbSW, luma);\n\
-				float lumaSE = dot(rgbSE, luma);\n\
-				float lumaM  = dot(rgbM,  luma);\n\
-				float lumaMin = min(lumaM, min(min(lumaNW, lumaNE), min(lumaSW, lumaSE)));\n\
-				float lumaMax = max(lumaM, max(max(lumaNW, lumaNE), max(lumaSW, lumaSE)));\n\
-				\n\
-				vec2 dir;\n\
-				dir.x = -((lumaNW + lumaNE) - (lumaSW + lumaSE));\n\
-				dir.y =  ((lumaNW + lumaSW) - (lumaNE + lumaSE));\n\
-				\n\
-				float dirReduce = max((lumaNW + lumaNE + lumaSW + lumaSE) * (0.25 * FXAA_REDUCE_MUL), FXAA_REDUCE_MIN);\n\
-				\n\
-				float rcpDirMin = 1.0 / (min(abs(dir.x), abs(dir.y)) + dirReduce);\n\
-				dir = min(vec2(FXAA_SPAN_MAX, FXAA_SPAN_MAX), max(vec2(-FXAA_SPAN_MAX, -FXAA_SPAN_MAX), dir * rcpDirMin)) * u_iViewportSize;\n\
-				\n\
-				vec3 rgbA = 0.5 * (texture2D(tex, fragCoord * u_iViewportSize + dir * (1.0 / 3.0 - 0.5)).xyz + \n\
-					texture2D(tex, fragCoord * u_iViewportSize + dir * (2.0 / 3.0 - 0.5)).xyz);\n\
-				vec3 rgbB = rgbA * 0.5 + 0.25 * (texture2D(tex, fragCoord * u_iViewportSize + dir * -0.5).xyz + \n\
-					texture2D(tex, fragCoord * u_iViewportSize + dir * 0.5).xyz);\n\
-				\n\
-				return vec4(rgbA,1.0);\n\
-				float lumaB = dot(rgbB, luma);\n\
-				if ((lumaB < lumaMin) || (lumaB > lumaMax))\n\
-					color = vec4(rgbA, 1.0);\n\
-				else\n\
-					color = vec4(rgbB, 1.0);\n\
-				return color;\n\
-			}\n\
+			" + Shader.FXAA_FUNC + "\n\
 			\n\
 			void main() {\n\
 			   gl_FragColor = applyFXAA( u_texture, v_coord * u_viewportSize) ;\n\
@@ -692,4 +764,20 @@ Shader.getFXAAShader = function(gl)
 			");
 
 	return gl.shaders[":fxaa"] = shader;
+}
+
+/**
+* Returns a flat shader (useful to render lines)
+* @method Shader.getFlatShader
+*/
+Shader.getFlatShader = function(gl)
+{
+	gl = gl || global.gl;
+	var shader = gl.shaders[":flat"];
+	if(shader)
+		return shader;
+
+	var shader = new GL.Shader( Shader.FLAT_VERTEX_SHADER,Shader.FLAT_FRAGMENT_SHADER);
+	shader.uniforms({u_color:[1,1,1,1]});
+	return gl.shaders[":flat"] = shader;
 }

@@ -245,7 +245,7 @@ Image.prototype.getPixels = function()
 
 if(!String.prototype.hasOwnProperty(&quot;replaceAll&quot;)) 
 	Object.defineProperty(String.prototype, &quot;replaceAll&quot;, {
-		get: function(words){
+		value: function(words){
 			var str = this;
 			for(var i in words)
 				str = str.split(i).join(words[i]);

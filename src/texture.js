@@ -507,7 +507,7 @@ Texture.drawToColorAndDepth = function(color_texture, depth_texture, callback) {
 
 	var v = gl.getViewport();
 
-	 gl._framebuffer =  gl._framebuffer || gl.createFramebuffer();
+	gl._framebuffer =  gl._framebuffer || gl.createFramebuffer();
 
 	gl.bindFramebuffer(gl.FRAMEBUFFER,  gl._framebuffer);
 
@@ -528,27 +528,40 @@ Texture.drawToColorAndDepth = function(color_texture, depth_texture, callback) {
 /**
 * Copy content of one texture into another
 * @method copyTo
-* @param {Texture} target_texture
+* @param {GL.Texture} target_texture
+* @param {GL.Shader} [shader=null] optional shader to apply while copying
 */
-Texture.prototype.copyTo = function(target_texture) {
+Texture.prototype.copyTo = function(target_texture, shader) {
 	var that = this;
 	var gl = this.gl;
 
-	//copy content
-	target_texture.drawTo(function() {
-		gl.disable( gl.BLEND );
-		gl.disable( gl.DEPTH_TEST );
-		gl.disable( gl.CULL_FACE );
-		that.toViewport();
-	});
+	//save state
+	var current_fbo = gl.getParameter( gl.FRAMEBUFFER_BINDING );
+	var viewport = gl.getViewport(); 
 
+	//reuse fbo
+	var fbo = gl.__copy_fbo = gl.__copy_fbo || gl.createFramebuffer();
+	gl.bindFramebuffer( gl.FRAMEBUFFER, fbo );
+	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, target_texture.handler, 0);
+	gl.viewport(0,0,target_texture.width, target_texture.height);
+
+	//render
+	gl.disable( gl.BLEND );
+	gl.disable( gl.DEPTH_TEST );
+	this.toViewport( shader );
+	
+	//restore previous state
+	gl.setViewport(viewport); //restore viewport
+	gl.bindFramebuffer( gl.FRAMEBUFFER, current_fbo ); //restore fbo
+
+	//generate mipmaps when needed
 	if (target_texture.minFilter && target_texture.minFilter != gl.NEAREST && target_texture.minFilter != gl.LINEAR) {
 		target_texture.bind();
 		gl.generateMipmap(target_texture.texture_type);
 		target_texture.has_mipmaps = true;
 	}
-	gl.bindTexture(target_texture.texture_type, null); //disable
 
+	gl.bindTexture(target_texture.texture_type, null); //disable
 	return this;
 }
 
@@ -563,7 +576,7 @@ Texture.prototype.toViewport = function(shader, uniforms)
 	shader = shader || Shader.getScreenShader();
 	var mesh = Mesh.getScreenQuad();
 	this.bind(0);
-	shader.uniforms({u_texture: 0});
+	//shader.uniforms({u_texture: 0}); //never changes
 	if(uniforms)
 		shader.uniforms(uniforms);
 	shader.draw( mesh, gl.TRIANGLES );
