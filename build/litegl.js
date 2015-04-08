@@ -3610,6 +3610,21 @@ Texture.prototype.toViewport = function(shader, uniforms)
 }
 
 /**
+* Fills the texture with a constant color (uses gl.clear)
+* @method fill
+* @param {vec4} color rgba
+*/
+Texture.prototype.fill = function(color)
+{
+	var old_color = gl.getParameter( gl.COLOR_CLEAR_VALUE );
+	gl.clearColor( color[0], color[1], color[2], color[3] );
+	this.drawTo( function() {
+		gl.clear( gl.COLOR_BUFFER_BIT );	
+	});
+	gl.clearColor( old_color[0], old_color[1], old_color[2], old_color[3] );
+}
+
+/**
 * Render texture in a quad of specified area
 * @method renderQuad
 * @param {number} x
@@ -4688,13 +4703,13 @@ Shader.QUAD_VERTEX_SHADER = "\n\
 			uniform vec2 u_viewport;\n\
 			uniform mat3 u_transform;\n\
 			void main() { \n\
-				v_coord = vec2(a_coord.x, a_coord.y); \n\
-				vec3 pos = vec3(u_position + a_coord * u_size, 1.0);\n\
+				vec3 pos = vec3(u_position + vec2(a_coord.x,1.0 - a_coord.y)  * u_size, 1.0);\n\
+				v_coord = a_coord; \n\
 				pos = u_transform * pos;\n\
 				pos.z = 0.0;\n\
 				//normalize\n\
 				pos.x = (2.0 * pos.x / u_viewport.x) - 1.0;\n\
-				pos.y = ((2.0 * pos.y / u_viewport.y) - 1.0);\n\
+				pos.y = -((2.0 * pos.y / u_viewport.y) - 1.0);\n\
 				gl_Position = vec4(pos, 1.0); \n\
 			}\n\
 			";
@@ -5560,13 +5575,18 @@ GL.create = function(options) {
 		var size = vec2.create();
 		var area = vec4.create();
 		var white = vec4.fromValues(1,1,1,1);
+		var viewport = vec2.create();
+		var _uniforms = {u_texture: 0, u_position: pos, u_color: white, u_size: size, u_texture_area: area, u_viewport: viewport, u_transform: identity };
 
 		return (function(texture, x,y, w,h, tx,ty, tw,th, shader, uniforms)
 		{
 			pos[0] = x;	pos[1] = y;
-			if(w === undefined) w = texture.width;
-			if(h === undefined) h = texture.height;
-			size[0] = w; size[1] = h;
+			if(w === undefined)
+				w = texture.width;
+			if(h === undefined)
+				h = texture.height;
+			size[0] = w;
+			size[1] = h;
 
 			if(tx === undefined) tx = 0;
 			if(ty === undefined) ty = 0;
@@ -5578,12 +5598,15 @@ GL.create = function(options) {
 			area[2] = (tx + tw) / texture.width;
 			area[3] = (ty + th) / texture.height;
 
+			viewport[0] = this.viewport_data[2];
+			viewport[1] = this.viewport_data[3];
+
 			shader = shader || Shader.getPartialQuadShader(this);
 			var mesh = Mesh.getScreenQuad(this);
 			texture.bind(0);
-			shader.uniforms({u_texture: 0, u_position: pos, u_color: white, u_size: size, u_texture_area: area, u_viewport: this.viewport_data.subarray(2,4), u_transform: identity });
-			if(uniforms)
-				shader.uniforms(uniforms);
+			shader.uniforms( _uniforms );
+			if( uniforms )
+				shader.uniforms( uniforms );
 			shader.draw( mesh, gl.TRIANGLES );
 		});
 	})();

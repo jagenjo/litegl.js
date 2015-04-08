@@ -583,6 +583,21 @@ Texture.prototype.toViewport = function(shader, uniforms)
 }
 
 /**
+* Fills the texture with a constant color (uses gl.clear)
+* @method fill
+* @param {vec4} color rgba
+*/
+Texture.prototype.fill = function(color)
+{
+	var old_color = gl.getParameter( gl.COLOR_CLEAR_VALUE );
+	gl.clearColor( color[0], color[1], color[2], color[3] );
+	this.drawTo( function() {
+		gl.clear( gl.COLOR_BUFFER_BIT );	
+	});
+	gl.clearColor( old_color[0], old_color[1], old_color[2], old_color[3] );
+}
+
+/**
 * Render texture in a quad of specified area
 * @method renderQuad
 * @param {number} x

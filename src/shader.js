@@ -500,13 +500,13 @@ Shader.QUAD_VERTEX_SHADER = "\n\
 			uniform vec2 u_viewport;\n\
 			uniform mat3 u_transform;\n\
 			void main() { \n\
-				v_coord = vec2(a_coord.x, a_coord.y); \n\
-				vec3 pos = vec3(u_position + a_coord * u_size, 1.0);\n\
+				vec3 pos = vec3(u_position + vec2(a_coord.x,1.0 - a_coord.y)  * u_size, 1.0);\n\
+				v_coord = a_coord; \n\
 				pos = u_transform * pos;\n\
 				pos.z = 0.0;\n\
 				//normalize\n\
 				pos.x = (2.0 * pos.x / u_viewport.x) - 1.0;\n\
-				pos.y = ((2.0 * pos.y / u_viewport.y) - 1.0);\n\
+				pos.y = -((2.0 * pos.y / u_viewport.y) - 1.0);\n\
 				gl_Position = vec4(pos, 1.0); \n\
 			}\n\
 			";
