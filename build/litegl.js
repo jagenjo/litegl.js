@@ -7216,21 +7216,21 @@ HitTest.prototype = {
 //       var result = GL.Raytracer.hitTestSphere(
 //       tracer.eye, ray, new GL.Vector(0, 0, 0), 1);
 
-global.Raytracer = GL.Raytracer = function Raytracer(viewmatrix, projectionmatrix, viewport) {
+global.Raytracer = GL.Raytracer = function Raytracer( viewprojection_matrix, viewport ) {
+
   viewport = viewport || gl.getViewport(); //gl.getParameter(gl.VIEWPORT);
-  var m = viewmatrix;
   this.viewport = viewport;
 
   var minX = viewport[0], maxX = minX + viewport[2];
   var minY = viewport[1], maxY = minY + viewport[3];
-  this.ray00 = vec3.unproject(vec3.create(), vec3.fromValues(minX, minY, 1), viewmatrix, projectionmatrix, viewport);
-  this.ray10 = vec3.unproject(vec3.create(), vec3.fromValues(maxX, minY, 1), viewmatrix, projectionmatrix, viewport);
-  this.ray01 = vec3.unproject(vec3.create(), vec3.fromValues(minX, maxY, 1), viewmatrix, projectionmatrix, viewport);
-  this.ray11 = vec3.unproject(vec3.create(), vec3.fromValues(maxX, maxY, 1), viewmatrix, projectionmatrix, viewport);
+  this.ray00 = vec3.unproject( vec3.create(), vec3.fromValues(minX, minY, 1), viewprojection_matrix, viewport);
+  this.ray10 = vec3.unproject( vec3.create(), vec3.fromValues(maxX, minY, 1), viewprojection_matrix, viewport);
+  this.ray01 = vec3.unproject( vec3.create(), vec3.fromValues(minX, maxY, 1), viewprojection_matrix, viewport);
+  this.ray11 = vec3.unproject( vec3.create(), vec3.fromValues(maxX, maxY, 1), viewprojection_matrix, viewport);
 
   this.eye = vec3.create();
   var eye = this.eye;
-  vec3.unproject(eye, eye, viewmatrix, projectionmatrix, viewport);
+  vec3.unproject(eye, eye, viewprojection_matrix, viewport);
 
   vec3.subtract(this.ray00, this.ray00, eye);
   vec3.subtract(this.ray10, this.ray10, eye);

@@ -32,7 +32,7 @@
 		var cam_pos = vec3.fromValues(100,0,100);
 
 		//create basic matrices for cameras and transformation
-		var persp = window.persp = mat4.create();
+		var projection = window.persp = mat4.create();
 		var view = window.view = mat4.create();
 		var mvp = window.mvp = mat4.create();
 		var temp = mat4.create();
@@ -44,12 +44,13 @@
 				objects.push({ color: [0.3,0.3,0.3,1.0], model: mat4.translationMatrix( [x*12,y*12,0] ), mesh: cube_mesh });
 
 		//set the camera perspective
-		mat4.perspective(persp, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 0.1, 1000);
+		mat4.perspective( projection, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 0.1, 1000 );
 		//mat4.ortho(persp, -50,50,-50,50,0,500); //ray doesnt work in perspective
 
 		function getClosestObject(x,y)
 		{
-			var RT = new GL.Raytracer(view, persp);
+			mat4.multiply( mvp, projection, view );
+			var RT = new GL.Raytracer( mvp );
 			var ray = RT.getRayForPixel(x,y);
 
 			var closest_object = null;

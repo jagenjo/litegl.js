@@ -567,7 +567,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 620,
+            "line": 628,
             "description": "use it to reset the the initial gl state",
             "itemtype": "method",
             "name": "gl.reset",
@@ -2730,6 +2730,21 @@
         {
             "file": "../src/texture.js",
             "line": 585,
+            "description": "Fills the texture with a constant color (uses gl.clear)",
+            "itemtype": "method",
+            "name": "fill",
+            "params": [
+                {
+                    "name": "color",
+                    "description": "rgba",
+                    "type": "Vec4"
+                }
+            ],
+            "class": "Texture"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 600,
             "description": "Render texture in a quad of specified area",
             "itemtype": "method",
             "name": "renderQuad",
@@ -2759,7 +2774,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 616,
+            "line": 631,
             "description": "Applies a blur filter of one pixel to the texture (be careful using it, it is slow)",
             "itemtype": "method",
             "name": "applyBlur",
@@ -2798,7 +2813,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 652,
+            "line": 667,
             "description": "Loads and uploads a texture from a url",
             "itemtype": "method",
             "name": "Texture.fromURL",
@@ -2827,7 +2842,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 709,
+            "line": 724,
             "description": "Create a texture from an Image",
             "itemtype": "method",
             "name": "Texture.fromImage",
@@ -2851,7 +2866,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 731,
+            "line": 746,
             "description": "Create a texture from a Video",
             "itemtype": "method",
             "name": "Texture.fromVideo",
@@ -2875,7 +2890,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 753,
+            "line": 768,
             "description": "Create a clone of a texture",
             "itemtype": "method",
             "name": "Texture.fromTexture",
@@ -2899,7 +2914,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 767,
+            "line": 782,
             "description": "Create a texture from an ArrayBuffer containing the pixels",
             "itemtype": "method",
             "name": "Texture.fromTexture",
@@ -2933,7 +2948,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 802,
+            "line": 817,
             "description": "Create a texture from an ArrayBuffer containing the pixels",
             "itemtype": "method",
             "name": "Texture.fromDDSInMemory",
@@ -2957,7 +2972,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 824,
+            "line": 839,
             "description": "Create a generative texture from a shader ( must GL.Shader.getScreenShader as reference for the shader )",
             "itemtype": "method",
             "name": "Texture.fromShader",
@@ -2991,7 +3006,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 849,
+            "line": 864,
             "description": "Create a cubemap texture from a set of 6 images",
             "itemtype": "method",
             "name": "Texture.cubemapFromImages",
@@ -3015,7 +3030,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 890,
+            "line": 905,
             "description": "Create a cubemap texture from a single image that contains all six images arranged vertically",
             "itemtype": "method",
             "name": "Texture.cubemapFromImage",
@@ -3039,7 +3054,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 920,
+            "line": 935,
             "description": "Create a cubemap texture from a single image url that contains the six images in vertical",
             "itemtype": "method",
             "name": "Texture.cubemapFromURL",
@@ -3063,7 +3078,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 957,
+            "line": 972,
             "description": "returns an ArrayBuffer with the pixels in the texture, they are fliped in Y",
             "itemtype": "method",
             "name": "getPixels",
@@ -3075,7 +3090,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 998,
+            "line": 1013,
             "description": "Copy texture content to a canvas",
             "itemtype": "method",
             "name": "toCanvas",
@@ -3090,7 +3105,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 1022,
+            "line": 1037,
             "description": "returns a Blob containing all the data from the texture",
             "itemtype": "method",
             "name": "toBlob",
@@ -3102,7 +3117,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 1078,
+            "line": 1093,
             "description": "returns a base64 String containing all the data from the texture",
             "itemtype": "method",
             "name": "toBase64",
@@ -3121,7 +3136,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 1120,
+            "line": 1135,
             "description": "generates some basic metadata about the image",
             "itemtype": "method",
             "name": "generateMetadata",

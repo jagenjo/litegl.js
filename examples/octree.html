@@ -45,7 +45,10 @@
 
 		function testCollision(x,y)
 		{
-			var RT = new GL.Raytracer(view, proj);
+
+			mat4.multiply( vp, proj, view );
+
+			var RT = new GL.Raytracer(vp);
 			var ray = RT.getRayForPixel(x,y);
 			if( !mesh || mesh.ready === false )
 				return;
@@ -120,7 +123,6 @@
 		{
 			gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
 			mat4.lookAt(view, cam_pos, cam_target, [0,1,0]);
-
 			mat4.multiply(vp,proj,view); //vp
 
 			//render mesh using the shader
