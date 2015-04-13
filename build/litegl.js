@@ -3429,18 +3429,15 @@ Texture.prototype.drawTo = function(callback, params)
 * @param {Texture} depth_texture
 * @param {Function} callback
 */
-Texture.drawTo = function(textures, callback)
+Texture.drawTo = function(color_textures, callback, depth_texture)
 {
-	var depth_texture = null;
 	var w = -1,
 		h = -1,
 		type = null;
-	var color_textures = 0;
-	for(var i = 0; i < textures.length; i++)
+
+	for(var i = 0; i < color_textures.length; i++)
 	{
-		var t = textures[i];
-		if(t.type == gl.DEPTH_COMPONENT)
-			depth_texture = t;
+		var t = color_textures[i];
 		if(w == -1) 
 			w = t.width;
 		else if(w != t.width)
@@ -3449,15 +3446,11 @@ Texture.drawTo = function(textures, callback)
 			h = t.height;
 		else if(h != t.height)
 			throw("Cannot use Texture.drawTo if textures have different dimensions");
-		if(type == null)
-			type =  t.type;
-		else if (type != t.type && t.type == gl.DEPTH_COMPONENT)
+		if(type == null) //first one defines the type
+			type = t.type;
+		else if (type != t.type)
 			throw("Cannot use Texture.drawTo if textures have different data type, all must have the same type");
-		color_textures += 1;
 	}
-
-	if(!color_textures)
-		throw("you must pass one color texture at least");
 
 	var v = gl.getViewport();
 	gl._framebuffer =  gl._framebuffer || gl.createFramebuffer();
@@ -3465,7 +3458,7 @@ Texture.drawTo = function(textures, callback)
 
 	gl.viewport(0, 0, w, h);
 	var ext = gl.extensions["WEBGL_draw_buffers"];
-	if(!ext && color_textures > 1)
+	if(!ext && color_textures.length > 1)
 		throw("Rendering to several textures not supported");
 
 	var renderbuffer = null;
@@ -3477,28 +3470,21 @@ Texture.drawTo = function(textures, callback)
 		gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer );
 	}
 
-
-	var slot = 0;
 	var order = []; //draw_buffers request the use of an array with the order of the attachments
-	for(var i = 0; i < textures.length; i++)
+	for(var i = 0; i < color_textures.length; i++)
 	{
-		var t = textures[i];
+		var t = color_textures[i];
 		if(t.type == gl.DEPTH_COMPONENT)
 			continue;
-		if(color_textures == 1)
-		{
-			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t.handler, 0);
-			break;
-		}
 
-		var att = ext.COLOR_ATTACHMENT0_WEBGL + slot;
-		gl.framebufferTexture2D(gl.FRAMEBUFFER, att, gl.TEXTURE_2D, t.handler, 0);
-		order.push(att);
-		slot++;
+		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, t.handler, 0);
+		order.push( gl.COLOR_ATTACHMENT0 + i );
 	}
 
 	if( depth_texture )
-		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT,  gl.TEXTURE_2D, depth_texture.handler, 0);
+	{
+		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depth_texture.handler, 0);
+	}
 	else //create a temporary renderbuffer
 	{
 		gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, w, h);
@@ -3509,7 +3495,7 @@ Texture.drawTo = function(textures, callback)
 	if(complete !== gl.FRAMEBUFFER_COMPLETE)
 		throw("FBO not complete: " + complete);
 
-	if(color_textures > 1)
+	if(color_textures.length > 1)
 		ext.drawBuffersWEBGL( order );
 
 	callback();
@@ -4045,6 +4031,10 @@ Texture.prototype.getPixels = function()
 Texture.prototype.toCanvas = function(canvas)
 {
 	var gl = this.gl;
+
+	if(this.texture_type != gl.TEXTURE_2D)
+		return null;
+
 	var w = this.width;
 	var h = this.height;
 	canvas = canvas || createCanvas(w,h);

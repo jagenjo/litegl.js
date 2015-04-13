@@ -38,7 +38,10 @@
 	var texture_color = new GL.Texture(w,h, { type: type, filter: gl.NEAREST });
 	var texture_normal = new GL.Texture(w,h, { type: type, filter: gl.NEAREST });
 	var texture_albedo = new GL.Texture(w,h, { type: type, filter: gl.NEAREST });
-	var texture_depth = new GL.Texture(w,h, { type: type, filter: gl.NEAREST }); 
+
+	var texture_depth = new GL.Texture(w,h, { format: gl.DEPTH_COMPONENT, type: gl.UNSIGNED_INT, filter: gl.NEAREST }); 
+
+	var textures = [ texture_color, texture_normal, texture_albedo ];
 
 	//create basic matrices for cameras and transformation
 	var persp = mat4.create();
@@ -57,7 +60,7 @@
 	}
 
 	//set the camera position
-	mat4.perspective(persp, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 0.1, 1000);
+	mat4.perspective(persp, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 50, 1000);
 	mat4.lookAt(view, camera_position, [0,0,0], [0,1,0]);
 
 	//basic shader
@@ -76,6 +79,7 @@
 				v_wPosition = (u_model * vec4(a_vertex,1.0)).xyz;\
 				v_normal = (u_model * vec4(a_normal,0.0)).xyz;\
 				gl_Position = u_mvp * vec4(a_vertex,1.0);\
+				gl_PointSize = 20.0;\
 			}\
 			', '\
 			\
@@ -92,11 +96,12 @@
 			void main() {\
 			  vec3 N = normalize(v_normal);\
 			  vec3 L = normalize(v_wPosition - u_light_position);\
-			  vec4 color = u_color * texture2D( u_texture, v_coord );\
-			  gl_FragData[2] = color;\
+			  vec4 diffuse_color = u_color * texture2D( u_texture, v_coord );\
+			  vec4 final_color = diffuse_color;\
 			  float depth = 0.002 * length(v_wPosition - u_camera_position);\
-			  color.xyz *= u_light_color * (0.05 + vec3(max(0.0, dot( -L, N ) )));\
-			  gl_FragData[0] = color;\
+			  final_color.xyz *= u_light_color * (0.05 + vec3(max(0.0, dot( -L, N ) )));\
+			  gl_FragData[0] = final_color;\
+			  gl_FragData[2] = diffuse_color;\
 			  gl_FragData[1] = vec4(abs(N),1.0);\
 			  gl_FragData[3] = vec4(vec3(abs(depth)),1.0);\
 			}\
@@ -123,7 +128,7 @@
 	{
 
 		//render something in the texture
-		Texture.drawTo([texture_color, texture_normal, texture_albedo, texture_depth],function(){
+		Texture.drawTo(textures,function(){
 			gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
 			gl.enable( gl.DEPTH_TEST );
 
@@ -135,7 +140,9 @@
 
 			shader.uniforms( uniforms ).draw( plane );
 			shader.uniforms( uniforms ).draw( sphere );
-		});
+
+			shader.uniforms( uniforms ).draw( sphere, gl.POINTS );
+		}, texture_depth );
 
 		gl.disable( gl.DEPTH_TEST );
 
