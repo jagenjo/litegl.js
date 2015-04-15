@@ -280,7 +280,8 @@ GL.create = function(options) {
 		if(gl.onmouse)
 			gl.onmouse(e);
 
-		e.stopPropagation();
+		if(e.eventType != "mousemove")
+			e.stopPropagation();
 		e.preventDefault();
 		return false;
 	}

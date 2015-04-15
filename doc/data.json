@@ -410,7 +410,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 327,
+            "line": 328,
             "description": "Tells the system to capture key events on the canvas. This will trigger onkey",
             "itemtype": "method",
             "name": "captureKeys",
@@ -425,7 +425,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 405,
+            "line": 406,
             "description": "Tells the system to capture gamepad events on the canvas.",
             "itemtype": "method",
             "name": "captureGamepads",
@@ -433,7 +433,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 427,
+            "line": 428,
             "description": "returns the detected gamepads on the system",
             "itemtype": "method",
             "name": "getGamepads",
@@ -441,7 +441,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 485,
+            "line": 486,
             "description": "launches de canvas in fullscreen mode",
             "itemtype": "method",
             "name": "fullscreen",
@@ -449,7 +449,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 502,
+            "line": 503,
             "description": "returns a canvas with a snapshot of an area\nthis is safer than using the canvas itself due to internals of webgl",
             "itemtype": "method",
             "name": "snapshot",
@@ -483,7 +483,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 540,
+            "line": 541,
             "description": "returns a texture and caches it inside gl.textures[]",
             "itemtype": "method",
             "name": "loadTexture",
@@ -512,7 +512,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 572,
+            "line": 573,
             "description": "draws a texture to the viewport",
             "itemtype": "method",
             "name": "drawTexture",
@@ -567,7 +567,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 628,
+            "line": 629,
             "description": "use it to reset the the initial gl state",
             "itemtype": "method",
             "name": "gl.reset",
@@ -2662,7 +2662,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 495,
+            "line": 481,
             "description": "Similar to drawTo but it also stores the depth in a depth texture",
             "itemtype": "method",
             "name": "drawToColorAndDepth",
@@ -2687,7 +2687,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 528,
+            "line": 514,
             "description": "Copy content of one texture into another",
             "itemtype": "method",
             "name": "copyTo",
@@ -2709,7 +2709,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 568,
+            "line": 554,
             "description": "Render texture in a quad to full viewport size",
             "itemtype": "method",
             "name": "toViewport",
@@ -2729,7 +2729,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 585,
+            "line": 571,
             "description": "Fills the texture with a constant color (uses gl.clear)",
             "itemtype": "method",
             "name": "fill",
@@ -2744,7 +2744,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 600,
+            "line": 586,
             "description": "Render texture in a quad of specified area",
             "itemtype": "method",
             "name": "renderQuad",
@@ -2774,7 +2774,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 631,
+            "line": 617,
             "description": "Applies a blur filter of one pixel to the texture (be careful using it, it is slow)",
             "itemtype": "method",
             "name": "applyBlur",
@@ -2813,7 +2813,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 667,
+            "line": 653,
             "description": "Loads and uploads a texture from a url",
             "itemtype": "method",
             "name": "Texture.fromURL",
@@ -2842,7 +2842,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 724,
+            "line": 710,
             "description": "Create a texture from an Image",
             "itemtype": "method",
             "name": "Texture.fromImage",
@@ -2866,7 +2866,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 746,
+            "line": 735,
             "description": "Create a texture from a Video",
             "itemtype": "method",
             "name": "Texture.fromVideo",
@@ -2890,7 +2890,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 768,
+            "line": 757,
             "description": "Create a clone of a texture",
             "itemtype": "method",
             "name": "Texture.fromTexture",
@@ -2914,7 +2914,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 782,
+            "line": 771,
             "description": "Create a texture from an ArrayBuffer containing the pixels",
             "itemtype": "method",
             "name": "Texture.fromTexture",
@@ -2948,7 +2948,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 817,
+            "line": 806,
             "description": "Create a texture from an ArrayBuffer containing the pixels",
             "itemtype": "method",
             "name": "Texture.fromDDSInMemory",
@@ -2972,7 +2972,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 839,
+            "line": 828,
             "description": "Create a generative texture from a shader ( must GL.Shader.getScreenShader as reference for the shader )",
             "itemtype": "method",
             "name": "Texture.fromShader",
@@ -3006,7 +3006,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 864,
+            "line": 853,
             "description": "Create a cubemap texture from a set of 6 images",
             "itemtype": "method",
             "name": "Texture.cubemapFromImages",
@@ -3030,8 +3030,8 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 905,
-            "description": "Create a cubemap texture from a single image that contains all six images arranged vertically",
+            "line": 894,
+            "description": "Create a cubemap texture from a single image that contains all six images \nIf it is a cross, it must be horizontally aligned, and options.is_cross must be equal to the column where the top and bottom are located (usually 1 or 2)\notherwise it assumes the 6 images are arranged vertically, in the order of OpenGL: +X, -X, +Y, -Y, +Z, -Z",
             "itemtype": "method",
             "name": "Texture.cubemapFromImage",
             "params": [
@@ -3054,8 +3054,32 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 935,
-            "description": "Create a cubemap texture from a single image url that contains the six images in vertical",
+            "line": 956,
+            "description": "Given the width and the height of an image, and in which column is the top and bottom sides of the cubemap, it gets the info to pass to Texture.cubemapFromImage in options.faces",
+            "itemtype": "method",
+            "name": "Texture.generateCubemapCrossFaces",
+            "params": [
+                {
+                    "name": "width",
+                    "description": "",
+                    "type": "Number"
+                },
+                {
+                    "name": "column",
+                    "description": "the column where the top and the bottom is located",
+                    "type": "Number"
+                }
+            ],
+            "return": {
+                "description": "object to pass to Texture.cubemapFromImage in options.faces",
+                "type": "Object"
+            },
+            "class": "Texture"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 979,
+            "description": "Create a cubemap texture from a single image url that contains the six images\nif it is a cross, it must be horizontally aligned, and options.is_cross must be equal to the column where the top and bottom are located (usually 1 or 2)\notherwise it assumes the 6 images are arranged vertically.",
             "itemtype": "method",
             "name": "Texture.cubemapFromURL",
             "params": [
@@ -3068,6 +3092,11 @@
                     "name": "options",
                     "description": "",
                     "type": "Object"
+                },
+                {
+                    "name": "on_complete",
+                    "description": "callback",
+                    "type": "Function"
                 }
             ],
             "return": {
@@ -3078,7 +3107,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 972,
+            "line": 1019,
             "description": "returns an ArrayBuffer with the pixels in the texture, they are fliped in Y",
             "itemtype": "method",
             "name": "getPixels",
@@ -3090,7 +3119,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 1013,
+            "line": 1060,
             "description": "Copy texture content to a canvas",
             "itemtype": "method",
             "name": "toCanvas",
@@ -3105,7 +3134,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 1037,
+            "line": 1088,
             "description": "returns a Blob containing all the data from the texture",
             "itemtype": "method",
             "name": "toBlob",
@@ -3117,7 +3146,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 1093,
+            "line": 1144,
             "description": "returns a base64 String containing all the data from the texture",
             "itemtype": "method",
             "name": "toBase64",
@@ -3136,7 +3165,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 1135,
+            "line": 1186,
             "description": "generates some basic metadata about the image",
             "itemtype": "method",
             "name": "generateMetadata",

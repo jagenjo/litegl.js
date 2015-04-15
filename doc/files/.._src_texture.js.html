@@ -510,18 +510,15 @@ Texture.prototype.drawTo = function(callback, params)
 * @param {Texture} depth_texture
 * @param {Function} callback
 */
-Texture.drawTo = function(textures, callback)
+Texture.drawTo = function(color_textures, callback, depth_texture)
 {
-	var depth_texture = null;
 	var w = -1,
 		h = -1,
 		type = null;
-	var color_textures = 0;
-	for(var i = 0; i &lt; textures.length; i++)
+
+	for(var i = 0; i &lt; color_textures.length; i++)
 	{
-		var t = textures[i];
-		if(t.type == gl.DEPTH_COMPONENT)
-			depth_texture = t;
+		var t = color_textures[i];
 		if(w == -1) 
 			w = t.width;
 		else if(w != t.width)
@@ -530,15 +527,11 @@ Texture.drawTo = function(textures, callback)
 			h = t.height;
 		else if(h != t.height)
 			throw(&quot;Cannot use Texture.drawTo if textures have different dimensions&quot;);
-		if(type == null)
-			type =  t.type;
-		else if (type != t.type &amp;&amp; t.type == gl.DEPTH_COMPONENT)
+		if(type == null) //first one defines the type
+			type = t.type;
+		else if (type != t.type)
 			throw(&quot;Cannot use Texture.drawTo if textures have different data type, all must have the same type&quot;);
-		color_textures += 1;
 	}
-
-	if(!color_textures)
-		throw(&quot;you must pass one color texture at least&quot;);
 
 	var v = gl.getViewport();
 	gl._framebuffer =  gl._framebuffer || gl.createFramebuffer();
@@ -546,7 +539,7 @@ Texture.drawTo = function(textures, callback)
 
 	gl.viewport(0, 0, w, h);
 	var ext = gl.extensions[&quot;WEBGL_draw_buffers&quot;];
-	if(!ext &amp;&amp; color_textures &gt; 1)
+	if(!ext &amp;&amp; color_textures.length &gt; 1)
 		throw(&quot;Rendering to several textures not supported&quot;);
 
 	var renderbuffer = null;
@@ -558,28 +551,21 @@ Texture.drawTo = function(textures, callback)
 		gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer );
 	}
 
-
-	var slot = 0;
 	var order = []; //draw_buffers request the use of an array with the order of the attachments
-	for(var i = 0; i &lt; textures.length; i++)
+	for(var i = 0; i &lt; color_textures.length; i++)
 	{
-		var t = textures[i];
+		var t = color_textures[i];
 		if(t.type == gl.DEPTH_COMPONENT)
 			continue;
-		if(color_textures == 1)
-		{
-			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t.handler, 0);
-			break;
-		}
 
-		var att = ext.COLOR_ATTACHMENT0_WEBGL + slot;
-		gl.framebufferTexture2D(gl.FRAMEBUFFER, att, gl.TEXTURE_2D, t.handler, 0);
-		order.push(att);
-		slot++;
+		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, t.handler, 0);
+		order.push( gl.COLOR_ATTACHMENT0 + i );
 	}
 
 	if( depth_texture )
-		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT,  gl.TEXTURE_2D, depth_texture.handler, 0);
+	{
+		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depth_texture.handler, 0);
+	}
 	else //create a temporary renderbuffer
 	{
 		gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, w, h);
@@ -590,7 +576,7 @@ Texture.drawTo = function(textures, callback)
 	if(complete !== gl.FRAMEBUFFER_COMPLETE)
 		throw(&quot;FBO not complete: &quot; + complete);
 
-	if(color_textures &gt; 1)
+	if(color_textures.length &gt; 1)
 		ext.drawBuffersWEBGL( order );
 
 	callback();
@@ -848,6 +834,9 @@ Texture.fromImage = function(image, options) {
 		texture.has_mipmaps = true;
 	}
 	gl.bindTexture(texture.texture_type, null); //disable
+
+	if(options.keep_image)
+		texture.img = image;
 	return texture;
 };
 
@@ -1011,40 +1000,98 @@ Texture.cubemapFromImages = function(images, options) {
 };
 
 /**
-* Create a cubemap texture from a single image that contains all six images arranged vertically
+* Create a cubemap texture from a single image that contains all six images 
+* If it is a cross, it must be horizontally aligned, and options.is_cross must be equal to the column where the top and bottom are located (usually 1 or 2)
+* otherwise it assumes the 6 images are arranged vertically, in the order of OpenGL: +X, -X, +Y, -Y, +Z, -Z
 * @method Texture.cubemapFromImage
 * @param {Image} image
 * @param {Object} options
 * @return {Texture} the texture
 */
-Texture.cubemapFromImage = function(image, options) {
+Texture.cubemapFromImage = function( image, options ) {
 	options = options || {};
 
-	if(image.width != (image.height / 6) &amp;&amp; image.height % 6 != 0)
+	if(image.width != (image.height / 6) &amp;&amp; image.height % 6 != 0 &amp;&amp; !options.faces)
 	{
 		console.log(&quot;Texture not valid, size doesnt match a cubemap&quot;);
-		return;
+		return null;
 	}
 
-	var size = image.width;
-	var height = image.height / 6;
+	var width = image.width;
+	var height = image.height;
+	
+	if(options.is_cross !== undefined)
+	{
+		options.faces = Texture.generateCubemapCrossFacesInfo(image.width, options.is_cross);
+		width = height = image.width / 4;
+	}
+	else if(options.faces)
+	{
+		width = options.width || options.faces[0].width;
+		height = options.height || options.faces[0].height;
+	}
+	else
+		height /= 6;
+
+	if(width != height)
+	{
+		console.log(&quot;Texture not valid, width and height for every face must be square&quot;);
+		return null;
+	}
+
+	var size = width;
+	options.no_flip = true;
+
 	var images = [];
 	for(var i = 0; i &lt; 6; i++)
 	{
-		var canvas = createCanvas( image.width, height );
+		var canvas = createCanvas( size, size );
 		var ctx = canvas.getContext(&quot;2d&quot;);
-		ctx.drawImage(image, 0, height*i, image.width,height, 0,0, image.width,height );
+		if(options.faces)
+			ctx.drawImage(image, options.faces[i].x, options.faces[i].y, options.faces[i].width || size, options.faces[i].height || size, 0,0, size, size );
+		else
+			ctx.drawImage(image, 0, height*i, width, height, 0,0, size, size );
 		images.push(canvas);
+		//document.body.appendChild(canvas); //debug
 	}
 
-	return Texture.cubemapFromImages(images, options);
+	var texture = Texture.cubemapFromImages(images, options);
+	if(options.keep_image)
+		texture.img = image;
+	return texture;
 };
 
 /**
-* Create a cubemap texture from a single image url that contains the six images in vertical
+* Given the width and the height of an image, and in which column is the top and bottom sides of the cubemap, it gets the info to pass to Texture.cubemapFromImage in options.faces
+* @method Texture.generateCubemapCrossFaces
+* @param {number} width
+* @param {number} column the column where the top and the bottom is located
+* @return {Object} object to pass to Texture.cubemapFromImage in options.faces
+*/
+Texture.generateCubemapCrossFacesInfo = function(width, column)
+{
+	if(column === undefined)
+		column = 1;
+	var s = width / 4;
+
+	return [
+		{ x: 2*s, y: s, width: s, height: s }, //+x
+		{ x: 0, y: s, width: s, height: s }, //-x
+		{ x: column*s, y: 0, width: s, height: s }, //+y
+		{ x: column*s, y: 2*s, width: s, height: s }, //-y
+		{ x: s, y: s, width: s, height: s }, //+z
+		{ x: 3*s, y: s, width: s, height: s } //-z
+	];
+}
+
+/**
+* Create a cubemap texture from a single image url that contains the six images
+* if it is a cross, it must be horizontally aligned, and options.is_cross must be equal to the column where the top and bottom are located (usually 1 or 2)
+* otherwise it assumes the 6 images are arranged vertically.
 * @method Texture.cubemapFromURL
 * @param {Image} image
 * @param {Object} options
+* @param {Function} on_complete callback
 * @return {Texture} the texture
 */
 Texture.cubemapFromURL = function(url, options, on_complete) {
@@ -1126,6 +1173,10 @@ Texture.prototype.getPixels = function()
 Texture.prototype.toCanvas = function(canvas)
 {
 	var gl = this.gl;
+
+	if(this.texture_type != gl.TEXTURE_2D)
+		return null;
+
 	var w = this.width;
 	var h = this.height;
 	canvas = canvas || createCanvas(w,h);

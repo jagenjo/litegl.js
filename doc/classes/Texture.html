@@ -444,6 +444,13 @@
                             </li>
                         
                             <li class="index-item method">
+                                <a href="#method_Texture.generateCubemapCrossFaces">Texture.generateCubemapCrossFaces</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
                                 <a href="#method_Texture.setUploadOptions">Texture.setUploadOptions</a>
 
                                 
@@ -585,7 +592,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l631"><code>..&#x2F;src&#x2F;texture.js:631</code></a>
+        <a href="../files/.._src_texture.js.html#l617"><code>..&#x2F;src&#x2F;texture.js:617</code></a>
         
         </p>
 
@@ -865,7 +872,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l528"><code>..&#x2F;src&#x2F;texture.js:528</code></a>
+        <a href="../files/.._src_texture.js.html#l514"><code>..&#x2F;src&#x2F;texture.js:514</code></a>
         
         </p>
 
@@ -1202,7 +1209,7 @@ Keep in mind that it tries to reuse the last renderbuffer for the depth, and if 
             
         
         
-        <a href="../files/.._src_texture.js.html#l495"><code>..&#x2F;src&#x2F;texture.js:495</code></a>
+        <a href="../files/.._src_texture.js.html#l481"><code>..&#x2F;src&#x2F;texture.js:481</code></a>
         
         </p>
 
@@ -1320,7 +1327,7 @@ Keep in mind that it tries to reuse the last renderbuffer for the depth, and if 
             
         
         
-        <a href="../files/.._src_texture.js.html#l585"><code>..&#x2F;src&#x2F;texture.js:585</code></a>
+        <a href="../files/.._src_texture.js.html#l571"><code>..&#x2F;src&#x2F;texture.js:571</code></a>
         
         </p>
 
@@ -1403,7 +1410,7 @@ Keep in mind that it tries to reuse the last renderbuffer for the depth, and if 
             
         
         
-        <a href="../files/.._src_texture.js.html#l1135"><code>..&#x2F;src&#x2F;texture.js:1135</code></a>
+        <a href="../files/.._src_texture.js.html#l1186"><code>..&#x2F;src&#x2F;texture.js:1186</code></a>
         
         </p>
 
@@ -1474,7 +1481,7 @@ Keep in mind that it tries to reuse the last renderbuffer for the depth, and if 
             
         
         
-        <a href="../files/.._src_texture.js.html#l972"><code>..&#x2F;src&#x2F;texture.js:972</code></a>
+        <a href="../files/.._src_texture.js.html#l1019"><code>..&#x2F;src&#x2F;texture.js:1019</code></a>
         
         </p>
 
@@ -1626,7 +1633,7 @@ Keep in mind that it tries to reuse the last renderbuffer for the depth, and if 
             
         
         
-        <a href="../files/.._src_texture.js.html#l600"><code>..&#x2F;src&#x2F;texture.js:600</code></a>
+        <a href="../files/.._src_texture.js.html#l586"><code>..&#x2F;src&#x2F;texture.js:586</code></a>
         
         </p>
 
@@ -1769,7 +1776,7 @@ Keep in mind that it tries to reuse the last renderbuffer for the depth, and if 
             
         
         
-        <a href="../files/.._src_texture.js.html#l905"><code>..&#x2F;src&#x2F;texture.js:905</code></a>
+        <a href="../files/.._src_texture.js.html#l894"><code>..&#x2F;src&#x2F;texture.js:894</code></a>
         
         </p>
 
@@ -1780,7 +1787,9 @@ Keep in mind that it tries to reuse the last renderbuffer for the depth, and if 
     </div>
 
     <div class="description">
-        <p>Create a cubemap texture from a single image that contains all six images arranged vertically</p>
+        <p>Create a cubemap texture from a single image that contains all six images 
+If it is a cross, it must be horizontally aligned, and options.is_cross must be equal to the column where the top and bottom are located (usually 1 or 2)
+otherwise it assumes the 6 images are arranged vertically, in the order of OpenGL: +X, -X, +Y, -Y, +Z, -Z</p>
 
     </div>
 
@@ -1896,7 +1905,7 @@ Keep in mind that it tries to reuse the last renderbuffer for the depth, and if 
             
         
         
-        <a href="../files/.._src_texture.js.html#l864"><code>..&#x2F;src&#x2F;texture.js:864</code></a>
+        <a href="../files/.._src_texture.js.html#l853"><code>..&#x2F;src&#x2F;texture.js:853</code></a>
         
         </p>
 
@@ -1990,6 +1999,12 @@ Keep in mind that it tries to reuse the last renderbuffer for the depth, and if 
                     
                 </li>
             
+                <li class="arg">
+                    
+                        <code>on_complete</code>
+                    
+                </li>
+            
             </ul><span class="paren">)</span>
         </div>
     
@@ -2023,7 +2038,7 @@ Keep in mind that it tries to reuse the last renderbuffer for the depth, and if 
             
         
         
-        <a href="../files/.._src_texture.js.html#l935"><code>..&#x2F;src&#x2F;texture.js:935</code></a>
+        <a href="../files/.._src_texture.js.html#l979"><code>..&#x2F;src&#x2F;texture.js:979</code></a>
         
         </p>
 
@@ -2034,7 +2049,9 @@ Keep in mind that it tries to reuse the last renderbuffer for the depth, and if 
     </div>
 
     <div class="description">
-        <p>Create a cubemap texture from a single image url that contains the six images in vertical</p>
+        <p>Create a cubemap texture from a single image url that contains the six images
+if it is a cross, it must be horizontally aligned, and options.is_cross must be equal to the column where the top and bottom are located (usually 1 or 2)
+otherwise it assumes the 6 images are arranged vertically.</p>
 
     </div>
 
@@ -2069,6 +2086,22 @@ Keep in mind that it tries to reuse the last renderbuffer for the depth, and if 
 
                     <div class="param-description">
                          
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">on_complete</code>
+                        <span class="type">Function</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>callback</p>
+
                     </div>
 
                     
@@ -2150,7 +2183,7 @@ Keep in mind that it tries to reuse the last renderbuffer for the depth, and if 
             
         
         
-        <a href="../files/.._src_texture.js.html#l817"><code>..&#x2F;src&#x2F;texture.js:817</code></a>
+        <a href="../files/.._src_texture.js.html#l806"><code>..&#x2F;src&#x2F;texture.js:806</code></a>
         
         </p>
 
@@ -2278,7 +2311,7 @@ Keep in mind that it tries to reuse the last renderbuffer for the depth, and if 
             
         
         
-        <a href="../files/.._src_texture.js.html#l724"><code>..&#x2F;src&#x2F;texture.js:724</code></a>
+        <a href="../files/.._src_texture.js.html#l710"><code>..&#x2F;src&#x2F;texture.js:710</code></a>
         
         </p>
 
@@ -2417,7 +2450,7 @@ Keep in mind that it tries to reuse the last renderbuffer for the depth, and if 
             
         
         
-        <a href="../files/.._src_texture.js.html#l839"><code>..&#x2F;src&#x2F;texture.js:839</code></a>
+        <a href="../files/.._src_texture.js.html#l828"><code>..&#x2F;src&#x2F;texture.js:828</code></a>
         
         </p>
 
@@ -2574,7 +2607,7 @@ Keep in mind that it tries to reuse the last renderbuffer for the depth, and if 
             
         
         
-        <a href="../files/.._src_texture.js.html#l768"><code>..&#x2F;src&#x2F;texture.js:768</code></a>
+        <a href="../files/.._src_texture.js.html#l757"><code>..&#x2F;src&#x2F;texture.js:757</code></a>
         
         </p>
 
@@ -2713,7 +2746,7 @@ Keep in mind that it tries to reuse the last renderbuffer for the depth, and if 
             
         
         
-        <a href="../files/.._src_texture.js.html#l782"><code>..&#x2F;src&#x2F;texture.js:782</code></a>
+        <a href="../files/.._src_texture.js.html#l771"><code>..&#x2F;src&#x2F;texture.js:771</code></a>
         
         </p>
 
@@ -2876,7 +2909,7 @@ Keep in mind that it tries to reuse the last renderbuffer for the depth, and if 
             
         
         
-        <a href="../files/.._src_texture.js.html#l667"><code>..&#x2F;src&#x2F;texture.js:667</code></a>
+        <a href="../files/.._src_texture.js.html#l653"><code>..&#x2F;src&#x2F;texture.js:653</code></a>
         
         </p>
 
@@ -3018,7 +3051,7 @@ Keep in mind that it tries to reuse the last renderbuffer for the depth, and if 
             
         
         
-        <a href="../files/.._src_texture.js.html#l746"><code>..&#x2F;src&#x2F;texture.js:746</code></a>
+        <a href="../files/.._src_texture.js.html#l735"><code>..&#x2F;src&#x2F;texture.js:735</code></a>
         
         </p>
 
@@ -3083,6 +3116,134 @@ Keep in mind that it tries to reuse the last renderbuffer for the depth, and if 
                         <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>:
                     
                     <p>the texture</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_Texture.generateCubemapCrossFaces" class="method item">
+    <h3 class="name"><code>Texture.generateCubemapCrossFaces</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>width</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>column</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type">Object</span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_texture.js.html#l956"><code>..&#x2F;src&#x2F;texture.js:956</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Given the width and the height of an image, and in which column is the top and bottom sides of the cubemap, it gets the info to pass to Texture.cubemapFromImage in options.faces</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">width</code>
+                        <span class="type">Number</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">column</code>
+                        <span class="type">Number</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>the column where the top and the bottom is located</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">Object</span>:
+                    
+                    <p>object to pass to Texture.cubemapFromImage in options.faces</p>
 
                 
             </div>
@@ -3230,7 +3391,7 @@ Keep in mind that it tries to reuse the last renderbuffer for the depth, and if 
             
         
         
-        <a href="../files/.._src_texture.js.html#l1093"><code>..&#x2F;src&#x2F;texture.js:1093</code></a>
+        <a href="../files/.._src_texture.js.html#l1144"><code>..&#x2F;src&#x2F;texture.js:1144</code></a>
         
         </p>
 
@@ -3327,7 +3488,7 @@ Keep in mind that it tries to reuse the last renderbuffer for the depth, and if 
             
         
         
-        <a href="../files/.._src_texture.js.html#l1037"><code>..&#x2F;src&#x2F;texture.js:1037</code></a>
+        <a href="../files/.._src_texture.js.html#l1088"><code>..&#x2F;src&#x2F;texture.js:1088</code></a>
         
         </p>
 
@@ -3406,7 +3567,7 @@ Keep in mind that it tries to reuse the last renderbuffer for the depth, and if 
             
         
         
-        <a href="../files/.._src_texture.js.html#l1013"><code>..&#x2F;src&#x2F;texture.js:1013</code></a>
+        <a href="../files/.._src_texture.js.html#l1060"><code>..&#x2F;src&#x2F;texture.js:1060</code></a>
         
         </p>
 
@@ -3501,7 +3662,7 @@ Keep in mind that it tries to reuse the last renderbuffer for the depth, and if 
             
         
         
-        <a href="../files/.._src_texture.js.html#l568"><code>..&#x2F;src&#x2F;texture.js:568</code></a>
+        <a href="../files/.._src_texture.js.html#l554"><code>..&#x2F;src&#x2F;texture.js:554</code></a>
         
         </p>
 

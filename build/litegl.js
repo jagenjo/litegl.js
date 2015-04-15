@@ -3753,6 +3753,9 @@ Texture.fromImage = function(image, options) {
 		texture.has_mipmaps = true;
 	}
 	gl.bindTexture(texture.texture_type, null); //disable
+
+	if(options.keep_image)
+		texture.img = image;
 	return texture;
 };
 
@@ -3916,40 +3919,98 @@ Texture.cubemapFromImages = function(images, options) {
 };
 
 /**
-* Create a cubemap texture from a single image that contains all six images arranged vertically
+* Create a cubemap texture from a single image that contains all six images 
+* If it is a cross, it must be horizontally aligned, and options.is_cross must be equal to the column where the top and bottom are located (usually 1 or 2)
+* otherwise it assumes the 6 images are arranged vertically, in the order of OpenGL: +X, -X, +Y, -Y, +Z, -Z
 * @method Texture.cubemapFromImage
 * @param {Image} image
 * @param {Object} options
 * @return {Texture} the texture
 */
-Texture.cubemapFromImage = function(image, options) {
+Texture.cubemapFromImage = function( image, options ) {
 	options = options || {};
 
-	if(image.width != (image.height / 6) && image.height % 6 != 0)
+	if(image.width != (image.height / 6) && image.height % 6 != 0 && !options.faces)
 	{
 		console.log("Texture not valid, size doesnt match a cubemap");
-		return;
+		return null;
 	}
 
-	var size = image.width;
-	var height = image.height / 6;
+	var width = image.width;
+	var height = image.height;
+	
+	if(options.is_cross !== undefined)
+	{
+		options.faces = Texture.generateCubemapCrossFacesInfo(image.width, options.is_cross);
+		width = height = image.width / 4;
+	}
+	else if(options.faces)
+	{
+		width = options.width || options.faces[0].width;
+		height = options.height || options.faces[0].height;
+	}
+	else
+		height /= 6;
+
+	if(width != height)
+	{
+		console.log("Texture not valid, width and height for every face must be square");
+		return null;
+	}
+
+	var size = width;
+	options.no_flip = true;
+
 	var images = [];
 	for(var i = 0; i < 6; i++)
 	{
-		var canvas = createCanvas( image.width, height );
+		var canvas = createCanvas( size, size );
 		var ctx = canvas.getContext("2d");
-		ctx.drawImage(image, 0, height*i, image.width,height, 0,0, image.width,height );
+		if(options.faces)
+			ctx.drawImage(image, options.faces[i].x, options.faces[i].y, options.faces[i].width || size, options.faces[i].height || size, 0,0, size, size );
+		else
+			ctx.drawImage(image, 0, height*i, width, height, 0,0, size, size );
 		images.push(canvas);
+		//document.body.appendChild(canvas); //debug
 	}
 
-	return Texture.cubemapFromImages(images, options);
+	var texture = Texture.cubemapFromImages(images, options);
+	if(options.keep_image)
+		texture.img = image;
+	return texture;
 };
 
 /**
-* Create a cubemap texture from a single image url that contains the six images in vertical
+* Given the width and the height of an image, and in which column is the top and bottom sides of the cubemap, it gets the info to pass to Texture.cubemapFromImage in options.faces
+* @method Texture.generateCubemapCrossFaces
+* @param {number} width
+* @param {number} column the column where the top and the bottom is located
+* @return {Object} object to pass to Texture.cubemapFromImage in options.faces
+*/
+Texture.generateCubemapCrossFacesInfo = function(width, column)
+{
+	if(column === undefined)
+		column = 1;
+	var s = width / 4;
+
+	return [
+		{ x: 2*s, y: s, width: s, height: s }, //+x
+		{ x: 0, y: s, width: s, height: s }, //-x
+		{ x: column*s, y: 0, width: s, height: s }, //+y
+		{ x: column*s, y: 2*s, width: s, height: s }, //-y
+		{ x: s, y: s, width: s, height: s }, //+z
+		{ x: 3*s, y: s, width: s, height: s } //-z
+	];
+}
+
+/**
+* Create a cubemap texture from a single image url that contains the six images
+* if it is a cross, it must be horizontally aligned, and options.is_cross must be equal to the column where the top and bottom are located (usually 1 or 2)
+* otherwise it assumes the 6 images are arranged vertically.
 * @method Texture.cubemapFromURL
 * @param {Image} image
 * @param {Object} options
+* @param {Function} on_complete callback
 * @return {Texture} the texture
 */
 Texture.cubemapFromURL = function(url, options, on_complete) {
@@ -5256,7 +5317,8 @@ GL.create = function(options) {
 		if(gl.onmouse)
 			gl.onmouse(e);
 
-		e.stopPropagation();
+		if(e.eventType != "mousemove")
+			e.stopPropagation();
 		e.preventDefault();
 		return false;
 	}
