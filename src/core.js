@@ -647,6 +647,10 @@ GL.create = function(options) {
 		gl._current_fbo_depth = null;
 	}
 
+	//Reset state
+	gl.reset();
+
+	//Return
 	return gl;
 }
 

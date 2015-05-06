@@ -174,7 +174,7 @@ Mesh.common_buffers = {
 	"coords": { spacing:2, attribute: "a_coord"},
 	"coords1": { spacing:2, attribute: "a_coord1"},
 	"coords2": { spacing:2, attribute: "a_coord2"},
-	"colors": { spacing:4, attribute: "a_color"},
+	"colors": { spacing:4, attribute: "a_color"}, 
 	"tangents": { spacing:3, attribute: "a_tangent"},
 	"bone_indices": { spacing:4, attribute: "a_bone_indices", type: Uint8Array },
 	"weights": { spacing:4, attribute: "a_weights"},
@@ -183,6 +183,8 @@ Mesh.common_buffers = {
 	"extra3": { spacing:3, attribute: "a_extra3"},
 	"extra4": { spacing:4, attribute: "a_extra4"}
 };
+
+Mesh.default_datatype = Float32Array;
 
 
 /**
@@ -200,7 +202,7 @@ Mesh.prototype.addBuffer = function(name, buffer)
 		this.indexBuffers[name] = buffer;
 
 	if(!buffer.attribute)
-		buffer.attribute = Mesh.common_buffers[name].attribute;
+		buffer.attribute = GL.Mesh.common_buffers[name].attribute;
 }
 
 
@@ -237,12 +239,12 @@ Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers, stream_type)
 			data = newdata;
 		}
 
-		var stream_info = Mesh.common_buffers[i];
+		var stream_info = GL.Mesh.common_buffers[i];
 
-		//cast to typed
+		//cast to typed float32 if no type is specified
 		if(data.constructor === Array)
 		{
-			var datatype = Float32Array;
+			var datatype = GL.Mesh.default_datatype;
 			if(stream_info && stream_info.type)
 				datatype = stream_info.type;
 			data = new datatype( data );
@@ -305,7 +307,7 @@ Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers, stream_type)
 
 Mesh.prototype.createVertexBuffer = function(name, attribute, buffer_spacing, buffer_data, stream_type ) {
 
-	var common = Mesh.common_buffers[name]; //generic info about a buffer with the same name
+	var common = GL.Mesh.common_buffers[name]; //generic info about a buffer with the same name
 
 	if (!attribute && common)
 		attribute = common.attribute;
@@ -326,7 +328,7 @@ Mesh.prototype.createVertexBuffer = function(name, attribute, buffer_spacing, bu
 		var num = this.getNumVertices();
 		if(!num)
 			throw("Cannot create an empty buffer in a mesh without vertices (vertices are needed to know the size)");
-		buffer_data = new Float32Array(num * buffer_spacing);
+		buffer_data = new (GL.Mesh.default_datatype)(num * buffer_spacing);
 	}
 
 	if(!buffer_data.buffer)
@@ -661,7 +663,7 @@ Mesh.prototype.computeNormals = function( stream_type  ) {
 		normals_buffer.upload( stream_type );
 	}
 	else
-		return this.createVertexBuffer('normals', Mesh.common_buffers["normals"].attribute, 3, normals );
+		return this.createVertexBuffer('normals', GL.Mesh.common_buffers["normals"].attribute, 3, normals );
 	return normals_buffer;
 }
 
@@ -799,7 +801,7 @@ Mesh.computeBounding = function( vertices, bb ) {
 Mesh.prototype.updateBounding = function() {
 	var vertices = this.vertexBuffers["vertices"].data;
 	if(!vertices) return;
-	this.bounding = Mesh.computeBounding(vertices, this.bounding);
+	this.bounding = GL.Mesh.computeBounding(vertices, this.bounding);
 }
 
 
@@ -844,7 +846,7 @@ Mesh.prototype.configure = function(o, options)
 
 		if(j == "indices" || j == "lines" ||  j == "wireframe" || j == "triangles")
 			i[j] = o[j];
-		else if(Mesh.common_buffers[j])
+		else if(GL.Mesh.common_buffers[j])
 			v[j] = o[j];
 		else
 			options[j] = o[j];
@@ -964,11 +966,11 @@ Mesh.fromURL = function(url, on_complete, gl)
 
 	HttpRequest( url, null, function(data) {
 		var ext = url.substr(url.length - 4).toLowerCase();
-		var parser = Mesh.parsers[ ext ];
+		var parser = GL.Mesh.parsers[ ext ];
 		if(parser)
 			parser.call(null, data, {mesh: mesh});
 		else
-			throw("Mesh.fromURL: no parser found for format " + ext);
+			throw("GL.Mesh.fromURL: no parser found for format " + ext);
 		delete mesh["ready"];
 		if(on_complete)
 			on_complete(mesh);
@@ -987,7 +989,7 @@ Mesh.getScreenQuad = function(gl)
 	if(mesh)
 		return mesh;
 
-	var vertices = new Float32Array(18);
+	var vertices = new Float32Array([0,0,0, 1,1,0, 0,1,0,  0,0,0, 1,0,0, 1,1,0 ]);
 	var coords = new Float32Array([0,0, 1,1, 0,1,  0,0, 1,0, 1,1 ]);
 	mesh = new GL.Mesh({ vertices: vertices, coords: coords}, undefined, undefined, gl);
 	return gl.meshes[":screen_quad"] = mesh;

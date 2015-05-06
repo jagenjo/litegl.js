@@ -1665,7 +1665,7 @@ Mesh.common_buffers = {
 	"coords": { spacing:2, attribute: "a_coord"},
 	"coords1": { spacing:2, attribute: "a_coord1"},
 	"coords2": { spacing:2, attribute: "a_coord2"},
-	"colors": { spacing:4, attribute: "a_color"},
+	"colors": { spacing:4, attribute: "a_color"}, 
 	"tangents": { spacing:3, attribute: "a_tangent"},
 	"bone_indices": { spacing:4, attribute: "a_bone_indices", type: Uint8Array },
 	"weights": { spacing:4, attribute: "a_weights"},
@@ -1674,6 +1674,8 @@ Mesh.common_buffers = {
 	"extra3": { spacing:3, attribute: "a_extra3"},
 	"extra4": { spacing:4, attribute: "a_extra4"}
 };
+
+Mesh.default_datatype = Float32Array;
 
 
 /**
@@ -1691,7 +1693,7 @@ Mesh.prototype.addBuffer = function(name, buffer)
 		this.indexBuffers[name] = buffer;
 
 	if(!buffer.attribute)
-		buffer.attribute = Mesh.common_buffers[name].attribute;
+		buffer.attribute = GL.Mesh.common_buffers[name].attribute;
 }
 
 
@@ -1728,12 +1730,12 @@ Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers, stream_type)
 			data = newdata;
 		}
 
-		var stream_info = Mesh.common_buffers[i];
+		var stream_info = GL.Mesh.common_buffers[i];
 
-		//cast to typed
+		//cast to typed float32 if no type is specified
 		if(data.constructor === Array)
 		{
-			var datatype = Float32Array;
+			var datatype = GL.Mesh.default_datatype;
 			if(stream_info && stream_info.type)
 				datatype = stream_info.type;
 			data = new datatype( data );
@@ -1796,7 +1798,7 @@ Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers, stream_type)
 
 Mesh.prototype.createVertexBuffer = function(name, attribute, buffer_spacing, buffer_data, stream_type ) {
 
-	var common = Mesh.common_buffers[name]; //generic info about a buffer with the same name
+	var common = GL.Mesh.common_buffers[name]; //generic info about a buffer with the same name
 
 	if (!attribute && common)
 		attribute = common.attribute;
@@ -1817,7 +1819,7 @@ Mesh.prototype.createVertexBuffer = function(name, attribute, buffer_spacing, bu
 		var num = this.getNumVertices();
 		if(!num)
 			throw("Cannot create an empty buffer in a mesh without vertices (vertices are needed to know the size)");
-		buffer_data = new Float32Array(num * buffer_spacing);
+		buffer_data = new (GL.Mesh.default_datatype)(num * buffer_spacing);
 	}
 
 	if(!buffer_data.buffer)
@@ -2152,7 +2154,7 @@ Mesh.prototype.computeNormals = function( stream_type  ) {
 		normals_buffer.upload( stream_type );
 	}
 	else
-		return this.createVertexBuffer('normals', Mesh.common_buffers["normals"].attribute, 3, normals );
+		return this.createVertexBuffer('normals', GL.Mesh.common_buffers["normals"].attribute, 3, normals );
 	return normals_buffer;
 }
 
@@ -2290,7 +2292,7 @@ Mesh.computeBounding = function( vertices, bb ) {
 Mesh.prototype.updateBounding = function() {
 	var vertices = this.vertexBuffers["vertices"].data;
 	if(!vertices) return;
-	this.bounding = Mesh.computeBounding(vertices, this.bounding);
+	this.bounding = GL.Mesh.computeBounding(vertices, this.bounding);
 }
 
 
@@ -2335,7 +2337,7 @@ Mesh.prototype.configure = function(o, options)
 
 		if(j == "indices" || j == "lines" ||  j == "wireframe" || j == "triangles")
 			i[j] = o[j];
-		else if(Mesh.common_buffers[j])
+		else if(GL.Mesh.common_buffers[j])
 			v[j] = o[j];
 		else
 			options[j] = o[j];
@@ -2455,11 +2457,11 @@ Mesh.fromURL = function(url, on_complete, gl)
 
 	HttpRequest( url, null, function(data) {
 		var ext = url.substr(url.length - 4).toLowerCase();
-		var parser = Mesh.parsers[ ext ];
+		var parser = GL.Mesh.parsers[ ext ];
 		if(parser)
 			parser.call(null, data, {mesh: mesh});
 		else
-			throw("Mesh.fromURL: no parser found for format " + ext);
+			throw("GL.Mesh.fromURL: no parser found for format " + ext);
 		delete mesh["ready"];
 		if(on_complete)
 			on_complete(mesh);
@@ -2478,7 +2480,7 @@ Mesh.getScreenQuad = function(gl)
 	if(mesh)
 		return mesh;
 
-	var vertices = new Float32Array(18);
+	var vertices = new Float32Array([0,0,0, 1,1,0, 0,1,0,  0,0,0, 1,0,0, 1,1,0 ]);
 	var coords = new Float32Array([0,0, 1,1, 0,1,  0,0, 1,0, 1,1 ]);
 	mesh = new GL.Mesh({ vertices: vertices, coords: coords}, undefined, undefined, gl);
 	return gl.meshes[":screen_quad"] = mesh;
@@ -3065,7 +3067,7 @@ global.Texture = GL.Texture = function Texture(width, height, options, gl) {
 	this.width = width;
 	this.height = height;
 	this.format = options.format || gl.RGBA; //(if gl.DEPTH_COMPONENT remember format: gl.UNSIGNED_SHORT)
-	this.type = options.type || gl.UNSIGNED_BYTE; //gl.UNSIGNED_SHORT or gl.HIGH_PRECISION_FORMAT
+	this.type = options.type || gl.UNSIGNED_BYTE; //gl.UNSIGNED_SHORT, gl.FLOAT or gl.HALF_FLOAT_OES (or gl.HIGH_PRECISION_FORMAT which could be half or float)
 	this.texture_type = options.texture_type || gl.TEXTURE_2D; //or gl.TEXTURE_CUBE_MAP
 	this.magFilter = options.magFilter || options.filter || gl.LINEAR;
 	this.minFilter = options.minFilter || options.filter || gl.LINEAR;
@@ -3298,7 +3300,7 @@ Texture.prototype.drawTo = function(callback, params)
 	var now = GL.getTime();
 
 	var framebuffer = gl._framebuffer = gl._framebuffer || gl.createFramebuffer();
-	gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer );
+	gl.bindFramebuffer( gl.FRAMEBUFFER, framebuffer );
 
 	//this code allows to reuse old renderbuffers instead of creating and destroying them for every frame
 	var renderbuffer = null;
@@ -3454,9 +3456,9 @@ Texture.drawTo = function(color_textures, callback, depth_texture)
 
 	var v = gl.getViewport();
 	gl._framebuffer =  gl._framebuffer || gl.createFramebuffer();
-	gl.bindFramebuffer(gl.FRAMEBUFFER,  gl._framebuffer);
+	gl.bindFramebuffer( gl.FRAMEBUFFER,  gl._framebuffer );
 
-	gl.viewport(0, 0, w, h);
+	gl.viewport( 0, 0, w, h );
 	var ext = gl.extensions["WEBGL_draw_buffers"];
 	if(!ext && color_textures.length > 1)
 		throw("Rendering to several textures not supported");
@@ -3470,17 +3472,6 @@ Texture.drawTo = function(color_textures, callback, depth_texture)
 		gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer );
 	}
 
-	var order = []; //draw_buffers request the use of an array with the order of the attachments
-	for(var i = 0; i < color_textures.length; i++)
-	{
-		var t = color_textures[i];
-		if(t.type == gl.DEPTH_COMPONENT)
-			continue;
-
-		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, t.handler, 0);
-		order.push( gl.COLOR_ATTACHMENT0 + i );
-	}
-
 	if( depth_texture )
 	{
 		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depth_texture.handler, 0);
@@ -3491,12 +3482,20 @@ Texture.drawTo = function(color_textures, callback, depth_texture)
 		gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer );
 	}
 
-	var complete = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
-	if(complete !== gl.FRAMEBUFFER_COMPLETE)
-		throw("FBO not complete: " + complete);
+	var order = []; //draw_buffers request the use of an array with the order of the attachments
+	for(var i = 0; i < color_textures.length; i++)
+	{
+		var t = color_textures[i];
+		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, t.handler, 0);
+		order.push( gl.COLOR_ATTACHMENT0 + i );
+	}
 
 	if(color_textures.length > 1)
 		ext.drawBuffersWEBGL( order );
+
+	var complete = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+	if(complete !== gl.FRAMEBUFFER_COMPLETE)
+		throw("FBO not complete: " + complete);
 
 	callback();
 
@@ -4252,6 +4251,134 @@ Texture.getBlackTexture = function()
 	var color = new Uint8Array([0,0,0,255]);
 	return gl.textures[":black"] = new GL.Texture(1,1,{ pixel_data: color });
 }
+//FBO.js for FrameBufferObjects
+
+function FBO( textures, depth_texture )
+{
+	this.handler = null;
+
+	this.color_textures = textures;
+	this.depth_texture = depth_texture;
+
+	this.init();
+}
+
+GL.FBO = FBO;
+
+FBO.prototype.init = function()
+{
+	if(!this.handler)
+		this.handler = gl.createFramebuffer();
+
+	var w = -1,
+		h = -1,
+		type = null;
+
+	var color_textures = this.color_textures;
+	var depth_texture = this.depth_texture;
+
+	for(var i = 0; i < color_textures.length; i++)
+	{
+		var t = color_textures[i];
+		if(w == -1) 
+			w = t.width;
+		else if(w != t.width)
+			throw("Cannot use Texture.drawTo if textures have different dimensions");
+		if(h == -1) 
+			h = t.height;
+		else if(h != t.height)
+			throw("Cannot use Texture.drawTo if textures have different dimensions");
+		if(type == null) //first one defines the type
+			type = t.type;
+		else if (type != t.type)
+			throw("Cannot use Texture.drawTo if textures have different data type, all must have the same type");
+	}
+
+	this.width = w;
+	this.height = h;
+
+	gl.bindFramebuffer( gl.FRAMEBUFFER, this.handler );
+
+	var ext = gl.extensions["WEBGL_draw_buffers"];
+	if(!ext && color_textures.length > 1)
+		throw("Rendering to several textures not supported");
+
+	if( depth_texture )
+	{
+		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depth_texture.handler, 0);
+	}
+	else //create a temporary renderbuffer
+	{
+		var renderbuffer = gl.createRenderbuffer();
+		renderbuffer.width = w;
+		renderbuffer.height = h;
+		gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer );
+		gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, w, h);
+		gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer );
+	}
+
+	this.order = []; //draw_buffers request the use of an array with the order of the attachments
+	for(var i = 0; i < color_textures.length; i++)
+	{
+		var t = color_textures[i];
+
+		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, t.handler, 0);
+		this.order.push( gl.COLOR_ATTACHMENT0 + i );
+	}
+
+	if(color_textures.length > 1)
+		ext.drawBuffersWEBGL( this.order );
+
+	var complete = gl.checkFramebufferStatus( gl.FRAMEBUFFER );
+	if(complete !== gl.FRAMEBUFFER_COMPLETE)
+		throw("FBO not complete: " + complete);
+
+	//disable all
+	gl.bindFramebuffer( gl.FRAMEBUFFER, null );
+	gl.bindTexture(gl.TEXTURE_2D, null);
+	gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+}
+
+
+FBO.prototype.bind = function( keep_old )
+{
+	if(keep_old)
+	{
+		this._old_fbo = gl.getParameter( gl.FRAMEBUFFER_BINDING );
+		if(!this._old_viewport)
+			this._old_viewport = gl.getViewport(); 
+		else
+			this._old_viewport.set( gl.viewport_data );
+	}
+	else
+	{
+		this._old_fbo = null;
+		this._old_viewport = null;
+	}
+
+
+	gl.bindFramebuffer( gl.FRAMEBUFFER, this.handler );
+	gl.viewport( 0,0, this.width, this.height );
+}
+
+FBO.prototype.unbind = function()
+{
+	if(this._old_fbo)
+	{
+		gl.bindFramebuffer( gl.FRAMEBUFFER, this._old_fbo );
+		var v = this._old_viewport;
+		gl.viewport( v[0], v[1], v[2], v[3] );
+		this._old_fbo = null;
+	}
+	else
+	{
+		gl.bindFramebuffer( gl.FRAMEBUFFER, null );
+		gl.viewport( 0,0, gl.canvas.width, gl.canvas.height );
+	}
+}
+
+
+
 /**
 * Shader class to upload programs to the GPU
 * @class Shader
@@ -5684,6 +5811,10 @@ GL.create = function(options) {
 		gl._current_fbo_depth = null;
 	}
 
+	//Reset state
+	gl.reset();
+
+	//Return
 	return gl;
 }
 
@@ -6080,21 +6211,26 @@ global.geo = {
 	* @param {vec3} result collision position
 	* @return {boolean} returns if the segment collides the plane or it is parallel to the plane
 	*/
-	testSegmentPlane: function(start, end, P, N, result)
-	{
-		var D = vec3.dot( P, N );
-		var numer = D - vec3.dot(N, start);
-		var direction = vec3.sub( vec3.create(), end, start );
-		var denom = vec3.dot(N, direction);
-		if( Math.abs(denom) < EPSILON) return false; //parallel 
-		var t = (numer / denom);
-		if(t < 0.0) return false; //behind the start
-		if(t > 1.0) return false; //after the end
-		if(result)
-			vec3.add( result,  start, vec3.scale( result, direction, t) );
-
-		return true;
-	},
+	testSegmentPlane: (function() { 
+		var temp = vec3.create();
+		return function(start, end, P, N, result)
+		{
+			var D = vec3.dot( P, N );
+			var numer = D - vec3.dot(N, start);
+			var direction = vec3.sub( temp, end, start );
+			var denom = vec3.dot(N, direction);
+			if( Math.abs(denom) < EPSILON)
+				return false; //parallel 
+			var t = (numer / denom);
+			if(t < 0.0)
+				return false; //behind the start
+			if(t > 1.0)
+				return false; //after the end
+			if(result)
+				vec3.add( result,  start, vec3.scale( result, direction, t) );
+			return true;
+		};
+	})(),
 
 	/**
 	* test a ray sphere collision and retrieves the collision point
@@ -6106,36 +6242,39 @@ global.geo = {
 	* @param {vec3} result collision position
 	* @return {boolean} returns if the ray collides the sphere
 	*/
-	testRaySphere: function(start, direction, center, radius, result)
-	{
-		// sphere equation (centered at origin) x2+y2+z2=r2
-		// ray equation x(t) = p0 + t*dir
-		// substitute x(t) into sphere equation
-		// solution below:
-
-		// transform ray origin into sphere local coordinates
-		var orig = vec3.subtract(vec3.create(), start, center);
-
-		var a = direction[0]*direction[0] + direction[1]*direction[1] + direction[2]*direction[2];
-		var b = 2*orig[0]*direction[0] + 2*orig[1]*direction[1] + 2*orig[2]*direction[2];
-		var c = orig[0]*orig[0] + orig[1]*orig[1] + orig[2]*orig[2] - radius*radius;
-		//return quadraticFormula(a,b,c,t0,t1) ? 2 : 0;
-
-		var q = b*b - 4*a*c; 
-		if( q < 0.0 )
-			return false;
-
-		if(result)
+	testRaySphere: (function() { 
+		var temp = vec3.create();
+		return function(start, direction, center, radius, result)
 		{
-			var sq = Math.sqrt(q);
-			var d = 1 / (2*a);
-			var r1 = ( -b + sq ) * d;
-			var r2 = ( -b - sq ) * d;
-			var t = r1 < r2 ? r1 : r2;
-			vec3.add(result, start, vec3.scale( vec3.create(), direction, t ) );
-		}
-		return true;//real roots
-	},
+			// sphere equation (centered at origin) x2+y2+z2=r2
+			// ray equation x(t) = p0 + t*dir
+			// substitute x(t) into sphere equation
+			// solution below:
+
+			// transform ray origin into sphere local coordinates
+			var orig = vec3.subtract( temp , start, center);
+
+			var a = direction[0]*direction[0] + direction[1]*direction[1] + direction[2]*direction[2];
+			var b = 2*orig[0]*direction[0] + 2*orig[1]*direction[1] + 2*orig[2]*direction[2];
+			var c = orig[0]*orig[0] + orig[1]*orig[1] + orig[2]*orig[2] - radius*radius;
+			//return quadraticFormula(a,b,c,t0,t1) ? 2 : 0;
+
+			var q = b*b - 4*a*c; 
+			if( q < 0.0 )
+				return false;
+
+			if(result)
+			{
+				var sq = Math.sqrt(q);
+				var d = 1 / (2*a);
+				var r1 = ( -b + sq ) * d;
+				var r2 = ( -b - sq ) * d;
+				var t = r1 < r2 ? r1 : r2;
+				vec3.add(result, start, vec3.scale( result, direction, t ) );
+			}
+			return true;//real roots
+		};
+	})(),
 
 	/**
 	* test a ray cylinder collision and retrieves the collision point

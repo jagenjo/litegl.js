@@ -34,14 +34,15 @@
 	//create G Buffers
 	var w = (gl.canvas.width*0.5)|0;
 	var h = (gl.canvas.height*0.5)|0;
-	var type = gl.HALF_FLOAT_OES; //gl.UNSIGNED_BYTE , gl.HALF_FLOAT_OES or gl.FLOAT
+	var type = gl.FLOAT; //gl.UNSIGNED_BYTE , gl.FLOAT, (or gl.HALF_FLOAT_OES although it doesnt work in firefox)
 	var texture_color = new GL.Texture(w,h, { type: type, filter: gl.NEAREST });
 	var texture_normal = new GL.Texture(w,h, { type: type, filter: gl.NEAREST });
 	var texture_albedo = new GL.Texture(w,h, { type: type, filter: gl.NEAREST });
 
+	var textures = [ texture_color, texture_normal, texture_albedo ];
 	var texture_depth = new GL.Texture(w,h, { format: gl.DEPTH_COMPONENT, type: gl.UNSIGNED_INT, filter: gl.NEAREST }); 
 
-	var textures = [ texture_color, texture_normal, texture_albedo ];
+	var fbo = new GL.FBO( textures, texture_depth );
 
 	//create basic matrices for cameras and transformation
 	var persp = mat4.create();
@@ -128,21 +129,23 @@
 	{
 
 		//render something in the texture
-		Texture.drawTo(textures,function(){
-			gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
-			gl.enable( gl.DEPTH_TEST );
+		fbo.bind(true);
 
-			//create modelview and projection matrices
-			mat4.multiply(temp,view,model);
-			mat4.multiply(mvp,persp,temp);
+		gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
+		gl.enable( gl.DEPTH_TEST );
 
-			texture.bind(0);
+		//create modelview and projection matrices
+		mat4.multiply(temp,view,model);
+		mat4.multiply(mvp,persp,temp);
 
-			shader.uniforms( uniforms ).draw( plane );
-			shader.uniforms( uniforms ).draw( sphere );
+		texture.bind(0);
 
-			shader.uniforms( uniforms ).draw( sphere, gl.POINTS );
-		}, texture_depth );
+		shader.uniforms( uniforms ).draw( plane );
+		shader.uniforms( uniforms ).draw( sphere );
+
+		shader.uniforms( uniforms ).draw( sphere, gl.POINTS );
+
+		fbo.unbind();
 
 		gl.disable( gl.DEPTH_TEST );
 
