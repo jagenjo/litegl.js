@@ -290,4 +290,4 @@ Mesh.parseOBJ = function(text, options)
 	return final_mesh;
 }
 
-Mesh.parsers[".obj"] = Mesh.parseOBJ.bind( Mesh );
+Mesh.parsers["obj"] = Mesh.parseOBJ.bind( Mesh );

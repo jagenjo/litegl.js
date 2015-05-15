@@ -965,12 +965,9 @@ Mesh.fromURL = function(url, on_complete, gl)
 	mesh.ready = false;
 
 	HttpRequest( url, null, function(data) {
-		var ext = url.substr(url.length - 4).toLowerCase();
-		var parser = GL.Mesh.parsers[ ext ];
-		if(parser)
-			parser.call(null, data, {mesh: mesh});
-		else
-			throw("GL.Mesh.fromURL: no parser found for format " + ext);
+		var pos = url.lastIndexOf(".");
+		var ext = url.substr(pos+1);
+		mesh.parse( data, ext );
 		delete mesh["ready"];
 		if(on_complete)
 			on_complete(mesh);
@@ -979,6 +976,17 @@ Mesh.fromURL = function(url, on_complete, gl)
 			on_complete(null);
 	});
 	return mesh;
+}
+
+Mesh.prototype.parse = function( data, format )
+{
+	format = format.toLowerCase();
+	var parser = GL.Mesh.parsers[ format ];
+	if(parser)
+		return parser.call(null, data, {mesh: this});
+	else
+		throw("GL.Mesh.fromURL: no parser found for format " + format );
+	return null;
 }
 
 

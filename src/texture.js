@@ -1016,12 +1016,15 @@ Texture.cubemapFromURL = function(url, options, on_complete) {
 /**
 * returns an ArrayBuffer with the pixels in the texture, they are fliped in Y
 * @method getPixels
-* @return {ArrayBuffer} the data
+* @param {enum} type gl.UNSIGNED_BYTE or gl.FLOAT, if omited then the one in the texture is read
+* @param {bool} force_rgba if yo want to force the output to have 4 components per pixel (useful to transfer to canvas)
+* @return {ArrayBuffer} the data ( Uint8Array or Float32Array )
 */
-Texture.prototype.getPixels = function()
+Texture.prototype.getPixels = function( type, force_rgba )
 {
 	var gl = this.gl;
 	var v = gl.getViewport();
+	type = type || this.type;
 
 	var framebuffer = gl.createFramebuffer();
 	var renderbuffer = gl.createRenderbuffer();
@@ -1043,8 +1046,17 @@ Texture.prototype.getPixels = function()
 	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.handler, 0);
 	gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
 
-	var buffer = new Uint8Array( this.width * this.height * 4);
-	gl.readPixels(0,0, this.width, this.height, gl.RGBA, gl.UNSIGNED_BYTE, buffer);
+	var channels = this.format == gl.RGB ? 3 : 4;
+	if(force_rgba)
+		channels = 4;
+
+	var buffer = null;
+	if(type == gl.UNSIGNED_BYTE)
+		buffer = new Uint8Array( this.width * this.height * channels );
+	else //half float and float forced to float
+		buffer = new Float32Array( this.width * this.height * channels );
+
+	gl.readPixels(0,0, this.width, this.height, force_rgba ? gl.RGBA : this.format, type, buffer );
 
 	gl.bindFramebuffer(gl.FRAMEBUFFER, gl._current_fbo_color );
 	gl.bindRenderbuffer(gl.RENDERBUFFER, gl._current_fbo_depth );
@@ -1059,7 +1071,7 @@ Texture.prototype.getPixels = function()
 * @method toCanvas
 * @param {Canvas} canvas must have the same size, if different the canvas will be resized
 */
-Texture.prototype.toCanvas = function(canvas)
+Texture.prototype.toCanvas = function( canvas, flip_y )
 {
 	var gl = this.gl;
 
@@ -1072,12 +1084,22 @@ Texture.prototype.toCanvas = function(canvas)
 	if(canvas.width != w) canvas.width = w;
 	if(canvas.height != h) canvas.height = h;
 
-	var buffer = this.getPixels();
+	var buffer = this.getPixels( gl.UNSIGNED_BYTE, true );
 
 	var ctx = canvas.getContext("2d");
 	var pixels = ctx.getImageData(0,0,w,h);
 	pixels.data.set( buffer );
 	ctx.putImageData(pixels,0,0);
+
+	if(flip_y)
+	{
+		var temp = createCanvas(w,h);
+		var temp_ctx = temp.getContext("2d");
+		temp_ctx.translate(0,temp.height);
+		temp_ctx.scale(1,-1);
+		temp_ctx.drawImage( canvas, 0, 0, temp.width, temp.height );
+		ctx.drawImage( temp, 0, 0 );
+	}
 
 	return canvas;
 }

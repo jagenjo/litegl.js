@@ -2456,12 +2456,9 @@ Mesh.fromURL = function(url, on_complete, gl)
 	mesh.ready = false;
 
 	HttpRequest( url, null, function(data) {
-		var ext = url.substr(url.length - 4).toLowerCase();
-		var parser = GL.Mesh.parsers[ ext ];
-		if(parser)
-			parser.call(null, data, {mesh: mesh});
-		else
-			throw("GL.Mesh.fromURL: no parser found for format " + ext);
+		var pos = url.lastIndexOf(".");
+		var ext = url.substr(pos+1);
+		mesh.parse( data, ext );
 		delete mesh["ready"];
 		if(on_complete)
 			on_complete(mesh);
@@ -2470,6 +2467,17 @@ Mesh.fromURL = function(url, on_complete, gl)
 			on_complete(null);
 	});
 	return mesh;
+}
+
+Mesh.prototype.parse = function( data, format )
+{
+	format = format.toLowerCase();
+	var parser = GL.Mesh.parsers[ format ];
+	if(parser)
+		return parser.call(null, data, {mesh: this});
+	else
+		throw("GL.Mesh.fromURL: no parser found for format " + format );
+	return null;
 }
 
 
@@ -2756,9 +2764,10 @@ Mesh.cylinder = function(options) {
 	var height = options.height || options.size || 2;
 	var subdivisions = options.subdivisions || 64;
 
-	var vertices = new Float32Array(subdivisions * 6 * 3);
-	var normals = new Float32Array(subdivisions * 6 * 3);
-	var coords = new Float32Array(subdivisions * 6 * 2);
+	var vertices = new Float32Array(subdivisions * 6 * 3 * 2 );
+	var normals = new Float32Array(subdivisions * 6 * 3 * 2 );
+	var coords = new Float32Array(subdivisions * 6 * 2 * 2 );
+	//not indexed because caps have different normals and uvs so...
 
 	var delta = 2*Math.PI / subdivisions;
 	var normal = null;
@@ -2795,6 +2804,47 @@ Mesh.cylinder = function(options) {
 		vertices.set([ normal[0]*radius, height*-0.5, normal[2]*radius], i*6*3 + 15);
 		normals.set(normal, i*6*3 + 15);
 		coords.set([(i+1)/subdivisions,0], i*6*2 + 10);
+	}
+
+	var pos = i*6*3;
+	var pos_uv = i*6*2;
+
+	//caps
+	var top_center = vec3.fromValues(0,height*0.5,0);
+	var bottom_center = vec3.fromValues(0,height*-0.5,0);
+	var up = vec3.fromValues(0,1,0);
+	var down = vec3.fromValues(0,-1,0);
+	for(var i = 0; i < subdivisions; ++i)
+	{
+		var angle = i * delta;
+
+		var uv = vec3.fromValues( Math.sin(angle), 0, Math.cos(angle) );
+		var uv2 = vec3.fromValues( Math.sin(angle+delta), 0, Math.cos(angle+delta) );
+
+		vertices.set([ uv[0]*radius, height*0.5, uv[2]*radius], pos + i*6*3);
+		normals.set(up, pos + i*6*3 );
+		coords.set( [ -uv[0] * 0.5 + 0.5,uv[2] * 0.5 + 0.5], pos_uv + i*6*2 );
+
+		vertices.set([ uv2[0]*radius, height*0.5, uv2[2]*radius], pos + i*6*3 + 3);
+		normals.set(up, pos + i*6*3 + 3 );
+		coords.set( [ -uv2[0] * 0.5 + 0.5,uv2[2] * 0.5 + 0.5], pos_uv + i*6*2 + 2 );
+
+		vertices.set( top_center, pos + i*6*3 + 6 );
+		normals.set(up, pos + i*6*3 + 6);
+		coords.set([0.5,0.5], pos_uv + i*6*2 + 4);
+		
+		//bottom
+		vertices.set([ uv2[0]*radius, height*-0.5, uv2[2]*radius], pos + i*6*3 + 9);
+		normals.set(down, pos + i*6*3 + 9);
+		coords.set( [ uv2[0] * 0.5 + 0.5,uv2[2] * 0.5 + 0.5], pos_uv + i*6*2 + 6);
+
+		vertices.set([ uv[0]*radius, height*-0.5, uv[2]*radius], pos + i*6*3 + 12);
+		normals.set(down, pos + i*6*3 + 12 );
+		coords.set( [ uv[0] * 0.5 + 0.5,uv[2] * 0.5 + 0.5], pos_uv + i*6*2 + 8 );
+
+		vertices.set( bottom_center, pos + i*6*3 + 15 );
+		normals.set( down, pos + i*6*3 + 15);
+		coords.set( [0.5,0.5], pos_uv + i*6*2 + 10);
 	}
 
 	var buffers = {
@@ -4045,12 +4095,15 @@ Texture.cubemapFromURL = function(url, options, on_complete) {
 /**
 * returns an ArrayBuffer with the pixels in the texture, they are fliped in Y
 * @method getPixels
-* @return {ArrayBuffer} the data
+* @param {enum} type gl.UNSIGNED_BYTE or gl.FLOAT, if omited then the one in the texture is read
+* @param {bool} force_rgba if yo want to force the output to have 4 components per pixel (useful to transfer to canvas)
+* @return {ArrayBuffer} the data ( Uint8Array or Float32Array )
 */
-Texture.prototype.getPixels = function()
+Texture.prototype.getPixels = function( type, force_rgba )
 {
 	var gl = this.gl;
 	var v = gl.getViewport();
+	type = type || this.type;
 
 	var framebuffer = gl.createFramebuffer();
 	var renderbuffer = gl.createRenderbuffer();
@@ -4072,8 +4125,17 @@ Texture.prototype.getPixels = function()
 	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.handler, 0);
 	gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
 
-	var buffer = new Uint8Array( this.width * this.height * 4);
-	gl.readPixels(0,0, this.width, this.height, gl.RGBA, gl.UNSIGNED_BYTE, buffer);
+	var channels = this.format == gl.RGB ? 3 : 4;
+	if(force_rgba)
+		channels = 4;
+
+	var buffer = null;
+	if(type == gl.UNSIGNED_BYTE)
+		buffer = new Uint8Array( this.width * this.height * channels );
+	else //half float and float forced to float
+		buffer = new Float32Array( this.width * this.height * channels );
+
+	gl.readPixels(0,0, this.width, this.height, force_rgba ? gl.RGBA : this.format, type, buffer );
 
 	gl.bindFramebuffer(gl.FRAMEBUFFER, gl._current_fbo_color );
 	gl.bindRenderbuffer(gl.RENDERBUFFER, gl._current_fbo_depth );
@@ -4088,7 +4150,7 @@ Texture.prototype.getPixels = function()
 * @method toCanvas
 * @param {Canvas} canvas must have the same size, if different the canvas will be resized
 */
-Texture.prototype.toCanvas = function(canvas)
+Texture.prototype.toCanvas = function( canvas, flip_y )
 {
 	var gl = this.gl;
 
@@ -4101,12 +4163,22 @@ Texture.prototype.toCanvas = function(canvas)
 	if(canvas.width != w) canvas.width = w;
 	if(canvas.height != h) canvas.height = h;
 
-	var buffer = this.getPixels();
+	var buffer = this.getPixels( gl.UNSIGNED_BYTE, true );
 
 	var ctx = canvas.getContext("2d");
 	var pixels = ctx.getImageData(0,0,w,h);
 	pixels.data.set( buffer );
 	ctx.putImageData(pixels,0,0);
+
+	if(flip_y)
+	{
+		var temp = createCanvas(w,h);
+		var temp_ctx = temp.getContext("2d");
+		temp_ctx.translate(0,temp.height);
+		temp_ctx.scale(1,-1);
+		temp_ctx.drawImage( canvas, 0, 0, temp.width, temp.height );
+		ctx.drawImage( temp, 0, 0 );
+	}
 
 	return canvas;
 }
@@ -5891,7 +5963,7 @@ GL.augmentEvent = function(e, root_element)
 * @constructor
 */
 
-global.LEvent = GL.LEvent = {
+var LEvent = global.LEvent = GL.LEvent = {
 	jQuery: false, //dispatch as jQuery events (enable this if you want to hook regular jQuery events to instances, they are dispatches as ":eventname" to avoid collisions)
 	//map: new Weakmap(),
 
@@ -6094,6 +6166,176 @@ global.LEvent = GL.LEvent = {
 		}
 	}
 };
+
+// NOT FINISHED, STILL HAS SOME ISSUES TO SOLVE, TEST OR DELETE
+//There is a secondary implementation using WeakMap, this implementation clears the events from the objects
+//and moves them to one global object, so objects are not constantly changing, but I must test performance.
+/*
+if(global.WeakMap && 0)
+{
+	(function(){
+
+	//local scope
+	var map = new WeakMap;
+
+	LEvent.bind = function( instance, event_type, callback, target_instance )
+	{
+		if(!instance) 
+			throw("cannot bind event to null");
+		if(!callback) 
+			throw("cannot bind to null callback");
+		if(instance.constructor === String ) 
+			throw("cannot bind event to a string");
+		var name = event_type;
+
+		var obj = map[instance];
+		if(!obj)
+			obj = map[instance] = {};
+
+		if(obj.hasOwnProperty(name))
+			obj[name].push([callback,target_instance]);
+		else
+			obj[name] = [[callback,target_instance]];
+	}
+
+	LEvent.unbind = function( instance, event_type, callback, target_instance )
+	{
+		if(!instance) 
+			throw("cannot unbind event to null");
+		if(!callback) 
+			throw("cannot unbind from null callback");
+		if(instance.constructor === String ) 
+			throw("cannot bind event to a string");
+
+		var obj = map[instance];
+		if(!obj)
+			return;
+
+		var name = event_type;
+		if(!obj[name]) 
+			return;
+
+		for(var i = 0, l = obj[name].length; i < l; ++i)
+		{
+			var v = obj[name][i];
+			if(v[0] === callback && v[1] === target_instance)
+			{
+				obj[name].splice( i, 1);
+				break;
+			}
+		}
+
+		if (obj[name].length == 0)
+			delete obj[name];
+	},
+
+	LEvent.unbindAll = function(instance, target_instance)
+	{
+		if(!instance) 
+			throw("cannot unbind events in null");
+		if(!target_instance) //remove all
+		{
+			map.delete(instance);
+			return;
+		}
+
+		//remove only the target_instance
+		//for every property in the instance
+		var obj = map[instance];
+		if(!obj)
+			return;
+
+		for(var i in obj)
+		{
+			var array = obj[i];
+			for(var j=0; j < array.length; ++j)
+			{
+				if( array[j][1] != target_instance ) 
+					continue;
+				array.splice(j,1);//remove
+				--j;//iterate from the gap
+			}
+
+			if(array.length == 0)
+				delete obj[i];
+		}
+	}
+
+	LEvent.isBind = function( instance, event_type, callback, target_instance )
+	{
+		var name = event_type;
+		var obj = map[instance];
+		if(!obj || !obj.hasOwnProperty(name)) 
+			return false;
+		for(var i = 0, l = obj[name].length; i < l; ++i)
+		{
+			var v = obj[name][i];
+			if(v[0] === callback && v[1] === target_instance)
+				return true;
+		}
+		return false;
+	}
+
+	LEvent.trigger = function( instance, event_type, params, skip_jquery )
+	{
+		if(!instance) 
+			throw("cannot trigger event from null");
+		if(instance.constructor === String ) 
+			throw("cannot bind event to a string");
+
+		
+
+		//you can resend the events as jQuery events, but to avoid collisions with system events, we use ":" at the begining
+		if(LEvent.jQuery && !skip_jquery)
+			$(instance).trigger( ":" + event_type, params );
+
+		var name = event_type;
+
+		var obj = map[instance];
+
+		if(!obj.hasOwnProperty(name)) 
+			return;
+		var inst = obj[name];
+		for(var i = 0, l = inst.length; i < l; ++i)
+		{
+			var v = inst[i];
+			if( v[0].call(v[1], event_type, params) == false)// || event.stop)
+				break; //stopPropagation
+		}
+	}
+
+	LEvent.triggerArray = function( instances, event_type, params, skip_jquery )
+	{
+		for(var i = 0, l = instances.length; i < l; ++i)
+		{
+			var instance = instances[i];
+			if(!instance) 
+				throw("cannot trigger event from null");
+			if(instance.constructor === String ) 
+				throw("cannot bind event to a string");
+
+			var obj = map[instance];
+
+			//you can resend the events as jQuery events, but to avoid collisions with system events, we use ":" at the begining
+			if(LEvent.jQuery && !skip_jquery) 
+				$(instance).trigger( ":" + event_type, params );
+
+			var name = event_type;
+			if(!obj.hasOwnProperty(name)) 
+				continue;
+			for(var j = 0, l = obj[name].length; j < l; ++j)
+			{
+				var v = obj[name][j];
+				if( v[0].call(v[1], event_type, params) == false)// || event.stop)
+					break; //stopPropagation
+			}
+		}
+	}
+
+
+	})(); //local scope end
+}
+*/
 /* geometric utilities */
 global.CLIP_INSIDE = GL.CLIP_INSIDE = 0;
 global.CLIP_OUTSIDE = GL.CLIP_OUTSIDE = 1;
@@ -7833,7 +8075,7 @@ Mesh.parseOBJ = function(text, options)
 	return final_mesh;
 }
 
-Mesh.parsers[".obj"] = Mesh.parseOBJ.bind( Mesh );
+Mesh.parsers["obj"] = Mesh.parseOBJ.bind( Mesh );
 
 
 //footer.js

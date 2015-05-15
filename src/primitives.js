@@ -268,9 +268,10 @@ Mesh.cylinder = function(options) {
 	var height = options.height || options.size || 2;
 	var subdivisions = options.subdivisions || 64;
 
-	var vertices = new Float32Array(subdivisions * 6 * 3);
-	var normals = new Float32Array(subdivisions * 6 * 3);
-	var coords = new Float32Array(subdivisions * 6 * 2);
+	var vertices = new Float32Array(subdivisions * 6 * 3 * 2 );
+	var normals = new Float32Array(subdivisions * 6 * 3 * 2 );
+	var coords = new Float32Array(subdivisions * 6 * 2 * 2 );
+	//not indexed because caps have different normals and uvs so...
 
 	var delta = 2*Math.PI / subdivisions;
 	var normal = null;
@@ -307,6 +308,47 @@ Mesh.cylinder = function(options) {
 		vertices.set([ normal[0]*radius, height*-0.5, normal[2]*radius], i*6*3 + 15);
 		normals.set(normal, i*6*3 + 15);
 		coords.set([(i+1)/subdivisions,0], i*6*2 + 10);
+	}
+
+	var pos = i*6*3;
+	var pos_uv = i*6*2;
+
+	//caps
+	var top_center = vec3.fromValues(0,height*0.5,0);
+	var bottom_center = vec3.fromValues(0,height*-0.5,0);
+	var up = vec3.fromValues(0,1,0);
+	var down = vec3.fromValues(0,-1,0);
+	for(var i = 0; i < subdivisions; ++i)
+	{
+		var angle = i * delta;
+
+		var uv = vec3.fromValues( Math.sin(angle), 0, Math.cos(angle) );
+		var uv2 = vec3.fromValues( Math.sin(angle+delta), 0, Math.cos(angle+delta) );
+
+		vertices.set([ uv[0]*radius, height*0.5, uv[2]*radius], pos + i*6*3);
+		normals.set(up, pos + i*6*3 );
+		coords.set( [ -uv[0] * 0.5 + 0.5,uv[2] * 0.5 + 0.5], pos_uv + i*6*2 );
+
+		vertices.set([ uv2[0]*radius, height*0.5, uv2[2]*radius], pos + i*6*3 + 3);
+		normals.set(up, pos + i*6*3 + 3 );
+		coords.set( [ -uv2[0] * 0.5 + 0.5,uv2[2] * 0.5 + 0.5], pos_uv + i*6*2 + 2 );
+
+		vertices.set( top_center, pos + i*6*3 + 6 );
+		normals.set(up, pos + i*6*3 + 6);
+		coords.set([0.5,0.5], pos_uv + i*6*2 + 4);
+		
+		//bottom
+		vertices.set([ uv2[0]*radius, height*-0.5, uv2[2]*radius], pos + i*6*3 + 9);
+		normals.set(down, pos + i*6*3 + 9);
+		coords.set( [ uv2[0] * 0.5 + 0.5,uv2[2] * 0.5 + 0.5], pos_uv + i*6*2 + 6);
+
+		vertices.set([ uv[0]*radius, height*-0.5, uv[2]*radius], pos + i*6*3 + 12);
+		normals.set(down, pos + i*6*3 + 12 );
+		coords.set( [ uv[0] * 0.5 + 0.5,uv[2] * 0.5 + 0.5], pos_uv + i*6*2 + 8 );
+
+		vertices.set( bottom_center, pos + i*6*3 + 15 );
+		normals.set( down, pos + i*6*3 + 15);
+		coords.set( [0.5,0.5], pos_uv + i*6*2 + 10);
 	}
 
 	var buffers = {
