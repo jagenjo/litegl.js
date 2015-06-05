@@ -1,0 +1,239 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+
+<title>litegl.js: Deferred rendering</title>
+	<link rel="stylesheet" type="text/css" href="style.css" />
+	<style type='text/css'>
+		html, body { margin: 0; padding: 0; }
+		body { background-color: #DDD;}
+		h1 { color: #777; background-color: #CCC; }
+	</style>
+	<script type="text/javascript" src="../external/gl-matrix.js"></script>
+	<script type="text/javascript" src="../build/litegl.js"></script>
+</head>
+<body>
+	<script type="text/javascript">
+	
+	//create the rendering context
+	var gl = GL.create({width: window.innerWidth,height: window.innerHeight});
+	var container = document.body;
+	container.appendChild(gl.canvas);
+	gl.animate();
+
+	var camera_position = vec3.fromValues(0,100,100);
+
+	//build the mesh
+	var mesh = GL.Mesh.cube({size:10});
+	var plane = GL.Mesh.plane({size:400,xz: true});
+	var sphere = GL.Mesh.sphere({size:50});
+
+	var texture = GL.Texture.fromURL("texture.png", { minFilter: gl.LINEAR});
+
+	//create G Buffers
+	var w = (gl.canvas.width*0.5)|0;
+	var h = (gl.canvas.height*0.5)|0;
+	var type = gl.UNSIGNED_BYTE;// , gl.FLOAT, (or gl.HALF_FLOAT_OES although it doesnt work in firefox)
+
+	var texture_albedo = new GL.Texture(w,h, { type: type, filter: gl.NEAREST });
+	var texture_normal = new GL.Texture(w,h, { type: type, filter: gl.NEAREST });
+	var texture_depth = new GL.Texture(w,h, { format: gl.DEPTH_COMPONENT, type: gl.UNSIGNED_INT, filter: gl.NEAREST }); 
+	var textures = [ texture_albedo, texture_normal ];
+	var fbo = new GL.FBO( textures, texture_depth );
+	var texture_final = new GL.Texture(w,h, { type: type, filter: gl.NEAREST });
+
+	//create basic matrices for cameras and transformation
+	var proj = mat4.create();
+	var view = mat4.create();
+	var viewprojection = mat4.create();
+	var inv_vp = mat4.create();
+	var model = mat4.create();
+	var mvp = mat4.create();
+	var temp = mat4.create();
+	var identity = mat4.create();
+
+	//get mouse actions
+	gl.captureMouse();
+	gl.onmousemove = function(e)
+	{
+		if(e.dragging)
+		{
+			camera_position[0] += e.deltax * 0.1;
+			camera_position[1] -= e.deltay * 0.1;
+		}
+	}
+
+	//set the camera position
+	mat4.perspective(proj, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 50, 1000);
+	mat4.lookAt(view, camera_position, [0,0,0], [0,1,0]);
+
+	//basic shader
+	var gbuffers_shader = new Shader('\
+			precision highp float;\
+			attribute vec3 a_vertex;\
+			attribute vec3 a_normal;\
+			attribute vec2 a_coord;\
+			varying vec3 v_wPosition;\
+			varying vec3 v_normal;\
+			varying vec2 v_coord;\
+			uniform mat4 u_mvp;\
+			uniform mat4 u_model;\
+			void main() {\
+				v_coord = a_coord;\
+				v_wPosition = (u_model * vec4(a_vertex,1.0)).xyz;\
+				v_normal = (u_model * vec4(a_normal,0.0)).xyz;\
+				gl_Position = u_mvp * vec4(a_vertex,1.0);\
+				gl_PointSize = 20.0;\
+			}\
+			', '\
+			\
+			#extension GL_EXT_draw_buffers : require \n\
+			precision highp float;\
+			varying vec3 v_wPosition;\
+			varying vec3 v_normal;\
+			varying vec2 v_coord;\
+			uniform vec4 u_color;\
+			uniform sampler2D u_texture;\
+			void main() {\
+			  vec3 N = normalize(v_normal);\
+			  vec4 diffuse_color = u_color * texture2D( u_texture, v_coord );\
+			  gl_FragData[0] = diffuse_color;\
+			  gl_FragData[1] = vec4((N * 0.5 + vec3(0.5) ),1.0);\
+			}\
+		');	
+
+	//basic shader
+	var final_shader = new Shader('\
+			precision highp float;\
+			attribute vec3 a_vertex;\
+			attribute vec2 a_coord;\
+			varying vec2 v_coord;\
+			void main() {\
+				v_coord = a_coord; \
+				gl_Position = vec4(a_coord * 2.0 - 1.0, 0.0, 1.0); \
+			}\
+			', '\
+			\
+			precision highp float;\
+			varying vec2 v_coord;\
+			uniform vec3 u_camera_position;\
+			uniform vec3 u_light_color;\
+			uniform vec3 u_light_position;\
+			uniform vec3 u_ambient_light;\
+			uniform sampler2D u_color_texture;\
+			uniform sampler2D u_normal_texture;\
+			uniform sampler2D u_depth_texture;\
+			uniform mat4 u_invvp;\
+			uniform vec4 u_viewport;\
+			void main() {\
+				vec3 N = texture2D( u_normal_texture, v_coord ).xyz * 2.0 - vec3(1.0);\
+				N = normalize(N);\
+				vec4 diffuse_color = texture2D( u_color_texture, v_coord );\
+				float depth = texture2D( u_depth_texture, v_coord ).x;\
+				if(depth == 1.0) discard;\
+				depth = depth * 2.0 - 1.0;\
+				vec2 pos2D = (gl_FragCoord.xy / u_viewport.zw) * 2.0 - vec2(1.0);\
+				vec4 pos = vec4( pos2D, depth, 1.0 );\
+				pos = u_invvp * pos;\
+				pos.xyz = pos.xyz / pos.w;\
+				vec3 L = normalize( u_light_position - pos.xyz);\
+				float NdotL = clamp( dot( N, L ), 0.0, 1.0 );\
+				vec3 final_color = diffuse_color.xyz * (u_light_color * NdotL + u_ambient_light);\
+				vec3 E = normalize( pos.xyz - u_camera_position );\
+				final_color += u_light_color * pow( max(0.0, dot( E, reflect(L,N) )), 4.0 );\
+				gl_FragColor = vec4( final_color, 1.0 );\
+			}\
+		');	
+
+	//generic gl flags and settings
+	gl.clearColor(0.1,0.1,0.1,1);
+	gl.enable( gl.DEPTH_TEST );
+
+	var uniforms = {
+		u_texture: 0,
+		u_color: [1.0,0.8,0.8,1],
+		u_model: model,
+		u_mvp: mvp,
+		u_view: view,
+		u_camera_position: camera_position,
+	};
+
+	var light_color = vec3.fromValues( 0.9,0.8,0.5 );
+	var light_position = vec3.fromValues( 80, 50.0, 0.0 );
+	var ambient_light = vec3.fromValues( 0.1,0.1,0.2 );
+
+	//rendering loop
+	gl.ondraw = function()
+	{
+
+		//render something in the texture
+		fbo.bind(true);
+
+		gl.clearColor(0.1,0.1,0.1,1);
+		gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
+		gl.enable( gl.DEPTH_TEST );
+
+		//create modelview and projection matrices
+		mat4.lookAt( view, camera_position, [0,0,0], [0,1,0]);
+		mat4.multiply( viewprojection, proj, view );
+		mat4.invert( inv_vp, viewprojection );
+
+		mvp.set( viewprojection );
+
+		texture.bind(0);
+
+		gbuffers_shader.uniforms( uniforms ).draw( plane );
+		mat4.multiply( mvp, viewprojection, model );
+		gbuffers_shader.uniforms( uniforms ).draw( sphere );
+		//gbuffers_shader.uniforms( uniforms ).draw( sphere, gl.POINTS );
+
+		fbo.unbind();
+
+		gl.disable( gl.DEPTH_TEST );
+
+		texture_final.drawTo(function(){
+			gl.clearColor(0.0,0.0,0.0,1);
+			gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
+			gl.enable( gl.DEPTH_TEST );
+			var quad = GL.Mesh.getScreenQuad();
+
+			var final_uniforms = {
+				u_camera_position: camera_position,
+				u_invvp: inv_vp,
+				u_viewport: gl.viewport_data,
+				u_color_texture: 0,
+				u_normal_texture: 1,
+				u_depth_texture: 2,
+				u_light_color: light_color,
+				u_light_position: light_position,
+				u_ambient_light: ambient_light,
+			};
+
+			texture_albedo.bind(0);
+			texture_normal.bind(1);
+			texture_depth.bind(2);
+
+			final_shader.uniforms( final_uniforms ).draw( quad );
+		});
+
+
+		gl.drawTexture(texture_albedo, 0,0, gl.canvas.width * 0.5, gl.canvas.height * 0.5);
+		gl.drawTexture(texture_normal, gl.canvas.width * 0.5,0, gl.canvas.width * 0.5, gl.canvas.height * 0.5);
+		gl.drawTexture(texture_depth, 0, gl.canvas.height * 0.5, gl.canvas.width * 0.5, gl.canvas.height * 0.5);
+		gl.drawTexture(texture_final, gl.canvas.width * 0.5, gl.canvas.height * 0.5, gl.canvas.width * 0.5, gl.canvas.height * 0.5);
+	};
+
+	//update loop
+	gl.onupdate = function(dt)
+	{
+		//rotate cube
+		mat4.rotateY(model,model,dt*0.2);
+	};
+	
+	</script>
+</body>
+
+</html>
+
+

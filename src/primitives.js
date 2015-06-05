@@ -551,7 +551,7 @@ Mesh.icosahedron = function(options) {
 		var normaly = vertices[index*3+1] / mod;
 		var normalz = vertices[index*3+2] / mod;
 		normals.push( normalx, normaly, normalz );
-		coords.push( Math.atan2( normalx, normalz ), Math.acos( normaly ) );
+		coords.push( (Math.atan2( normalx, normalz ) / Math.PI) * 0.5, (Math.acos( normaly ) / Math.PI) );
 		vertices[index*3] *= radius/mod;
 		vertices[index*3+1] *= radius/mod;
 		vertices[index*3+2] *= radius/mod;

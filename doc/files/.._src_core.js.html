@@ -150,6 +150,9 @@ GL.create = function(options) {
 	gl.extensions[&quot;OES_element_index_uint&quot;] = gl.getExtension(&quot;OES_element_index_uint&quot;);
 	gl.extensions[&quot;WEBGL_draw_buffers&quot;] = gl.getExtension(&quot;WEBGL_draw_buffers&quot;);
 	gl.extensions[&quot;EXT_shader_texture_lod&quot;] = gl.getExtension(&quot;EXT_shader_texture_lod&quot;);
+	gl.extensions[&quot;EXT_sRGB&quot;] = gl.getExtension(&quot;EXT_sRGB&quot;);
+	gl.extensions[&quot;EXT_texture_filter_anisotropic&quot;] = gl.getExtension(&quot;EXT_texture_filter_anisotropic&quot;) || gl.getExtension(&quot;WEBKIT_EXT_texture_filter_anisotropic&quot;);
+
 
 	//for float textures
 	gl.extensions[&quot;OES_texture_float_linear&quot;] = gl.getExtension(&quot;OES_texture_float_linear&quot;);
@@ -755,6 +758,10 @@ GL.create = function(options) {
 		gl._current_fbo_depth = null;
 	}
 
+	//Reset state
+	gl.reset();
+
+	//Return
 	return gl;
 }
 

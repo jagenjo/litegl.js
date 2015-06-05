@@ -82,7 +82,10 @@ global.Texture = GL.Texture = function Texture(width, height, options, gl) {
 		//gl.TEXTURE_1D is not supported by WebGL...
 		if(this.texture_type == gl.TEXTURE_2D)
 		{
-			gl.texImage2D(gl.TEXTURE_2D, 0, this.format, width, height, 0, this.format, this.type, options.pixel_data || null );
+			var data = options.pixel_data;
+			if(data && !data.buffer)
+				data = new (this.type == gl.FLOAT ? Float32Array : Uint8Array)( data );
+			gl.texImage2D(gl.TEXTURE_2D, 0, this.format, width, height, 0, this.format, this.type, data );
 		}
 		else if(this.texture_type == gl.TEXTURE_CUBE_MAP)
 		{

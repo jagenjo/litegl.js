@@ -45,8 +45,9 @@
 	var fbo = new GL.FBO( textures, texture_depth );
 
 	//create basic matrices for cameras and transformation
-	var persp = mat4.create();
+	var proj = mat4.create();
 	var view = mat4.create();
+	var viewprojection = mat4.create();
 	var model = mat4.create();
 	var mvp = mat4.create();
 	var temp = mat4.create();
@@ -61,7 +62,7 @@
 	}
 
 	//set the camera position
-	mat4.perspective(persp, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 50, 1000);
+	mat4.perspective(proj, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 50, 1000);
 	mat4.lookAt(view, camera_position, [0,0,0], [0,1,0]);
 
 	//basic shader
@@ -135,8 +136,8 @@
 		gl.enable( gl.DEPTH_TEST );
 
 		//create modelview and projection matrices
-		mat4.multiply(temp,view,model);
-		mat4.multiply(mvp,persp,temp);
+		mat4.multiply( viewprojection, proj, view);
+		mat4.multiply( mvp, viewprojection, model);
 
 		texture.bind(0);
 

@@ -42,6 +42,9 @@ GL.create = function(options) {
 	gl.extensions["OES_element_index_uint"] = gl.getExtension("OES_element_index_uint");
 	gl.extensions["WEBGL_draw_buffers"] = gl.getExtension("WEBGL_draw_buffers");
 	gl.extensions["EXT_shader_texture_lod"] = gl.getExtension("EXT_shader_texture_lod");
+	gl.extensions["EXT_sRGB"] = gl.getExtension("EXT_sRGB");
+	gl.extensions["EXT_texture_filter_anisotropic"] = gl.getExtension("EXT_texture_filter_anisotropic") || gl.getExtension("WEBKIT_EXT_texture_filter_anisotropic");
+
 
 	//for float textures
 	gl.extensions["OES_texture_float_linear"] = gl.getExtension("OES_texture_float_linear");

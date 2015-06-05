@@ -3047,7 +3047,7 @@ Mesh.icosahedron = function(options) {
 		var normaly = vertices[index*3+1] / mod;
 		var normalz = vertices[index*3+2] / mod;
 		normals.push( normalx, normaly, normalz );
-		coords.push( Math.atan2( normalx, normalz ), Math.acos( normaly ) );
+		coords.push( (Math.atan2( normalx, normalz ) / Math.PI) * 0.5, (Math.acos( normaly ) / Math.PI) );
 		vertices[index*3] *= radius/mod;
 		vertices[index*3+1] *= radius/mod;
 		vertices[index*3+2] *= radius/mod;
@@ -3161,7 +3161,10 @@ global.Texture = GL.Texture = function Texture(width, height, options, gl) {
 		//gl.TEXTURE_1D is not supported by WebGL...
 		if(this.texture_type == gl.TEXTURE_2D)
 		{
-			gl.texImage2D(gl.TEXTURE_2D, 0, this.format, width, height, 0, this.format, this.type, options.pixel_data || null );
+			var data = options.pixel_data;
+			if(data && !data.buffer)
+				data = new (this.type == gl.FLOAT ? Float32Array : Uint8Array)( data );
+			gl.texImage2D(gl.TEXTURE_2D, 0, this.format, width, height, 0, this.format, this.type, data );
 		}
 		else if(this.texture_type == gl.TEXTURE_CUBE_MAP)
 		{
@@ -4819,7 +4822,7 @@ Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_
 	//range rendering
 	var offset = 0;
 	if(range_start > 0) //render a polygon range
-		offset = range_start * (indexBuffer ? indexBuffer.constructor.BYTES_PER_ELEMENT : 1); //in bytes (Uint16 == 2 bytes)
+		offset = range_start * ( (indexBuffer && indexBuffer.data) ? indexBuffer.data.constructor.BYTES_PER_ELEMENT : 1); //in bytes (Uint16 == 2 bytes)
 
 	if(range_length > 0)
 		length = range_length;
@@ -5278,6 +5281,9 @@ GL.create = function(options) {
 	gl.extensions["OES_element_index_uint"] = gl.getExtension("OES_element_index_uint");
 	gl.extensions["WEBGL_draw_buffers"] = gl.getExtension("WEBGL_draw_buffers");
 	gl.extensions["EXT_shader_texture_lod"] = gl.getExtension("EXT_shader_texture_lod");
+	gl.extensions["EXT_sRGB"] = gl.getExtension("EXT_sRGB");
+	gl.extensions["EXT_texture_filter_anisotropic"] = gl.getExtension("EXT_texture_filter_anisotropic") || gl.getExtension("WEBKIT_EXT_texture_filter_anisotropic");
+
 
 	//for float textures
 	gl.extensions["OES_texture_float_linear"] = gl.getExtension("OES_texture_float_linear");

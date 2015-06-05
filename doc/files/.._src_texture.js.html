@@ -146,7 +146,7 @@ global.Texture = GL.Texture = function Texture(width, height, options, gl) {
 	this.width = width;
 	this.height = height;
 	this.format = options.format || gl.RGBA; //(if gl.DEPTH_COMPONENT remember format: gl.UNSIGNED_SHORT)
-	this.type = options.type || gl.UNSIGNED_BYTE; //gl.UNSIGNED_SHORT or gl.HIGH_PRECISION_FORMAT
+	this.type = options.type || gl.UNSIGNED_BYTE; //gl.UNSIGNED_SHORT, gl.FLOAT or gl.HALF_FLOAT_OES (or gl.HIGH_PRECISION_FORMAT which could be half or float)
 	this.texture_type = options.texture_type || gl.TEXTURE_2D; //or gl.TEXTURE_CUBE_MAP
 	this.magFilter = options.magFilter || options.filter || gl.LINEAR;
 	this.minFilter = options.minFilter || options.filter || gl.LINEAR;
@@ -190,7 +190,10 @@ global.Texture = GL.Texture = function Texture(width, height, options, gl) {
 		//gl.TEXTURE_1D is not supported by WebGL...
 		if(this.texture_type == gl.TEXTURE_2D)
 		{
-			gl.texImage2D(gl.TEXTURE_2D, 0, this.format, width, height, 0, this.format, this.type, options.pixel_data || null );
+			var data = options.pixel_data;
+			if(data &amp;&amp; !data.buffer)
+				data = new (this.type == gl.FLOAT ? Float32Array : Uint8Array)( data );
+			gl.texImage2D(gl.TEXTURE_2D, 0, this.format, width, height, 0, this.format, this.type, data );
 		}
 		else if(this.texture_type == gl.TEXTURE_CUBE_MAP)
 		{
@@ -379,7 +382,7 @@ Texture.prototype.drawTo = function(callback, params)
 	var now = GL.getTime();
 
 	var framebuffer = gl._framebuffer = gl._framebuffer || gl.createFramebuffer();
-	gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer );
+	gl.bindFramebuffer( gl.FRAMEBUFFER, framebuffer );
 
 	//this code allows to reuse old renderbuffers instead of creating and destroying them for every frame
 	var renderbuffer = null;
@@ -535,9 +538,9 @@ Texture.drawTo = function(color_textures, callback, depth_texture)
 
 	var v = gl.getViewport();
 	gl._framebuffer =  gl._framebuffer || gl.createFramebuffer();
-	gl.bindFramebuffer(gl.FRAMEBUFFER,  gl._framebuffer);
+	gl.bindFramebuffer( gl.FRAMEBUFFER,  gl._framebuffer );
 
-	gl.viewport(0, 0, w, h);
+	gl.viewport( 0, 0, w, h );
 	var ext = gl.extensions[&quot;WEBGL_draw_buffers&quot;];
 	if(!ext &amp;&amp; color_textures.length &gt; 1)
 		throw(&quot;Rendering to several textures not supported&quot;);
@@ -551,17 +554,6 @@ Texture.drawTo = function(color_textures, callback, depth_texture)
 		gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer );
 	}
 
-	var order = []; //draw_buffers request the use of an array with the order of the attachments
-	for(var i = 0; i &lt; color_textures.length; i++)
-	{
-		var t = color_textures[i];
-		if(t.type == gl.DEPTH_COMPONENT)
-			continue;
-
-		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, t.handler, 0);
-		order.push( gl.COLOR_ATTACHMENT0 + i );
-	}
-
 	if( depth_texture )
 	{
 		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depth_texture.handler, 0);
@@ -572,12 +564,20 @@ Texture.drawTo = function(color_textures, callback, depth_texture)
 		gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer );
 	}
 
-	var complete = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
-	if(complete !== gl.FRAMEBUFFER_COMPLETE)
-		throw(&quot;FBO not complete: &quot; + complete);
+	var order = []; //draw_buffers request the use of an array with the order of the attachments
+	for(var i = 0; i &lt; color_textures.length; i++)
+	{
+		var t = color_textures[i];
+		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, t.handler, 0);
+		order.push( gl.COLOR_ATTACHMENT0 + i );
+	}
 
 	if(color_textures.length &gt; 1)
 		ext.drawBuffersWEBGL( order );
+
+	var complete = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+	if(complete !== gl.FRAMEBUFFER_COMPLETE)
+		throw(&quot;FBO not complete: &quot; + complete);
 
 	callback();
 
@@ -1127,12 +1127,15 @@ Texture.cubemapFromURL = function(url, options, on_complete) {
 /**
 * returns an ArrayBuffer with the pixels in the texture, they are fliped in Y
 * @method getPixels
-* @return {ArrayBuffer} the data
+* @param {enum} type gl.UNSIGNED_BYTE or gl.FLOAT, if omited then the one in the texture is read
+* @param {bool} force_rgba if yo want to force the output to have 4 components per pixel (useful to transfer to canvas)
+* @return {ArrayBuffer} the data ( Uint8Array or Float32Array )
 */
-Texture.prototype.getPixels = function()
+Texture.prototype.getPixels = function( type, force_rgba )
 {
 	var gl = this.gl;
 	var v = gl.getViewport();
+	type = type || this.type;
 
 	var framebuffer = gl.createFramebuffer();
 	var renderbuffer = gl.createRenderbuffer();
@@ -1154,8 +1157,17 @@ Texture.prototype.getPixels = function()
 	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.handler, 0);
 	gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
 
-	var buffer = new Uint8Array( this.width * this.height * 4);
-	gl.readPixels(0,0, this.width, this.height, gl.RGBA, gl.UNSIGNED_BYTE, buffer);
+	var channels = this.format == gl.RGB ? 3 : 4;
+	if(force_rgba)
+		channels = 4;
+
+	var buffer = null;
+	if(type == gl.UNSIGNED_BYTE)
+		buffer = new Uint8Array( this.width * this.height * channels );
+	else //half float and float forced to float
+		buffer = new Float32Array( this.width * this.height * channels );
+
+	gl.readPixels(0,0, this.width, this.height, force_rgba ? gl.RGBA : this.format, type, buffer );
 
 	gl.bindFramebuffer(gl.FRAMEBUFFER, gl._current_fbo_color );
 	gl.bindRenderbuffer(gl.RENDERBUFFER, gl._current_fbo_depth );
@@ -1170,7 +1182,7 @@ Texture.prototype.getPixels = function()
 * @method toCanvas
 * @param {Canvas} canvas must have the same size, if different the canvas will be resized
 */
-Texture.prototype.toCanvas = function(canvas)
+Texture.prototype.toCanvas = function( canvas, flip_y )
 {
 	var gl = this.gl;
 
@@ -1183,12 +1195,22 @@ Texture.prototype.toCanvas = function(canvas)
 	if(canvas.width != w) canvas.width = w;
 	if(canvas.height != h) canvas.height = h;
 
-	var buffer = this.getPixels();
+	var buffer = this.getPixels( gl.UNSIGNED_BYTE, true );
 
 	var ctx = canvas.getContext(&quot;2d&quot;);
 	var pixels = ctx.getImageData(0,0,w,h);
 	pixels.data.set( buffer );
 	ctx.putImageData(pixels,0,0);
+
+	if(flip_y)
+	{
+		var temp = createCanvas(w,h);
+		var temp_ctx = temp.getContext(&quot;2d&quot;);
+		temp_ctx.translate(0,temp.height);
+		temp_ctx.scale(1,-1);
+		temp_ctx.drawImage( canvas, 0, 0, temp.width, temp.height );
+		ctx.drawImage( temp, 0, 0 );
+	}
 
 	return canvas;
 }

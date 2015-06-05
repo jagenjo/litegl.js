@@ -223,21 +223,26 @@ global.geo = {
 	* @param {vec3} result collision position
 	* @return {boolean} returns if the segment collides the plane or it is parallel to the plane
 	*/
-	testSegmentPlane: function(start, end, P, N, result)
-	{
-		var D = vec3.dot( P, N );
-		var numer = D - vec3.dot(N, start);
-		var direction = vec3.sub( vec3.create(), end, start );
-		var denom = vec3.dot(N, direction);
-		if( Math.abs(denom) &lt; EPSILON) return false; //parallel 
-		var t = (numer / denom);
-		if(t &lt; 0.0) return false; //behind the start
-		if(t &gt; 1.0) return false; //after the end
-		if(result)
-			vec3.add( result,  start, vec3.scale( result, direction, t) );
-
-		return true;
-	},
+	testSegmentPlane: (function() { 
+		var temp = vec3.create();
+		return function(start, end, P, N, result)
+		{
+			var D = vec3.dot( P, N );
+			var numer = D - vec3.dot(N, start);
+			var direction = vec3.sub( temp, end, start );
+			var denom = vec3.dot(N, direction);
+			if( Math.abs(denom) &lt; EPSILON)
+				return false; //parallel 
+			var t = (numer / denom);
+			if(t &lt; 0.0)
+				return false; //behind the start
+			if(t &gt; 1.0)
+				return false; //after the end
+			if(result)
+				vec3.add( result,  start, vec3.scale( result, direction, t) );
+			return true;
+		};
+	})(),
 
 	/**
 	* test a ray sphere collision and retrieves the collision point
@@ -249,36 +254,39 @@ global.geo = {
 	* @param {vec3} result collision position
 	* @return {boolean} returns if the ray collides the sphere
 	*/
-	testRaySphere: function(start, direction, center, radius, result)
-	{
-		// sphere equation (centered at origin) x2+y2+z2=r2
-		// ray equation x(t) = p0 + t*dir
-		// substitute x(t) into sphere equation
-		// solution below:
-
-		// transform ray origin into sphere local coordinates
-		var orig = vec3.subtract(vec3.create(), start, center);
-
-		var a = direction[0]*direction[0] + direction[1]*direction[1] + direction[2]*direction[2];
-		var b = 2*orig[0]*direction[0] + 2*orig[1]*direction[1] + 2*orig[2]*direction[2];
-		var c = orig[0]*orig[0] + orig[1]*orig[1] + orig[2]*orig[2] - radius*radius;
-		//return quadraticFormula(a,b,c,t0,t1) ? 2 : 0;
-
-		var q = b*b - 4*a*c; 
-		if( q &lt; 0.0 )
-			return false;
-
-		if(result)
+	testRaySphere: (function() { 
+		var temp = vec3.create();
+		return function(start, direction, center, radius, result)
 		{
-			var sq = Math.sqrt(q);
-			var d = 1 / (2*a);
-			var r1 = ( -b + sq ) * d;
-			var r2 = ( -b - sq ) * d;
-			var t = r1 &lt; r2 ? r1 : r2;
-			vec3.add(result, start, vec3.scale( vec3.create(), direction, t ) );
-		}
-		return true;//real roots
-	},
+			// sphere equation (centered at origin) x2+y2+z2=r2
+			// ray equation x(t) = p0 + t*dir
+			// substitute x(t) into sphere equation
+			// solution below:
+
+			// transform ray origin into sphere local coordinates
+			var orig = vec3.subtract( temp , start, center);
+
+			var a = direction[0]*direction[0] + direction[1]*direction[1] + direction[2]*direction[2];
+			var b = 2*orig[0]*direction[0] + 2*orig[1]*direction[1] + 2*orig[2]*direction[2];
+			var c = orig[0]*orig[0] + orig[1]*orig[1] + orig[2]*orig[2] - radius*radius;
+			//return quadraticFormula(a,b,c,t0,t1) ? 2 : 0;
+
+			var q = b*b - 4*a*c; 
+			if( q &lt; 0.0 )
+				return false;
+
+			if(result)
+			{
+				var sq = Math.sqrt(q);
+				var d = 1 / (2*a);
+				var r1 = ( -b + sq ) * d;
+				var r2 = ( -b - sq ) * d;
+				var t = r1 &lt; r2 ? r1 : r2;
+				vec3.add(result, start, vec3.scale( result, direction, t ) );
+			}
+			return true;//real roots
+		};
+	})(),
 
 	/**
 	* test a ray cylinder collision and retrieves the collision point

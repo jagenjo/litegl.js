@@ -366,7 +366,7 @@ Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_
 	//range rendering
 	var offset = 0;
 	if(range_start > 0) //render a polygon range
-		offset = range_start * (indexBuffer ? indexBuffer.constructor.BYTES_PER_ELEMENT : 1); //in bytes (Uint16 == 2 bytes)
+		offset = range_start * ( (indexBuffer && indexBuffer.data) ? indexBuffer.data.constructor.BYTES_PER_ELEMENT : 1); //in bytes (Uint16 == 2 bytes)
 
 	if(range_length > 0)
 		length = range_length;
