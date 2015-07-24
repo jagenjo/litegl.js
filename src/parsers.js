@@ -291,3 +291,55 @@ Mesh.parseOBJ = function(text, options)
 }
 
 Mesh.parsers["obj"] = Mesh.parseOBJ.bind( Mesh );
+
+Mesh.encoders["obj"] = function( mesh, options )
+{
+	//store vertices
+	var verticesBuffer = mesh.getBuffer("vertices");
+	if(!verticesBuffer)
+		return null;
+
+	var result = "# Generated with liteGL.js by Javi Agenjo\n\n";
+
+	var vertices = verticesBuffer.data;
+	for (var i = 0; i < vertices.length; i+=3)
+		result += "v " + vertices[i].toFixed(4) + " " + vertices[i+1].toFixed(4) + " " + vertices[i+2].toFixed(4) + "\n";
+
+	//store normals
+	var normalsBuffer = mesh.getBuffer("normals");
+	if(normalsBuffer)
+	{
+		result += "\n";
+		var normals = normalsBuffer.data;
+		for (var i = 0; i < normals.length; i+=3)
+			result += "vn " + normals[i].toFixed(4) + " " + normals[i+1].toFixed(4) + " " + normals[i+2].toFixed(4) + "\n";
+	}
+	
+	//store uvs
+	var coordsBuffer = mesh.getBuffer("coords");
+	if(coordsBuffer)
+	{
+		result += "\n";
+		var coords = coordsBuffer.data;
+		for (var i = 0; i < coords.length; i+=2)
+			result += "vt " + coords[i].toFixed(4) + " " + coords[i+1].toFixed(4) + " " + " 0.0000\n";
+	}
+
+	result += "\ng mesh\n";
+
+	//store faces
+	var indicesBuffer = mesh.getIndexBuffer("triangles");
+	if(indicesBuffer)
+	{
+		var indices = indicesBuffer.data;
+		for (var i = 0; i < indices.length; i+=3)
+			result += "f " + (indices[i]+1) + "/" + (indices[i]+1) + "/" + (indices[i]+1) + " " + (indices[i+1]+1) + "/" + (indices[i+1]+1) + "/" + (indices[i+1]+1) + " " + (indices[i+2]+1) + "/" + (indices[i+2]+1) + "/" + (indices[i+2]+1) + "\n";
+	}
+	else //no indices
+	{
+		for (var i = 0; i < (vertices.length / 3); i+=3)
+			result += "f " + (i+1) + "/" + (i+1) + "/" + (i+1) + " " + (i+2) + "/" + (i+2) + "/" + (i+2) + " " + (i+3) + "/" + (i+3) + "/" + (i+3) + "\n";
+	}
+	
+	return result;
+}

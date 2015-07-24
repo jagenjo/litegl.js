@@ -193,7 +193,7 @@ global.Texture = GL.Texture = function Texture(width, height, options, gl) {
 			var data = options.pixel_data;
 			if(data &amp;&amp; !data.buffer)
 				data = new (this.type == gl.FLOAT ? Float32Array : Uint8Array)( data );
-			gl.texImage2D(gl.TEXTURE_2D, 0, this.format, width, height, 0, this.format, this.type, data );
+			gl.texImage2D(gl.TEXTURE_2D, 0, this.format, width, height, 0, this.format, this.type, data || null );
 		}
 		else if(this.texture_type == gl.TEXTURE_CUBE_MAP)
 		{
@@ -1355,6 +1355,7 @@ Texture.getBlackTexture = function()
 	var color = new Uint8Array([0,0,0,255]);
 	return gl.textures[&quot;:black&quot;] = new GL.Texture(1,1,{ pixel_data: color });
 }
+
     </pre>
 </div>
 

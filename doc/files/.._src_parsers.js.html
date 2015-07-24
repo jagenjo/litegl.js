@@ -400,6 +400,58 @@ Mesh.parseOBJ = function(text, options)
 
 Mesh.parsers[&quot;obj&quot;] = Mesh.parseOBJ.bind( Mesh );
 
+Mesh.encoders[&quot;obj&quot;] = function( mesh, options )
+{
+	//store vertices
+	var verticesBuffer = mesh.getBuffer(&quot;vertices&quot;);
+	if(!verticesBuffer)
+		return null;
+
+	var result = &quot;# Generated with liteGL.js by Javi Agenjo\n\n&quot;;
+
+	var vertices = verticesBuffer.data;
+	for (var i = 0; i &lt; vertices.length; i+=3)
+		result += &quot;v &quot; + vertices[i].toFixed(4) + &quot; &quot; + vertices[i+1].toFixed(4) + &quot; &quot; + vertices[i+2].toFixed(4) + &quot;\n&quot;;
+
+	//store normals
+	var normalsBuffer = mesh.getBuffer(&quot;normals&quot;);
+	if(normalsBuffer)
+	{
+		result += &quot;\n&quot;;
+		var normals = normalsBuffer.data;
+		for (var i = 0; i &lt; normals.length; i+=3)
+			result += &quot;vn &quot; + normals[i].toFixed(4) + &quot; &quot; + normals[i+1].toFixed(4) + &quot; &quot; + normals[i+2].toFixed(4) + &quot;\n&quot;;
+	}
+	
+	//store uvs
+	var coordsBuffer = mesh.getBuffer(&quot;coords&quot;);
+	if(coordsBuffer)
+	{
+		result += &quot;\n&quot;;
+		var coords = coordsBuffer.data;
+		for (var i = 0; i &lt; coords.length; i+=2)
+			result += &quot;vt &quot; + coords[i].toFixed(4) + &quot; &quot; + coords[i+1].toFixed(4) + &quot; &quot; + &quot; 0.0000\n&quot;;
+	}
+
+	result += &quot;\ng mesh\n&quot;;
+
+	//store faces
+	var indicesBuffer = mesh.getIndexBuffer(&quot;triangles&quot;);
+	if(indicesBuffer)
+	{
+		var indices = indicesBuffer.data;
+		for (var i = 0; i &lt; indices.length; i+=3)
+			result += &quot;f &quot; + (indices[i]+1) + &quot;/&quot; + (indices[i]+1) + &quot;/&quot; + (indices[i]+1) + &quot; &quot; + (indices[i+1]+1) + &quot;/&quot; + (indices[i+1]+1) + &quot;/&quot; + (indices[i+1]+1) + &quot; &quot; + (indices[i+2]+1) + &quot;/&quot; + (indices[i+2]+1) + &quot;/&quot; + (indices[i+2]+1) + &quot;\n&quot;;
+	}
+	else //no indices
+	{
+		for (var i = 0; i &lt; (vertices.length / 3); i+=3)
+			result += &quot;f &quot; + (i+1) + &quot;/&quot; + (i+1) + &quot;/&quot; + (i+1) + &quot; &quot; + (i+2) + &quot;/&quot; + (i+2) + &quot;/&quot; + (i+2) + &quot; &quot; + (i+3) + &quot;/&quot; + (i+3) + &quot;/&quot; + (i+3) + &quot;\n&quot;;
+	}
+	
+	return result;
+}
+
     </pre>
 </div>
 

@@ -2,25 +2,26 @@
 * Shader class to upload programs to the GPU
 * @class Shader
 * @constructor
-* @param {String} vertexSource
-* @param {String} fragmentSource
+* @param {String} vertexSource (it also allows to pass a compiled vertex shader)
+* @param {String} fragmentSource (it also allows to pass a compiled fragment shader)
 * @param {Object} macros (optional) precompiler macros to be applied when compiling
 */
-global.Shader = GL.Shader = function Shader(vertexSource, fragmentSource, macros)
+global.Shader = GL.Shader = function Shader( vertexSource, fragmentSource, macros )
 {
 	//used to avoid problems with resources moving between different webgl context
 	this._context_id = global.gl.context_id; 
 	var gl = this.gl = global.gl;
 
 	//expand macros
-	var extra_code = "";
-	if(macros)
-		for(var i in macros)
-			extra_code += "#define " + i + " " + (macros[i] ? macros[i] : "") + "\n";
+	var extra_code = Shader.expandMacros( macros );
 
 	this.program = gl.createProgram();
-	gl.attachShader(this.program, Shader.compileSource(gl.VERTEX_SHADER, extra_code + vertexSource),gl);
-	gl.attachShader(this.program, Shader.compileSource(gl.FRAGMENT_SHADER, extra_code + fragmentSource),gl);
+
+	var vs = vertexSource.constructor === String ? GL.Shader.compileSource( gl.VERTEX_SHADER, extra_code + vertexSource ) : vertexSource;
+	var fs = fragmentSource.constructor === String ? GL.Shader.compileSource( gl.FRAGMENT_SHADER, extra_code + fragmentSource ) : fragmentSource;
+
+	gl.attachShader( this.program, vs, gl );
+	gl.attachShader( this.program, fs, gl );
 	gl.linkProgram(this.program);
 	if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
 		throw 'link error: ' + gl.getProgramInfoLog(this.program);
@@ -33,6 +34,15 @@ global.Shader = GL.Shader = function Shader(vertexSource, fragmentSource, macros
 
 	//extract info about the shader to speed up future processes
 	this.extractShaderInfo();
+}
+
+Shader.expandMacros = function(macros)
+{
+	var extra_code = "";
+	if(macros)
+		for(var i in macros)
+			extra_code += "#define " + i + " " + (macros[i] ? macros[i] : "") + "\n";
+	return extra_code;
 }
 
 /**
@@ -233,6 +243,16 @@ Shader.fromURL = function( vs_path, fs_path, on_complete )
 	return shader;
 }
 
+/**
+* enables the shader (calls useProgram)
+* @method bind
+*/
+Shader.prototype.bind = function()
+{
+	var gl = this.gl;
+	gl.useProgram( this.program );
+	gl._current_shader = this;
+}
 
 /**
 * Uploads a set of uniforms to the Shader. You dont need to specify types, they are infered from the shader info.
@@ -244,44 +264,75 @@ Shader._temp_uniform = new Float32Array(16);
 Shader.prototype.uniforms = function(uniforms) {
 	var gl = this.gl;
 	gl.useProgram(this.program);
+	gl._current_shader = this;
 
 	for (var name in uniforms)
-		this._assing_uniform(uniforms, name, gl );
+		this.setUniform( name, uniforms[name] );
+		//this._assing_uniform(uniforms, name, gl );
 
 	return this;
 }//uniforms
 
 Shader.prototype.uniformsArray = function(array) {
 	var gl = this.gl;
-	gl.useProgram(this.program);
+	gl.useProgram( this.program );
+	gl._current_shader = this;
 
 	for(var i = 0, l = array.length; i < l; ++i)
 	{
 		var uniforms = array[i];
 		for (var name in uniforms)
-			this._assing_uniform(uniforms, name, gl );
+			this._setUniform( name, uniforms[name] );
+			//this._assing_uniform(uniforms, name, gl );
 	}
 
 	return this;
 }
 
-Shader.prototype._assing_uniform = function(uniforms, name, gl)
+/**
+* Uploads a uniform to the Shader. You dont need to specify types, they are infered from the shader info. Shader must be binded!
+* @method setUniform
+* @param {string} name
+* @param {*} value
+*/
+Shader.prototype.setUniform = function(name, value)
 {
+	if(	this.gl._current_shader != this )
+		this.bind();
+
 	var info = this.uniformInfo[name];
 	if (!info)
 		return;
 
-	var value = uniforms[name];
 	if(value == null) 
 		return;
 
 	if(value.constructor === Array)
-		value = new Float32Array(value);  //garbage generated...
+		value = new Float32Array( value );  //garbage generated...
 
 	if(info.is_matrix)
-		info.func.call( gl, info.loc, false, value );
+		info.func.call( this.gl, info.loc, false, value );
 	else
-		info.func.call( gl, info.loc, value );
+		info.func.call( this.gl, info.loc, value );
+}
+
+//skips enabling shader
+Shader.prototype._setUniform = function(name, value)
+{
+	var info = this.uniformInfo[ name ];
+	if (!info)
+		return;
+
+	if(value == null) 
+		return;
+
+	if(value.constructor === Array)
+		value = new Float32Array( value );  //garbage generated...
+
+	if(info.is_matrix)
+		info.func.call( this.gl, info.loc, false, value );
+	else
+		info.func.call( this.gl, info.loc, value );
 }
 
 /**
@@ -423,7 +474,7 @@ Shader.expandImports = function(code, files)
 		var file = files[id];
 		already_imported[ id ] = true;
 		if(file)
-			return file;
+			return file + "\n";
 		return "//import code not found: " + id + "\n";
 	}
 

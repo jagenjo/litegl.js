@@ -1,3 +1,3 @@
 
 //footer.js
-})(window);
+})( typeof(window) != "undefined" ? window : (typeof(self) != "undefined" ? self : global ) );

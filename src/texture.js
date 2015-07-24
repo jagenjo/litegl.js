@@ -85,7 +85,7 @@ global.Texture = GL.Texture = function Texture(width, height, options, gl) {
 			var data = options.pixel_data;
 			if(data && !data.buffer)
 				data = new (this.type == gl.FLOAT ? Float32Array : Uint8Array)( data );
-			gl.texImage2D(gl.TEXTURE_2D, 0, this.format, width, height, 0, this.format, this.type, data );
+			gl.texImage2D(gl.TEXTURE_2D, 0, this.format, width, height, 0, this.format, this.type, data || null );
 		}
 		else if(this.texture_type == gl.TEXTURE_CUBE_MAP)
 		{

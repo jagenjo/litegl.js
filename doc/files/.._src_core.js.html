@@ -404,6 +404,10 @@ GL.create = function(options) {
 			first = touches[0],
 			type = &quot;&quot;;
 
+		//ignore secondary touches
+        if(e.touches.length &amp;&amp; e.changedTouches[0].identifier !== e.touches[0].identifier)
+        	return;
+        	
 		if(touches &gt; 1)
 			return;
 
@@ -440,12 +444,16 @@ GL.create = function(options) {
 	* Tells the system to capture key events on the canvas. This will trigger onkey
 	* @method captureKeys
 	* @param {boolean} prevent_default prevent default behaviour (like scroll on the web, etc)
+	* @param {boolean} only_canvas only caches keyboard events if they happen when the canvas is in focus
 	*/
 	var onkey_handler = null;
-	gl.captureKeys = function( prevent_default ) {
+	gl.captureKeys = function( prevent_default, only_canvas ) {
 		if(onkey_handler) 
 			return;
 		gl.keys = {};
+
+		var target = only_canvas ? gl.canvas : document;
+
 		document.addEventListener(&quot;keydown&quot;, inner );
 		document.addEventListener(&quot;keyup&quot;, inner );
 		function inner(e) { onkey(e, prevent_default); }
@@ -469,6 +477,7 @@ GL.create = function(options) {
 		if(!key) //this key doesnt look like an special key
 			key = e.character;
 
+		//regular key
 		if (!e.altKey &amp;&amp; !e.ctrlKey &amp;&amp; !e.metaKey) {
 			if (key) 
 				gl.keys[key] = e.type == &quot;keydown&quot;;
@@ -772,6 +781,7 @@ GL.mapKeyCode = function(code)
 		9: &#x27;TAB&#x27;,
 		13: &#x27;ENTER&#x27;,
 		16: &#x27;SHIFT&#x27;,
+		17: &#x27;CTRL&#x27;,
 		27: &#x27;ESCAPE&#x27;,
 		32: &#x27;SPACE&#x27;,
 		37: &#x27;LEFT&#x27;,

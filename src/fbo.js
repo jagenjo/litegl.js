@@ -4,15 +4,12 @@ function FBO( textures, depth_texture )
 {
 	this.handler = null;
 
-	this.color_textures = textures;
-	this.depth_texture = depth_texture;
-
-	this.init();
+	this.setTextures( textures, depth_texture);
 }
 
 GL.FBO = FBO;
 
-FBO.prototype.init = function()
+FBO.prototype.setTextures = function( color_textures, depth_texture )
 {
 	if(!this.handler)
 		this.handler = gl.createFramebuffer();
@@ -21,8 +18,8 @@ FBO.prototype.init = function()
 		h = -1,
 		type = null;
 
-	var color_textures = this.color_textures;
-	var depth_texture = this.depth_texture;
+	this.color_textures = color_textures;
+	this.depth_texture = depth_texture;
 
 	for(var i = 0; i < color_textures.length; i++)
 	{
@@ -54,9 +51,9 @@ FBO.prototype.init = function()
 	{
 		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depth_texture.handler, 0);
 	}
-	else //create a temporary renderbuffer
+	else //create a renderbuffer to store depth
 	{
-		var renderbuffer = gl.createRenderbuffer();
+		var renderbuffer = this._renderbuffer = this._renderbuffer || gl.createRenderbuffer();
 		renderbuffer.width = w;
 		renderbuffer.height = h;
 		gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer );
@@ -86,7 +83,6 @@ FBO.prototype.init = function()
 	gl.bindRenderbuffer(gl.RENDERBUFFER, null);
 }
 
-
 FBO.prototype.bind = function( keep_old )
 {
 	if(keep_old)
@@ -102,7 +98,6 @@ FBO.prototype.bind = function( keep_old )
 		this._old_fbo = null;
 		this._old_viewport = null;
 	}
-
 
 	gl.bindFramebuffer( gl.FRAMEBUFFER, this.handler );
 	gl.viewport( 0,0, this.width, this.height );

@@ -530,6 +530,39 @@ Mesh.prototype.upload = function(buffer_type) {
 //LEGACY, plz remove
 Mesh.prototype.compile = Mesh.prototype.upload;
 
+
+
+
+Mesh.prototype.bindBuffers = function( shader )
+{
+	// enable attributes as necessary.
+	for (var name in this.vertexBuffers)
+	{
+		var buffer = this.vertexBuffers[ name ];
+		var attribute = buffer.attribute || name;
+		var location = shader.attributes[ attribute ];
+		if (location == null || !buffer.buffer) 
+			continue; 
+		gl.bindBuffer(gl.ARRAY_BUFFER, buffer.buffer);
+		gl.enableVertexAttribArray(location);
+		gl.vertexAttribPointer(location, buffer.buffer.spacing, buffer.buffer.gl_type, false, 0, 0);
+	}
+}
+
+Mesh.prototype.unbindBuffers = function( shader )
+{
+	// disable attributes
+	for (var name in this.vertexBuffers)
+	{
+		var buffer = this.vertexBuffers[ name ];
+		var attribute = buffer.attribute || name;
+		var location = shader.attributes[ attribute ];
+		if (location == null || !buffer.buffer)
+			continue; //ignore this buffer
+		gl.disableVertexAttribArray( shader.attributes[attribute] );
+	}
+}
+
 /**
 * Creates a clone of the mesh, the datarrays are cloned too
 * @method clone
@@ -564,6 +597,34 @@ Mesh.prototype.cloneShared = function( gl )
 	return new GL.Mesh( this.vertexBuffers, this.indexBuffers, undefined, gl );
 }
 
+
+/**
+* Creates an object with the info of the mesh (useful to transfer to workers)
+* @method toObject
+*/
+Mesh.prototype.toObject = function()
+{
+	var vbs = {};
+	var ibs = {};
+
+	for(var i in this.vertexBuffers)
+	{
+		var b = this.vertexBuffers[i];
+		vbs[i] = { 
+			spacing: b.spacing,
+			data: new b.data.constructor( b.data ) //clone
+		}; 
+	}
+	for(var i in this.indexBuffers)
+	{
+		var b = this.indexBuffers[i];
+		ibs[i] = { 
+			data: new b.data.constructor( b.data ) //clone
+		}
+	}
+
+	return { vertexBuffers: vbs, indexBuffers: ibs };
+}
 
 /**
 * Computes some data about the mesh
@@ -967,6 +1028,23 @@ Mesh.prototype.configure = function(o, options)
 }
 
 /**
+* Returns the amount of memory used by this mesh in bytes (sum of all buffers)
+* @method getMemory
+* @return {number} bytes
+*/
+Mesh.prototype.totalMemory = function()
+{
+	var num = 0|0;
+
+	for (var name in this.vertexBuffers)
+		num += this.vertexBuffers[name].data.buffer.byteLength;
+	for (var name in this.indexBuffers)
+		num += this.indexBuffers[name].data.buffer.byteLength;
+
+	return num;
+}
+
+/**
 * Static method for the class Mesh to create a mesh from a list of common streams
 * @method Mesh.load
 * @param {Object} buffers object will all the buffers
@@ -982,84 +1060,142 @@ Mesh.load = function(buffers, options, output_mesh) {
 }
 
 /**
-* Returns a mesh with all the meshes merged
+* Returns a mesh with all the meshes merged (you can apply transforms individually to every buffer)
 * @method Mesh.mergeMeshes
-* @param {Array} meshes array containing all the meshes
+* @param {Array} meshes array containing object like { mesh:, matrix:, texture_matrix: }
 */
-Mesh.mergeMeshes = function(meshes)
+Mesh.mergeMeshes = function( meshes, options )
 {
+	options = options || {};
+
 	var vertex_buffers = {};
 	var index_buffers = {};
-
-	var main_mesh = meshes[0];
-	var offsets = [];
+	var offsets = {};
+	var vertex_offsets = [];
+	var current_vertex_offset = 0;
 
 	//vertex buffers
-	for(var i in main_mesh.vertexBuffers)
+	//compute size
+	for(var i = 0; i &lt; meshes.length; ++i)
 	{
-		var buffer = main_mesh.vertexBuffers[i];
+		var mesh_info = meshes[i];
+		var mesh = mesh_info.mesh;
+		vertex_offsets.push( current_vertex_offset );
+		current_vertex_offset += mesh.vertexBuffers[&quot;vertices&quot;].data.length / 3;
 
-		//compute size
-		var total_size = buffer.data.length;
-		for(var j = 1; j &lt; meshes.length; ++j)
+		for(var j in mesh.vertexBuffers)
 		{
-			if(!meshes[j].vertexBuffers[i])
-				throw(&quot;cannot merge with different amount of buffers&quot;);
-			total_size += meshes[j].vertexBuffers[i].data.length;
-		}
-
-		//compact
-		var data = new Float32Array(total_size);
-		var pos = 0;
-		for(var j = 0; j &lt; meshes.length; ++j)
-		{
-			offsets[j] = pos;
-			data.set( meshes[j].vertexBuffers[i].data, pos );
-			pos += meshes[j].vertexBuffers[i].data.length;
-		}
-
-		vertex_buffers[i] = data;
-	}
-
-	//index buffers
-	for(var i in main_mesh.indexBuffers)
-	{
-		var buffer = main_mesh.indexBuffers[i];
-
-		//compute size
-		var total_size = buffer.data.length;
-		for(var j = 1; j &lt; meshes.length; ++j)
-		{
-			if(!meshes[j].indexBuffers[i])
-				throw(&quot;cannot merge with different amount of buffers&quot;);
-			total_size += meshes[j].indexBuffers[i].data.length;
-		}
-
-		//remap
-		var data = new buffer.constructor(total_size);
-		var pos = 0;
-		for(var j = 0; j &lt; meshes.length; ++j)
-		{
-			var b = meshes[j].indexBuffers[i].data;
-			if(j == 0)
-				data.set( b, pos );
+			if(!vertex_buffers[j])
+				vertex_buffers[j] = mesh.vertexBuffers[j].data.length;
 			else
-			{
-				var offset = offsets[j];
-				for(var k = 0, l = b.length; k &lt; l; k++)
-					data[k + pos] = b[k] + offset;
-			}
-			pos += meshes[j].indexBuffers[i].data.length;
+				vertex_buffers[j] += mesh.vertexBuffers[j].data.length;
 		}
 
-		index_buffers[i] = data;
+		for(var j in mesh.indexBuffers)
+		{
+			if(!index_buffers[j])
+				index_buffers[j] = mesh.indexBuffers[j].data.length;
+			else
+				index_buffers[j] += mesh.indexBuffers[j].data.length;
+		}
 	}
 
-	return new Mesh(vertex_buffers,index_buffers);
+	//allocate
+	for(var j in vertex_buffers)
+	{
+		var datatype = options[j];
+		if(datatype === null)
+		{
+			delete vertex_buffers[j];
+			continue;
+		}
+
+		if(!datatype)
+			datatype = Float32Array;
+
+		vertex_buffers[j] = new datatype( vertex_buffers[j] );
+		offsets[j] = 0;
+	}
+
+	for(var j in index_buffers)
+	{
+		index_buffers[j] = new Uint32Array( index_buffers[j] );
+		offsets[j] = 0;
+	}
+
+	//store
+	for(var i = 0; i &lt; meshes.length; ++i)
+	{
+		var mesh_info = meshes[i];
+		var mesh = mesh_info.mesh;
+
+		for(var j in mesh.vertexBuffers)
+		{
+			if(!vertex_buffers[j])
+				continue;
+
+			vertex_buffers[j].set( mesh.vertexBuffers[j].data, offsets[j] );
+
+			//apply transform
+			if(mesh_info[ j + &quot;_matrix&quot;] )
+			{
+				var matrix = mesh_info[ j + &quot;_matrix&quot; ];
+				if(matrix.length == 16)
+					apply_transform( vertex_buffers[j], offsets[j], mesh.vertexBuffers[j].data.length, matrix )
+				else if(matrix.length == 9)
+					apply_transform2D( vertex_buffers[j], offsets[j], mesh.vertexBuffers[j].data.length, matrix )
+			}
+
+			offsets[j] += mesh.vertexBuffers[j].data.length;
+		}
+
+		for(var j in mesh.indexBuffers)
+		{
+			index_buffers[j].set( mesh.indexBuffers[j].data, offsets[j] );
+			apply_offset( index_buffers[j], offsets[j], mesh.indexBuffers[j].data.length, vertex_offsets[i] );
+			offsets[j] += mesh.indexBuffers[j].data.length;
+		}
+	}
+
+	//useful functions
+	function apply_transform( array, start, length, matrix )
+	{
+		var l = start + length;
+		for(var i = start; i &lt; l; i+=3)
+		{
+			var v = array.subarray(i,i+3);
+			vec3.transformMat4( v, v, matrix );
+		}
+	}
+
+	function apply_transform2D( array, start, length, matrix )
+	{
+		var l = start + length;
+		for(var i = start; i &lt; l; i+=2)
+		{
+			var v = array.subarray(i,i+2);
+			vec2.transformMat3( v, v, matrix );
+		}
+	}
+
+	function apply_offset( array, start, length, offset )
+	{
+		var l = start + length;
+		for(var i = start; i &lt; l; ++i)
+			array[i] += offset;
+	}
+
+	//return
+	if( typeof(gl) != &quot;undefined&quot; )
+		return new GL.Mesh( vertex_buffers,index_buffers );
+	return { vertexBuffers: vertex_buffers, indexBuffers: index_buffers };
 }
 
-//Here we store all basic mesh parsers (OBJ, STL)
+
+
+//Here we store all basic mesh parsers (OBJ, STL) and encoders
 Mesh.parsers = {};
+Mesh.encoders = {};
 
 /**
 * Returns am empty mesh and loads a mesh and parses it using the Mesh.parsers, by default only OBJ is supported
@@ -1093,9 +1229,21 @@ Mesh.prototype.parse = function( data, format )
 	if(parser)
 		return parser.call(null, data, {mesh: this});
 	else
-		throw(&quot;GL.Mesh.fromURL: no parser found for format &quot; + format );
+		throw(&quot;GL.Mesh.parse: no parser found for format &quot; + format );
 	return null;
 }
+
+Mesh.prototype.encode = function( format, options )
+{
+	format = format.toLowerCase();
+	var encoder = GL.Mesh.encoders[ format ];
+	if(encoder)
+		return encoder.call(null, this, options );
+	else
+		throw(&quot;GL.Mesh.encode: no encoder found for format &quot; + format );
+	return null;
+}
+
 
 
 Mesh.getScreenQuad = function(gl)

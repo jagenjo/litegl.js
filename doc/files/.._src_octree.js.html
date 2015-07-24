@@ -303,12 +303,13 @@ Octree.prototype.trim = function(node)
 
 	var num = 1;
 	var valid = [];
-	for(var i in node.c)
+	var c = node.c;
+	for(var i = 0; i &lt; c.length; ++i)
 	{
-		if(node.c[i].inside)
+		if(c[i].inside)
 		{
-			valid.push(node.c[i]);
-			num += this.trim(node.c[i]);
+			valid.push(c[i]);
+			num += this.trim(c[i]);
 		}
 	}
 	node.c = valid;
@@ -378,7 +379,7 @@ Octree.testRayInNode = function(node, origin, direction)
 	//test children nodes faces
 	var child;
 	if(node.c)
-		for(var i in node.c)
+		for(var i = 0; i &lt; node.c.length; ++i)
 		{
 			child = node.c[i];
 			//test with node box
@@ -414,59 +415,81 @@ Octree.isInsideAABB = function(a,b)
 }
 
 
-Octree.hitTestBox = function(origin, ray, box_min, box_max) {
-	var tMin = vec3.subtract( vec3.create(), box_min, origin );
-	var tMax = vec3.subtract( vec3.create(), box_max, origin );
+Octree.hitTestBox = (function(){ 
+	var tMin = vec3.create();
+	var tMax = vec3.create();
+	var inv = vec3.create();
+	var t1 = vec3.create();
+	var t2 = vec3.create();
+	var tmp = vec3.create();
+	var epsilon = 1.0e-6;
+	var eps = vec3.fromValues(epsilon,epsilon,epsilon);
 	
-	if(	vec3.maxValue(tMin) &lt; 0 &amp;&amp; vec3.minValue(tMax) &gt; 0)
-		return new HitTest(0,origin,ray);
+	return function(origin, ray, box_min, box_max) {
+		vec3.subtract( tMin, box_min, origin );
+		vec3.subtract( tMax, box_max, origin );
+		
+		if(	vec3.maxValue(tMin) &lt; 0 &amp;&amp; vec3.minValue(tMax) &gt; 0)
+			return new HitTest(0,origin,ray);
 
-	vec3.multiply(tMin, tMin, [1/ray[0],1/ray[1],1/ray[2]]);
-	vec3.multiply(tMax, tMax, [1/ray[0],1/ray[1],1/ray[2]]);
-	var t1 = vec3.min(vec3.create(), tMin, tMax);
-	var t2 = vec3.max(vec3.create(), tMin, tMax);
-	var tNear = vec3.maxValue(t1);
-	var tFar = vec3.minValue(t2);
+		inv[0] = 1/ray[0];	inv[1] = 1/ray[1];	inv[2] = 1/ray[2];
+		vec3.multiply(tMin, tMin, inv);
+		vec3.multiply(tMax, tMax, inv);
+		vec3.min(t1, tMin, tMax);
+		vec3.max(t2, tMin, tMax);
+		var tNear = vec3.maxValue(t1);
+		var tFar = vec3.minValue(t2);
 
-	if (tNear &gt; 0 &amp;&amp; tNear &lt; tFar) {
-		var epsilon = 1.0e-6, hit = vec3.add( vec3.create(), vec3.scale(vec3.create(), ray, tNear ), origin);
-		vec3.add(box_min, box_min,[epsilon,epsilon,epsilon]);
-		vec3.subtract(box_min, box_min,[epsilon,epsilon,epsilon]);
-		return new HitTest(tNear, hit, vec3.fromValues(
-		  (hit[0] &gt; box_max[0]) - (hit[0] &lt; box_min[0]),
-		  (hit[1] &gt; box_max[1]) - (hit[1] &lt; box_min[1]),
-		  (hit[2] &gt; box_max[2]) - (hit[2] &lt; box_min[2]) ));
+		if (tNear &gt; 0 &amp;&amp; tNear &lt; tFar) {
+			var hit = vec3.add( vec3.create(), vec3.scale(tmp, ray, tNear ), origin);
+			vec3.add( box_min, box_min, eps);
+			vec3.subtract(box_min, box_min, eps);
+			return new HitTest(tNear, hit, vec3.fromValues(
+			  (hit[0] &gt; box_max[0]) - (hit[0] &lt; box_min[0]),
+			  (hit[1] &gt; box_max[1]) - (hit[1] &lt; box_min[1]),
+			  (hit[2] &gt; box_max[2]) - (hit[2] &lt; box_min[2]) ));
+		}
+
+		return null;
 	}
+})();
 
-	return null;
-}
+Octree.hitTestTriangle = (function(){ 
+	
+	var ab = vec3.create();
+	var ac = vec3.create();
+	var toHit = vec3.create();
+	var tmp = vec3.create();
+	
+	return function(origin, ray, a, b, c) {
+		vec3.subtract( ab, b,a );
+		vec3.subtract( ac, c,a );
+		var normal = vec3.cross( vec3.create(), ab, ac ); //returned
+		vec3.normalize( normal, normal );
+		if( vec3.dot(normal,ray) &gt; 0)
+			return null; //ignore backface
 
-Octree.hitTestTriangle = function(origin, ray, a, b, c) {
-	var ab = vec3.subtract( vec3.create(), b,a );
-	var ac = vec3.subtract( vec3.create(), c,a );
-	var normal = vec3.cross( vec3.create(), ab, ac );
-	vec3.normalize( normal, normal );
-	if( vec3.dot(normal,ray) &gt; 0) return; //ignore backface
+		var t = vec3.dot(normal, vec3.subtract( tmp, a, origin )) / vec3.dot(normal,ray);
 
-	var t = vec3.dot(normal, vec3.subtract( vec3.create(), a, origin )) / vec3.dot(normal,ray);
-
-  if (t &gt; 0) {
-	var hit = vec3.scale(vec3.create(), ray, t);
-	vec3.add(hit, hit, origin);
-	var toHit = vec3.subtract( vec3.create(), hit,a );
-	var dot00 = vec3.dot(ac,ac);
-	var dot01 = vec3.dot(ac,ab);
-	var dot02 = vec3.dot(ac,toHit);
-	var dot11 = vec3.dot(ab,ab);
-	var dot12 = vec3.dot(ab,toHit);
-	var divide = dot00 * dot11 - dot01 * dot01;
-	var u = (dot11 * dot02 - dot01 * dot12) / divide;
-	var v = (dot00 * dot12 - dot01 * dot02) / divide;
-	if (u &gt;= 0 &amp;&amp; v &gt;= 0 &amp;&amp; u + v &lt;= 1) return new HitTest(t, hit, normal);
-  }
-
-  return null;
-}
+	    if (t &gt; 0)
+		{
+			var hit = vec3.scale(vec3.create(), ray, t); //returned
+			vec3.add(hit, hit, origin);
+			vec3.subtract( toHit, hit,a );
+			var dot00 = vec3.dot(ac,ac);
+			var dot01 = vec3.dot(ac,ab);
+			var dot02 = vec3.dot(ac,toHit);
+			var dot11 = vec3.dot(ab,ab);
+			var dot12 = vec3.dot(ab,toHit);
+			var divide = dot00 * dot11 - dot01 * dot01;
+			var u = (dot11 * dot02 - dot01 * dot12) / divide;
+			var v = (dot00 * dot12 - dot01 * dot02) / divide;
+			if (u &gt;= 0 &amp;&amp; v &gt;= 0 &amp;&amp; u + v &lt;= 1)
+				return new HitTest(t, hit, normal);
+		}
+	    return null;
+	};
+})();
 
     </pre>
 </div>

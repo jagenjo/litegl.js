@@ -179,6 +179,9 @@ var LEvent = global.LEvent = GL.LEvent = {
 	**/
 	triggerArray: function( instances, event_type, params, skip_jquery )
 	{
+		var use_jquery = LEvent.jQuery && !skip_jquery;
+		var name = "__on_" + event_type;
+
 		for(var i = 0, l = instances.length; i < l; ++i)
 		{
 			var instance = instances[i];
@@ -192,13 +195,12 @@ var LEvent = global.LEvent = GL.LEvent = {
 			//var event_type = event.type;
 
 			//you can resend the events as jQuery events, but to avoid collisions with system events, we use ":" at the begining
-			if(LEvent.jQuery && !skip_jquery) 
+			if(use_jquery)
 				$(instance).trigger( ":" + event_type, params );
 
-			var name = "__on_" + event_type;
 			if(!instance.hasOwnProperty(name)) 
 				continue;
-			for(var j = 0, l = instance[name].length; j < l; ++j)
+			for(var j = 0, ll = instance[name].length; j < ll; ++j)
 			{
 				var v = instance[name][j];
 				if( v[0].call(v[1], event_type, params) == false)// || event.stop)

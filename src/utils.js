@@ -124,16 +124,18 @@ global.cloneCanvas = GL.cloneCanvas = function cloneCanvas(c) {
     return canvas;
 }
 
-Image.prototype.getPixels = function()
+if(typeof(Image) != "undefined") //not existing inside workers
 {
-    var canvas = document.createElement('canvas');
-    canvas.width = this.width;
-    canvas.height = this.height;
-    var ctx = canvas.getContext("2d");
-    ctx.drawImage(this,0,0);
-	return ctx.getImageData(0, 0, this.width, this.height).data;
+	Image.prototype.getPixels = function()
+	{
+		var canvas = document.createElement('canvas');
+		canvas.width = this.width;
+		canvas.height = this.height;
+		var ctx = canvas.getContext("2d");
+		ctx.drawImage(this,0,0);
+		return ctx.getImageData(0, 0, this.width, this.height).data;
+	}
 }
-
 
 if(!String.prototype.hasOwnProperty("replaceAll")) 
 	Object.defineProperty(String.prototype, "replaceAll", {
@@ -351,3 +353,92 @@ global.loadFileAtlas = GL.loadFileAtlas = function loadFileAtlas(url, callback, 
 	}
 }
 
+
+global.hexColorToRGBA = (function() {
+	//to change the color: from http://www.w3schools.com/cssref/css_colorsfull.asp
+	var string_colors = {
+		white: [1,1,1],
+		black: [0,0,0],
+		gray: [0.501960813999176, 0.501960813999176, 0.501960813999176],
+		red: [1,0,0],
+		orange: [1, 0.6470588445663452, 0],
+		pink: [1, 0.7529411911964417, 0.7960784435272217],
+		green: [0, 0.501960813999176, 0],
+		lime: [0,1,0],
+		blue: [0,0,1],
+		violet: [0.9333333373069763, 0.5098039507865906, 0.9333333373069763],
+		magenta: [1,0,1],
+		cyan: [0,1,1],
+		yellow: [1,1,0],
+		brown: [0.6470588445663452, 0.16470588743686676, 0.16470588743686676],
+		silver: [0.7529411911964417, 0.7529411911964417, 0.7529411911964417],
+		gold: [1, 0.843137264251709, 0],
+		transparent: [0,0,0,0]
+	};
+
+	return function( hex, color, alpha )
+	{
+	alpha = (alpha === undefined ? 1 : alpha);
+	color = color || new Float32Array(4);
+	color[3] = alpha;
+
+	if(typeof(hex) != "string")
+		return color;
+
+
+	//for those hardcoded colors
+	var col = string_colors[hex];
+	if( col !== undefined )
+	{
+		color.set( col );
+		if(color.length == 3)
+			color[3] = alpha;
+		else
+			color[3] *= alpha;
+		return;
+	}
+
+	//rgba colors
+	var pos = hex.indexOf("rgba(");
+	if(pos != -1)
+	{
+		var str = hex.substr(5);
+		str = str.split(",");
+		color[0] = parseInt( str[0] ) / 255;
+		color[1] = parseInt( str[1] ) / 255;
+		color[2] = parseInt( str[2] ) / 255;
+		color[3] = parseFloat( str[3] ) * alpha;
+		return color;
+	}
+
+	color[3] = alpha;
+
+	//rgb colors
+	var pos = hex.indexOf("rgb(");
+	if(pos != -1)
+	{
+		var str = hex.substr(3);
+		str = str.split(",");
+		color[0] = parseInt( str[0] ) / 255;
+		color[1] = parseInt( str[1] ) / 255;
+		color[2] = parseInt( str[2] ) / 255;
+		return color;
+	}
+
+	//the rest
+	// Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+	var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+	hex = hex.replace(shorthandRegex, function(m, r, g, b) {
+		return r + r + g + g + b + b;
+	});
+
+	var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+	if(!result)
+		return color;
+
+	color[0] = parseInt(result[1], 16) / 255;
+	color[1] = parseInt(result[2], 16) / 255;
+	color[2] = parseInt(result[3], 16) / 255;
+	return color;
+	}
+})();
