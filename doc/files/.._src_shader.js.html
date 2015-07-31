@@ -224,7 +224,7 @@ Shader.prototype.extractShaderInfo = function()
 		if(!data) break;
 		var func = Shader.getUniformFunc(data);
 		//this.uniformInfo[ data.name ] = { type: data.gl.getUniformLocation(this.program, data.name) };
-		this.uniformInfo[ data.name ] = { type: data.type, func: func, size: data.size, loc: gl.getUniformLocation(this.program, data.name ) };
+		this.uniformInfo[ data.name ] = { type: data.type, func: func, size: data.size, loc: null }; //gl.getAttribLocation( this.program, data.name )
 		this.attributes[ data.name ] = gl.getAttribLocation(this.program, data.name );	
 	}
 }
@@ -363,6 +363,20 @@ Shader.prototype.bind = function()
 }
 
 /**
+* Returns the location of a uniform or attribute
+* @method getLocation
+* @param {String} name
+* @return {WebGLUniformLocation} location
+*/
+Shader.prototype.getLocation = function( name )
+{
+	var info = this.uniformInfo[name];
+	if(info)
+		return this.uniformInfo[name].loc;
+	return null;
+}
+
+/**
 * Uploads a set of uniforms to the Shader. You dont need to specify types, they are infered from the shader info.
 * @method uniforms
 * @param {Object} uniforms
@@ -412,6 +426,12 @@ Shader.prototype.setUniform = function(name, value)
 	if (!info)
 		return;
 
+	if(info.loc === null)
+		return;
+
+	//if(info.loc.constructor !== Function)
+	//	return;
+
 	if(value == null) 
 		return;
 
@@ -430,6 +450,12 @@ Shader.prototype._setUniform = function(name, value)
 	var info = this.uniformInfo[ name ];
 	if (!info)
 		return;
+
+	if(info.loc === null)
+		return;
+
+	//if(info.loc.constructor !== Function)
+	//	return;
 
 	if(value == null) 
 		return;

@@ -2328,6 +2328,25 @@
         {
             "file": "../src/shader.js",
             "line": 257,
+            "description": "Returns the location of a uniform or attribute",
+            "itemtype": "method",
+            "name": "getLocation",
+            "params": [
+                {
+                    "name": "name",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "location",
+                "type": "WebGLUniformLocation"
+            },
+            "class": "Shader"
+        },
+        {
+            "file": "../src/shader.js",
+            "line": 271,
             "description": "Uploads a set of uniforms to the Shader. You dont need to specify types, they are infered from the shader info.",
             "itemtype": "method",
             "name": "uniforms",
@@ -2342,7 +2361,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 292,
+            "line": 306,
             "description": "Uploads a uniform to the Shader. You dont need to specify types, they are infered from the shader info. Shader must be binded!",
             "itemtype": "method",
             "name": "setUniform",
@@ -2362,7 +2381,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 338,
+            "line": 364,
             "description": "Renders a mesh using this shader, remember to use the function uniforms before to enable the shader",
             "itemtype": "method",
             "name": "draw",
@@ -2387,7 +2406,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 352,
+            "line": 378,
             "description": "Renders a range of a mesh using this shader",
             "itemtype": "method",
             "name": "drawRange",
@@ -2422,7 +2441,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 370,
+            "line": 396,
             "description": "Renders a range of a mesh using this shader",
             "itemtype": "method",
             "name": "drawBuffers",
@@ -2457,7 +2476,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 451,
+            "line": 477,
             "description": "Given a source code with the directive #import it expands it inserting the code using Shader.files to fetch for import files.\nWarning: Imports are evaluated only the first inclusion, the rest are ignored to avoid double inclusion of functions\n         Also, imports cannot have other imports inside.",
             "itemtype": "method",
             "name": "Shader.expandImports",
@@ -2481,7 +2500,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 621,
+            "line": 647,
             "description": "Allows to create a simple shader meant to be used to process a texture, instead of having to define the generic Vertex & Fragment Shader code",
             "itemtype": "method",
             "name": "Shader.createFX",
@@ -2503,7 +2522,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 636,
+            "line": 662,
             "description": "Renders a fullscreen quad with this shader applied",
             "itemtype": "method",
             "name": "toViewport",
@@ -2518,7 +2537,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 651,
+            "line": 677,
             "description": "Returns a shader ready to render a textured quad in fullscreen, use with Mesh.getScreenQuad() mesh\nshader params sampler2D u_texture",
             "itemtype": "method",
             "name": "Shader.getScreenShader",
@@ -2526,7 +2545,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 666,
+            "line": 692,
             "description": "Returns a shader ready to render a colored textured quad in fullscreen, use with Mesh.getScreenQuad() mesh\nshader params vec4 u_color and sampler2D u_texture",
             "itemtype": "method",
             "name": "Shader.getColoredScreenShader",
@@ -2534,7 +2553,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 681,
+            "line": 707,
             "description": "Returns a shader ready to render a quad with transform, use with Mesh.getScreenQuad() mesh\nshader must have: u_position, u_size, u_viewport, u_transform (mat3)",
             "itemtype": "method",
             "name": "Shader.getQuadShader",
@@ -2542,7 +2561,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 695,
+            "line": 721,
             "description": "Returns a shader ready to render part of a texture into the viewport\nshader must have: u_position, u_size, u_viewport, u_transform, u_texture_area (vec4)",
             "itemtype": "method",
             "name": "Shader.getPartialQuadShader",
@@ -2550,7 +2569,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 709,
+            "line": 735,
             "description": "Returns a shader used to apply gaussian blur to one texture in one axis (you should use it twice to get a gaussian blur)\nshader params are: vec2 u_offset, float u_intensity",
             "itemtype": "method",
             "name": "Shader.getBlurShader",
@@ -2558,7 +2577,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 794,
+            "line": 820,
             "description": "Returns a shader to apply FXAA antialiasing\nparams are vec2 u_viewportSize, mat4 u_iViewportSize",
             "itemtype": "method",
             "name": "Shader.getFXAAShader",
@@ -2566,7 +2585,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 820,
+            "line": 846,
             "description": "Returns a flat shader (useful to render lines)",
             "itemtype": "method",
             "name": "Shader.getFlatShader",
