@@ -682,6 +682,8 @@ Texture.fromURL = function(url, options, on_complete, gl) {
 			texture.texture_type = t.texture_type;
 			texture.handler = t;
 			delete texture["ready"]; //texture.ready = true;
+			if(on_complete)
+				on_complete(texture);
 		});
 	}
 	else
