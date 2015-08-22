@@ -683,7 +683,7 @@ Texture.fromURL = function(url, options, on_complete, gl) {
 			texture.handler = t;
 			delete texture["ready"]; //texture.ready = true;
 			if(on_complete)
-				on_complete(texture);
+				on_complete(texture, url);
 		});
 	}
 	else
@@ -697,7 +697,7 @@ Texture.fromURL = function(url, options, on_complete, gl) {
 			GL.Texture.fromImage(this, options);
 			delete texture["ready"]; //texture.ready = true;
 			if(on_complete)
-				on_complete(texture);
+				on_complete(texture, url);
 		}
 		image.onerror = function()
 		{

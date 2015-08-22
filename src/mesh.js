@@ -1106,7 +1106,7 @@ Mesh.fromURL = function(url, on_complete, gl)
 		mesh.parse( data, ext );
 		delete mesh["ready"];
 		if(on_complete)
-			on_complete(mesh);
+			on_complete(mesh, url);
 	}, function(err){
 		if(on_complete)
 			on_complete(null);
