@@ -2,8 +2,9 @@
 
 function FBO( textures, depth_texture )
 {
-	this.handler = null;
 
+	this.handler = null;
+	this._old_viewport = new Float32Array(4);
 	this.setTextures( textures, depth_texture);
 }
 
@@ -85,19 +86,12 @@ FBO.prototype.setTextures = function( color_textures, depth_texture )
 
 FBO.prototype.bind = function( keep_old )
 {
+	this._old_viewport.set( gl.viewport_data );
+
 	if(keep_old)
-	{
 		this._old_fbo = gl.getParameter( gl.FRAMEBUFFER_BINDING );
-		if(!this._old_viewport)
-			this._old_viewport = gl.getViewport(); 
-		else
-			this._old_viewport.set( gl.viewport_data );
-	}
 	else
-	{
 		this._old_fbo = null;
-		this._old_viewport = null;
-	}
 
 	gl.bindFramebuffer( gl.FRAMEBUFFER, this.handler );
 	gl.viewport( 0,0, this.width, this.height );
@@ -108,15 +102,14 @@ FBO.prototype.unbind = function()
 	if(this._old_fbo)
 	{
 		gl.bindFramebuffer( gl.FRAMEBUFFER, this._old_fbo );
-		var v = this._old_viewport;
-		gl.viewport( v[0], v[1], v[2], v[3] );
 		this._old_fbo = null;
 	}
 	else
 	{
 		gl.bindFramebuffer( gl.FRAMEBUFFER, null );
-		gl.viewport( 0,0, gl.canvas.width, gl.canvas.height );
 	}
+
+	gl.setViewport( this._old_viewport );
 }
 
 

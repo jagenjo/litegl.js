@@ -66,7 +66,10 @@ GL.create = function(options) {
 	gl._viewport_func = gl.viewport;
 	gl.viewport_data = new Float32Array([0,0,gl.canvas.width,gl.canvas.height]); //32000 max viewport, I guess its fine
 	gl.viewport = function(a,b,c,d) { var v = this.viewport_data; v[0] = a|0; v[1] = b|0; v[2] = c|0; v[3] = d|0; this._viewport_func(a,b,c,d); }
-	gl.getViewport = function() { return new Float32Array( gl.viewport_data ); };
+	gl.getViewport = function(v) { 
+		if(v) { v[0] = gl.viewport_data[0]; v[1] = gl.viewport_data[1]; v[2] = gl.viewport_data[2]; v[3] = gl.viewport_data[3]; return v; }
+		return new Float32Array( gl.viewport_data );
+	};
 	gl.setViewport = function(v) { gl.viewport_data.set(v); this._viewport_func(v[0],v[1],v[2],v[3]); };
 	
 	//just some checks

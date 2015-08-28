@@ -907,7 +907,7 @@ Texture.cubemapFromImage = function( image, options ) {
 
 	if(image.width != (image.height / 6) && image.height % 6 != 0 && !options.faces)
 	{
-		console.log("Texture not valid, size doesnt match a cubemap");
+		console.error( "Cubemap image not valid, only 1x6 (vertical) or 6x3 (cross) formats. Check size:", image.width, image.height );
 		return null;
 	}
 
@@ -1009,8 +1009,9 @@ Texture.cubemapFromURL = function(url, options, on_complete) {
 	image.onload = function()
 	{
 		options.texture = texture;
-		GL.Texture.cubemapFromImage(this, options);
-		texture.ready = true;
+		texture = GL.Texture.cubemapFromImage(this, options);
+		if(texture)
+			delete texture["ready"]; //texture.ready = true;
 		if(on_complete)
 			on_complete(texture);
 	}
