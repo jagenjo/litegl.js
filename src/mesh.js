@@ -856,6 +856,18 @@ Mesh.computeBounding = function( vertices, bb ) {
 }
 
 /**
+* returns the bounding box, if it is not computed, then computes it
+* @method getBoundingBox
+* @return {BBox} bounding box
+*/
+Mesh.prototype.getBoundingBox = function()
+{
+	if(!this.bounding)
+		this.updateBounding();
+	return this.bounding;
+}
+
+/**
 * Update bounding information of this mesh
 * @method updateBounding
 */
