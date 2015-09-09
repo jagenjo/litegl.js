@@ -187,6 +187,9 @@ global.Texture = GL.Texture = function Texture(width, height, options, gl) {
 		gl.texParameteri(this.texture_type, gl.TEXTURE_WRAP_S, this.wrapS );
 		gl.texParameteri(this.texture_type, gl.TEXTURE_WRAP_T, this.wrapT );
 
+		if(options.anisotropic &amp;&amp; gl.extensions[&quot;EXT_texture_filter_anisotropic&quot;])
+			gl.texParameterf(gl.TEXTURE_2D, gl.extensions[&quot;EXT_texture_filter_anisotropic&quot;].TEXTURE_MAX_ANISOTROPY_EXT, options.anisotropic);
+
 		//gl.TEXTURE_1D is not supported by WebGL...
 		if(this.texture_type == gl.TEXTURE_2D)
 		{
@@ -367,6 +370,9 @@ Texture.cubemap_camera_parameters = [
 
 /**
 * Render to texture using FBO, just pass the callback to a rendering function and the content of the texture will be updated
+* If the texture is a cubemap, the callback will be called six times, once per face, the number of the face is passed as a second parameter
+* for further info about how to set up the propper cubemap camera, check the GL.Texture.cubemap_camera_parameters with the direction and up vector for every face.
+*
 * Keep in mind that it tries to reuse the last renderbuffer for the depth, and if it cannot (different size) it creates a new one (throwing the old)
 * @method drawTo
 * @param {Function} callback function that does all the rendering inside this texture
@@ -790,6 +796,8 @@ Texture.fromURL = function(url, options, on_complete, gl) {
 			texture.texture_type = t.texture_type;
 			texture.handler = t;
 			delete texture[&quot;ready&quot;]; //texture.ready = true;
+			if(on_complete)
+				on_complete(texture, url);
 		});
 	}
 	else
@@ -803,7 +811,7 @@ Texture.fromURL = function(url, options, on_complete, gl) {
 			GL.Texture.fromImage(this, options);
 			delete texture[&quot;ready&quot;]; //texture.ready = true;
 			if(on_complete)
-				on_complete(texture);
+				on_complete(texture, url);
 		}
 		image.onerror = function()
 		{
@@ -1013,7 +1021,7 @@ Texture.cubemapFromImage = function( image, options ) {
 
 	if(image.width != (image.height / 6) &amp;&amp; image.height % 6 != 0 &amp;&amp; !options.faces)
 	{
-		console.log(&quot;Texture not valid, size doesnt match a cubemap&quot;);
+		console.error( &quot;Cubemap image not valid, only 1x6 (vertical) or 6x3 (cross) formats. Check size:&quot;, image.width, image.height );
 		return null;
 	}
 
@@ -1115,8 +1123,9 @@ Texture.cubemapFromURL = function(url, options, on_complete) {
 	image.onload = function()
 	{
 		options.texture = texture;
-		GL.Texture.cubemapFromImage(this, options);
-		texture.ready = true;
+		texture = GL.Texture.cubemapFromImage(this, options);
+		if(texture)
+			delete texture[&quot;ready&quot;]; //texture.ready = true;
 		if(on_complete)
 			on_complete(texture);
 	}

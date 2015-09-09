@@ -2,22 +2,59 @@
 
 function FBO( textures, depth_texture )
 {
-
 	this.handler = null;
+	this.width = -1;
+	this.height = -1;
+	this.color_textures = [];
+	this.depth_texture = null;
+
+	//assign textures
+	if(textures && textures.length)
+		this.setTextures( textures, depth_texture );
+
+	//save state
+	this._old_fbo = null;
 	this._old_viewport = new Float32Array(4);
-	this.setTextures( textures, depth_texture);
 }
 
 GL.FBO = FBO;
 
-FBO.prototype.setTextures = function( color_textures, depth_texture )
+FBO.prototype.setTextures = function( color_textures, depth_texture, skip_disable )
 {
+	//test if is already binded
+	var same = this.depth_texture == depth_texture;
+	if( same )
+	{
+		if( color_textures.length == this.color_textures.length )
+		{
+			for(var i = 0; i < color_textures.length; ++i)
+				if( color_textures[i] != this.color_textures[i] )
+				{
+					same = false;
+					break;
+				}
+		}
+		else
+			same = false;
+	}
+		
+	if(same)
+		return;
+
+
+	//save state to restore afterwards
+	this._old_fbo = gl.getParameter( gl.FRAMEBUFFER_BINDING );
+
 	if(!this.handler)
 		this.handler = gl.createFramebuffer();
 
 	var w = -1,
 		h = -1,
 		type = null;
+
+	var previously_attached = 0;
+	if( this.color_textures )
+		previously_attached = this.color_textures.length;
 
 	this.color_textures = color_textures;
 	this.depth_texture = depth_texture;
@@ -71,21 +108,31 @@ FBO.prototype.setTextures = function( color_textures, depth_texture )
 		this.order.push( gl.COLOR_ATTACHMENT0 + i );
 	}
 
+	//detach old ones (only is reusing a FBO with a different set of textures)
+	for(var i = color_textures.length; i < previously_attached; ++i)
+		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, null, 0);
+
+	//when using more than one texture you need to use the multidraw extension
 	if(color_textures.length > 1)
 		ext.drawBuffersWEBGL( this.order );
 
+	//check completion
 	var complete = gl.checkFramebufferStatus( gl.FRAMEBUFFER );
 	if(complete !== gl.FRAMEBUFFER_COMPLETE)
 		throw("FBO not complete: " + complete);
 
-	//disable all
-	gl.bindFramebuffer( gl.FRAMEBUFFER, null );
+
+	//restore state
 	gl.bindTexture(gl.TEXTURE_2D, null);
 	gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+	if(!skip_disable)
+		gl.bindFramebuffer( gl.FRAMEBUFFER, this._old_fbo );
 }
 
 FBO.prototype.bind = function( keep_old )
 {
+	if(!this.color_textures.length)
+		throw("FBO: no textures attached to FBO");
 	this._old_viewport.set( gl.viewport_data );
 
 	if(keep_old)
@@ -93,21 +140,15 @@ FBO.prototype.bind = function( keep_old )
 	else
 		this._old_fbo = null;
 
-	gl.bindFramebuffer( gl.FRAMEBUFFER, this.handler );
+	if(this._old_fbo != this.handler )
+		gl.bindFramebuffer( gl.FRAMEBUFFER, this.handler );
 	gl.viewport( 0,0, this.width, this.height );
 }
 
 FBO.prototype.unbind = function()
 {
-	if(this._old_fbo)
-	{
-		gl.bindFramebuffer( gl.FRAMEBUFFER, this._old_fbo );
-		this._old_fbo = null;
-	}
-	else
-	{
-		gl.bindFramebuffer( gl.FRAMEBUFFER, null );
-	}
+	gl.bindFramebuffer( gl.FRAMEBUFFER, this._old_fbo );
+	this._old_fbo = null;
 
 	gl.setViewport( this._old_viewport );
 }

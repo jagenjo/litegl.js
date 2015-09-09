@@ -79,6 +79,9 @@ global.Texture = GL.Texture = function Texture(width, height, options, gl) {
 		gl.texParameteri(this.texture_type, gl.TEXTURE_WRAP_S, this.wrapS );
 		gl.texParameteri(this.texture_type, gl.TEXTURE_WRAP_T, this.wrapT );
 
+		if(options.anisotropic && gl.extensions["EXT_texture_filter_anisotropic"])
+			gl.texParameterf(gl.TEXTURE_2D, gl.extensions["EXT_texture_filter_anisotropic"].TEXTURE_MAX_ANISOTROPY_EXT, options.anisotropic);
+
 		//gl.TEXTURE_1D is not supported by WebGL...
 		if(this.texture_type == gl.TEXTURE_2D)
 		{
@@ -259,6 +262,9 @@ Texture.cubemap_camera_parameters = [
 
 /**
 * Render to texture using FBO, just pass the callback to a rendering function and the content of the texture will be updated
+* If the texture is a cubemap, the callback will be called six times, once per face, the number of the face is passed as a second parameter
+* for further info about how to set up the propper cubemap camera, check the GL.Texture.cubemap_camera_parameters with the direction and up vector for every face.
+*
 * Keep in mind that it tries to reuse the last renderbuffer for the depth, and if it cannot (different size) it creates a new one (throwing the old)
 * @method drawTo
 * @param {Function} callback function that does all the rendering inside this texture

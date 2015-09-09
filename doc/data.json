@@ -141,7 +141,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "../src/geo.js",
-            "line": 631,
+            "line": 634,
             "description": "BBox is a class to create BoundingBoxes but it works as glMatrix, creating Float32Array with the info inside instead of objects\nThe bounding box is stored as center,halfsize,min,max,radius (total of 13 floats)"
         },
         "GL": {
@@ -356,7 +356,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 84,
+            "line": 87,
             "description": "sets this context as the current global gl context (in case you have more than one)",
             "itemtype": "method",
             "name": "makeCurrent",
@@ -364,7 +364,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 93,
+            "line": 96,
             "description": "executes callback inside this webgl context",
             "itemtype": "method",
             "name": "execute",
@@ -379,7 +379,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 107,
+            "line": 110,
             "description": "Launch animation loop (calls gl.onupdate and gl.ondraw every frame)\nexample: gl.ondraw = function(){ ... }   or  gl.onupdate = function(dt) { ... }",
             "itemtype": "method",
             "name": "animate",
@@ -387,7 +387,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 155,
+            "line": 158,
             "description": "Destroy this WebGL context (removes also the Canvas from the DOM)",
             "itemtype": "method",
             "name": "destroy",
@@ -395,7 +395,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 184,
+            "line": 187,
             "description": "Tells the system to capture mouse events on the canvas. \nThis will trigger onmousedown, onmousemove, onmouseup, onmousewheel callbacks assigned in the gl context\nexample: gl.onmousedown = function(e){ ... }\nThe event is a regular MouseEvent with some extra parameters",
             "itemtype": "method",
             "name": "captureMouse",
@@ -410,7 +410,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 335,
+            "line": 338,
             "description": "Tells the system to capture key events on the canvas. This will trigger onkey",
             "itemtype": "method",
             "name": "captureKeys",
@@ -430,7 +430,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 418,
+            "line": 421,
             "description": "Tells the system to capture gamepad events on the canvas.",
             "itemtype": "method",
             "name": "captureGamepads",
@@ -438,7 +438,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 440,
+            "line": 443,
             "description": "returns the detected gamepads on the system",
             "itemtype": "method",
             "name": "getGamepads",
@@ -446,7 +446,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 498,
+            "line": 501,
             "description": "launches de canvas in fullscreen mode",
             "itemtype": "method",
             "name": "fullscreen",
@@ -454,7 +454,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 515,
+            "line": 518,
             "description": "returns a canvas with a snapshot of an area\nthis is safer than using the canvas itself due to internals of webgl",
             "itemtype": "method",
             "name": "snapshot",
@@ -488,7 +488,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 553,
+            "line": 556,
             "description": "returns a texture and caches it inside gl.textures[]",
             "itemtype": "method",
             "name": "loadTexture",
@@ -517,7 +517,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 585,
+            "line": 588,
             "description": "draws a texture to the viewport",
             "itemtype": "method",
             "name": "drawTexture",
@@ -572,7 +572,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 641,
+            "line": 644,
             "description": "use it to reset the the initial gl state",
             "itemtype": "method",
             "name": "gl.reset",
@@ -805,7 +805,7 @@
                 },
                 {
                     "name": "direction",
-                    "description": "ray direction",
+                    "description": "ray direction (normalized)",
                     "type": "Vec3"
                 },
                 {
@@ -822,6 +822,11 @@
                     "name": "result",
                     "description": "collision position",
                     "type": "Vec3"
+                },
+                {
+                    "name": "max_dist",
+                    "description": "not fully tested",
+                    "type": "Number"
                 }
             ],
             "return": {
@@ -832,7 +837,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 183,
+            "line": 186,
             "description": "test a ray cylinder collision and retrieves the collision point",
             "itemtype": "method",
             "name": "testRaySphere",
@@ -876,7 +881,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 269,
+            "line": 272,
             "description": "test a ray bounding-box collision and retrieves the collision point, the BB must be Axis Aligned",
             "itemtype": "method",
             "name": "testRayBox",
@@ -915,7 +920,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 346,
+            "line": 349,
             "description": "test a ray bounding-box collision, it uses the  BBox class and allows to use non-axis aligned bbox",
             "itemtype": "method",
             "name": "testRayBBox",
@@ -954,7 +959,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 374,
+            "line": 377,
             "description": "test if a 3d point is inside a BBox",
             "itemtype": "method",
             "name": "testPointBBox",
@@ -978,7 +983,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 389,
+            "line": 392,
             "description": "test if a BBox overlaps another BBox",
             "itemtype": "method",
             "name": "testBBoxBBox",
@@ -1002,7 +1007,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 421,
+            "line": 424,
             "description": "test if a sphere overlaps a BBox",
             "itemtype": "method",
             "name": "testSphereBBox",
@@ -1031,7 +1036,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 504,
+            "line": 507,
             "description": "extract frustum planes given a view-projection matrix",
             "itemtype": "method",
             "name": "extractPlanes",
@@ -1050,7 +1055,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 553,
+            "line": 556,
             "description": "test a BBox against the frustum",
             "itemtype": "method",
             "name": "frustumTestBox",
@@ -1074,7 +1079,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 580,
+            "line": 583,
             "description": "test a Sphere against the frustum",
             "itemtype": "method",
             "name": "frustumTestSphere",
@@ -1098,7 +1103,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 615,
+            "line": 618,
             "description": "test if a 2d point is inside a 2d polygon",
             "itemtype": "method",
             "name": "testPoint2DInPolygon",
@@ -1122,7 +1127,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 647,
+            "line": 650,
             "description": "create an empty bbox",
             "itemtype": "method",
             "name": "create",
@@ -1134,7 +1139,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 657,
+            "line": 660,
             "description": "create an bbox copy from another one",
             "itemtype": "method",
             "name": "clone",
@@ -1146,7 +1151,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 667,
+            "line": 670,
             "description": "copy one bbox into another",
             "itemtype": "method",
             "name": "copy",
@@ -1170,7 +1175,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 680,
+            "line": 683,
             "description": "create a bbox from one point",
             "itemtype": "method",
             "name": "fromPoint",
@@ -1189,7 +1194,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 695,
+            "line": 698,
             "description": "create a bbox from min and max points",
             "itemtype": "method",
             "name": "fromMinMax",
@@ -1213,7 +1218,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 709,
+            "line": 712,
             "description": "create a bbox from center and halfsize",
             "itemtype": "method",
             "name": "fromCenterHalfsize",
@@ -1237,7 +1242,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 723,
+            "line": 726,
             "description": "create a bbox from a typed-array containing points",
             "itemtype": "method",
             "name": "fromPoints",
@@ -1256,7 +1261,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 736,
+            "line": 739,
             "description": "set the values to a BB from a set of points",
             "itemtype": "method",
             "name": "setFromPoints",
@@ -1280,7 +1285,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 766,
+            "line": 769,
             "description": "set the values to a BB from min and max",
             "itemtype": "method",
             "name": "setMinMax",
@@ -1309,7 +1314,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 792,
+            "line": 795,
             "description": "set the values to a BB from center and halfsize",
             "itemtype": "method",
             "name": "setCenterHalfsize",
@@ -1343,7 +1348,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 819,
+            "line": 822,
             "description": "Apply a matrix transformation to the BBox (applies to every corner and recomputes the BB)",
             "itemtype": "method",
             "name": "setCenterHalfsize",
@@ -1372,7 +1377,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 846,
+            "line": 849,
             "description": "Computes the eight corners of the BBox and returns it",
             "itemtype": "method",
             "name": "getCorners",
@@ -1922,6 +1927,18 @@
         {
             "file": "../src/mesh.js",
             "line": 858,
+            "description": "returns the bounding box, if it is not computed, then computes it",
+            "itemtype": "method",
+            "name": "getBoundingBox",
+            "return": {
+                "description": "bounding box",
+                "type": "BBox"
+            },
+            "class": "Mesh"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 870,
             "description": "Update bounding information of this mesh",
             "itemtype": "method",
             "name": "updateBounding",
@@ -1929,7 +1946,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 869,
+            "line": 881,
             "description": "forces a bounding box to be set",
             "itemtype": "method",
             "name": "setBounding",
@@ -1949,7 +1966,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 880,
+            "line": 892,
             "description": "Remove all local memory from the streams (leaving it only in the VRAM) to save RAM",
             "itemtype": "method",
             "name": "freeData",
@@ -1957,7 +1974,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 922,
+            "line": 934,
             "description": "Returns the amount of memory used by this mesh in bytes (sum of all buffers)",
             "itemtype": "method",
             "name": "getMemory",
@@ -1969,7 +1986,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 939,
+            "line": 951,
             "description": "Static method for the class Mesh to create a mesh from a list of common streams",
             "itemtype": "method",
             "name": "Mesh.load",
@@ -1994,7 +2011,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 954,
+            "line": 966,
             "description": "Returns a mesh with all the meshes merged (you can apply transforms individually to every buffer)",
             "itemtype": "method",
             "name": "Mesh.mergeMeshes",
@@ -2009,7 +2026,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 1092,
+            "line": 1104,
             "description": "Returns am empty mesh and loads a mesh and parses it using the Mesh.parsers, by default only OBJ is supported",
             "itemtype": "method",
             "name": "Mesh.fromOBJ",
@@ -2593,7 +2610,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 132,
+            "line": 135,
             "description": "Returns if depth texture is supported by the GPU",
             "itemtype": "method",
             "name": "isDepthSupported",
@@ -2601,7 +2618,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 141,
+            "line": 144,
             "description": "Binds the texture to one texture unit",
             "itemtype": "method",
             "name": "bind",
@@ -2620,7 +2637,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 155,
+            "line": 158,
             "description": "Unbinds the texture",
             "itemtype": "method",
             "name": "unbind",
@@ -2639,7 +2656,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 174,
+            "line": 177,
             "description": "Unbinds the texture",
             "itemtype": "method",
             "name": "Texture.setUploadOptions",
@@ -2654,7 +2671,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 198,
+            "line": 201,
             "description": "Given an Image/Canvas/Video it uploads it to the GPU",
             "itemtype": "method",
             "name": "uploadImage",
@@ -2674,7 +2691,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 231,
+            "line": 234,
             "description": "Uploads data to the GPU (data must have the appropiate size)",
             "itemtype": "method",
             "name": "uploadData",
@@ -2694,8 +2711,8 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 260,
-            "description": "Render to texture using FBO, just pass the callback to a rendering function and the content of the texture will be updated\nKeep in mind that it tries to reuse the last renderbuffer for the depth, and if it cannot (different size) it creates a new one (throwing the old)",
+            "line": 263,
+            "description": "Render to texture using FBO, just pass the callback to a rendering function and the content of the texture will be updated\nIf the texture is a cubemap, the callback will be called six times, once per face, the number of the face is passed as a second parameter\nfor further info about how to set up the propper cubemap camera, check the GL.Texture.cubemap_camera_parameters with the direction and up vector for every face.\n\nKeep in mind that it tries to reuse the last renderbuffer for the depth, and if it cannot (different size) it creates a new one (throwing the old)",
             "itemtype": "method",
             "name": "drawTo",
             "params": [
@@ -2709,7 +2726,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 401,
+            "line": 407,
             "description": "Static version of drawTo meant to be used with several buffers",
             "itemtype": "method",
             "name": "drawToColorAndDepth",
@@ -2734,7 +2751,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 481,
+            "line": 487,
             "description": "Similar to drawTo but it also stores the depth in a depth texture",
             "itemtype": "method",
             "name": "drawToColorAndDepth",
@@ -2759,7 +2776,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 514,
+            "line": 520,
             "description": "Copy content of one texture into another",
             "itemtype": "method",
             "name": "copyTo",
@@ -2781,7 +2798,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 554,
+            "line": 560,
             "description": "Render texture in a quad to full viewport size",
             "itemtype": "method",
             "name": "toViewport",
@@ -2801,7 +2818,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 571,
+            "line": 577,
             "description": "Fills the texture with a constant color (uses gl.clear)",
             "itemtype": "method",
             "name": "fill",
@@ -2816,7 +2833,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 586,
+            "line": 592,
             "description": "Render texture in a quad of specified area",
             "itemtype": "method",
             "name": "renderQuad",
@@ -2846,7 +2863,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 617,
+            "line": 623,
             "description": "Applies a blur filter of one pixel to the texture (be careful using it, it is slow)",
             "itemtype": "method",
             "name": "applyBlur",
@@ -2885,7 +2902,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 653,
+            "line": 659,
             "description": "Loads and uploads a texture from a url",
             "itemtype": "method",
             "name": "Texture.fromURL",
@@ -2914,7 +2931,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 710,
+            "line": 718,
             "description": "Create a texture from an Image",
             "itemtype": "method",
             "name": "Texture.fromImage",
@@ -2938,7 +2955,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 735,
+            "line": 743,
             "description": "Create a texture from a Video",
             "itemtype": "method",
             "name": "Texture.fromVideo",
@@ -2962,7 +2979,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 757,
+            "line": 765,
             "description": "Create a clone of a texture",
             "itemtype": "method",
             "name": "Texture.fromTexture",
@@ -2986,7 +3003,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 771,
+            "line": 779,
             "description": "Create a texture from an ArrayBuffer containing the pixels",
             "itemtype": "method",
             "name": "Texture.fromTexture",
@@ -3020,7 +3037,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 806,
+            "line": 814,
             "description": "Create a texture from an ArrayBuffer containing the pixels",
             "itemtype": "method",
             "name": "Texture.fromDDSInMemory",
@@ -3044,7 +3061,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 828,
+            "line": 836,
             "description": "Create a generative texture from a shader ( must GL.Shader.getScreenShader as reference for the shader )",
             "itemtype": "method",
             "name": "Texture.fromShader",
@@ -3078,7 +3095,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 853,
+            "line": 861,
             "description": "Create a cubemap texture from a set of 6 images",
             "itemtype": "method",
             "name": "Texture.cubemapFromImages",
@@ -3102,7 +3119,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 894,
+            "line": 902,
             "description": "Create a cubemap texture from a single image that contains all six images \nIf it is a cross, it must be horizontally aligned, and options.is_cross must be equal to the column where the top and bottom are located (usually 1 or 2)\notherwise it assumes the 6 images are arranged vertically, in the order of OpenGL: +X, -X, +Y, -Y, +Z, -Z",
             "itemtype": "method",
             "name": "Texture.cubemapFromImage",
@@ -3126,7 +3143,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 956,
+            "line": 964,
             "description": "Given the width and the height of an image, and in which column is the top and bottom sides of the cubemap, it gets the info to pass to Texture.cubemapFromImage in options.faces",
             "itemtype": "method",
             "name": "Texture.generateCubemapCrossFaces",
@@ -3150,7 +3167,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 979,
+            "line": 987,
             "description": "Create a cubemap texture from a single image url that contains the six images\nif it is a cross, it must be horizontally aligned, and options.is_cross must be equal to the column where the top and bottom are located (usually 1 or 2)\notherwise it assumes the 6 images are arranged vertically.",
             "itemtype": "method",
             "name": "Texture.cubemapFromURL",
@@ -3179,7 +3196,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 1019,
+            "line": 1028,
             "description": "returns an ArrayBuffer with the pixels in the texture, they are fliped in Y",
             "itemtype": "method",
             "name": "getPixels",
@@ -3203,7 +3220,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 1072,
+            "line": 1081,
             "description": "Copy texture content to a canvas",
             "itemtype": "method",
             "name": "toCanvas",
@@ -3218,7 +3235,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 1110,
+            "line": 1119,
             "description": "returns a Blob containing all the data from the texture",
             "itemtype": "method",
             "name": "toBlob",
@@ -3230,7 +3247,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 1166,
+            "line": 1175,
             "description": "returns a base64 String containing all the data from the texture",
             "itemtype": "method",
             "name": "toBase64",
@@ -3249,7 +3266,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 1208,
+            "line": 1217,
             "description": "generates some basic metadata about the image",
             "itemtype": "method",
             "name": "generateMetadata",
