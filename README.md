@@ -19,7 +19,7 @@ This library has been used in several projects like [Rendeer.js](https://github.
 
 Demos
 -----
-Demos are included in the Examples folder but you can check them in [this website](http://tamats.com/webglstudio/litegl/#examples).
+Demos are included in the Examples folder but you can check them in [this website](http://tamats.com/projects/litegl/examples).
 
 Usage
 -----
