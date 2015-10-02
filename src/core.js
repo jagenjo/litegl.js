@@ -44,7 +44,8 @@ GL.create = function(options) {
 	gl.extensions["EXT_shader_texture_lod"] = gl.getExtension("EXT_shader_texture_lod");
 	gl.extensions["EXT_sRGB"] = gl.getExtension("EXT_sRGB");
 	gl.extensions["EXT_texture_filter_anisotropic"] = gl.getExtension("EXT_texture_filter_anisotropic") || gl.getExtension("WEBKIT_EXT_texture_filter_anisotropic") || gl.getExtension("MOZ_EXT_texture_filter_anisotropic");
-	gl.extensions["EXT_lose_context"] = gl.getExtension("EXT_lose_context") || gl.getExtension("WEBKIT_EXT_lose_context") || gl.getExtension("MOZ_EXT_lose_context");
+	gl.extensions["EXT_frag_depth"] = gl.getExtension("EXT_frag_depth") || gl.getExtension("WEBKIT_EXT_frag_depth") || gl.getExtension("MOZ_EXT_frag_depth");
+	gl.extensions["WEBGL_lose_context"] = gl.getExtension("WEBGL_lose_context") || gl.getExtension("WEBKIT_WEBGL_lose_context") || gl.getExtension("MOZ_WEBGL_lose_context");
 
 	//for float textures
 	gl.extensions["OES_texture_float_linear"] = gl.getExtension("OES_texture_float_linear");
@@ -112,7 +113,14 @@ GL.create = function(options) {
 	* example: gl.ondraw = function(){ ... }   or  gl.onupdate = function(dt) { ... }
 	* @method animate
 	*/
-	gl.animate = function() {
+	gl.animate = function(v) {
+		if(v === false)
+		{
+			global.cancelAnimationFrame( this._requestFrame_id );
+			this._requestFrame_id = null;
+			return;
+		}
+
 		var post = global.requestAnimationFrame;
 		var time = getTime();
 		var context = this;
@@ -122,7 +130,7 @@ GL.create = function(options) {
 			if(gl.destroyed) //to stop rendering once it is destroyed
 				return;
 
-			post(loop); //do it first, in case it crashes
+			context._requestFrame_id = post(loop); //do it first, in case it crashes
 
 			var now = getTime();
 			var dt = (now - time) * 0.001;
@@ -143,7 +151,7 @@ GL.create = function(options) {
 			}
 			time = now;
 		}
-		post(loop); //launch main loop
+		this._requestFrame_id = post(loop); //launch main loop
 	}	
 
 	//store binded to be able to remove them if destroyed
@@ -468,6 +476,8 @@ GL.create = function(options) {
 				xbox.axes["ly"] = gamepad.axes[1];
 				xbox.axes["rx"] = gamepad.axes[2];
 				xbox.axes["ry"] = gamepad.axes[3];
+				xbox.axes["triggers"] = gamepad.axes[4];
+
 				for(var i = 0; i < gamepad.buttons.length; i++)
 				{
 					switch(i) //I use a switch to ensure that a player with another gamepad could play
@@ -640,6 +650,12 @@ GL.create = function(options) {
 			shader.draw( mesh, gl.TRIANGLES );
 		});
 	})();
+
+	gl.canvas.addEventListener("webglcontextlost", function(e) {
+		e.preventDefault();
+		if(gl.onlosecontext)
+			gl.onlosecontext(e);
+	}, false);
 
 	/**
 	* use it to reset the the initial gl state

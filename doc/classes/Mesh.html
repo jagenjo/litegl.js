@@ -45,6 +45,8 @@
             
                 <li><a href="../classes/Buffer.html">Buffer</a></li>
             
+                <li><a href="../classes/FBO.html">FBO</a></li>
+            
                 <li><a href="../classes/geo.html">geo</a></li>
             
                 <li><a href="../classes/gl.html">gl</a></li>
@@ -335,6 +337,13 @@
                             </li>
                         
                             <li class="index-item method">
+                                <a href="#method_computeIndices">computeIndices</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
                                 <a href="#method_computeNormals">computeNormals</a>
 
                                 
@@ -364,6 +373,13 @@
                         
                             <li class="index-item method">
                                 <a href="#method_createVertexBuffer">createVertexBuffer</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
+                                <a href="#method_flipNormals">flipNormals</a>
 
                                 
                                 
@@ -552,7 +568,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l190"><code>..&#x2F;src&#x2F;mesh.js:190</code></a>
+        <a href="../files/.._src_mesh.js.html#l221"><code>..&#x2F;src&#x2F;mesh.js:221</code></a>
         
         </p>
 
@@ -667,7 +683,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l209"><code>..&#x2F;src&#x2F;mesh.js:209</code></a>
+        <a href="../files/.._src_mesh.js.html#l240"><code>..&#x2F;src&#x2F;mesh.js:240</code></a>
         
         </p>
 
@@ -778,7 +794,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l482"><code>..&#x2F;src&#x2F;mesh.js:482</code></a>
+        <a href="../files/.._src_mesh.js.html#l506"><code>..&#x2F;src&#x2F;mesh.js:506</code></a>
         
         </p>
 
@@ -789,7 +805,7 @@
     </div>
 
     <div class="description">
-        <p>Creates a clone of the mesh, but the data-arrays are shared between both meshes (useful for sharing a mesh between contexts)</p>
+        <p>Creates a clone of the mesh, the datarrays are cloned too</p>
 
     </div>
 
@@ -833,7 +849,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l458"><code>..&#x2F;src&#x2F;mesh.js:458</code></a>
+        <a href="../files/.._src_mesh.js.html#l530"><code>..&#x2F;src&#x2F;mesh.js:530</code></a>
         
         </p>
 
@@ -844,7 +860,62 @@
     </div>
 
     <div class="description">
-        <p>Creates a clone of the mesh, the datarrays are cloned too</p>
+        <p>Creates a clone of the mesh, but the data-arrays are shared between both meshes (useful for sharing a mesh between contexts)</p>
+
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="method_computeIndices" class="method item">
+    <h3 class="name"><code>computeIndices</code></h3>
+
+    
+        <span class="paren">()</span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_mesh.js.html#l732"><code>..&#x2F;src&#x2F;mesh.js:732</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Compute indices for a mesh where vertices are shared</p>
 
     </div>
 
@@ -898,7 +969,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l650"><code>..&#x2F;src&#x2F;mesh.js:650</code></a>
+        <a href="../files/.._src_mesh.js.html#l830"><code>..&#x2F;src&#x2F;mesh.js:830</code></a>
         
         </p>
 
@@ -977,7 +1048,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l732"><code>..&#x2F;src&#x2F;mesh.js:732</code></a>
+        <a href="../files/.._src_mesh.js.html#l912"><code>..&#x2F;src&#x2F;mesh.js:912</code></a>
         
         </p>
 
@@ -1032,7 +1103,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l600"><code>..&#x2F;src&#x2F;mesh.js:600</code></a>
+        <a href="../files/.._src_mesh.js.html#l648"><code>..&#x2F;src&#x2F;mesh.js:648</code></a>
         
         </p>
 
@@ -1109,7 +1180,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l368"><code>..&#x2F;src&#x2F;mesh.js:368</code></a>
+        <a href="../files/.._src_mesh.js.html#l399"><code>..&#x2F;src&#x2F;mesh.js:399</code></a>
         
         </p>
 
@@ -1252,7 +1323,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l298"><code>..&#x2F;src&#x2F;mesh.js:298</code></a>
+        <a href="../files/.._src_mesh.js.html#l329"><code>..&#x2F;src&#x2F;mesh.js:329</code></a>
         
         </p>
 
@@ -1363,6 +1434,95 @@
 </div>
 
                 
+                    <div id="method_flipNormals" class="method item">
+    <h3 class="name"><code>flipNormals</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>stream_type</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_mesh.js.html#l699"><code>..&#x2F;src&#x2F;mesh.js:699</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Multiplies every normal vy -1 and uploads it</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">stream_type</code>
+                        <span class="type">Enum</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW)</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+</div>
+
+                
                     <div id="method_freeData" class="method item">
     <h3 class="name"><code>freeData</code></h3>
 
@@ -1395,7 +1555,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l892"><code>..&#x2F;src&#x2F;mesh.js:892</code></a>
+        <a href="../files/.._src_mesh.js.html#l1072"><code>..&#x2F;src&#x2F;mesh.js:1072</code></a>
         
         </p>
 
@@ -1450,7 +1610,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l521"><code>..&#x2F;src&#x2F;mesh.js:521</code></a>
+        <a href="../files/.._src_mesh.js.html#l569"><code>..&#x2F;src&#x2F;mesh.js:569</code></a>
         
         </p>
 
@@ -1509,7 +1669,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l858"><code>..&#x2F;src&#x2F;mesh.js:858</code></a>
+        <a href="../files/.._src_mesh.js.html#l1038"><code>..&#x2F;src&#x2F;mesh.js:1038</code></a>
         
         </p>
 
@@ -1592,7 +1752,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l381"><code>..&#x2F;src&#x2F;mesh.js:381</code></a>
+        <a href="../files/.._src_mesh.js.html#l412"><code>..&#x2F;src&#x2F;mesh.js:412</code></a>
         
         </p>
 
@@ -1699,7 +1859,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l392"><code>..&#x2F;src&#x2F;mesh.js:392</code></a>
+        <a href="../files/.._src_mesh.js.html#l423"><code>..&#x2F;src&#x2F;mesh.js:423</code></a>
         
         </p>
 
@@ -1796,7 +1956,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l934"><code>..&#x2F;src&#x2F;mesh.js:934</code></a>
+        <a href="../files/.._src_mesh.js.html#l1114"><code>..&#x2F;src&#x2F;mesh.js:1114</code></a>
         
         </p>
 
@@ -1879,7 +2039,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l356"><code>..&#x2F;src&#x2F;mesh.js:356</code></a>
+        <a href="../files/.._src_mesh.js.html#l387"><code>..&#x2F;src&#x2F;mesh.js:387</code></a>
         
         </p>
 
@@ -1982,7 +2142,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l820"><code>..&#x2F;src&#x2F;mesh.js:820</code></a>
+        <a href="../files/.._src_mesh.js.html#l1000"><code>..&#x2F;src&#x2F;mesh.js:1000</code></a>
         
         </p>
 
@@ -2071,7 +2231,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l832"><code>..&#x2F;src&#x2F;mesh.js:832</code></a>
+        <a href="../files/.._src_mesh.js.html#l1012"><code>..&#x2F;src&#x2F;mesh.js:1012</code></a>
         
         </p>
 
@@ -2160,7 +2320,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l1104"><code>..&#x2F;src&#x2F;mesh.js:1104</code></a>
+        <a href="../files/.._src_mesh.js.html#l1284"><code>..&#x2F;src&#x2F;mesh.js:1284</code></a>
         
         </p>
 
@@ -2261,7 +2421,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l951"><code>..&#x2F;src&#x2F;mesh.js:951</code></a>
+        <a href="../files/.._src_mesh.js.html#l1131"><code>..&#x2F;src&#x2F;mesh.js:1131</code></a>
         
         </p>
 
@@ -2381,7 +2541,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l966"><code>..&#x2F;src&#x2F;mesh.js:966</code></a>
+        <a href="../files/.._src_mesh.js.html#l1146"><code>..&#x2F;src&#x2F;mesh.js:1146</code></a>
         
         </p>
 
@@ -2470,7 +2630,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l345"><code>..&#x2F;src&#x2F;mesh.js:345</code></a>
+        <a href="../files/.._src_mesh.js.html#l376"><code>..&#x2F;src&#x2F;mesh.js:376</code></a>
         
         </p>
 
@@ -2565,7 +2725,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l881"><code>..&#x2F;src&#x2F;mesh.js:881</code></a>
+        <a href="../files/.._src_mesh.js.html#l1061"><code>..&#x2F;src&#x2F;mesh.js:1061</code></a>
         
         </p>
 
@@ -2660,7 +2820,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l493"><code>..&#x2F;src&#x2F;mesh.js:493</code></a>
+        <a href="../files/.._src_mesh.js.html#l541"><code>..&#x2F;src&#x2F;mesh.js:541</code></a>
         
         </p>
 
@@ -2715,7 +2875,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l870"><code>..&#x2F;src&#x2F;mesh.js:870</code></a>
+        <a href="../files/.._src_mesh.js.html#l1050"><code>..&#x2F;src&#x2F;mesh.js:1050</code></a>
         
         </p>
 
@@ -2780,7 +2940,7 @@
             
         
         
-        <a href="../files/.._src_mesh.js.html#l403"><code>..&#x2F;src&#x2F;mesh.js:403</code></a>
+        <a href="../files/.._src_mesh.js.html#l434"><code>..&#x2F;src&#x2F;mesh.js:434</code></a>
         
         </p>
 

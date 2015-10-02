@@ -45,6 +45,8 @@
             
                 <li><a href="../classes/Buffer.html">Buffer</a></li>
             
+                <li><a href="../classes/FBO.html">FBO</a></li>
+            
                 <li><a href="../classes/geo.html">geo</a></li>
             
                 <li><a href="../classes/gl.html">gl</a></li>
@@ -1412,7 +1414,7 @@ for further info about how to set up the propper cubemap camera, check the GL.Te
             
         
         
-        <a href="../files/.._src_texture.js.html#l1217"><code>..&#x2F;src&#x2F;texture.js:1217</code></a>
+        <a href="../files/.._src_texture.js.html#l1232"><code>..&#x2F;src&#x2F;texture.js:1232</code></a>
         
         </p>
 
@@ -3449,7 +3451,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
             
         
         
-        <a href="../files/.._src_texture.js.html#l1175"><code>..&#x2F;src&#x2F;texture.js:1175</code></a>
+        <a href="../files/.._src_texture.js.html#l1190"><code>..&#x2F;src&#x2F;texture.js:1190</code></a>
         
         </p>
 
@@ -3546,7 +3548,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
             
         
         
-        <a href="../files/.._src_texture.js.html#l1119"><code>..&#x2F;src&#x2F;texture.js:1119</code></a>
+        <a href="../files/.._src_texture.js.html#l1134"><code>..&#x2F;src&#x2F;texture.js:1134</code></a>
         
         </p>
 
@@ -3593,6 +3595,18 @@ otherwise it assumes the 6 images are arranged vertically.</p>
                 <li class="arg">
                     
                         <code>canvas</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>flip_y</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>max_size</code>
                     
                 </li>
             
@@ -3656,6 +3670,38 @@ otherwise it assumes the 6 images are arranged vertically.</p>
 
                     <div class="param-description">
                         <p>must have the same size, if different the canvas will be resized</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">flip_y</code>
+                        <span class="type">Boolean</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>optional, flip vertically</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">max_size</code>
+                        <span class="type">Number</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>optional, if it is supplied the canvas wont be bigger of max_size (the iamge will be scaled down)</p>
 
                     </div>
 

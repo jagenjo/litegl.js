@@ -138,7 +138,7 @@ Texture.prototype.toJSON = function()
 */
 Texture.isDepthSupported = function()
 {
-	return (gl.getExtension("WEBGL_depth_texture") || gl.getExtension("WEBKIT_WEBGL_depth_texture") || gl.getExtension("MOZ_WEBGL_depth_texture")) != null;
+	return gl.extensions["WEBGL_depth_texture"] != null;
 }
 
 /**
@@ -1082,21 +1082,36 @@ Texture.prototype.getPixels = function( type, force_rgba )
 * Copy texture content to a canvas
 * @method toCanvas
 * @param {Canvas} canvas must have the same size, if different the canvas will be resized
+* @param {boolean} flip_y optional, flip vertically
+* @param {Number} max_size optional, if it is supplied the canvas wont be bigger of max_size (the iamge will be scaled down)
 */
-Texture.prototype.toCanvas = function( canvas, flip_y )
+Texture.prototype.toCanvas = function( canvas, flip_y, max_size )
 {
+	max_size = max_size || 8192;
 	var gl = this.gl;
 
 	if(this.texture_type != gl.TEXTURE_2D)
 		return null;
 
-	var w = this.width;
-	var h = this.height;
-	canvas = canvas || createCanvas(w,h);
-	if(canvas.width != w) canvas.width = w;
-	if(canvas.height != h) canvas.height = h;
+	var w = Math.min( this.width, max_size );
+	var h = Math.min( this.height, max_size );
 
-	var buffer = this.getPixels( gl.UNSIGNED_BYTE, true );
+	canvas = canvas || createCanvas(w,h);
+	if(canvas.width != w) 
+		canvas.width = w;
+	if(canvas.height != h)
+		canvas.height = h;
+
+	var buffer = null;
+	if(this.width != w || this.height != h )
+	{
+		//create a temporary texture
+		var temp = new GL.Texture(w,h,{ format: gl.RGBA, filter: gl.NEAREST });
+		this.copyTo( temp );	
+		buffer = temp.getPixels( gl.UNSIGNED_BYTE, true );
+	}
+	else
+		buffer = this.getPixels( gl.UNSIGNED_BYTE, true );
 
 	var ctx = canvas.getContext("2d");
 	var pixels = ctx.getImageData(0,0,w,h);

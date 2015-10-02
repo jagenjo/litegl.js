@@ -10,6 +10,15 @@
             "fors": {},
             "namespaces": {}
         },
+        "../src/fbo.js": {
+            "name": "../src/fbo.js",
+            "modules": {},
+            "classes": {
+                "FBO": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
         "../src/geo.js": {
             "name": "../src/geo.js",
             "modules": {},
@@ -119,6 +128,30 @@
             "file": "../src/core.js",
             "line": 29,
             "description": "the webgl context returned by GL.create, its a WebGLRenderingContext with some extra methods added"
+        },
+        "FBO": {
+            "name": "FBO",
+            "shortname": "FBO",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "../src/fbo.js",
+            "line": 1,
+            "params": [
+                {
+                    "name": "color_textures",
+                    "description": "an array containing the color textures, if not supplied a render buffer will be used",
+                    "type": "Array"
+                },
+                {
+                    "name": "depth_texture",
+                    "description": "the depth texture, if not supplied a render buffer will be used",
+                    "type": "GL.Texture"
+                }
+            ],
+            "is_constructor": 1
         },
         "geo": {
             "name": "geo",
@@ -356,7 +389,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 87,
+            "line": 88,
             "description": "sets this context as the current global gl context (in case you have more than one)",
             "itemtype": "method",
             "name": "makeCurrent",
@@ -364,7 +397,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 96,
+            "line": 97,
             "description": "executes callback inside this webgl context",
             "itemtype": "method",
             "name": "execute",
@@ -379,7 +412,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 110,
+            "line": 111,
             "description": "Launch animation loop (calls gl.onupdate and gl.ondraw every frame)\nexample: gl.ondraw = function(){ ... }   or  gl.onupdate = function(dt) { ... }",
             "itemtype": "method",
             "name": "animate",
@@ -387,7 +420,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 158,
+            "line": 166,
             "description": "Destroy this WebGL context (removes also the Canvas from the DOM)",
             "itemtype": "method",
             "name": "destroy",
@@ -395,7 +428,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 187,
+            "line": 195,
             "description": "Tells the system to capture mouse events on the canvas. \nThis will trigger onmousedown, onmousemove, onmouseup, onmousewheel callbacks assigned in the gl context\nexample: gl.onmousedown = function(e){ ... }\nThe event is a regular MouseEvent with some extra parameters",
             "itemtype": "method",
             "name": "captureMouse",
@@ -410,7 +443,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 338,
+            "line": 346,
             "description": "Tells the system to capture key events on the canvas. This will trigger onkey",
             "itemtype": "method",
             "name": "captureKeys",
@@ -430,7 +463,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 421,
+            "line": 429,
             "description": "Tells the system to capture gamepad events on the canvas.",
             "itemtype": "method",
             "name": "captureGamepads",
@@ -438,7 +471,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 443,
+            "line": 451,
             "description": "returns the detected gamepads on the system",
             "itemtype": "method",
             "name": "getGamepads",
@@ -446,7 +479,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 501,
+            "line": 511,
             "description": "launches de canvas in fullscreen mode",
             "itemtype": "method",
             "name": "fullscreen",
@@ -454,7 +487,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 518,
+            "line": 528,
             "description": "returns a canvas with a snapshot of an area\nthis is safer than using the canvas itself due to internals of webgl",
             "itemtype": "method",
             "name": "snapshot",
@@ -488,7 +521,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 556,
+            "line": 566,
             "description": "returns a texture and caches it inside gl.textures[]",
             "itemtype": "method",
             "name": "loadTexture",
@@ -517,7 +550,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 588,
+            "line": 598,
             "description": "draws a texture to the viewport",
             "itemtype": "method",
             "name": "drawTexture",
@@ -572,11 +605,54 @@
         },
         {
             "file": "../src/core.js",
-            "line": 644,
+            "line": 660,
             "description": "use it to reset the the initial gl state",
             "itemtype": "method",
             "name": "gl.reset",
             "class": "gl"
+        },
+        {
+            "file": "../src/fbo.js",
+            "line": 30,
+            "description": "Changes the textures binded to this FBO",
+            "itemtype": "method",
+            "name": "setTextures",
+            "params": [
+                {
+                    "name": "color_textures",
+                    "description": "an array containing the color textures, if not supplied a render buffer will be used",
+                    "type": "Array"
+                },
+                {
+                    "name": "depth_texture",
+                    "description": "the depth texture, if not supplied a render buffer will be used",
+                    "type": "GL.Texture"
+                }
+            ],
+            "class": "FBO"
+        },
+        {
+            "file": "../src/fbo.js",
+            "line": 168,
+            "description": "Enables this FBO (from now on all the render will be stored in the textures attached to this FBO\nIt stores the previous viewport to restore it afterwards, and changes it to full FBO size",
+            "itemtype": "method",
+            "name": "bind",
+            "params": [
+                {
+                    "name": "keep_old",
+                    "description": "keeps the previous FBO is one was attached to restore it afterwards",
+                    "type": "Boolean"
+                }
+            ],
+            "class": "FBO"
+        },
+        {
+            "file": "../src/fbo.js",
+            "line": 190,
+            "description": "Disables this FBO, if it was binded with keep_old then the old FBO is enabled, otherwise it will render to the screen\nRestores viewport to previous",
+            "itemtype": "method",
+            "name": "unbind",
+            "class": "FBO"
         },
         {
             "file": "../src/geo.js",
@@ -1314,7 +1390,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 795,
+            "line": 800,
             "description": "set the values to a BB from center and halfsize",
             "itemtype": "method",
             "name": "setCenterHalfsize",
@@ -1348,7 +1424,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 822,
+            "line": 827,
             "description": "Apply a matrix transformation to the BBox (applies to every corner and recomputes the BB)",
             "itemtype": "method",
             "name": "setCenterHalfsize",
@@ -1377,7 +1453,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 849,
+            "line": 854,
             "description": "Computes the eight corners of the BBox and returns it",
             "itemtype": "method",
             "name": "getCorners",
@@ -1401,7 +1477,7 @@
         },
         {
             "file": "../src/gl-matrix-extra.js",
-            "line": 158,
+            "line": 164,
             "class": "GL"
         },
         {
@@ -1621,7 +1697,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 119,
+            "line": 122,
             "description": "Uploads part of the buffer data (stored in this.data) to the GPU",
             "itemtype": "method",
             "name": "uploadRange",
@@ -1641,7 +1717,22 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 190,
+            "line": 143,
+            "description": "Clones one buffer (it allows to share the same data between both buffers)",
+            "itemtype": "method",
+            "name": "clone",
+            "params": [
+                {
+                    "name": "share",
+                    "description": "if you want that both buffers share the same data (default false)\nreturn {GL.Buffer} buffer cloned",
+                    "type": "Boolean"
+                }
+            ],
+            "class": "Buffer"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 221,
             "description": "Adds buffer to mesh",
             "itemtype": "method",
             "name": "addBuffer",
@@ -1661,7 +1752,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 209,
+            "line": 240,
             "description": "Adds vertex and indices buffers to a mesh",
             "itemtype": "method",
             "name": "addBuffers",
@@ -1686,7 +1777,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 298,
+            "line": 329,
             "description": "Creates a new empty buffer and attachs it to this mesh",
             "itemtype": "method",
             "name": "createVertexBuffer",
@@ -1721,7 +1812,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 345,
+            "line": 376,
             "description": "Removes a vertex buffer from the mesh",
             "itemtype": "method",
             "name": "removeVertexBuffer",
@@ -1736,7 +1827,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 356,
+            "line": 387,
             "description": "Returns a vertex buffer",
             "itemtype": "method",
             "name": "getVertexBuffer",
@@ -1755,7 +1846,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 368,
+            "line": 399,
             "description": "Creates a new empty index buffer and attachs it to this mesh",
             "itemtype": "method",
             "name": "createIndexBuffer",
@@ -1780,7 +1871,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 381,
+            "line": 412,
             "description": "Returns a vertex buffer",
             "itemtype": "method",
             "name": "getBuffer",
@@ -1799,7 +1890,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 392,
+            "line": 423,
             "description": "Returns a index buffer",
             "itemtype": "method",
             "name": "getIndexBuffer",
@@ -1818,7 +1909,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 403,
+            "line": 434,
             "description": "Uploads data inside buffers to VRAM.",
             "itemtype": "method",
             "name": "upload",
@@ -1833,7 +1924,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 458,
+            "line": 506,
             "description": "Creates a clone of the mesh, the datarrays are cloned too",
             "itemtype": "method",
             "name": "clone",
@@ -1841,7 +1932,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 482,
+            "line": 530,
             "description": "Creates a clone of the mesh, but the data-arrays are shared between both meshes (useful for sharing a mesh between contexts)",
             "itemtype": "method",
             "name": "clone",
@@ -1849,7 +1940,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 493,
+            "line": 541,
             "description": "Creates an object with the info of the mesh (useful to transfer to workers)",
             "itemtype": "method",
             "name": "toObject",
@@ -1857,7 +1948,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 521,
+            "line": 569,
             "description": "Computes some data about the mesh",
             "itemtype": "method",
             "name": "generateMetadata",
@@ -1865,7 +1956,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 600,
+            "line": 648,
             "description": "Creates a new index stream with wireframe",
             "itemtype": "method",
             "name": "computeWireframe",
@@ -1873,7 +1964,30 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 650,
+            "line": 699,
+            "description": "Multiplies every normal vy -1 and uploads it",
+            "itemtype": "method",
+            "name": "flipNormals",
+            "params": [
+                {
+                    "name": "stream_type",
+                    "description": "default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW)",
+                    "type": "Enum"
+                }
+            ],
+            "class": "Mesh"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 732,
+            "description": "Compute indices for a mesh where vertices are shared",
+            "itemtype": "method",
+            "name": "computeIndices",
+            "class": "Mesh"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 830,
             "description": "Creates a stream with the normals",
             "itemtype": "method",
             "name": "computeNormals",
@@ -1888,7 +2002,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 732,
+            "line": 912,
             "description": "Creates a new stream with the tangents",
             "itemtype": "method",
             "name": "computeTangents",
@@ -1896,7 +2010,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 820,
+            "line": 1000,
             "description": "Computes bounding information",
             "itemtype": "method",
             "name": "getVertexNumber",
@@ -1911,7 +2025,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 832,
+            "line": 1012,
             "description": "Computes bounding information",
             "itemtype": "method",
             "name": "Mesh.computeBounding",
@@ -1926,7 +2040,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 858,
+            "line": 1038,
             "description": "returns the bounding box, if it is not computed, then computes it",
             "itemtype": "method",
             "name": "getBoundingBox",
@@ -1938,7 +2052,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 870,
+            "line": 1050,
             "description": "Update bounding information of this mesh",
             "itemtype": "method",
             "name": "updateBounding",
@@ -1946,7 +2060,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 881,
+            "line": 1061,
             "description": "forces a bounding box to be set",
             "itemtype": "method",
             "name": "setBounding",
@@ -1966,7 +2080,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 892,
+            "line": 1072,
             "description": "Remove all local memory from the streams (leaving it only in the VRAM) to save RAM",
             "itemtype": "method",
             "name": "freeData",
@@ -1974,7 +2088,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 934,
+            "line": 1114,
             "description": "Returns the amount of memory used by this mesh in bytes (sum of all buffers)",
             "itemtype": "method",
             "name": "getMemory",
@@ -1986,7 +2100,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 951,
+            "line": 1131,
             "description": "Static method for the class Mesh to create a mesh from a list of common streams",
             "itemtype": "method",
             "name": "Mesh.load",
@@ -2011,7 +2125,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 966,
+            "line": 1146,
             "description": "Returns a mesh with all the meshes merged (you can apply transforms individually to every buffer)",
             "itemtype": "method",
             "name": "Mesh.mergeMeshes",
@@ -2026,7 +2140,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 1104,
+            "line": 1284,
             "description": "Returns am empty mesh and loads a mesh and parses it using the Mesh.parsers, by default only OBJ is supported",
             "itemtype": "method",
             "name": "Mesh.fromOBJ",
@@ -2173,7 +2287,7 @@
         },
         {
             "file": "../src/primitives.js",
-            "line": 364,
+            "line": 373,
             "description": "Returns a sphere mesh",
             "itemtype": "method",
             "name": "Mesh.sphere",
@@ -2188,7 +2302,7 @@
         },
         {
             "file": "../src/primitives.js",
-            "line": 461,
+            "line": 470,
             "description": "Returns a grid mesh (must be rendered using gl.LINES)",
             "itemtype": "method",
             "name": "Mesh.grid",
@@ -2203,7 +2317,7 @@
         },
         {
             "file": "../src/primitives.js",
-            "line": 500,
+            "line": 509,
             "description": "Returns a icosahedron mesh (useful to create spheres by subdivision)",
             "itemtype": "method",
             "name": "Mesh.icosahedron",
@@ -3229,13 +3343,23 @@
                     "name": "canvas",
                     "description": "must have the same size, if different the canvas will be resized",
                     "type": "Canvas"
+                },
+                {
+                    "name": "flip_y",
+                    "description": "optional, flip vertically",
+                    "type": "Boolean"
+                },
+                {
+                    "name": "max_size",
+                    "description": "optional, if it is supplied the canvas wont be bigger of max_size (the iamge will be scaled down)",
+                    "type": "Number"
                 }
             ],
             "class": "Texture"
         },
         {
             "file": "../src/texture.js",
-            "line": 1119,
+            "line": 1134,
             "description": "returns a Blob containing all the data from the texture",
             "itemtype": "method",
             "name": "toBlob",
@@ -3247,7 +3371,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 1175,
+            "line": 1190,
             "description": "returns a base64 String containing all the data from the texture",
             "itemtype": "method",
             "name": "toBase64",
@@ -3266,7 +3390,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 1217,
+            "line": 1232,
             "description": "generates some basic metadata about the image",
             "itemtype": "method",
             "name": "generateMetadata",
@@ -3335,7 +3459,7 @@
     "warnings": [
         {
             "message": "Missing item type",
-            "line": " ../src/gl-matrix-extra.js:158"
+            "line": " ../src/gl-matrix-extra.js:164"
         }
     ]
 }

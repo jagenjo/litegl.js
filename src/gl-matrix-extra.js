@@ -7,6 +7,12 @@ Math.clamp = function(v,a,b) { return (a > v ? a : (b < v ? b : v)); }
 var V3 = vec3.create;
 var M4 = vec3.create;
 
+
+vec3.ZERO = vec3.fromValues(0,0,0);
+vec3.FRONT = vec3.fromValues(0,0,-1);
+vec3.UP = vec3.fromValues(0,1,0);
+vec3.RIGHT = vec3.fromValues(1,0,0);
+
 vec2.rotate = function(out,vec,angle_in_rad)
 {
 	var x = vec[0], y = vec[1];
@@ -431,27 +437,31 @@ quat.fromMat4 = function(out,m)
 	quat.normalize(out,out);
 }
 
-/* doesnt work 
-quat.lookAt = function(target, up, quat) {
-	var forward = vec3.normalize( target, vec3.create() );
-	up = vec3.normalize( up, vec3.create() );
+quat.fromMat4.lookAt = (function(){ 
+	var axis = vec3.create();
+	
+	return function( out, forwardVector, up )
+	{
+		var dot = vec3.dot( vec3.FRONT, forwardVector );
 
-	var right = vec3.cross(up,forward, vec3.create() );
-	vec3.normalize( right );
-	vec3.cross(forward, right, up );
+		if ( Math.abs( dot - (-1.0)) < 0.000001 )
+		{
+			out.set( vec3.UP );
+			out[3] = Math.PI;
+			return out;
+		}
+		if ( Math.abs(dot - 1.0) < 0.000001 )
+		{
+			return quat.identity( out );
+		}
 
-	quat = quat || quat.create();
-
-	quat[3] = Math.sqrt(1.0 + right[0] + up[1] + forward[2]) * 0.5;
-	var w4_recip = 1.0 / (4.0 * quat[3]);
-	quat[0] = (forward[1] - up[2]) * w4_recip;
-	quat[1] = (right[2] - forward[0]) * w4_recip;
-	quat[2] = (up[0] - right[1]) * w4_recip;
-	 
-	return quat;
-}
-*/
-
+		var rotAngle = Math.acos( dot );
+		vec3.cross( axis, vec3.FRONT, forwardVector );
+		vec3.normalize( axis, axis );
+		quat.setAxisAngle( out, axis, rotAngle );
+		return out;
+	}
+})();
 
 
 

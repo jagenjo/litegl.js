@@ -783,11 +783,16 @@ global.BBox = GL.BBox = {
 		bb[10] = max[1];
 		bb[11] = max[2];
 
-		var center = bb.subarray(0,3);
-		vec3.sub( center, max, min );
-		vec3.scale( center, center, 0.5 );
-		bb.set( [max[0]-center[0],max[1]-center[1],max[2]-center[2]], 3);
-		vec3.sub( bb.subarray(3,6), max, center );
+		//halfsize
+		var halfsize = bb.subarray(3,6); 
+		vec3.sub( halfsize, max, min ); //range
+		vec3.scale( halfsize, halfsize, 0.5 );
+
+		//center
+		bb[0] = max[0] - halfsize[0];
+		bb[1] = max[1] - halfsize[1];
+		bb[2] = max[2] - halfsize[2];
+
 		bb[12] = vec3.length(bb.subarray(3,6)); //radius
 		return bb;
 	},
@@ -876,6 +881,16 @@ global.BBox = GL.BBox = {
 
 		return corners;
 	},	
+
+	merge: function( out, a, b )
+	{
+		out = out || BBox.create();
+		var min = out.subarray(6,9);
+		var max = out.subarray(9,12);
+		vec3.min( min, a.subarray(6,9), b.subarray(6,9) );
+		vec3.max( max, a.subarray(9,12), b.subarray(9,12) );
+		return BBox.setMinMax( out, min, max );
+	},
 
 	getCenter: function(bb) { return bb.subarray(0,3); },
 	getHalfsize: function(bb) { return bb.subarray(3,6); },

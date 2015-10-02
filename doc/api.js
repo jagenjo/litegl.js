@@ -3,6 +3,7 @@ YUI.add("yuidoc-meta", function(Y) {
     "classes": [
         "BBox",
         "Buffer",
+        "FBO",
         "GL",
         "Indexer",
         "LEvent",

@@ -92,6 +92,9 @@ GL.Buffer.prototype.upload = function(stream_type) { //default gl.STATIC_DRAW (o
 
 	//I store some stuff inside the WebGL buffer instance, it is supported
 	this.buffer = this.buffer || gl.createBuffer();
+	if(!this.buffer)
+		return; //if the context is lost...
+
 	this.buffer.length = data.length;
 	this.buffer.spacing = spacing;
 
@@ -137,7 +140,35 @@ GL.Buffer.prototype.uploadRange = function(start, size) {
 	gl.bufferSubData(this.target, start, view );
 };
 
-
+/**
+* Clones one buffer (it allows to share the same data between both buffers)
+* @method clone
+* @param {boolean} share if you want that both buffers share the same data (default false)
+* return {GL.Buffer} buffer cloned
+*/
+GL.Buffer.prototype.clone = function(share) {
+	var buffer = new GL.Buffer();
+	if(share)
+	{
+		for(var i in this)
+			buffer[i] = this[i];
+	}
+	else
+	{
+		if(this.target)
+			buffer.target = this.target;
+		if(this.gl)
+			buffer.gl = this.gl;
+		if(this.spacing)
+			buffer.spacing = this.spacing;
+		if(this.data) //clone data
+		{
+			buffer.data = new global[ this.data.constructor ]( this.data );
+			buffer.upload();
+		}
+	}
+	return buffer;
+}
 
 /**
 * Mesh class to upload geometry to the GPU
@@ -423,6 +454,23 @@ Mesh.prototype.upload = function(buffer_type) {
 Mesh.prototype.compile = Mesh.prototype.upload;
 
 
+Mesh.prototype.deleteBuffers = function()
+{
+	for(var i in this.vertexBuffers)
+	{
+		var buffer = this.vertexBuffers[i];
+		this.gl.deleteBuffer( buffer.buffer );
+		delete this.vertexBuffers[i];
+	}
+
+	for(var i in this.indexBuffers)
+	{
+		var buffer = this.indexBuffers[i];
+		this.gl.deleteBuffer( buffer.buffer );
+		delete this.vertexBuffers[i];
+	}
+}
+
 
 
 Mesh.prototype.bindBuffers = function( shader )
@@ -646,6 +694,138 @@ Mesh.prototype.computeWireframe = function() {
 	this.createIndexBuffer('wireframe', buffer);
 	return this;
 }
+
+
+/**
+* Multiplies every normal vy -1 and uploads it
+* @method flipNormals
+* @param {enum} stream_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW)
+*/
+Mesh.prototype.flipNormals = function( stream_type  ) {
+	var normals_buffer = this.vertexBuffers["normals"];
+	if(!normals_buffer)
+		return;
+	var data = normals_buffer.data;
+	var l = data.length;
+	for(var i = 0; i < l; ++i)
+		data[i] *= -1;
+	normals_buffer.upload( stream_type );
+
+	//reverse indices too
+	if(!this.indexBuffers["triangles"])
+		this.computeIndices();
+
+	var triangles_buffer = this.indexBuffers["triangles"];
+	var data = triangles_buffer.data;
+	var l = data.length;
+	for(var i = 0; i < l; i += 3)
+	{
+		var tmp = data[i];
+		data[i] = data[i+1];
+		data[i+1] = tmp;
+		//the [i+2] stays the same
+	}
+	triangles_buffer.upload( stream_type );
+}
+
+
+/**
+* Compute indices for a mesh where vertices are shared
+* @method computeIndices
+*/
+Mesh.prototype.computeIndices = function() {
+
+	//cluster by distance
+	var new_vertices = [];
+	var new_normals = [];
+	var new_coords = [];
+
+	var indices = [];
+
+	var old_vertices_buffer = this.vertexBuffers["vertices"];
+	var old_normals_buffer = this.vertexBuffers["normals"];
+	var old_coords_buffer = this.vertexBuffers["coords"];
+
+	var old_vertices_data = old_vertices_buffer.data;
+
+	var old_normals_data = null;
+	if( old_normals_buffer )
+		old_normals_data = old_normals_buffer.data;
+
+	var old_coords_data = null;
+	if( old_coords_buffer )
+		old_coords_data = old_coords_buffer.data;
+
+
+	var indexer = {};
+
+	var l = old_vertices_data.length / 3;
+	for(var i = 0; i < l; ++i)
+	{
+		var v = old_vertices_data.subarray( i*3,(i+1)*3 );
+		var key = (v[0] * 1000)|0;
+
+		//search in new_vertices
+		var j = 0;
+		var candidates = indexer[key];
+		if(candidates)
+		{
+			var l2 = candidates.length;
+			for(; j < l2; j++)
+			{
+				var v2 = new_vertices[ candidates[j] ];
+				//same vertex
+				if( vec3.sqrDist( v, v2 ) < 0.01 )
+				{
+					indices.push(j);
+					break;
+				}
+			}
+		}
+
+		/*
+		var l2 = new_vertices.length;
+		for(var j = 0; j < l2; j++)
+		{
+			//same vertex
+			if( vec3.sqrDist( v, new_vertices[j] ) < 0.001 )
+			{
+				indices.push(j);
+				break;
+			}
+		}
+		*/
+
+		if(candidates && j != l2)
+			continue;
+
+		var index = j;
+		new_vertices.push(v);
+		if( indexer[ key ] )
+			indexer[ key ].push( index );
+		else
+			indexer[ key ] = [ index ];
+
+		if(old_normals_data)
+			new_normals.push( old_normals_data.subarray(i*3, (i+1)*3) );
+		if(old_coords_data)
+			new_coords.push( old_coords_data.subarray(i*2, (i+1)*2) );
+		indices.push(index);
+	}
+
+	this.vertexBuffers = {}; //erase all
+
+	//new buffers
+	this.createVertexBuffer( 'vertices', GL.Mesh.common_buffers["vertices"].attribute, 3, linearizeArray( new_vertices ) );	
+	if(old_normals_data)
+		this.createVertexBuffer( 'normals', GL.Mesh.common_buffers["normals"].attribute, 3, linearizeArray( new_normals ) );	
+	if(old_coords_data)
+		this.createVertexBuffer( 'coords', GL.Mesh.common_buffers["coords"].attribute, 2, linearizeArray( new_coords ) );	
+
+	this.createIndexBuffer( "triangles", indices );
+}
+
+
 
 /**
 * Creates a stream with the normals
