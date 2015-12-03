@@ -305,7 +305,7 @@ var DDS = (function () {
 			{
 				width = header[off_width];
 				height = header[off_height];
-				for(i = 0; i < mipmapCount; ++i) {
+				for(var i = 0; i < mipmapCount; ++i) {
 					if(fourCC)
 					{
 						dataLength = Math.max( 4, width )/4 * Math.max( 4, height )/4 * blockBytes;
@@ -331,7 +331,7 @@ var DDS = (function () {
 		{
 			if(ext) {
 				gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true );
-				for(i = 0; i < mipmapCount; ++i) {
+				for(var i = 0; i < mipmapCount; ++i) {
 					if(fourCC)
 					{
 						dataLength = Math.max( 4, width )/4 * Math.max( 4, height )/4 * blockBytes;
@@ -434,11 +434,11 @@ var DDS = (function () {
 
 		if(is_cubemap)
 		{
-			for(face = 0; face < 6; ++face)
+			for(var face = 0; face < 6; ++face)
 			{
 				width = header[off_width];
 				height = header[off_height];
-				for(i = 0; i < mipmapCount; ++i)
+				for(var i = 0; i < mipmapCount; ++i)
 				{
 					if(fourCC)
 					{
@@ -463,7 +463,7 @@ var DDS = (function () {
 		{
 			if(!compressed_not_supported)
 			{
-				for(i = 0; i < mipmapCount; ++i) {
+				for(var i = 0; i < mipmapCount; ++i) {
 					dataLength = Math.max( 4, width )/4 * Math.max( 4, height )/4 * blockBytes;
 					byteArray = new Uint8Array(arrayBuffer, dataOffset, dataLength);
 					//gl.compressedTexImage2D(gl.TEXTURE_2D, i, internalFormat, width, height, 0, byteArray);

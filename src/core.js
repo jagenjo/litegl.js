@@ -189,7 +189,17 @@ GL.create = function(options) {
 		x:0,
 		y:0,
 		deltax: 0,
-		deltay: 0
+		deltay: 0,
+		isInsideRect: function(x,y,w,h, flip_y )
+		{
+			var mouse_y = this.y;
+			if(flip_y)
+				mouse_y = gl.canvas.height - mouse_y;
+			if( this.x > x && this.x < x + w &&
+				mouse_y > y && mouse_y < y + h)
+				return true;
+			return false;
+		}
 	};
 
 	/**

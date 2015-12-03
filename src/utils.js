@@ -228,8 +228,12 @@ global.extendClass = GL.extendClass = function extendClass( target, origin ) {
 
 
 //simple http request
-global.HttpRequest = GL.request = function HttpRequest(url,params, callback, error, sync)
+global.HttpRequest = GL.request = function HttpRequest(url,params, callback, error, options)
 {
+	var async = true;
+	if(options && options.async !== undefined)
+		async = options.async;
+
 	if(params)
 	{
 		var params_str = null;
@@ -241,10 +245,11 @@ global.HttpRequest = GL.request = function HttpRequest(url,params, callback, err
 	}
 
 	var xhr = new XMLHttpRequest();
-	xhr.open('GET', url, !sync);
-	xhr.onload = function()
+	xhr.open('GET', url, async);
+	xhr.onload = function(e)
 	{
 		var response = this.response;
+		var type = this.getResponseHeader("Content-Type");
 		if(this.status != 200)
 		{
 			LEvent.trigger(xhr,"fail",this.status);
@@ -262,6 +267,14 @@ global.HttpRequest = GL.request = function HttpRequest(url,params, callback, err
 	xhr.onerror = function(err)
 	{
 		LEvent.trigger(xhr,"fail",err);
+	}
+	
+	if(options)
+	{
+		for(var i in options)
+			xhr[i] = options[i];
+		if(options.binary)
+			xhr.responseType = "arraybuffer";
 	}
 
 	xhr.send();

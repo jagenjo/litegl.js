@@ -428,7 +428,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 195,
+            "line": 205,
             "description": "Tells the system to capture mouse events on the canvas. \nThis will trigger onmousedown, onmousemove, onmouseup, onmousewheel callbacks assigned in the gl context\nexample: gl.onmousedown = function(e){ ... }\nThe event is a regular MouseEvent with some extra parameters",
             "itemtype": "method",
             "name": "captureMouse",
@@ -443,7 +443,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 346,
+            "line": 356,
             "description": "Tells the system to capture key events on the canvas. This will trigger onkey",
             "itemtype": "method",
             "name": "captureKeys",
@@ -463,7 +463,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 429,
+            "line": 439,
             "description": "Tells the system to capture gamepad events on the canvas.",
             "itemtype": "method",
             "name": "captureGamepads",
@@ -471,7 +471,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 451,
+            "line": 461,
             "description": "returns the detected gamepads on the system",
             "itemtype": "method",
             "name": "getGamepads",
@@ -479,7 +479,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 511,
+            "line": 521,
             "description": "launches de canvas in fullscreen mode",
             "itemtype": "method",
             "name": "fullscreen",
@@ -487,7 +487,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 528,
+            "line": 538,
             "description": "returns a canvas with a snapshot of an area\nthis is safer than using the canvas itself due to internals of webgl",
             "itemtype": "method",
             "name": "snapshot",
@@ -521,7 +521,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 566,
+            "line": 576,
             "description": "returns a texture and caches it inside gl.textures[]",
             "itemtype": "method",
             "name": "loadTexture",
@@ -550,7 +550,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 598,
+            "line": 608,
             "description": "draws a texture to the viewport",
             "itemtype": "method",
             "name": "drawTexture",
@@ -605,7 +605,7 @@
         },
         {
             "file": "../src/core.js",
-            "line": 660,
+            "line": 670,
             "description": "use it to reset the the initial gl state",
             "itemtype": "method",
             "name": "gl.reset",
@@ -1482,7 +1482,7 @@
         },
         {
             "file": "../src/levent.js",
-            "line": 11,
+            "line": 10,
             "description": "Binds an event to an instance",
             "itemtype": "method",
             "name": "LEvent.bind",
@@ -1512,7 +1512,7 @@
         },
         {
             "file": "../src/levent.js",
-            "line": 34,
+            "line": 37,
             "description": "Unbinds an event from an instance",
             "itemtype": "method",
             "name": "LEvent.unbind",
@@ -1542,7 +1542,7 @@
         },
         {
             "file": "../src/levent.js",
-            "line": 70,
+            "line": 75,
             "description": "Unbinds all events from an instance (or the ones that match certain target_instance)",
             "itemtype": "method",
             "name": "LEvent.unbindAll",
@@ -1562,7 +1562,7 @@
         },
         {
             "file": "../src/levent.js",
-            "line": 115,
+            "line": 113,
             "description": "Tells if there is a binded callback that matches the criteria",
             "itemtype": "method",
             "name": "LEvent.isBind",
@@ -1592,7 +1592,55 @@
         },
         {
             "file": "../src/levent.js",
-            "line": 137,
+            "line": 142,
+            "description": "Tells if there is any callback binded to this event",
+            "itemtype": "method",
+            "name": "LEvent.hasBind",
+            "params": [
+                {
+                    "name": "instance",
+                    "description": "where the are the events binded",
+                    "type": "Object"
+                },
+                {
+                    "name": "event_name",
+                    "description": "string defining the event name",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "true is there is at least one",
+                "type": "Boolean"
+            },
+            "class": "LEvent"
+        },
+        {
+            "file": "../src/levent.js",
+            "line": 159,
+            "description": "Tells if there is any callback binded to this object pointing to a method in the target object",
+            "itemtype": "method",
+            "name": "LEvent.hasBindTo",
+            "params": [
+                {
+                    "name": "instance",
+                    "description": "where there are the events binded",
+                    "type": "Object"
+                },
+                {
+                    "name": "target",
+                    "description": "instance to check to",
+                    "type": "Object"
+                }
+            ],
+            "return": {
+                "description": "true is there is at least one",
+                "type": "Boolean"
+            },
+            "class": "LEvent"
+        },
+        {
+            "file": "../src/levent.js",
+            "line": 186,
             "description": "Triggers and event in an instance",
             "itemtype": "method",
             "name": "LEvent.trigger",
@@ -1611,18 +1659,13 @@
                     "name": "parameters",
                     "description": "that will be received by the binded function",
                     "type": "*"
-                },
-                {
-                    "name": "skip_jquery",
-                    "description": "[optional] force to skip jquery triggering",
-                    "type": "Boolean"
                 }
             ],
             "class": "LEvent"
         },
         {
             "file": "../src/levent.js",
-            "line": 172,
+            "line": 215,
             "description": "Triggers and event to every element in an array",
             "itemtype": "method",
             "name": "LEvent.triggerArray",
@@ -1641,11 +1684,6 @@
                     "name": "parameters",
                     "description": "that will be received by the binded function",
                     "type": "*"
-                },
-                {
-                    "name": "skip_jquery",
-                    "description": "[optional] force to skip jquery triggering",
-                    "type": "Boolean"
                 }
             ],
             "class": "LEvent"
@@ -1698,6 +1736,26 @@
         {
             "file": "../src/mesh.js",
             "line": 122,
+            "description": "Assign data to buffer and uploads it (it allows range)",
+            "itemtype": "method",
+            "name": "setData",
+            "params": [
+                {
+                    "name": "data",
+                    "description": "in Float32Array format usually",
+                    "type": "ArrayBufferView"
+                },
+                {
+                    "name": "offset",
+                    "description": "offset in bytes",
+                    "type": "Number"
+                }
+            ],
+            "class": "Buffer"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 162,
             "description": "Uploads part of the buffer data (stored in this.data) to the GPU",
             "itemtype": "method",
             "name": "uploadRange",
@@ -1717,7 +1775,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 143,
+            "line": 184,
             "description": "Clones one buffer (it allows to share the same data between both buffers)",
             "itemtype": "method",
             "name": "clone",
@@ -1732,7 +1790,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 221,
+            "line": 263,
             "description": "Adds buffer to mesh",
             "itemtype": "method",
             "name": "addBuffer",
@@ -1752,7 +1810,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 240,
+            "line": 282,
             "description": "Adds vertex and indices buffers to a mesh",
             "itemtype": "method",
             "name": "addBuffers",
@@ -1777,7 +1835,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 329,
+            "line": 371,
             "description": "Creates a new empty buffer and attachs it to this mesh",
             "itemtype": "method",
             "name": "createVertexBuffer",
@@ -1812,7 +1870,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 376,
+            "line": 418,
             "description": "Removes a vertex buffer from the mesh",
             "itemtype": "method",
             "name": "removeVertexBuffer",
@@ -1827,7 +1885,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 387,
+            "line": 429,
             "description": "Returns a vertex buffer",
             "itemtype": "method",
             "name": "getVertexBuffer",
@@ -1846,7 +1904,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 399,
+            "line": 441,
             "description": "Creates a new empty index buffer and attachs it to this mesh",
             "itemtype": "method",
             "name": "createIndexBuffer",
@@ -1871,7 +1929,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 412,
+            "line": 454,
             "description": "Returns a vertex buffer",
             "itemtype": "method",
             "name": "getBuffer",
@@ -1890,7 +1948,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 423,
+            "line": 465,
             "description": "Returns a index buffer",
             "itemtype": "method",
             "name": "getIndexBuffer",
@@ -1909,7 +1967,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 434,
+            "line": 476,
             "description": "Uploads data inside buffers to VRAM.",
             "itemtype": "method",
             "name": "upload",
@@ -1924,7 +1982,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 506,
+            "line": 548,
             "description": "Creates a clone of the mesh, the datarrays are cloned too",
             "itemtype": "method",
             "name": "clone",
@@ -1932,7 +1990,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 530,
+            "line": 572,
             "description": "Creates a clone of the mesh, but the data-arrays are shared between both meshes (useful for sharing a mesh between contexts)",
             "itemtype": "method",
             "name": "clone",
@@ -1940,7 +1998,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 541,
+            "line": 583,
             "description": "Creates an object with the info of the mesh (useful to transfer to workers)",
             "itemtype": "method",
             "name": "toObject",
@@ -1948,7 +2006,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 569,
+            "line": 611,
             "description": "Computes some data about the mesh",
             "itemtype": "method",
             "name": "generateMetadata",
@@ -1956,7 +2014,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 648,
+            "line": 690,
             "description": "Creates a new index stream with wireframe",
             "itemtype": "method",
             "name": "computeWireframe",
@@ -1964,7 +2022,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 699,
+            "line": 741,
             "description": "Multiplies every normal vy -1 and uploads it",
             "itemtype": "method",
             "name": "flipNormals",
@@ -1979,7 +2037,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 732,
+            "line": 774,
             "description": "Compute indices for a mesh where vertices are shared",
             "itemtype": "method",
             "name": "computeIndices",
@@ -1987,7 +2045,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 830,
+            "line": 872,
             "description": "Creates a stream with the normals",
             "itemtype": "method",
             "name": "computeNormals",
@@ -2002,7 +2060,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 912,
+            "line": 954,
             "description": "Creates a new stream with the tangents",
             "itemtype": "method",
             "name": "computeTangents",
@@ -2010,7 +2068,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 1000,
+            "line": 1042,
             "description": "Computes bounding information",
             "itemtype": "method",
             "name": "getVertexNumber",
@@ -2025,7 +2083,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 1012,
+            "line": 1054,
             "description": "Computes bounding information",
             "itemtype": "method",
             "name": "Mesh.computeBounding",
@@ -2040,7 +2098,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 1038,
+            "line": 1080,
             "description": "returns the bounding box, if it is not computed, then computes it",
             "itemtype": "method",
             "name": "getBoundingBox",
@@ -2052,7 +2110,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 1050,
+            "line": 1092,
             "description": "Update bounding information of this mesh",
             "itemtype": "method",
             "name": "updateBounding",
@@ -2060,7 +2118,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 1061,
+            "line": 1103,
             "description": "forces a bounding box to be set",
             "itemtype": "method",
             "name": "setBounding",
@@ -2080,7 +2138,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 1072,
+            "line": 1114,
             "description": "Remove all local memory from the streams (leaving it only in the VRAM) to save RAM",
             "itemtype": "method",
             "name": "freeData",
@@ -2088,7 +2146,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 1114,
+            "line": 1156,
             "description": "Returns the amount of memory used by this mesh in bytes (sum of all buffers)",
             "itemtype": "method",
             "name": "getMemory",
@@ -2100,7 +2158,19 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 1131,
+            "line": 1173,
+            "description": "returns a low poly version of the mesh that takes much less memory (but breaks tiling of uvs and smoothing groups)",
+            "itemtype": "method",
+            "name": "simplify",
+            "return": {
+                "description": "simplified mesh",
+                "type": "Mesh"
+            },
+            "class": "Mesh"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 1225,
             "description": "Static method for the class Mesh to create a mesh from a list of common streams",
             "itemtype": "method",
             "name": "Mesh.load",
@@ -2125,7 +2195,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 1146,
+            "line": 1240,
             "description": "Returns a mesh with all the meshes merged (you can apply transforms individually to every buffer)",
             "itemtype": "method",
             "name": "Mesh.mergeMeshes",
@@ -2140,7 +2210,7 @@
         },
         {
             "file": "../src/mesh.js",
-            "line": 1284,
+            "line": 1378,
             "description": "Returns am empty mesh and loads a mesh and parses it using the Mesh.parsers, by default only OBJ is supported",
             "itemtype": "method",
             "name": "Mesh.fromOBJ",
@@ -2156,7 +2226,7 @@
         {
             "file": "../src/octree.js",
             "line": 211,
-            "description": "Uploads a set of uniforms to the Shader",
+            "description": "Test collision between ray and triangles in the octree",
             "itemtype": "method",
             "name": "testRay",
             "params": [
@@ -2184,6 +2254,30 @@
             "return": {
                 "description": "object containing pos and normal",
                 "type": "HitTest"
+            },
+            "class": "Octree"
+        },
+        {
+            "file": "../src/octree.js",
+            "line": 258,
+            "description": "test collision between sphere and the triangles in the octree (only test if there is any vertex inside the sphere)",
+            "itemtype": "method",
+            "name": "testSphere",
+            "params": [
+                {
+                    "name": "origin",
+                    "description": "sphere center",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "radius",
+                    "description": "",
+                    "type": "Number"
+                }
+            ],
+            "return": {
+                "description": "true if the sphere collided with the mesh",
+                "type": "Boolean"
             },
             "class": "Octree"
         },
@@ -2709,14 +2803,14 @@
         {
             "file": "../src/shader.js",
             "line": 820,
-            "description": "Returns a shader to apply FXAA antialiasing\nparams are vec2 u_viewportSize, mat4 u_iViewportSize",
+            "description": "Returns a shader to apply FXAA antialiasing\nparams are vec2 u_viewportSize, vec2 u_iViewportSize or you can call shader.setup()",
             "itemtype": "method",
             "name": "Shader.getFXAAShader",
             "class": "Shader"
         },
         {
             "file": "../src/shader.js",
-            "line": 846,
+            "line": 856,
             "description": "Returns a flat shader (useful to render lines)",
             "itemtype": "method",
             "name": "Shader.getFlatShader",
@@ -2724,7 +2818,15 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 135,
+            "line": 119,
+            "description": "Free the texture memory, the handler is null",
+            "itemtype": "method",
+            "name": "isDepthSupported",
+            "class": "Texture"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 151,
             "description": "Returns if depth texture is supported by the GPU",
             "itemtype": "method",
             "name": "isDepthSupported",
@@ -2732,7 +2834,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 144,
+            "line": 160,
             "description": "Binds the texture to one texture unit",
             "itemtype": "method",
             "name": "bind",
@@ -2751,7 +2853,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 158,
+            "line": 174,
             "description": "Unbinds the texture",
             "itemtype": "method",
             "name": "unbind",
@@ -2770,7 +2872,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 177,
+            "line": 201,
             "description": "Unbinds the texture",
             "itemtype": "method",
             "name": "Texture.setUploadOptions",
@@ -2785,7 +2887,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 201,
+            "line": 225,
             "description": "Given an Image/Canvas/Video it uploads it to the GPU",
             "itemtype": "method",
             "name": "uploadImage",
@@ -2805,7 +2907,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 234,
+            "line": 258,
             "description": "Uploads data to the GPU (data must have the appropiate size)",
             "itemtype": "method",
             "name": "uploadData",
@@ -2825,7 +2927,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 263,
+            "line": 287,
             "description": "Render to texture using FBO, just pass the callback to a rendering function and the content of the texture will be updated\nIf the texture is a cubemap, the callback will be called six times, once per face, the number of the face is passed as a second parameter\nfor further info about how to set up the propper cubemap camera, check the GL.Texture.cubemap_camera_parameters with the direction and up vector for every face.\n\nKeep in mind that it tries to reuse the last renderbuffer for the depth, and if it cannot (different size) it creates a new one (throwing the old)",
             "itemtype": "method",
             "name": "drawTo",
@@ -2840,7 +2942,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 407,
+            "line": 433,
             "description": "Static version of drawTo meant to be used with several buffers",
             "itemtype": "method",
             "name": "drawToColorAndDepth",
@@ -2865,7 +2967,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 487,
+            "line": 513,
             "description": "Similar to drawTo but it also stores the depth in a depth texture",
             "itemtype": "method",
             "name": "drawToColorAndDepth",
@@ -2890,7 +2992,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 520,
+            "line": 546,
             "description": "Copy content of one texture into another",
             "itemtype": "method",
             "name": "copyTo",
@@ -2912,7 +3014,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 560,
+            "line": 586,
             "description": "Render texture in a quad to full viewport size",
             "itemtype": "method",
             "name": "toViewport",
@@ -2932,7 +3034,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 577,
+            "line": 603,
             "description": "Fills the texture with a constant color (uses gl.clear)",
             "itemtype": "method",
             "name": "fill",
@@ -2947,7 +3049,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 592,
+            "line": 618,
             "description": "Render texture in a quad of specified area",
             "itemtype": "method",
             "name": "renderQuad",
@@ -2977,7 +3079,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 623,
+            "line": 649,
             "description": "Applies a blur filter of one pixel to the texture (be careful using it, it is slow)",
             "itemtype": "method",
             "name": "applyBlur",
@@ -3016,7 +3118,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 659,
+            "line": 685,
             "description": "Loads and uploads a texture from a url",
             "itemtype": "method",
             "name": "Texture.fromURL",
@@ -3045,7 +3147,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 718,
+            "line": 744,
             "description": "Create a texture from an Image",
             "itemtype": "method",
             "name": "Texture.fromImage",
@@ -3069,7 +3171,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 743,
+            "line": 769,
             "description": "Create a texture from a Video",
             "itemtype": "method",
             "name": "Texture.fromVideo",
@@ -3093,7 +3195,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 765,
+            "line": 791,
             "description": "Create a clone of a texture",
             "itemtype": "method",
             "name": "Texture.fromTexture",
@@ -3117,7 +3219,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 779,
+            "line": 805,
             "description": "Create a texture from an ArrayBuffer containing the pixels",
             "itemtype": "method",
             "name": "Texture.fromTexture",
@@ -3151,7 +3253,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 814,
+            "line": 840,
             "description": "Create a texture from an ArrayBuffer containing the pixels",
             "itemtype": "method",
             "name": "Texture.fromDDSInMemory",
@@ -3175,7 +3277,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 836,
+            "line": 862,
             "description": "Create a generative texture from a shader ( must GL.Shader.getScreenShader as reference for the shader )",
             "itemtype": "method",
             "name": "Texture.fromShader",
@@ -3209,7 +3311,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 861,
+            "line": 887,
             "description": "Create a cubemap texture from a set of 6 images",
             "itemtype": "method",
             "name": "Texture.cubemapFromImages",
@@ -3233,7 +3335,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 902,
+            "line": 928,
             "description": "Create a cubemap texture from a single image that contains all six images \nIf it is a cross, it must be horizontally aligned, and options.is_cross must be equal to the column where the top and bottom are located (usually 1 or 2)\notherwise it assumes the 6 images are arranged vertically, in the order of OpenGL: +X, -X, +Y, -Y, +Z, -Z",
             "itemtype": "method",
             "name": "Texture.cubemapFromImage",
@@ -3257,7 +3359,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 964,
+            "line": 990,
             "description": "Given the width and the height of an image, and in which column is the top and bottom sides of the cubemap, it gets the info to pass to Texture.cubemapFromImage in options.faces",
             "itemtype": "method",
             "name": "Texture.generateCubemapCrossFaces",
@@ -3281,7 +3383,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 987,
+            "line": 1013,
             "description": "Create a cubemap texture from a single image url that contains the six images\nif it is a cross, it must be horizontally aligned, and options.is_cross must be equal to the column where the top and bottom are located (usually 1 or 2)\notherwise it assumes the 6 images are arranged vertically.",
             "itemtype": "method",
             "name": "Texture.cubemapFromURL",
@@ -3310,7 +3412,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 1028,
+            "line": 1054,
             "description": "returns an ArrayBuffer with the pixels in the texture, they are fliped in Y",
             "itemtype": "method",
             "name": "getPixels",
@@ -3334,7 +3436,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 1081,
+            "line": 1114,
             "description": "Copy texture content to a canvas",
             "itemtype": "method",
             "name": "toCanvas",
@@ -3359,7 +3461,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 1134,
+            "line": 1167,
             "description": "returns a Blob containing all the data from the texture",
             "itemtype": "method",
             "name": "toBlob",
@@ -3371,7 +3473,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 1190,
+            "line": 1223,
             "description": "returns a base64 String containing all the data from the texture",
             "itemtype": "method",
             "name": "toBase64",
@@ -3390,7 +3492,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 1232,
+            "line": 1265,
             "description": "generates some basic metadata about the image",
             "itemtype": "method",
             "name": "generateMetadata",

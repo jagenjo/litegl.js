@@ -28,7 +28,7 @@ GL.Indexer.prototype = {
 * @param {number} spacing number of numbers per component (3 per vertex, 2 per uvs...), default 3
 * @param {enum} stream_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW 
 */
-global.Buffer = GL.Buffer = function Buffer(target, data, spacing, stream_type, gl) {
+global.Buffer = GL.Buffer = function Buffer( target, data, spacing, stream_type, gl ) {
 	gl = gl || global.gl;
 	this.buffer = null; //webgl buffer
 	this.target = target;
@@ -120,12 +120,53 @@ GL.Buffer.prototype.compile = GL.Buffer.prototype.upload;
 
 
 /**
+* Assign data to buffer and uploads it (it allows range)
+* @method setData
+* @param {ArrayBufferView} data in Float32Array format usually
+* @param {number} offset offset in bytes
+*/
+GL.Buffer.prototype.setData = function( data, offset )
+{
+	if(!data.buffer)
+		throw("Data must be typed array");
+	offset = offset || 0;
+
+	if(!this.data)
+	{
+		this.data = data;
+		this.upload();
+		return;
+	}
+	else if( this.data.length < data.length )
+		throw("buffer is not big enough, you cannot set data to a smaller buffer");
+
+	if(this.data != data)
+	{
+		if(this.data.length == data.length)
+		{
+			this.data.set( data );
+			this.upload();
+			return;
+		}
+
+		//upload just part of it
+		var new_data_view = new Uint8Array( data.buffer, data.buffer.byteOffset, data.buffer.byteLength );
+		var data_view = new Uint8Array( this.data.buffer );
+		data_view.set( new_data_view, offset );
+		this.uploadRange( offset, new_data_view.length );
+	}
+
+};
+
+
+/**
 * Uploads part of the buffer data (stored in this.data) to the GPU
 * @method uploadRange
 * @param {number} start offset in bytes
 * @param {number} size sizes in bytes
 */
-GL.Buffer.prototype.uploadRange = function(start, size) {
+GL.Buffer.prototype.uploadRange = function(start, size)
+{
 	if(!this.data)
 		throw("No data stored in this buffer");
 
@@ -146,7 +187,8 @@ GL.Buffer.prototype.uploadRange = function(start, size) {
 * @param {boolean} share if you want that both buffers share the same data (default false)
 * return {GL.Buffer} buffer cloned
 */
-GL.Buffer.prototype.clone = function(share) {
+GL.Buffer.prototype.clone = function(share)
+{
 	var buffer = new GL.Buffer();
 	if(share)
 	{
@@ -191,7 +233,7 @@ global.Mesh = GL.Mesh = function Mesh(vertexbuffers, indexbuffers, options, gl)
 	this.indexBuffers = {};
 
 	if(vertexbuffers || indexbuffers)
-		this.addBuffers(vertexbuffers, indexbuffers);
+		this.addBuffers(vertexbuffers, indexbuffers, options ? options.stream_type : null );
 
 	if(options)
 		for(var i in options)
@@ -460,15 +502,15 @@ Mesh.prototype.deleteBuffers = function()
 	{
 		var buffer = this.vertexBuffers[i];
 		this.gl.deleteBuffer( buffer.buffer );
-		delete this.vertexBuffers[i];
 	}
+	this.vertexBuffers = {};
 
 	for(var i in this.indexBuffers)
 	{
 		var buffer = this.indexBuffers[i];
 		this.gl.deleteBuffer( buffer.buffer );
-		delete this.vertexBuffers[i];
 	}
+	this.indexBuffers[i] = {};
 }
 
 
@@ -1129,6 +1171,58 @@ Mesh.prototype.totalMemory = function()
 }
 
 /**
+* returns a low poly version of the mesh that takes much less memory (but breaks tiling of uvs and smoothing groups)
+* @method simplify
+* @return {Mesh} simplified mesh
+*/
+Mesh.prototype.simplify = function()
+{
+	//compute bounding box
+	var bb = this.getBoundingBox();
+	var min = BBox.getMin( bb );
+	var halfsize = BBox.getHalfsize( bb );
+	var range = vec3.scale( vec3.create(), halfsize, 2 );
+
+	var newmesh = new GL.Mesh();
+	var temp = vec3.create();
+
+	for(var i in this.vertexBuffers)
+	{
+		//take every vertex and normalize it to the bounding box
+		var buffer = this.vertexBuffers[i];
+		var data = buffer.data;
+
+		var new_data = new Float32Array( data.length );
+
+		if(i == "vertices")
+		{
+			for(var j = 0, l = data.length; j < l; j+=3 )
+			{
+				var v = data.subarray(j,j+3);
+				vec3.sub( temp, v, min );
+				vec3.div( temp, temp, range );
+				temp[0] = Math.round(temp[0] * 256) / 256;
+				temp[1] = Math.round(temp[1] * 256) / 256;
+				temp[2] = Math.round(temp[2] * 256) / 256;
+				vec3.mul( temp, temp, range );
+				vec3.add( temp, temp, min );
+				new_data.set( temp, j );
+			}
+		}
+		else
+		{
+		}
+
+		newmesh.addBuffer();
+	}
+
+	//search for repeated vertices
+		//compute the average normal and coord
+	//reindex the triangles
+	//return simplified mesh	
+}
+
+/**
 * Static method for the class Mesh to create a mesh from a list of common streams
 * @method Mesh.load
 * @param {Object} buffers object will all the buffers
@@ -1139,7 +1233,7 @@ Mesh.load = function(buffers, options, output_mesh) {
 	options = options || {};
 
 	var mesh = output_mesh || new GL.Mesh();
-	mesh.configure(buffers, options);
+	mesh.configure( buffers, options);
 	return mesh;
 }
 
@@ -1286,8 +1380,9 @@ Mesh.encoders = {};
 * @method Mesh.fromOBJ
 * @param {Array} meshes array containing all the meshes
 */
-Mesh.fromURL = function(url, on_complete, gl)
+Mesh.fromURL = function(url, on_complete, gl, options)
 {
+	options = options || {};
 	gl = gl || global.gl;
 	var mesh = new GL.Mesh(undefined,undefined,undefined,gl);
 	mesh.ready = false;
@@ -1298,11 +1393,11 @@ Mesh.fromURL = function(url, on_complete, gl)
 		mesh.parse( data, ext );
 		delete mesh["ready"];
 		if(on_complete)
-			on_complete(mesh, url);
+			on_complete.call(mesh,mesh, url);
 	}, function(err){
 		if(on_complete)
 			on_complete(null);
-	});
+	},options);
 	return mesh;
 }
 

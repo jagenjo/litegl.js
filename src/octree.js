@@ -6,7 +6,7 @@
 * @param {Mesh} mesh object containing vertices buffer (indices buffer optional)
 */
 
-global.Octree = GL.Octree = function Octree(mesh)
+global.Octree = GL.Octree = function Octree( mesh )
 {
 	this.root = null;
 	this.total_depth = 0;
@@ -209,7 +209,7 @@ Octree.prototype.trim = function(node)
 }
 
 /**
-* Uploads a set of uniforms to the Shader
+* Test collision between ray and triangles in the octree
 * @method testRay
 * @param {vec3} origin ray origin position
 * @param {vec3} direction ray direction position
@@ -217,36 +217,71 @@ Octree.prototype.trim = function(node)
 * @param {number} dist_max
 * @return {HitTest} object containing pos and normal
 */
-Octree.prototype.testRay = function(origin, direction, dist_min, dist_max)
+Octree.prototype.testRay = (function(){ 
+	var origin_temp = vec3.create();
+	var direction_temp = vec3.create();
+	var min_temp = vec3.create();
+	var max_temp = vec3.create();
+
+	return function(origin, direction, dist_min, dist_max)
+	{
+		octree_tested_boxes = 0;
+		octree_tested_triangles = 0;
+
+		if(!this.root)
+		{
+			throw("Error: octree not build");
+		}
+
+		origin_temp.set( origin );
+		direction_temp.set( direction );
+		min_temp.set( this.root.min );
+		max_temp.set( this.root.max );
+
+		var test = Octree.hitTestBox( origin_temp, direction_temp, min_temp, max_temp );
+		if(!test) //no collision with mesh bounding box
+			return null;
+
+		var test = Octree.testRayInNode( this.root, origin_temp, direction_temp );
+		if(test != null)
+		{
+			var pos = vec3.scale( vec3.create(), direction, test.t );
+			vec3.add( pos, pos, origin );
+			test.pos = pos;
+			return test;
+		}
+
+		return null;
+	}
+})();
+
+/**
+* test collision between sphere and the triangles in the octree (only test if there is any vertex inside the sphere)
+* @method testSphere
+* @param {vec3} origin sphere center
+* @param {number} radius
+* @return {Boolean} true if the sphere collided with the mesh
+*/
+Octree.prototype.testSphere = function( origin, radius )
 {
 	origin = vec3.clone(origin);
-	direction = vec3.clone(direction);
-	//direction = direction.unit();
 	octree_tested_boxes = 0;
 	octree_tested_triangles = 0;
 
 	if(!this.root)
-	{
 		throw("Error: octree not build");
-	}
 
-	var test = Octree.hitTestBox( origin, direction, vec3.clone(this.root.min), vec3.clone(this.root.max) );
-	if(!test) //no collision with mesh bounding box
-		return null;
+	//better to use always the radius squared, because all the calculations are going to do that
+	var rr = radius * radius;
 
-	var test = Octree.testRayInNode(this.root,origin,direction);
-	if(test != null)
-	{
-		var pos = vec3.scale( vec3.create(), direction, test.t );
-		vec3.add( pos, pos, origin );
-		test.pos = pos;
-		return test;
-	}
+	if( !Octree.testSphereBox( origin, rr, vec3.clone(this.root.min), vec3.clone(this.root.max) ) )
+		return false; //out of the box
 
-	return null;
+	return Octree.testSphereInNode( this.root, origin, rr );
 }
 
-Octree.testRayInNode = function(node, origin, direction)
+//WARNING: cannot use static here, it uses recursion
+Octree.testRayInNode = function( node, origin, direction )
 {
 	var test = null;
 	var prev_test = null;
@@ -257,16 +292,19 @@ Octree.testRayInNode = function(node, origin, direction)
 		for(var i = 0, l = node.faces.length; i < l; ++i)
 		{
 			var face = node.faces[i];
-			
 			octree_tested_triangles += 1;
-			test = Octree.hitTestTriangle(origin,direction, face.subarray(0,3) , face.subarray(3,6), face.subarray(6,9) );
+			test = Octree.hitTestTriangle( origin, direction, face.subarray(0,3) , face.subarray(3,6), face.subarray(6,9) );
 			if (test==null)
 				continue;
 			if(prev_test)
-				prev_test.mergeWith(test);
+				prev_test.mergeWith( test );
 			else
 				prev_test = test;
 		}
+
+	//WARNING: cannot use statics here, this function uses recursion
+	var child_min = vec3.create();
+	var child_max = vec3.create();
 
 	//test children nodes faces
 	var child;
@@ -274,8 +312,11 @@ Octree.testRayInNode = function(node, origin, direction)
 		for(var i = 0; i < node.c.length; ++i)
 		{
 			child = node.c[i];
+			child_min.set( child.min );
+			child_max.set( child.max );
+
 			//test with node box
-			test = Octree.hitTestBox( origin, direction, vec3.clone(child.min), vec3.clone(child.max) );
+			test = Octree.hitTestBox( origin, direction, child_min, child_max );
 			if( test == null )
 				continue;
 
@@ -284,17 +325,59 @@ Octree.testRayInNode = function(node, origin, direction)
 				continue;
 
 			//test collision with node
-			test = Octree.testRayInNode(child, origin, direction);
+			test = Octree.testRayInNode( child, origin, direction );
 			if(test == null)
 				continue;
 
 			if(prev_test)
-				prev_test.mergeWith(test);
+				prev_test.mergeWith( test );
 			else
 				prev_test = test;
 		}
 
 	return prev_test;
+}
+
+//WARNING: cannot use static here, it uses recursion
+Octree.testSphereInNode = function( node, origin, radius2 )
+{
+	var test = null;
+	var prev_test = null;
+	octree_tested_boxes += 1;
+
+	//test faces
+	if(node.faces)
+		for(var i = 0, l = node.faces.length; i < l; ++i)
+		{
+			var face = node.faces[i];
+			octree_tested_triangles += 1;
+			if( Octree.testSphereTriangle( origin, radius2, face.subarray(0,3) , face.subarray(3,6), face.subarray(6,9) ) )
+				return true;
+		}
+
+	//WARNING: cannot use statics here, this function uses recursion
+	var child_min = vec3.create();
+	var child_max = vec3.create();
+
+	//test children nodes faces
+	var child;
+	if(node.c)
+		for(var i = 0; i < node.c.length; ++i)
+		{
+			child = node.c[i];
+			child_min.set( child.min );
+			child_max.set( child.max );
+
+			//test with node box
+			if( !Octree.testSphereBox( origin, radius2, child_min, child_max ) )
+				continue;
+
+			//test collision with node content
+			if( Octree.testSphereInNode( child, origin, radius2 ) )
+				return true;
+		}
+
+	return false;
 }
 
 //test if one bounding is inside or overlapping another bounding
@@ -315,9 +398,9 @@ Octree.hitTestBox = (function(){
 	var t2 = vec3.create();
 	var tmp = vec3.create();
 	var epsilon = 1.0e-6;
-	var eps = vec3.fromValues(epsilon,epsilon,epsilon);
+	var eps = vec3.fromValues( epsilon,epsilon,epsilon );
 	
-	return function(origin, ray, box_min, box_max) {
+	return function( origin, ray, box_min, box_max ) {
 		vec3.subtract( tMin, box_min, origin );
 		vec3.subtract( tMax, box_max, origin );
 		
@@ -348,31 +431,31 @@ Octree.hitTestBox = (function(){
 
 Octree.hitTestTriangle = (function(){ 
 	
-	var ab = vec3.create();
-	var ac = vec3.create();
+	var AB = vec3.create();
+	var AC = vec3.create();
 	var toHit = vec3.create();
 	var tmp = vec3.create();
 	
-	return function(origin, ray, a, b, c) {
-		vec3.subtract( ab, b,a );
-		vec3.subtract( ac, c,a );
-		var normal = vec3.cross( vec3.create(), ab, ac ); //returned
+	return function(origin, ray, A, B, C) {
+		vec3.subtract( AB, B, A );
+		vec3.subtract( AC, C, A );
+		var normal = vec3.cross( vec3.create(), AB, AC ); //returned
 		vec3.normalize( normal, normal );
 		if( vec3.dot(normal,ray) > 0)
 			return null; //ignore backface
 
-		var t = vec3.dot(normal, vec3.subtract( tmp, a, origin )) / vec3.dot(normal,ray);
+		var t = vec3.dot(normal, vec3.subtract( tmp, A, origin )) / vec3.dot(normal,ray);
 
 	    if (t > 0)
 		{
 			var hit = vec3.scale(vec3.create(), ray, t); //returned
 			vec3.add(hit, hit, origin);
-			vec3.subtract( toHit, hit,a );
-			var dot00 = vec3.dot(ac,ac);
-			var dot01 = vec3.dot(ac,ab);
-			var dot02 = vec3.dot(ac,toHit);
-			var dot11 = vec3.dot(ab,ab);
-			var dot12 = vec3.dot(ab,toHit);
+			vec3.subtract( toHit, hit, A );
+			var dot00 = vec3.dot(AC,AC);
+			var dot01 = vec3.dot(AC,AB);
+			var dot02 = vec3.dot(AC,toHit);
+			var dot11 = vec3.dot(AB,AB);
+			var dot12 = vec3.dot(AB,toHit);
 			var divide = dot00 * dot11 - dot01 * dot01;
 			var u = (dot11 * dot02 - dot01 * dot12) / divide;
 			var v = (dot00 * dot12 - dot01 * dot02) / divide;
@@ -382,3 +465,105 @@ Octree.hitTestTriangle = (function(){
 	    return null;
 	};
 })();
+
+//from http://realtimecollisiondetection.net/blog/?p=103
+//radius must be squared
+Octree.testSphereTriangle = (function(){ 
+	
+	var A = vec3.create();
+	var B = vec3.create();
+	var C = vec3.create();
+	var AB = vec3.create();
+	var AC = vec3.create();
+	var BC = vec3.create();
+	var CA = vec3.create();
+	var V = vec3.create();
+	
+	return function( P, rr, A_, B_, C_ ) {
+		vec3.sub( A, A_, P );
+		vec3.sub( B, B_, P );
+		vec3.sub( C, C_, P );
+
+		vec3.sub( AB, B, A );
+		vec3.sub( AC, C, A );
+
+		vec3.cross( V, AB, AC );
+		var d = vec3.dot( A, V );
+		var e = vec3.dot( V, V );
+		var sep1 = d * d > rr * e;
+		var aa = vec3.dot(A, A);
+		var ab = vec3.dot(A, B);
+		var ac = vec3.dot(A, C);
+		var bb = vec3.dot(B, B);
+		var bc = vec3.dot(B, C);
+		var cc = vec3.dot(C, C);
+		var sep2 = (aa > rr) & (ab > aa) & (ac > aa);
+		var sep3 = (bb > rr) & (ab > bb) & (bc > bb);
+		var sep4 = (cc > rr) & (ac > cc) & (bc > cc);
+
+		var d1 = ab - aa;
+		var d2 = bc - bb;
+		var d3 = ac - cc;
+
+		vec3.sub( BC, C, B );
+		vec3.sub( CA, A, C );
+
+		var e1 = vec3.dot(AB, AB);
+		var e2 = vec3.dot(BC, BC);
+		var e3 = vec3.dot(CA, CA);
+
+		var Q1 = vec3.scale(vec3.create(), A, e1); vec3.sub( Q1, Q1, vec3.scale(vec3.create(), AB, d1) );
+		var Q2 = vec3.scale(vec3.create(), B, e2); vec3.sub( Q2, Q2, vec3.scale(vec3.create(), BC, d2) );
+		var Q3 = vec3.scale(vec3.create(), C, e3); vec3.sub( Q3, Q3, vec3.scale(vec3.create(), CA, d3) );
+
+		var QC = vec3.scale( vec3.create(), C, e1 ); QC = vec3.sub( QC, QC, Q1 );
+		var QA = vec3.scale( vec3.create(), A, e2 ); QA = vec3.sub( QA, QA, Q2 );
+		var QB = vec3.scale( vec3.create(), B, e3 ); QB = vec3.sub( QB, QB, Q3 );
+
+		var sep5 = ( vec3.dot(Q1, Q1) > rr * e1 * e1) & (vec3.dot(Q1, QC) > 0 );
+		var sep6 = ( vec3.dot(Q2, Q2) > rr * e2 * e2) & (vec3.dot(Q2, QA) > 0 );
+		var sep7 = ( vec3.dot(Q3, Q3) > rr * e3 * e3) & (vec3.dot(Q3, QB) > 0 );
+
+		var separated = sep1 | sep2 | sep3 | sep4 | sep5 | sep6 | sep7
+		return !separated;
+	};
+})();
+
+Octree.testSphereBox = function( center, radius2, box_min, box_max ) {
+
+	// arvo's algorithm from gamasutra
+	// http://www.gamasutra.com/features/19991018/Gomez_4.htm
+	var s, d = 0.0;
+	//find the square of the distance
+	//from the sphere to the box
+	for(var i = 0; i < 3; ++i) 
+	{ 
+		if( center[i] < box_min[i] )
+		{
+			s = center[i] - box_min[i];
+			d += s*s; 
+		}
+		else if( center[i] > box_max[i] )
+		{ 
+			s = center[i] - box_max[i];
+			d += s*s; 
+		}
+	}
+	//return d <= r*r
+
+	if (d <= radius2)
+	{
+		return true;
+		/*
+		// this is used just to know if it overlaps or is just inside, but I dont care
+		// make an aabb aabb test with the sphere aabb to test inside state
+		var halfsize = vec3.fromValues( radius, radius, radius );
+		var sphere_bbox = BBox.fromCenterHalfsize( center, halfsize );
+		if ( geo.testBBoxBBox(bbox, sphere_bbox) )
+			return INSIDE;
+		return OVERLAP;	
+		*/
+	}
+
+	return false; //OUTSIDE;
+};
