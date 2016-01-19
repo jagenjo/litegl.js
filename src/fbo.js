@@ -1,4 +1,6 @@
-/** FBO for FrameBufferObjects, FBOs are used to store the render inside one or several textures (include the depth buffer)
+/** 
+* FBO for FrameBufferObjects, FBOs are used to store the render inside one or several textures 
+* Supports multibuffer and depthbuffer texture, useful for deferred rendering
 * @class FBO
 * @param {Array} color_textures an array containing the color textures, if not supplied a render buffer will be used
 * @param {GL.Texture} depth_texture the depth texture, if not supplied a render buffer will be used

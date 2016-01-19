@@ -386,6 +386,13 @@
                             </li>
                         
                             <li class="index-item method">
+                                <a href="#method_Mesh.parseOBJ">Mesh.parseOBJ</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
                                 <a href="#method_Mesh.plane">Mesh.plane</a>
 
                                 
@@ -1576,7 +1583,7 @@ This info is stored so it works faster during rendering.</p>
             
         
         
-        <a href="../files/.._src_primitives.js.html#l112"><code>..&#x2F;src&#x2F;primitives.js:112</code></a>
+        <a href="../files/.._src_primitives.js.html#l85"><code>..&#x2F;src&#x2F;primitives.js:85</code></a>
         
         </p>
 
@@ -1587,7 +1594,7 @@ This info is stored so it works faster during rendering.</p>
     </div>
 
     <div class="description">
-        <p>Returns a cube mesh of a given size</p>
+        <p>Returns a cube mesh</p>
 
     </div>
 
@@ -1606,7 +1613,7 @@ This info is stored so it works faster during rendering.</p>
                     
 
                     <div class="param-description">
-                        <p>valid options: size, sizex, sizey, sizez</p>
+                        <p>valid options: size</p>
 
                     </div>
 
@@ -1665,7 +1672,7 @@ This info is stored so it works faster during rendering.</p>
             
         
         
-        <a href="../files/.._src_primitives.js.html#l85"><code>..&#x2F;src&#x2F;primitives.js:85</code></a>
+        <a href="../files/.._src_primitives.js.html#l112"><code>..&#x2F;src&#x2F;primitives.js:112</code></a>
         
         </p>
 
@@ -1676,7 +1683,7 @@ This info is stored so it works faster during rendering.</p>
     </div>
 
     <div class="description">
-        <p>Returns a cube mesh</p>
+        <p>Returns a cube mesh of a given size</p>
 
     </div>
 
@@ -1695,7 +1702,7 @@ This info is stored so it works faster during rendering.</p>
                     
 
                     <div class="param-description">
-                        <p>valid options: size</p>
+                        <p>valid options: size, sizex, sizey, sizez</p>
 
                     </div>
 
@@ -1973,6 +1980,134 @@ This info is stored so it works faster during rendering.</p>
         </div>
     
 
+    
+
+    
+</div>
+
+                
+                    <div id="method_Mesh.parseOBJ" class="method item">
+    <h3 class="name"><code>Mesh.parseOBJ</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>data</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>options</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type">Object</span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_parsers.js.html#l2"><code>..&#x2F;src&#x2F;parsers.js:2</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Parses a OBJ string and returns an object with the info ready to be passed to GL.Mesh.load</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">data</code>
+                        <span class="type">String</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>all the OBJ info to be parsed</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">options</code>
+                        <span class="type">Object</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">Object</span>:
+                    
+                    <p>mesh information (vertices, coords, normals, indices)</p>
+
+                
+            </div>
+        </div>
     
 
     
@@ -2587,7 +2722,7 @@ It throws an exception if there is any error in the code</p>
             
         
         
-        <a href="../files/.._src_shader.js.html#l647"><code>..&#x2F;src&#x2F;shader.js:647</code></a>
+        <a href="../files/.._src_shader.js.html#l666"><code>..&#x2F;src&#x2F;shader.js:666</code></a>
         
         </p>
 
@@ -2963,7 +3098,7 @@ Warning: Imports are evaluated only the first inclusion, the rest are ignored to
             
         
         
-        <a href="../files/.._src_shader.js.html#l735"><code>..&#x2F;src&#x2F;shader.js:735</code></a>
+        <a href="../files/.._src_shader.js.html#l754"><code>..&#x2F;src&#x2F;shader.js:754</code></a>
         
         </p>
 
@@ -3019,7 +3154,7 @@ shader params are: vec2 u_offset, float u_intensity</p>
             
         
         
-        <a href="../files/.._src_shader.js.html#l692"><code>..&#x2F;src&#x2F;shader.js:692</code></a>
+        <a href="../files/.._src_shader.js.html#l711"><code>..&#x2F;src&#x2F;shader.js:711</code></a>
         
         </p>
 
@@ -3075,7 +3210,7 @@ shader params vec4 u_color and sampler2D u_texture</p>
             
         
         
-        <a href="../files/.._src_shader.js.html#l856"><code>..&#x2F;src&#x2F;shader.js:856</code></a>
+        <a href="../files/.._src_shader.js.html#l875"><code>..&#x2F;src&#x2F;shader.js:875</code></a>
         
         </p>
 
@@ -3130,7 +3265,7 @@ shader params vec4 u_color and sampler2D u_texture</p>
             
         
         
-        <a href="../files/.._src_shader.js.html#l820"><code>..&#x2F;src&#x2F;shader.js:820</code></a>
+        <a href="../files/.._src_shader.js.html#l839"><code>..&#x2F;src&#x2F;shader.js:839</code></a>
         
         </p>
 
@@ -3186,7 +3321,7 @@ params are vec2 u_viewportSize, vec2 u_iViewportSize or you can call shader.setu
             
         
         
-        <a href="../files/.._src_shader.js.html#l721"><code>..&#x2F;src&#x2F;shader.js:721</code></a>
+        <a href="../files/.._src_shader.js.html#l740"><code>..&#x2F;src&#x2F;shader.js:740</code></a>
         
         </p>
 
@@ -3242,7 +3377,7 @@ shader must have: u_position, u_size, u_viewport, u_transform, u_texture_area (v
             
         
         
-        <a href="../files/.._src_shader.js.html#l707"><code>..&#x2F;src&#x2F;shader.js:707</code></a>
+        <a href="../files/.._src_shader.js.html#l726"><code>..&#x2F;src&#x2F;shader.js:726</code></a>
         
         </p>
 
@@ -3298,7 +3433,7 @@ shader must have: u_position, u_size, u_viewport, u_transform (mat3)</p>
             
         
         
-        <a href="../files/.._src_shader.js.html#l677"><code>..&#x2F;src&#x2F;shader.js:677</code></a>
+        <a href="../files/.._src_shader.js.html#l696"><code>..&#x2F;src&#x2F;shader.js:696</code></a>
         
         </p>
 
@@ -3470,7 +3605,7 @@ Used internally from extractShaderInfo to optimize calls</p>
             
         
         
-        <a href="../files/.._src_shader.js.html#l662"><code>..&#x2F;src&#x2F;shader.js:662</code></a>
+        <a href="../files/.._src_shader.js.html#l681"><code>..&#x2F;src&#x2F;shader.js:681</code></a>
         
         </p>
 

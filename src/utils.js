@@ -317,7 +317,7 @@ global.loadFileAtlas = GL.loadFileAtlas = function loadFileAtlas(url, callback, 
 	var deferred_callback = null;
 
 	HttpRequest(url, null, function(data) {
-		var files = processFileAtlas(data); 
+		var files = GL.processFileAtlas(data); 
 		if(callback)
 			callback(files);
 		if(deferred_callback)
@@ -325,45 +325,45 @@ global.loadFileAtlas = GL.loadFileAtlas = function loadFileAtlas(url, callback, 
 	}, alert, sync);
 
 	return { done: function(callback) { deferred_callback = callback; } };
+}
 
-	function processFileAtlas(data, callback)
+global.processFileAtlas = GL.processFileAtlas = function(data)
+{
+	//var reg = /^[a-z0-9/_]+$/i;
+	var lines = data.split("\n");
+	var files = {};
+	var file = [];
+	var filename = "";
+	for(var i = 0, l = lines.length; i < l; i++)
 	{
-		//var reg = /^[a-z0-9/_]+$/i;
-		var lines = data.split("\n");
-		var files = {};
-		var file = [];
-		var filename = "";
-		for(var i = 0, l = lines.length; i < l; i++)
+		var line = lines[i].trim();
+		if(!line.length)
+			continue;
+		if( line[0] == "\\") // || (line[0] == '/' && reg.test( line[1] ) ) //allow to use forward slash instead of backward slash
 		{
-			var line = lines[i].trim();
-			if(!line.length)
-				continue;
-			if( line[0] == "\\") // || (line[0] == '/' && reg.test( line[1] ) ) //allow to use forward slash instead of backward slash
+			if(!filename)
 			{
-				if(!filename)
-				{
-					filename = line.substr(1);
-					continue;
-				}
-				inner_newfile();
+				filename = line.substr(1);
+				continue;
 			}
-			else
-				file.push(line);
-		}
-
-		if(filename)
 			inner_newfile();
-
-		function inner_newfile()
-		{
-			var resource = file.join("\n");
-			files[ filename ] = resource;
-			file.length = 0;
-			filename = line.substr(1);
 		}
-
-		return files;
+		else
+			file.push(line);
 	}
+
+	if(filename)
+		inner_newfile();
+
+	function inner_newfile()
+	{
+		var resource = file.join("\n");
+		files[ filename ] = resource;
+		file.length = 0;
+		filename = line.substr(1);
+	}
+
+	return files;
 }
 
 

@@ -50,3 +50,7 @@ GL.ONE_MINUS_CONSTANT_COLOR = 32770;
 GL.CONSTANT_ALPHA = 32771;
 GL.ONE_MINUS_CONSTANT_ALPHA = 32772;
 
+GL.temp_vec3 = vec3.create();
+GL.temp2_vec3 = vec3.create();
+GL.temp_vec4 = vec4.create();
+GL.temp_mat4 = mat4.create();

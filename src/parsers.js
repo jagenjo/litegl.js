@@ -1,10 +1,10 @@
 //***** OBJ parser adapted from SpiderGL implementation *****************
 /**
-* A data buffer to be stored in the GPU
-* @class Mesh
+* Parses a OBJ string and returns an object with the info ready to be passed to GL.Mesh.load
 * @method Mesh.parseOBJ
 * @param {String} data all the OBJ info to be parsed
 * @param {Object} options
+* @return {Object} mesh information (vertices, coords, normals, indices)
 */
 
 Mesh.parseOBJ = function(text, options)

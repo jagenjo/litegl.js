@@ -51,6 +51,10 @@ GL.ONE_MINUS_CONSTANT_COLOR = 32770;
 GL.CONSTANT_ALPHA = 32771;
 GL.ONE_MINUS_CONSTANT_ALPHA = 32772;
 
+GL.temp_vec3 = vec3.create();
+GL.temp2_vec3 = vec3.create();
+GL.temp_vec4 = vec4.create();
+GL.temp_mat4 = mat4.create();
 
 
 global.DEG2RAD = 0.0174532925;
@@ -371,7 +375,7 @@ global.loadFileAtlas = GL.loadFileAtlas = function loadFileAtlas(url, callback, 
 	var deferred_callback = null;
 
 	HttpRequest(url, null, function(data) {
-		var files = processFileAtlas(data); 
+		var files = GL.processFileAtlas(data); 
 		if(callback)
 			callback(files);
 		if(deferred_callback)
@@ -379,45 +383,45 @@ global.loadFileAtlas = GL.loadFileAtlas = function loadFileAtlas(url, callback, 
 	}, alert, sync);
 
 	return { done: function(callback) { deferred_callback = callback; } };
+}
 
-	function processFileAtlas(data, callback)
+global.processFileAtlas = GL.processFileAtlas = function(data)
+{
+	//var reg = /^[a-z0-9/_]+$/i;
+	var lines = data.split("\n");
+	var files = {};
+	var file = [];
+	var filename = "";
+	for(var i = 0, l = lines.length; i < l; i++)
 	{
-		//var reg = /^[a-z0-9/_]+$/i;
-		var lines = data.split("\n");
-		var files = {};
-		var file = [];
-		var filename = "";
-		for(var i = 0, l = lines.length; i < l; i++)
+		var line = lines[i].trim();
+		if(!line.length)
+			continue;
+		if( line[0] == "\\") // || (line[0] == '/' && reg.test( line[1] ) ) //allow to use forward slash instead of backward slash
 		{
-			var line = lines[i].trim();
-			if(!line.length)
-				continue;
-			if( line[0] == "\\") // || (line[0] == '/' && reg.test( line[1] ) ) //allow to use forward slash instead of backward slash
+			if(!filename)
 			{
-				if(!filename)
-				{
-					filename = line.substr(1);
-					continue;
-				}
-				inner_newfile();
+				filename = line.substr(1);
+				continue;
 			}
-			else
-				file.push(line);
-		}
-
-		if(filename)
 			inner_newfile();
-
-		function inner_newfile()
-		{
-			var resource = file.join("\n");
-			files[ filename ] = resource;
-			file.length = 0;
-			filename = line.substr(1);
 		}
-
-		return files;
+		else
+			file.push(line);
 	}
+
+	if(filename)
+		inner_newfile();
+
+	function inner_newfile()
+	{
+		var resource = file.join("\n");
+		files[ filename ] = resource;
+		file.length = 0;
+		filename = line.substr(1);
+	}
+
+	return files;
 }
 
 
@@ -1636,7 +1640,9 @@ GL.Indexer.prototype = {
 * @param {enum} stream_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW 
 */
 global.Buffer = GL.Buffer = function Buffer( target, data, spacing, stream_type, gl ) {
-	gl = gl || global.gl;
+	if(gl !== null)
+		gl = gl || global.gl;
+
 	this.buffer = null; //webgl buffer
 	this.target = target;
 	this.gl = gl;
@@ -1645,7 +1651,7 @@ global.Buffer = GL.Buffer = function Buffer( target, data, spacing, stream_type,
 	this.data = data;
 	this.spacing = spacing || 3;
 
-	if(this.data)
+	if(this.data && this.gl)
 		this.upload(stream_type);
 }
 
@@ -1686,9 +1692,11 @@ GL.Buffer.prototype.applyTransform = function(mat)
 * @method upload
 * @param {number} stream_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW 
 */
-GL.Buffer.prototype.upload = function(stream_type) { //default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW )
+GL.Buffer.prototype.upload = function( stream_type ) { //default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW )
 	var spacing = this.spacing || 3; //default spacing	
 	var gl = this.gl;
+	if(!gl)
+		return;
 
 	if(!this.data)
 		throw("No data supplied");
@@ -1820,7 +1828,7 @@ GL.Buffer.prototype.clone = function(share)
 }
 
 /**
-* Mesh class to upload geometry to the GPU
+* Base class for meshes, it wraps several buffers and some global info like the bounding box
 * @class Mesh
 * @param {Object} vertexBuffers object with all the vertex streams
 * @param {Object} indexBuffers object with all the indices streams
@@ -1828,10 +1836,13 @@ GL.Buffer.prototype.clone = function(share)
 * @param {WebGLContext} gl [Optional] gl context where to create the mesh
 * @constructor
 */
-global.Mesh = GL.Mesh = function Mesh(vertexbuffers, indexbuffers, options, gl)
+global.Mesh = GL.Mesh = function Mesh( vertexbuffers, indexbuffers, options, gl )
 {
-	gl = gl || global.gl;
-	this.gl = gl;
+	if( gl !== null )
+	{
+		gl = gl || global.gl;
+		this.gl = gl;
+	}
 
 	//used to avoid problems with resources moving between different webgl context
 	this._context_id = gl.context_id; 
@@ -1840,7 +1851,7 @@ global.Mesh = GL.Mesh = function Mesh(vertexbuffers, indexbuffers, options, gl)
 	this.indexBuffers = {};
 
 	if(vertexbuffers || indexbuffers)
-		this.addBuffers(vertexbuffers, indexbuffers, options ? options.stream_type : null );
+		this.addBuffers( vertexbuffers, indexbuffers, options ? options.stream_type : null );
 
 	if(options)
 		for(var i in options)
@@ -1893,7 +1904,7 @@ Mesh.prototype.addBuffer = function(name, buffer)
 * @param {Object} indexBuffers object with all the indices streams
 * @param {enum} stream_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW )
 */
-Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers, stream_type)
+Mesh.prototype.addBuffers = function( vertexbuffers, indexbuffers, stream_type )
 {
 	var num_vertices = 0;
 
@@ -1941,7 +1952,7 @@ Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers, stream_type)
 		var attribute = "a_" + i;
 		if(stream_info && stream_info.attribute)
 			attribute = stream_info.attribute;
-		this.createVertexBuffer( i, attribute, spacing, data, stream_type);
+		this.createVertexBuffer( i, attribute, spacing, data, stream_type );
 	}
 
 	if(indexbuffers)
@@ -1956,10 +1967,11 @@ Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers, stream_type)
 			}
 			if( typeof(data[0]) != "number") //linearize
 			{
-				data = [];
-				for (var i = 0, chunk = 10000; i < this.data.length; i += chunk) {
-				  data = Array.prototype.concat.apply(data, this.data.slice(i, i + chunk));
+				newdata = [];
+				for (var i = 0, chunk = 10000; i < data.length; i += chunk) {
+				  newdata = Array.prototype.concat.apply(newdata, data.slice(i, i + chunk));
 				}
+				data = newdata;
 			}
 
 			//cast to typed
@@ -2015,7 +2027,7 @@ Mesh.prototype.createVertexBuffer = function(name, attribute, buffer_spacing, bu
 		throw("Buffer data MUST be typed array");
 
 	//used to ensure the buffers are held in the same gl context as the mesh
-	var buffer = this.vertexBuffers[name] = new GL.Buffer(gl.ARRAY_BUFFER, buffer_data, buffer_spacing, stream_type, this.gl );
+	var buffer = this.vertexBuffers[name] = new GL.Buffer( gl.ARRAY_BUFFER, buffer_data, buffer_spacing, stream_type, this.gl );
 	buffer.name = name;
 	buffer.attribute = attribute;
 
@@ -2492,8 +2504,8 @@ Mesh.prototype.computeNormals = function( stream_type  ) {
 	if(this.indexBuffers["triangles"])
 		triangles = this.indexBuffers["triangles"].data;
 
-	var temp = vec3.create();
-	var temp2 = vec3.create();
+	var temp = GL.temp_vec3;
+	var temp2 = GL.temp2_vec3;
 
 	var i1,i2,i3,v1,v2,v3,n1,n2,n3;
 
@@ -2677,7 +2689,7 @@ Mesh.computeBounding = function( vertices, bb ) {
 		vec3.max( max,v, max);
 	}
 
-	var center = vec3.add(vec3.create(), min,max );
+	var center = vec3.add( vec3.create(), min,max );
 	vec3.scale( center, center, 0.5);
 	var half_size = vec3.subtract( vec3.create(), max, center );
 
@@ -2736,7 +2748,7 @@ Mesh.prototype.freeData = function()
 	}
 }
 
-Mesh.prototype.configure = function(o, options)
+Mesh.prototype.configure = function( o, options )
 {
 	var v = {};
 	var i = {};
@@ -2754,7 +2766,7 @@ Mesh.prototype.configure = function(o, options)
 			options[j] = o[j];
 	}
 
-	this.addBuffers(v, i);
+	this.addBuffers( v, i, options.stream_type );
 
 	for(var i in options)
 		this[i] = options[i];		
@@ -2833,14 +2845,16 @@ Mesh.prototype.simplify = function()
 * Static method for the class Mesh to create a mesh from a list of common streams
 * @method Mesh.load
 * @param {Object} buffers object will all the buffers
-* @param {Object} options
-* @param {Mesh} output_mesh optional mesh to store the mesh, otherwise is created
+* @param {Object} options [optional]
+* @param {Mesh} output_mesh [optional] mesh to store the mesh, otherwise is created
+* @param {WebGLContext} gl [optional] if omitted, the global.gl is used
 */
-Mesh.load = function(buffers, options, output_mesh) {
+Mesh.load = function( buffers, options, output_mesh, gl ) {
 	options = options || {};
-
-	var mesh = output_mesh || new GL.Mesh();
-	mesh.configure( buffers, options);
+	if(options.no_gl)
+		gl = null;
+	var mesh = output_mesh || new GL.Mesh(null,null,null,gl);
+	mesh.configure( buffers, options );
 	return mesh;
 }
 
@@ -3051,7 +3065,7 @@ Mesh.getScreenQuad = function(gl)
 * @method Mesh.plane
 * @param {Object} options valid options: detail, detailX, detailY, size, width, heigth, xz (horizontal plane)
 */
-Mesh.plane = function(options) {
+Mesh.plane = function(options, gl) {
 	options = options || {};
 	options.triangles = [];
 	var mesh = {};
@@ -3100,14 +3114,14 @@ Mesh.plane = function(options) {
 
 	var bounding = BBox.fromCenterHalfsize( [0,0,0], xz ? [width,0,height] : [width,height,0] );
 	var mesh_info = {vertices:vertices, normals: normals, coords: coords, triangles: triangles };
-	return GL.Mesh.load( mesh_info, { bounding: bounding });
+	return GL.Mesh.load( mesh_info, { bounding: bounding }, gl);
 };
 
 /**
 * Returns a 2D Mesh (be careful, stream is vertices2D, used for 2D engines )
 * @method Mesh.plane2D
 */
-Mesh.plane2D = function(options) {
+Mesh.plane2D = function(options, gl) {
 	var vertices = new Float32Array([-1,1, 1,-1, 1,1, -1,1, -1,-1, 1,-1]);
 	var coords = new Float32Array([0,1, 1,0, 1,1, 0,1, 0,0, 1,0]);
 
@@ -3117,7 +3131,7 @@ Mesh.plane2D = function(options) {
 		for(var i = 0; i < vertices.length; ++i)
 			vertices[i] *= s;
 	}
-	return new GL.Mesh( {vertices2D: vertices, coords: coords } );
+	return new GL.Mesh( {vertices2D: vertices, coords: coords },null,gl );
 };
 
 /**
@@ -3134,7 +3148,7 @@ Mesh.point = function(options) {
 * @method Mesh.cube
 * @param {Object} options valid options: size 
 */
-Mesh.cube = function(options) {
+Mesh.cube = function(options, gl) {
 	options = options || {};
 	var halfsize = (options.size || 1) * 0.5;
 
@@ -3152,7 +3166,7 @@ Mesh.cube = function(options) {
 	if(options.wireframe)
 		buffers.wireframe = new Uint16Array([0,2, 2,5, 5,4, 4,0,   6,7, 7,10, 10,11, 11,6, 0,6, 2,7, 5,10, 4,11  ]);
 	options.bounding = BBox.fromCenterHalfsize( [0,0,0], [halfsize,halfsize,halfsize] );
-	return Mesh.load(buffers, options);
+	return GL.Mesh.load(buffers, options, gl);
 }
 
 
@@ -3161,7 +3175,7 @@ Mesh.cube = function(options) {
 * @method Mesh.cube
 * @param {Object} options valid options: size, sizex, sizey, sizez
 */
-Mesh.box = function(options) {
+Mesh.box = function(options, gl) {
 	options = options || {};
 	var sizex = options.sizex || 1;
 	var sizey = options.sizey || 1;
@@ -3191,7 +3205,7 @@ Mesh.box = function(options) {
 
 	options.bounding = BBox.fromCenterHalfsize( [0,0,0], [sizex,sizey,sizez] );
 
-	return Mesh.load(buffers, options);
+	return GL.Mesh.load(buffers, options, gl);
 }
 
 /**
@@ -3199,7 +3213,7 @@ Mesh.box = function(options) {
 * @method Mesh.circle
 * @param {Object} options valid options: size,radius, xz = in xz plane, otherwise xy plane
 */
-Mesh.circle = function(options) {
+Mesh.circle = function( options, gl ) {
 	options = options || {};
 	var size = options.size || options.radius || 1;
 	var slices = Math.ceil(options.slices || 24);
@@ -3301,7 +3315,7 @@ Mesh.circle = function(options) {
 		buffers.wireframe = wireframe;
 	}
 
-	return Mesh.load( buffers, options );
+	return GL.Mesh.load( buffers, options, gl );
 }
 
 /**
@@ -3309,7 +3323,7 @@ Mesh.circle = function(options) {
 * @method Mesh.cylinder
 * @param {Object} options valid options: radius, height, subdivisions 
 */
-Mesh.cylinder = function(options) {
+Mesh.cylinder = function( options, gl ) {
 	options = options || {};
 	var radius = options.radius || options.size || 1;
 	var height = options.height || options.size || 2;
@@ -3414,7 +3428,7 @@ Mesh.cylinder = function(options) {
 	}
 	options.bounding = BBox.fromCenterHalfsize( [0,0,0], [radius,height*0.5,radius] );
 
-	return Mesh.load(buffers, options);
+	return Mesh.load( buffers, options, gl );
 }
 
 /**
@@ -3422,7 +3436,7 @@ Mesh.cylinder = function(options) {
 * @method Mesh.sphere
 * @param {Object} options valid options: radius, lat, long, subdivisions, hemi
 */
-Mesh.sphere = function(options) {
+Mesh.sphere = function( options, gl ) {
 	options = options || {};
 	var radius = options.radius || options.size || 1;
 	var latitudeBands = options.lat || options.subdivisions || 16;
@@ -3511,7 +3525,7 @@ Mesh.sphere = function(options) {
 		options.bounding = BBox.fromCenterHalfsize( [0,radius*0.5,0], [radius,radius*0.5,radius], radius );
 	else
 		options.bounding = BBox.fromCenterHalfsize( [0,0,0], [radius,radius,radius], radius );
-	return Mesh.load(buffers, options);
+	return GL.Mesh.load( buffers, options, gl );
 }
 
 /**
@@ -3519,7 +3533,7 @@ Mesh.sphere = function(options) {
 * @method Mesh.grid
 * @param {Object} options valid options: size, lines
 */
-Mesh.grid = function(options)
+Mesh.grid = function( options, gl )
 {
 	options = options || {};
 	var num_lines = options.lines || 11;
@@ -3549,7 +3563,7 @@ Mesh.grid = function(options)
 		pos += 12;
 	}
 
-	return new GL.Mesh({vertices: vertexPositionData});
+	return new GL.Mesh({vertices: vertexPositionData}, options, gl );
 }
 
 
@@ -3558,7 +3572,7 @@ Mesh.grid = function(options)
 * @method Mesh.icosahedron
 * @param {Object} options valid options: radius, subdivisions (max: 6)
 */
-Mesh.icosahedron = function(options) {
+Mesh.icosahedron = function( options, gl ) {
 	options = options || {};
 	var radius = options.radius || options.size || 1;
 	var subdivisions = options.subdivisions === undefined ? 0 : options.subdivisions;
@@ -3635,10 +3649,10 @@ Mesh.icosahedron = function(options) {
 
 	options.bounding = BBox.fromCenterHalfsize( [0,0,0], [radius,radius,radius], radius );
 
-	return new GL.Mesh.load({vertices: vertices, coords: coords, normals: normals, triangles: indices},options);
+	return new GL.Mesh.load({vertices: vertices, coords: coords, normals: normals, triangles: indices},options,gl);
 }
 /**
-* Texture class to upload images to the GPU, default is gl.TEXTURE_2D, gl.RGBAof gl.UNSIGNED_BYTE with filter gl.LINEAR, and gl.CLAMP_TO_EDGE
+* Texture class to upload images to the GPU, default is gl.TEXTURE_2D, gl.RGBA of gl.UNSIGNED_BYTE with filters set to gl.LINEAR and wrap to gl.CLAMP_TO_EDGE
 	There is a list of options
 	==========================
 	- texture_type: gl.TEXTURE_2D, gl.TEXTURE_CUBE_MAP, default gl.TEXTURE_2D
@@ -3647,9 +3661,11 @@ Mesh.icosahedron = function(options) {
 	- filter: filtering for mag and min: gl.NEAREST or gl.LINEAR, default gl.NEAREST
 	- magFilter: magnifying filter: gl.NEAREST, gl.LINEAR, default gl.NEAREST
 	- minFilter: minifying filter: gl.NEAREST, gl.LINEAR, gl.LINEAR_MIPMAP_LINEAR, default gl.NEAREST
-	- wrap: texture wrapping: gl.CLAMP_TO_EDGE, gl.REPEAT, gl.MIRROR, default gl.CLAMP_TO_EDGE
-	- premultiply_alpha : multiply the color by the alpha value, default FALSE
+	- wrap: texture wrapping: gl.CLAMP_TO_EDGE, gl.REPEAT, gl.MIRROR, default gl.CLAMP_TO_EDGE (also accepts wrapT and wrapS for separate settings)
+	- pixel_data: ArrayBufferView with the pixel data to upload to the texture, otherwise the texture will be black
+	- premultiply_alpha : multiply the color by the alpha value when uploading, default FALSE
 	- no_flip : do not flip in Y, default TRUE
+	- anisotropic : number of anisotropic fetches, default 0
 
 * @class Texture
 * @param {number} width texture width (any supported but Power of Two allows to have mipmaps), 0 means no memory reserved till its filled
@@ -3721,28 +3737,30 @@ global.Texture = GL.Texture = function Texture(width, height, options, gl) {
 		if(options.anisotropic && gl.extensions["EXT_texture_filter_anisotropic"])
 			gl.texParameterf(gl.TEXTURE_2D, gl.extensions["EXT_texture_filter_anisotropic"].TEXTURE_MAX_ANISOTROPY_EXT, options.anisotropic);
 
+		var pixel_data = options.pixel_data;
+		if(pixel_data && !pixel_data.buffer)
+			pixel_data = new (this.type == gl.FLOAT ? Float32Array : Uint8Array)( pixel_data );
+
 		//gl.TEXTURE_1D is not supported by WebGL...
 		if(this.texture_type == gl.TEXTURE_2D)
 		{
-			var data = options.pixel_data;
-			if(data && !data.buffer)
-				data = new (this.type == gl.FLOAT ? Float32Array : Uint8Array)( data );
-			gl.texImage2D(gl.TEXTURE_2D, 0, this.format, width, height, 0, this.format, this.type, data || null );
+			gl.texImage2D(gl.TEXTURE_2D, 0, this.format, width, height, 0, this.format, this.type, pixel_data || null );
 
-			//only generate mipmaps if pixel_data is provided
-			if (GL.isPowerOfTwo(width) && GL.isPowerOfTwo(height) && options.minFilter && options.minFilter != gl.NEAREST && options.minFilter != gl.LINEAR) {
-				gl.generateMipmap(this.texture_type);
+			//only generate mipmaps if pixel_data is provided?
+			if ( GL.isPowerOfTwo(width) && GL.isPowerOfTwo(height) && options.minFilter && options.minFilter != gl.NEAREST && options.minFilter != gl.LINEAR)
+			{
+				gl.generateMipmap( this.texture_type );
 				this.has_mipmaps = true;
 			}
 		}
 		else if(this.texture_type == gl.TEXTURE_CUBE_MAP)
 		{
-			gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, this.format, this.width, this.height, 0, this.format, this.type, null);
-			gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, this.format, this.width, this.height, 0, this.format, this.type, null);
-			gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, this.format, this.width, this.height, 0, this.format, this.type, null);
-			gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, this.format, this.width, this.height, 0, this.format, this.type, null);
-			gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, this.format, this.width, this.height, 0, this.format, this.type, null);
-			gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, this.format, this.width, this.height, 0, this.format, this.type, null);
+			gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, this.format, this.width, this.height, 0, this.format, this.type, pixel_data || null );
+			gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, this.format, this.width, this.height, 0, this.format, this.type, pixel_data || null );
+			gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, this.format, this.width, this.height, 0, this.format, this.type, pixel_data || null );
+			gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, this.format, this.width, this.height, 0, this.format, this.type, pixel_data || null );
+			gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, this.format, this.width, this.height, 0, this.format, this.type, pixel_data || null );
+			gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, this.format, this.width, this.height, 0, this.format, this.type, pixel_data || null );
 		}
 		gl.bindTexture(this.texture_type, null); //disable
 		gl.activeTexture(gl.TEXTURE0);
@@ -4187,8 +4205,9 @@ Texture.drawToColorAndDepth = function(color_texture, depth_texture, callback) {
 * @method copyTo
 * @param {GL.Texture} target_texture
 * @param {GL.Shader} [shader=null] optional shader to apply while copying
+* @param {Object} [uniforms=null] optional uniforms for the shader
 */
-Texture.prototype.copyTo = function(target_texture, shader) {
+Texture.prototype.copyTo = function( target_texture, shader, uniforms ) {
 	var that = this;
 	var gl = this.gl;
 
@@ -4205,6 +4224,8 @@ Texture.prototype.copyTo = function(target_texture, shader) {
 	//render
 	gl.disable( gl.BLEND );
 	gl.disable( gl.DEPTH_TEST );
+	if(shader && uniforms)
+		shader.uniforms( uniforms );
 	this.toViewport( shader );
 	
 	//restore previous state
@@ -4944,7 +4965,9 @@ Texture.getBlackTexture = function()
 	return gl.textures[":black"] = new GL.Texture(1,1,{ pixel_data: color });
 }
 
-/** FBO for FrameBufferObjects, FBOs are used to store the render inside one or several textures (include the depth buffer)
+/** 
+* FBO for FrameBufferObjects, FBOs are used to store the render inside one or several textures 
+* Supports multibuffer and depthbuffer texture, useful for deferred rendering
 * @class FBO
 * @param {Array} color_textures an array containing the color textures, if not supplied a render buffer will be used
 * @param {GL.Texture} depth_texture the depth texture, if not supplied a render buffer will be used
@@ -5658,6 +5681,25 @@ Shader.expandImports = function(code, files)
 	return code.replace(/#import\s+\"([a-zA-Z0-9_\.]+)\"\s*\n/g, replace_import );
 }
 
+Shader.dumpErrorToConsole = function(err, vscode, fscode)
+{
+	console.error(err);
+	var msg = err.msg;
+	var code = null;
+	if(err.indexOf("Fragment") != -1)
+		code = fscode;
+	else
+		code = vscode;
+
+	var lines = code.split("\n");
+	for(var i in lines)
+		lines[i] = i + "| " + lines[i];
+
+	console.groupCollapsed("Shader code");
+	console.log( lines.join("\n") );
+	console.groupEnd();
+}
+
 //**************** SHADERS ***********************************
 
 Shader.SCREEN_VERTEX_SHADER = "\n\
@@ -6316,8 +6358,13 @@ GL.create = function(options) {
 				e.wheel = -e.deltaY;
 			else
 				e.wheel = (e.wheelDeltaY != null ? e.wheelDeltaY : e.detail * -60);
+
+			//from stack overflow
+			e.delta = e.wheelDelta ? e.wheelDelta/40 : e.deltaY ? -e.deltaY/3 : 0;
+			//console.log(e.delta);
 			if(gl.onmousewheel)
 				gl.onmousewheel(e);
+
 			LEvent.trigger(gl, "mousewheel", e);
 		}
 
@@ -6784,7 +6831,8 @@ GL.augmentEvent = function(e, root_element)
 }
 
 /**
-* LEvent is a lightweight events library focused in low memory footprint
+* LEvent is a lightweight events library focused in low memory footprint and fast delivery.
+* It works by creating a property called "__levents" inside the object that has the bindings, and storing arrays with all the bindings.
 * @class LEvent
 * @constructor
 */
@@ -6809,9 +6857,12 @@ var LEvent = global.LEvent = GL.LEvent = {
 		if(instance.constructor === String ) 
 			throw("cannot bind event to a string");
 
-		var events = instance.__events;
+		var events = instance.__levents;
 		if(!events)
-			events = instance.__events = {};
+		{
+			Object.defineProperty( instance, "__levents", {value: {}, enumerable: false });
+			events = instance.__levents;
+		}
 
 		if( events.hasOwnProperty( event_type ) )
 			events[event_type].push([callback,target_instance]);
@@ -6836,7 +6887,7 @@ var LEvent = global.LEvent = GL.LEvent = {
 		if(instance.constructor === String ) 
 			throw("cannot bind event to a string");
 
-		var events = instance.__events;
+		var events = instance.__levents;
 		if(!events)
 			return;
 
@@ -6868,13 +6919,13 @@ var LEvent = global.LEvent = GL.LEvent = {
 		if(!instance) 
 			throw("cannot unbind events in null");
 
-		var events = instance.__events;
+		var events = instance.__levents;
 		if(!events)
 			return;
 
 		if(!target_instance) //remove all
 		{
-			delete instance.__events;
+			delete instance.__levents;
 			return;
 		}
 
@@ -6896,6 +6947,24 @@ var LEvent = global.LEvent = GL.LEvent = {
 	},
 
 	/**
+	* Unbinds all callbacks associated to one specific event from this instance
+	* @method LEvent.unbindAll
+	* @param {Object} instance where the events are binded
+	* @param {String} event name of the event you want to remove all binds
+	**/
+	unbindAllEvent: function( instance, event )
+	{
+		if(!instance) 
+			throw("cannot unbind events in null");
+
+		var events = instance.__levents;
+		if(!events)
+			return;
+		delete events[ event ];
+		return;
+	},
+
+	/**
 	* Tells if there is a binded callback that matches the criteria
 	* @method LEvent.isBind
 	* @param {Object} instance where the are the events binded
@@ -6908,7 +6977,7 @@ var LEvent = global.LEvent = GL.LEvent = {
 		if(!instance)
 			throw("LEvent cannot have null as instance");
 
-		var events = instance.__events;
+		var events = instance.__levents;
 		if( !events )
 			return;
 
@@ -6935,7 +7004,7 @@ var LEvent = global.LEvent = GL.LEvent = {
 	{
 		if(!instance)
 			throw("LEvent cannot have null as instance");
-		var events = instance.__events;
+		var events = instance.__levents;
 		if(!events || !events.hasOwnProperty( event_type ) || !events[event_type].length) 
 			return false;
 		return true;
@@ -6952,7 +7021,7 @@ var LEvent = global.LEvent = GL.LEvent = {
 	{
 		if(!instance)
 			throw("LEvent cannot have null as instance");
-		var events = instance.__events;
+		var events = instance.__levents;
 
 		//no events binded
 		if(!events || !events.hasOwnProperty( event_type ) || !events[event_type].length) 
@@ -6982,7 +7051,7 @@ var LEvent = global.LEvent = GL.LEvent = {
 		if(instance.constructor === String ) 
 			throw("cannot bind event to a string");
 
-		var events = instance.__events;
+		var events = instance.__levents;
 		if( !events || !events.hasOwnProperty(event_type) )
 			return true;
 
@@ -7014,7 +7083,7 @@ var LEvent = global.LEvent = GL.LEvent = {
 			if(instance.constructor === String ) 
 				throw("cannot bind event to a string");
 
-			var events = instance.__events;
+			var events = instance.__levents;
 			if( !events || !events.hasOwnProperty( event_type ) )
 				continue;
 
@@ -8873,11 +8942,11 @@ Raytracer.hitTestTriangle = function(origin, ray, a, b, c) {
 };
 //***** OBJ parser adapted from SpiderGL implementation *****************
 /**
-* A data buffer to be stored in the GPU
-* @class Mesh
+* Parses a OBJ string and returns an object with the info ready to be passed to GL.Mesh.load
 * @method Mesh.parseOBJ
 * @param {String} data all the OBJ info to be parsed
 * @param {Object} options
+* @return {Object} mesh information (vertices, coords, normals, indices)
 */
 
 Mesh.parseOBJ = function(text, options)

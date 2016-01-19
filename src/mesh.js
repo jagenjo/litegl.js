@@ -29,7 +29,9 @@ GL.Indexer.prototype = {
 * @param {enum} stream_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW 
 */
 global.Buffer = GL.Buffer = function Buffer( target, data, spacing, stream_type, gl ) {
-	gl = gl || global.gl;
+	if(gl !== null)
+		gl = gl || global.gl;
+
 	this.buffer = null; //webgl buffer
 	this.target = target;
 	this.gl = gl;
@@ -38,7 +40,7 @@ global.Buffer = GL.Buffer = function Buffer( target, data, spacing, stream_type,
 	this.data = data;
 	this.spacing = spacing || 3;
 
-	if(this.data)
+	if(this.data && this.gl)
 		this.upload(stream_type);
 }
 
@@ -79,9 +81,11 @@ GL.Buffer.prototype.applyTransform = function(mat)
 * @method upload
 * @param {number} stream_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW 
 */
-GL.Buffer.prototype.upload = function(stream_type) { //default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW )
+GL.Buffer.prototype.upload = function( stream_type ) { //default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW )
 	var spacing = this.spacing || 3; //default spacing	
 	var gl = this.gl;
+	if(!gl)
+		return;
 
 	if(!this.data)
 		throw("No data supplied");
@@ -213,7 +217,7 @@ GL.Buffer.prototype.clone = function(share)
 }
 
 /**
-* Mesh class to upload geometry to the GPU
+* Base class for meshes, it wraps several buffers and some global info like the bounding box
 * @class Mesh
 * @param {Object} vertexBuffers object with all the vertex streams
 * @param {Object} indexBuffers object with all the indices streams
@@ -221,10 +225,13 @@ GL.Buffer.prototype.clone = function(share)
 * @param {WebGLContext} gl [Optional] gl context where to create the mesh
 * @constructor
 */
-global.Mesh = GL.Mesh = function Mesh(vertexbuffers, indexbuffers, options, gl)
+global.Mesh = GL.Mesh = function Mesh( vertexbuffers, indexbuffers, options, gl )
 {
-	gl = gl || global.gl;
-	this.gl = gl;
+	if( gl !== null )
+	{
+		gl = gl || global.gl;
+		this.gl = gl;
+	}
 
 	//used to avoid problems with resources moving between different webgl context
 	this._context_id = gl.context_id; 
@@ -233,7 +240,7 @@ global.Mesh = GL.Mesh = function Mesh(vertexbuffers, indexbuffers, options, gl)
 	this.indexBuffers = {};
 
 	if(vertexbuffers || indexbuffers)
-		this.addBuffers(vertexbuffers, indexbuffers, options ? options.stream_type : null );
+		this.addBuffers( vertexbuffers, indexbuffers, options ? options.stream_type : null );
 
 	if(options)
 		for(var i in options)
@@ -286,7 +293,7 @@ Mesh.prototype.addBuffer = function(name, buffer)
 * @param {Object} indexBuffers object with all the indices streams
 * @param {enum} stream_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW )
 */
-Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers, stream_type)
+Mesh.prototype.addBuffers = function( vertexbuffers, indexbuffers, stream_type )
 {
 	var num_vertices = 0;
 
@@ -334,7 +341,7 @@ Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers, stream_type)
 		var attribute = "a_" + i;
 		if(stream_info && stream_info.attribute)
 			attribute = stream_info.attribute;
-		this.createVertexBuffer( i, attribute, spacing, data, stream_type);
+		this.createVertexBuffer( i, attribute, spacing, data, stream_type );
 	}
 
 	if(indexbuffers)
@@ -349,10 +356,11 @@ Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers, stream_type)
 			}
 			if( typeof(data[0]) != "number") //linearize
 			{
-				data = [];
-				for (var i = 0, chunk = 10000; i < this.data.length; i += chunk) {
-				  data = Array.prototype.concat.apply(data, this.data.slice(i, i + chunk));
+				newdata = [];
+				for (var i = 0, chunk = 10000; i < data.length; i += chunk) {
+				  newdata = Array.prototype.concat.apply(newdata, data.slice(i, i + chunk));
 				}
+				data = newdata;
 			}
 
 			//cast to typed
@@ -408,7 +416,7 @@ Mesh.prototype.createVertexBuffer = function(name, attribute, buffer_spacing, bu
 		throw("Buffer data MUST be typed array");
 
 	//used to ensure the buffers are held in the same gl context as the mesh
-	var buffer = this.vertexBuffers[name] = new GL.Buffer(gl.ARRAY_BUFFER, buffer_data, buffer_spacing, stream_type, this.gl );
+	var buffer = this.vertexBuffers[name] = new GL.Buffer( gl.ARRAY_BUFFER, buffer_data, buffer_spacing, stream_type, this.gl );
 	buffer.name = name;
 	buffer.attribute = attribute;
 
@@ -885,8 +893,8 @@ Mesh.prototype.computeNormals = function( stream_type  ) {
 	if(this.indexBuffers["triangles"])
 		triangles = this.indexBuffers["triangles"].data;
 
-	var temp = vec3.create();
-	var temp2 = vec3.create();
+	var temp = GL.temp_vec3;
+	var temp2 = GL.temp2_vec3;
 
 	var i1,i2,i3,v1,v2,v3,n1,n2,n3;
 
@@ -1070,7 +1078,7 @@ Mesh.computeBounding = function( vertices, bb ) {
 		vec3.max( max,v, max);
 	}
 
-	var center = vec3.add(vec3.create(), min,max );
+	var center = vec3.add( vec3.create(), min,max );
 	vec3.scale( center, center, 0.5);
 	var half_size = vec3.subtract( vec3.create(), max, center );
 
@@ -1129,7 +1137,7 @@ Mesh.prototype.freeData = function()
 	}
 }
 
-Mesh.prototype.configure = function(o, options)
+Mesh.prototype.configure = function( o, options )
 {
 	var v = {};
 	var i = {};
@@ -1147,7 +1155,7 @@ Mesh.prototype.configure = function(o, options)
 			options[j] = o[j];
 	}
 
-	this.addBuffers(v, i);
+	this.addBuffers( v, i, options.stream_type );
 
 	for(var i in options)
 		this[i] = options[i];		
@@ -1226,14 +1234,16 @@ Mesh.prototype.simplify = function()
 * Static method for the class Mesh to create a mesh from a list of common streams
 * @method Mesh.load
 * @param {Object} buffers object will all the buffers
-* @param {Object} options
-* @param {Mesh} output_mesh optional mesh to store the mesh, otherwise is created
+* @param {Object} options [optional]
+* @param {Mesh} output_mesh [optional] mesh to store the mesh, otherwise is created
+* @param {WebGLContext} gl [optional] if omitted, the global.gl is used
 */
-Mesh.load = function(buffers, options, output_mesh) {
+Mesh.load = function( buffers, options, output_mesh, gl ) {
 	options = options || {};
-
-	var mesh = output_mesh || new GL.Mesh();
-	mesh.configure( buffers, options);
+	if(options.no_gl)
+		gl = null;
+	var mesh = output_mesh || new GL.Mesh(null,null,null,gl);
+	mesh.configure( buffers, options );
 	return mesh;
 }
 

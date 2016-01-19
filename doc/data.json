@@ -59,7 +59,8 @@
             "modules": {},
             "classes": {
                 "Indexer": 1,
-                "Buffer": 1
+                "Buffer": 1,
+                "Mesh": 1
             },
             "fors": {},
             "namespaces": {}
@@ -76,9 +77,7 @@
         "../src/parsers.js": {
             "name": "../src/parsers.js",
             "modules": {},
-            "classes": {
-                "Mesh": 1
-            },
+            "classes": {},
             "fors": {},
             "namespaces": {}
         },
@@ -139,6 +138,7 @@
             "extension_for": [],
             "file": "../src/fbo.js",
             "line": 1,
+            "description": "FBO for FrameBufferObjects, FBOs are used to store the render inside one or several textures \nSupports multibuffer and depthbuffer texture, useful for deferred rendering",
             "params": [
                 {
                     "name": "color_textures",
@@ -199,7 +199,7 @@
             "extension_for": [],
             "file": "../src/levent.js",
             "line": 1,
-            "description": "LEvent is a lightweight events library focused in low memory footprint",
+            "description": "LEvent is a lightweight events library focused in low memory footprint and fast delivery.\nIt works by creating a property called \"__levents\" inside the object that has the bindings, and storing arrays with all the bindings.",
             "is_constructor": 1
         },
         "Indexer": {
@@ -258,9 +258,9 @@
             "extensions": [],
             "plugin_for": [],
             "extension_for": [],
-            "file": "../src/parsers.js",
-            "line": 2,
-            "description": "A data buffer to be stored in the GPU",
+            "file": "../src/mesh.js",
+            "line": 215,
+            "description": "Base class for meshes, it wraps several buffers and some global info like the bounding box",
             "params": [
                 {
                     "name": "vertexBuffers",
@@ -283,8 +283,7 @@
                     "type": "WebGLContext"
                 }
             ],
-            "is_constructor": 1,
-            "itemtype": "method"
+            "is_constructor": 1
         },
         "Octree": {
             "name": "Octree",
@@ -346,7 +345,7 @@
             "extension_for": [],
             "file": "../src/texture.js",
             "line": 1,
-            "description": "Texture class to upload images to the GPU, default is gl.TEXTURE_2D, gl.RGBAof gl.UNSIGNED_BYTE with filter gl.LINEAR, and gl.CLAMP_TO_EDGE\n\tThere is a list of options\n\t==========================\n\t- texture_type: gl.TEXTURE_2D, gl.TEXTURE_CUBE_MAP, default gl.TEXTURE_2D\n\t- format: gl.RGB, gl.RGBA, gl.DEPTH_COMPONENT, default gl.RGBA\n\t- type: gl.UNSIGNED_BYTE, gl.UNSIGNED_SHORT, gl.HALF_FLOAT_OES, gl.FLOAT, default gl.UNSIGNED_BYTE\n\t- filter: filtering for mag and min: gl.NEAREST or gl.LINEAR, default gl.NEAREST\n\t- magFilter: magnifying filter: gl.NEAREST, gl.LINEAR, default gl.NEAREST\n\t- minFilter: minifying filter: gl.NEAREST, gl.LINEAR, gl.LINEAR_MIPMAP_LINEAR, default gl.NEAREST\n\t- wrap: texture wrapping: gl.CLAMP_TO_EDGE, gl.REPEAT, gl.MIRROR, default gl.CLAMP_TO_EDGE\n\t- premultiply_alpha : multiply the color by the alpha value, default FALSE\n\t- no_flip : do not flip in Y, default TRUE",
+            "description": "Texture class to upload images to the GPU, default is gl.TEXTURE_2D, gl.RGBA of gl.UNSIGNED_BYTE with filters set to gl.LINEAR and wrap to gl.CLAMP_TO_EDGE\n\tThere is a list of options\n\t==========================\n\t- texture_type: gl.TEXTURE_2D, gl.TEXTURE_CUBE_MAP, default gl.TEXTURE_2D\n\t- format: gl.RGB, gl.RGBA, gl.DEPTH_COMPONENT, default gl.RGBA\n\t- type: gl.UNSIGNED_BYTE, gl.UNSIGNED_SHORT, gl.HALF_FLOAT_OES, gl.FLOAT, default gl.UNSIGNED_BYTE\n\t- filter: filtering for mag and min: gl.NEAREST or gl.LINEAR, default gl.NEAREST\n\t- magFilter: magnifying filter: gl.NEAREST, gl.LINEAR, default gl.NEAREST\n\t- minFilter: minifying filter: gl.NEAREST, gl.LINEAR, gl.LINEAR_MIPMAP_LINEAR, default gl.NEAREST\n\t- wrap: texture wrapping: gl.CLAMP_TO_EDGE, gl.REPEAT, gl.MIRROR, default gl.CLAMP_TO_EDGE (also accepts wrapT and wrapS for separate settings)\n\t- pixel_data: ArrayBufferView with the pixel data to upload to the texture, otherwise the texture will be black\n\t- premultiply_alpha : multiply the color by the alpha value when uploading, default FALSE\n\t- no_flip : do not flip in Y, default TRUE\n\t- anisotropic : number of anisotropic fetches, default 0",
             "params": [
                 {
                     "name": "width",
@@ -613,7 +612,7 @@
         },
         {
             "file": "../src/fbo.js",
-            "line": 30,
+            "line": 32,
             "description": "Changes the textures binded to this FBO",
             "itemtype": "method",
             "name": "setTextures",
@@ -633,7 +632,7 @@
         },
         {
             "file": "../src/fbo.js",
-            "line": 168,
+            "line": 170,
             "description": "Enables this FBO (from now on all the render will be stored in the textures attached to this FBO\nIt stores the previous viewport to restore it afterwards, and changes it to full FBO size",
             "itemtype": "method",
             "name": "bind",
@@ -648,7 +647,7 @@
         },
         {
             "file": "../src/fbo.js",
-            "line": 190,
+            "line": 192,
             "description": "Disables this FBO, if it was binded with keep_old then the old FBO is enabled, otherwise it will render to the screen\nRestores viewport to previous",
             "itemtype": "method",
             "name": "unbind",
@@ -1482,7 +1481,7 @@
         },
         {
             "file": "../src/levent.js",
-            "line": 10,
+            "line": 11,
             "description": "Binds an event to an instance",
             "itemtype": "method",
             "name": "LEvent.bind",
@@ -1512,7 +1511,7 @@
         },
         {
             "file": "../src/levent.js",
-            "line": 37,
+            "line": 41,
             "description": "Unbinds an event from an instance",
             "itemtype": "method",
             "name": "LEvent.unbind",
@@ -1542,7 +1541,7 @@
         },
         {
             "file": "../src/levent.js",
-            "line": 75,
+            "line": 79,
             "description": "Unbinds all events from an instance (or the ones that match certain target_instance)",
             "itemtype": "method",
             "name": "LEvent.unbindAll",
@@ -1562,7 +1561,7 @@
         },
         {
             "file": "../src/levent.js",
-            "line": 113,
+            "line": 117,
             "description": "Tells if there is a binded callback that matches the criteria",
             "itemtype": "method",
             "name": "LEvent.isBind",
@@ -1592,7 +1591,7 @@
         },
         {
             "file": "../src/levent.js",
-            "line": 142,
+            "line": 146,
             "description": "Tells if there is any callback binded to this event",
             "itemtype": "method",
             "name": "LEvent.hasBind",
@@ -1616,7 +1615,7 @@
         },
         {
             "file": "../src/levent.js",
-            "line": 159,
+            "line": 163,
             "description": "Tells if there is any callback binded to this object pointing to a method in the target object",
             "itemtype": "method",
             "name": "LEvent.hasBindTo",
@@ -1640,7 +1639,7 @@
         },
         {
             "file": "../src/levent.js",
-            "line": 186,
+            "line": 190,
             "description": "Triggers and event in an instance",
             "itemtype": "method",
             "name": "LEvent.trigger",
@@ -1665,7 +1664,7 @@
         },
         {
             "file": "../src/levent.js",
-            "line": 215,
+            "line": 219,
             "description": "Triggers and event to every element in an array",
             "itemtype": "method",
             "name": "LEvent.triggerArray",
@@ -2282,6 +2281,30 @@
             "class": "Octree"
         },
         {
+            "file": "../src/parsers.js",
+            "line": 2,
+            "description": "Parses a OBJ string and returns an object with the info ready to be passed to GL.Mesh.load",
+            "itemtype": "method",
+            "name": "Mesh.parseOBJ",
+            "params": [
+                {
+                    "name": "data",
+                    "description": "all the OBJ info to be parsed",
+                    "type": "String"
+                },
+                {
+                    "name": "options",
+                    "description": "",
+                    "type": "Object"
+                }
+            ],
+            "return": {
+                "description": "mesh information (vertices, coords, normals, indices)",
+                "type": "Object"
+            },
+            "class": "Shader"
+        },
+        {
             "file": "../src/primitives.js",
             "line": 2,
             "description": "Returns a planar mesh (you can choose how many subdivisions)",
@@ -2725,7 +2748,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 647,
+            "line": 666,
             "description": "Allows to create a simple shader meant to be used to process a texture, instead of having to define the generic Vertex & Fragment Shader code",
             "itemtype": "method",
             "name": "Shader.createFX",
@@ -2747,7 +2770,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 662,
+            "line": 681,
             "description": "Renders a fullscreen quad with this shader applied",
             "itemtype": "method",
             "name": "toViewport",
@@ -2762,7 +2785,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 677,
+            "line": 696,
             "description": "Returns a shader ready to render a textured quad in fullscreen, use with Mesh.getScreenQuad() mesh\nshader params sampler2D u_texture",
             "itemtype": "method",
             "name": "Shader.getScreenShader",
@@ -2770,7 +2793,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 692,
+            "line": 711,
             "description": "Returns a shader ready to render a colored textured quad in fullscreen, use with Mesh.getScreenQuad() mesh\nshader params vec4 u_color and sampler2D u_texture",
             "itemtype": "method",
             "name": "Shader.getColoredScreenShader",
@@ -2778,7 +2801,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 707,
+            "line": 726,
             "description": "Returns a shader ready to render a quad with transform, use with Mesh.getScreenQuad() mesh\nshader must have: u_position, u_size, u_viewport, u_transform (mat3)",
             "itemtype": "method",
             "name": "Shader.getQuadShader",
@@ -2786,7 +2809,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 721,
+            "line": 740,
             "description": "Returns a shader ready to render part of a texture into the viewport\nshader must have: u_position, u_size, u_viewport, u_transform, u_texture_area (vec4)",
             "itemtype": "method",
             "name": "Shader.getPartialQuadShader",
@@ -2794,7 +2817,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 735,
+            "line": 754,
             "description": "Returns a shader used to apply gaussian blur to one texture in one axis (you should use it twice to get a gaussian blur)\nshader params are: vec2 u_offset, float u_intensity",
             "itemtype": "method",
             "name": "Shader.getBlurShader",
@@ -2802,7 +2825,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 820,
+            "line": 839,
             "description": "Returns a shader to apply FXAA antialiasing\nparams are vec2 u_viewportSize, vec2 u_iViewportSize or you can call shader.setup()",
             "itemtype": "method",
             "name": "Shader.getFXAAShader",
@@ -2810,7 +2833,7 @@
         },
         {
             "file": "../src/shader.js",
-            "line": 856,
+            "line": 875,
             "description": "Returns a flat shader (useful to render lines)",
             "itemtype": "method",
             "name": "Shader.getFlatShader",
@@ -2818,7 +2841,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 119,
+            "line": 123,
             "description": "Free the texture memory, the handler is null",
             "itemtype": "method",
             "name": "isDepthSupported",
@@ -2826,7 +2849,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 151,
+            "line": 155,
             "description": "Returns if depth texture is supported by the GPU",
             "itemtype": "method",
             "name": "isDepthSupported",
@@ -2834,7 +2857,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 160,
+            "line": 164,
             "description": "Binds the texture to one texture unit",
             "itemtype": "method",
             "name": "bind",
@@ -2853,7 +2876,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 174,
+            "line": 178,
             "description": "Unbinds the texture",
             "itemtype": "method",
             "name": "unbind",
@@ -2872,7 +2895,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 201,
+            "line": 205,
             "description": "Unbinds the texture",
             "itemtype": "method",
             "name": "Texture.setUploadOptions",
@@ -2887,7 +2910,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 225,
+            "line": 229,
             "description": "Given an Image/Canvas/Video it uploads it to the GPU",
             "itemtype": "method",
             "name": "uploadImage",
@@ -2907,7 +2930,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 258,
+            "line": 262,
             "description": "Uploads data to the GPU (data must have the appropiate size)",
             "itemtype": "method",
             "name": "uploadData",
@@ -2927,7 +2950,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 287,
+            "line": 291,
             "description": "Render to texture using FBO, just pass the callback to a rendering function and the content of the texture will be updated\nIf the texture is a cubemap, the callback will be called six times, once per face, the number of the face is passed as a second parameter\nfor further info about how to set up the propper cubemap camera, check the GL.Texture.cubemap_camera_parameters with the direction and up vector for every face.\n\nKeep in mind that it tries to reuse the last renderbuffer for the depth, and if it cannot (different size) it creates a new one (throwing the old)",
             "itemtype": "method",
             "name": "drawTo",
@@ -2942,7 +2965,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 433,
+            "line": 437,
             "description": "Static version of drawTo meant to be used with several buffers",
             "itemtype": "method",
             "name": "drawToColorAndDepth",
@@ -2967,7 +2990,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 513,
+            "line": 517,
             "description": "Similar to drawTo but it also stores the depth in a depth texture",
             "itemtype": "method",
             "name": "drawToColorAndDepth",
@@ -2992,7 +3015,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 546,
+            "line": 550,
             "description": "Copy content of one texture into another",
             "itemtype": "method",
             "name": "copyTo",
@@ -3014,7 +3037,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 586,
+            "line": 590,
             "description": "Render texture in a quad to full viewport size",
             "itemtype": "method",
             "name": "toViewport",
@@ -3034,7 +3057,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 603,
+            "line": 607,
             "description": "Fills the texture with a constant color (uses gl.clear)",
             "itemtype": "method",
             "name": "fill",
@@ -3049,7 +3072,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 618,
+            "line": 622,
             "description": "Render texture in a quad of specified area",
             "itemtype": "method",
             "name": "renderQuad",
@@ -3079,7 +3102,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 649,
+            "line": 653,
             "description": "Applies a blur filter of one pixel to the texture (be careful using it, it is slow)",
             "itemtype": "method",
             "name": "applyBlur",
@@ -3118,7 +3141,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 685,
+            "line": 689,
             "description": "Loads and uploads a texture from a url",
             "itemtype": "method",
             "name": "Texture.fromURL",
@@ -3147,7 +3170,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 744,
+            "line": 748,
             "description": "Create a texture from an Image",
             "itemtype": "method",
             "name": "Texture.fromImage",
@@ -3171,7 +3194,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 769,
+            "line": 773,
             "description": "Create a texture from a Video",
             "itemtype": "method",
             "name": "Texture.fromVideo",
@@ -3195,7 +3218,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 791,
+            "line": 795,
             "description": "Create a clone of a texture",
             "itemtype": "method",
             "name": "Texture.fromTexture",
@@ -3219,7 +3242,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 805,
+            "line": 809,
             "description": "Create a texture from an ArrayBuffer containing the pixels",
             "itemtype": "method",
             "name": "Texture.fromTexture",
@@ -3253,7 +3276,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 840,
+            "line": 844,
             "description": "Create a texture from an ArrayBuffer containing the pixels",
             "itemtype": "method",
             "name": "Texture.fromDDSInMemory",
@@ -3277,7 +3300,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 862,
+            "line": 866,
             "description": "Create a generative texture from a shader ( must GL.Shader.getScreenShader as reference for the shader )",
             "itemtype": "method",
             "name": "Texture.fromShader",
@@ -3311,7 +3334,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 887,
+            "line": 891,
             "description": "Create a cubemap texture from a set of 6 images",
             "itemtype": "method",
             "name": "Texture.cubemapFromImages",
@@ -3335,7 +3358,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 928,
+            "line": 932,
             "description": "Create a cubemap texture from a single image that contains all six images \nIf it is a cross, it must be horizontally aligned, and options.is_cross must be equal to the column where the top and bottom are located (usually 1 or 2)\notherwise it assumes the 6 images are arranged vertically, in the order of OpenGL: +X, -X, +Y, -Y, +Z, -Z",
             "itemtype": "method",
             "name": "Texture.cubemapFromImage",
@@ -3359,7 +3382,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 990,
+            "line": 994,
             "description": "Given the width and the height of an image, and in which column is the top and bottom sides of the cubemap, it gets the info to pass to Texture.cubemapFromImage in options.faces",
             "itemtype": "method",
             "name": "Texture.generateCubemapCrossFaces",
@@ -3383,7 +3406,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 1013,
+            "line": 1017,
             "description": "Create a cubemap texture from a single image url that contains the six images\nif it is a cross, it must be horizontally aligned, and options.is_cross must be equal to the column where the top and bottom are located (usually 1 or 2)\notherwise it assumes the 6 images are arranged vertically.",
             "itemtype": "method",
             "name": "Texture.cubemapFromURL",
@@ -3412,7 +3435,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 1054,
+            "line": 1058,
             "description": "returns an ArrayBuffer with the pixels in the texture, they are fliped in Y",
             "itemtype": "method",
             "name": "getPixels",
@@ -3436,7 +3459,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 1114,
+            "line": 1118,
             "description": "Copy texture content to a canvas",
             "itemtype": "method",
             "name": "toCanvas",
@@ -3461,7 +3484,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 1167,
+            "line": 1171,
             "description": "returns a Blob containing all the data from the texture",
             "itemtype": "method",
             "name": "toBlob",
@@ -3473,7 +3496,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 1223,
+            "line": 1227,
             "description": "returns a base64 String containing all the data from the texture",
             "itemtype": "method",
             "name": "toBase64",
@@ -3492,7 +3515,7 @@
         },
         {
             "file": "../src/texture.js",
-            "line": 1265,
+            "line": 1269,
             "description": "generates some basic metadata about the image",
             "itemtype": "method",
             "name": "generateMetadata",

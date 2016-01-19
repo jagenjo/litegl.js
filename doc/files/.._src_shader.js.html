@@ -618,6 +618,25 @@ Shader.expandImports = function(code, files)
 	return code.replace(/#import\s+\&quot;([a-zA-Z0-9_\.]+)\&quot;\s*\n/g, replace_import );
 }
 
+Shader.dumpErrorToConsole = function(err, vscode, fscode)
+{
+	console.error(err);
+	var msg = err.msg;
+	var code = null;
+	if(err.indexOf(&quot;Fragment&quot;) != -1)
+		code = fscode;
+	else
+		code = vscode;
+
+	var lines = code.split(&quot;\n&quot;);
+	for(var i in lines)
+		lines[i] = i + &quot;| &quot; + lines[i];
+
+	console.groupCollapsed(&quot;Shader code&quot;);
+	console.log( lines.join(&quot;\n&quot;) );
+	console.groupEnd();
+}
+
 //**************** SHADERS ***********************************
 
 Shader.SCREEN_VERTEX_SHADER = &quot;\n\

@@ -124,7 +124,7 @@
 
 
 <div class="box intro">
-    <p>Texture class to upload images to the GPU, default is gl.TEXTURE_2D, gl.RGBAof gl.UNSIGNED_BYTE with filter gl.LINEAR, and gl.CLAMP_TO_EDGE</p>
+    <p>Texture class to upload images to the GPU, default is gl.TEXTURE_2D, gl.RGBA of gl.UNSIGNED_BYTE with filters set to gl.LINEAR and wrap to gl.CLAMP_TO_EDGE</p>
 <pre class="code prettyprint"><code>There is a list of options
 ==========================
 - texture_type: gl.TEXTURE_2D, gl.TEXTURE_CUBE_MAP, default gl.TEXTURE_2D
@@ -133,9 +133,11 @@
 - filter: filtering for mag and min: gl.NEAREST or gl.LINEAR, default gl.NEAREST
 - magFilter: magnifying filter: gl.NEAREST, gl.LINEAR, default gl.NEAREST
 - minFilter: minifying filter: gl.NEAREST, gl.LINEAR, gl.LINEAR_MIPMAP_LINEAR, default gl.NEAREST
-- wrap: texture wrapping: gl.CLAMP_TO_EDGE, gl.REPEAT, gl.MIRROR, default gl.CLAMP_TO_EDGE
-- premultiply_alpha : multiply the color by the alpha value, default FALSE
-- no_flip : do not flip in Y, default TRUE</code></pre>
+- wrap: texture wrapping: gl.CLAMP_TO_EDGE, gl.REPEAT, gl.MIRROR, default gl.CLAMP_TO_EDGE (also accepts wrapT and wrapS for separate settings)
+- pixel_data: ArrayBufferView with the pixel data to upload to the texture, otherwise the texture will be black
+- premultiply_alpha : multiply the color by the alpha value when uploading, default FALSE
+- no_flip : do not flip in Y, default TRUE
+- anisotropic : number of anisotropic fetches, default 0</code></pre>
 
 </div>
 
@@ -601,7 +603,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l649"><code>..&#x2F;src&#x2F;texture.js:649</code></a>
+        <a href="../files/.._src_texture.js.html#l653"><code>..&#x2F;src&#x2F;texture.js:653</code></a>
         
         </p>
 
@@ -772,7 +774,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l160"><code>..&#x2F;src&#x2F;texture.js:160</code></a>
+        <a href="../files/.._src_texture.js.html#l164"><code>..&#x2F;src&#x2F;texture.js:164</code></a>
         
         </p>
 
@@ -881,7 +883,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l546"><code>..&#x2F;src&#x2F;texture.js:546</code></a>
+        <a href="../files/.._src_texture.js.html#l550"><code>..&#x2F;src&#x2F;texture.js:550</code></a>
         
         </p>
 
@@ -986,7 +988,7 @@
             
         
         
-        <a href="../files/.._src_texture.js.html#l287"><code>..&#x2F;src&#x2F;texture.js:287</code></a>
+        <a href="../files/.._src_texture.js.html#l291"><code>..&#x2F;src&#x2F;texture.js:291</code></a>
         
         </p>
 
@@ -1090,7 +1092,7 @@ for further info about how to set up the propper cubemap camera, check the GL.Te
             
         
         
-        <a href="../files/.._src_texture.js.html#l433"><code>..&#x2F;src&#x2F;texture.js:433</code></a>
+        <a href="../files/.._src_texture.js.html#l437"><code>..&#x2F;src&#x2F;texture.js:437</code></a>
         
         </p>
 
@@ -1220,7 +1222,7 @@ for further info about how to set up the propper cubemap camera, check the GL.Te
             
         
         
-        <a href="../files/.._src_texture.js.html#l513"><code>..&#x2F;src&#x2F;texture.js:513</code></a>
+        <a href="../files/.._src_texture.js.html#l517"><code>..&#x2F;src&#x2F;texture.js:517</code></a>
         
         </p>
 
@@ -1338,7 +1340,7 @@ for further info about how to set up the propper cubemap camera, check the GL.Te
             
         
         
-        <a href="../files/.._src_texture.js.html#l603"><code>..&#x2F;src&#x2F;texture.js:603</code></a>
+        <a href="../files/.._src_texture.js.html#l607"><code>..&#x2F;src&#x2F;texture.js:607</code></a>
         
         </p>
 
@@ -1421,7 +1423,7 @@ for further info about how to set up the propper cubemap camera, check the GL.Te
             
         
         
-        <a href="../files/.._src_texture.js.html#l1265"><code>..&#x2F;src&#x2F;texture.js:1265</code></a>
+        <a href="../files/.._src_texture.js.html#l1269"><code>..&#x2F;src&#x2F;texture.js:1269</code></a>
         
         </p>
 
@@ -1508,7 +1510,7 @@ for further info about how to set up the propper cubemap camera, check the GL.Te
             
         
         
-        <a href="../files/.._src_texture.js.html#l1054"><code>..&#x2F;src&#x2F;texture.js:1054</code></a>
+        <a href="../files/.._src_texture.js.html#l1058"><code>..&#x2F;src&#x2F;texture.js:1058</code></a>
         
         </p>
 
@@ -1617,7 +1619,7 @@ for further info about how to set up the propper cubemap camera, check the GL.Te
             
         
         
-        <a href="../files/.._src_texture.js.html#l119"><code>..&#x2F;src&#x2F;texture.js:119</code></a>
+        <a href="../files/.._src_texture.js.html#l123"><code>..&#x2F;src&#x2F;texture.js:123</code></a>
         
         </p>
 
@@ -1672,7 +1674,7 @@ for further info about how to set up the propper cubemap camera, check the GL.Te
             
         
         
-        <a href="../files/.._src_texture.js.html#l151"><code>..&#x2F;src&#x2F;texture.js:151</code></a>
+        <a href="../files/.._src_texture.js.html#l155"><code>..&#x2F;src&#x2F;texture.js:155</code></a>
         
         </p>
 
@@ -1755,7 +1757,7 @@ for further info about how to set up the propper cubemap camera, check the GL.Te
             
         
         
-        <a href="../files/.._src_texture.js.html#l618"><code>..&#x2F;src&#x2F;texture.js:618</code></a>
+        <a href="../files/.._src_texture.js.html#l622"><code>..&#x2F;src&#x2F;texture.js:622</code></a>
         
         </p>
 
@@ -1898,7 +1900,7 @@ for further info about how to set up the propper cubemap camera, check the GL.Te
             
         
         
-        <a href="../files/.._src_texture.js.html#l928"><code>..&#x2F;src&#x2F;texture.js:928</code></a>
+        <a href="../files/.._src_texture.js.html#l932"><code>..&#x2F;src&#x2F;texture.js:932</code></a>
         
         </p>
 
@@ -2027,7 +2029,7 @@ otherwise it assumes the 6 images are arranged vertically, in the order of OpenG
             
         
         
-        <a href="../files/.._src_texture.js.html#l887"><code>..&#x2F;src&#x2F;texture.js:887</code></a>
+        <a href="../files/.._src_texture.js.html#l891"><code>..&#x2F;src&#x2F;texture.js:891</code></a>
         
         </p>
 
@@ -2160,7 +2162,7 @@ otherwise it assumes the 6 images are arranged vertically, in the order of OpenG
             
         
         
-        <a href="../files/.._src_texture.js.html#l1013"><code>..&#x2F;src&#x2F;texture.js:1013</code></a>
+        <a href="../files/.._src_texture.js.html#l1017"><code>..&#x2F;src&#x2F;texture.js:1017</code></a>
         
         </p>
 
@@ -2305,7 +2307,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
             
         
         
-        <a href="../files/.._src_texture.js.html#l840"><code>..&#x2F;src&#x2F;texture.js:840</code></a>
+        <a href="../files/.._src_texture.js.html#l844"><code>..&#x2F;src&#x2F;texture.js:844</code></a>
         
         </p>
 
@@ -2433,7 +2435,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
             
         
         
-        <a href="../files/.._src_texture.js.html#l744"><code>..&#x2F;src&#x2F;texture.js:744</code></a>
+        <a href="../files/.._src_texture.js.html#l748"><code>..&#x2F;src&#x2F;texture.js:748</code></a>
         
         </p>
 
@@ -2572,7 +2574,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
             
         
         
-        <a href="../files/.._src_texture.js.html#l862"><code>..&#x2F;src&#x2F;texture.js:862</code></a>
+        <a href="../files/.._src_texture.js.html#l866"><code>..&#x2F;src&#x2F;texture.js:866</code></a>
         
         </p>
 
@@ -2729,7 +2731,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
             
         
         
-        <a href="../files/.._src_texture.js.html#l791"><code>..&#x2F;src&#x2F;texture.js:791</code></a>
+        <a href="../files/.._src_texture.js.html#l795"><code>..&#x2F;src&#x2F;texture.js:795</code></a>
         
         </p>
 
@@ -2868,7 +2870,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
             
         
         
-        <a href="../files/.._src_texture.js.html#l805"><code>..&#x2F;src&#x2F;texture.js:805</code></a>
+        <a href="../files/.._src_texture.js.html#l809"><code>..&#x2F;src&#x2F;texture.js:809</code></a>
         
         </p>
 
@@ -3031,7 +3033,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
             
         
         
-        <a href="../files/.._src_texture.js.html#l685"><code>..&#x2F;src&#x2F;texture.js:685</code></a>
+        <a href="../files/.._src_texture.js.html#l689"><code>..&#x2F;src&#x2F;texture.js:689</code></a>
         
         </p>
 
@@ -3173,7 +3175,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
             
         
         
-        <a href="../files/.._src_texture.js.html#l769"><code>..&#x2F;src&#x2F;texture.js:769</code></a>
+        <a href="../files/.._src_texture.js.html#l773"><code>..&#x2F;src&#x2F;texture.js:773</code></a>
         
         </p>
 
@@ -3300,7 +3302,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
             
         
         
-        <a href="../files/.._src_texture.js.html#l990"><code>..&#x2F;src&#x2F;texture.js:990</code></a>
+        <a href="../files/.._src_texture.js.html#l994"><code>..&#x2F;src&#x2F;texture.js:994</code></a>
         
         </p>
 
@@ -3418,7 +3420,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
             
         
         
-        <a href="../files/.._src_texture.js.html#l201"><code>..&#x2F;src&#x2F;texture.js:201</code></a>
+        <a href="../files/.._src_texture.js.html#l205"><code>..&#x2F;src&#x2F;texture.js:205</code></a>
         
         </p>
 
@@ -3513,7 +3515,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
             
         
         
-        <a href="../files/.._src_texture.js.html#l1223"><code>..&#x2F;src&#x2F;texture.js:1223</code></a>
+        <a href="../files/.._src_texture.js.html#l1227"><code>..&#x2F;src&#x2F;texture.js:1227</code></a>
         
         </p>
 
@@ -3610,7 +3612,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
             
         
         
-        <a href="../files/.._src_texture.js.html#l1167"><code>..&#x2F;src&#x2F;texture.js:1167</code></a>
+        <a href="../files/.._src_texture.js.html#l1171"><code>..&#x2F;src&#x2F;texture.js:1171</code></a>
         
         </p>
 
@@ -3701,7 +3703,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
             
         
         
-        <a href="../files/.._src_texture.js.html#l1114"><code>..&#x2F;src&#x2F;texture.js:1114</code></a>
+        <a href="../files/.._src_texture.js.html#l1118"><code>..&#x2F;src&#x2F;texture.js:1118</code></a>
         
         </p>
 
@@ -3828,7 +3830,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
             
         
         
-        <a href="../files/.._src_texture.js.html#l586"><code>..&#x2F;src&#x2F;texture.js:586</code></a>
+        <a href="../files/.._src_texture.js.html#l590"><code>..&#x2F;src&#x2F;texture.js:590</code></a>
         
         </p>
 
@@ -3937,7 +3939,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
             
         
         
-        <a href="../files/.._src_texture.js.html#l174"><code>..&#x2F;src&#x2F;texture.js:174</code></a>
+        <a href="../files/.._src_texture.js.html#l178"><code>..&#x2F;src&#x2F;texture.js:178</code></a>
         
         </p>
 
@@ -4046,7 +4048,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
             
         
         
-        <a href="../files/.._src_texture.js.html#l258"><code>..&#x2F;src&#x2F;texture.js:258</code></a>
+        <a href="../files/.._src_texture.js.html#l262"><code>..&#x2F;src&#x2F;texture.js:262</code></a>
         
         </p>
 
@@ -4156,7 +4158,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
             
         
         
-        <a href="../files/.._src_texture.js.html#l225"><code>..&#x2F;src&#x2F;texture.js:225</code></a>
+        <a href="../files/.._src_texture.js.html#l229"><code>..&#x2F;src&#x2F;texture.js:229</code></a>
         
         </p>
 

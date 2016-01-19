@@ -52,7 +52,7 @@
 		mat4.perspective(persp, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 0.1, 10000);
 		mat4.lookAt(view, cam_pos, center, [0,1,0]);
 
-		var mode = gl.LINES;
+		var mode = gl.POINTS;
 
 		//events
 		gl.captureMouse();

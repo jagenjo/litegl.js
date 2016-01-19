@@ -1,5 +1,6 @@
 /**
-* LEvent is a lightweight events library focused in low memory footprint
+* LEvent is a lightweight events library focused in low memory footprint and fast delivery.
+* It works by creating a property called "__levents" inside the object that has the bindings, and storing arrays with all the bindings.
 * @class LEvent
 * @constructor
 */
@@ -24,9 +25,12 @@ var LEvent = global.LEvent = GL.LEvent = {
 		if(instance.constructor === String ) 
 			throw("cannot bind event to a string");
 
-		var events = instance.__events;
+		var events = instance.__levents;
 		if(!events)
-			events = instance.__events = {};
+		{
+			Object.defineProperty( instance, "__levents", {value: {}, enumerable: false });
+			events = instance.__levents;
+		}
 
 		if( events.hasOwnProperty( event_type ) )
 			events[event_type].push([callback,target_instance]);
@@ -51,7 +55,7 @@ var LEvent = global.LEvent = GL.LEvent = {
 		if(instance.constructor === String ) 
 			throw("cannot bind event to a string");
 
-		var events = instance.__events;
+		var events = instance.__levents;
 		if(!events)
 			return;
 
@@ -83,13 +87,13 @@ var LEvent = global.LEvent = GL.LEvent = {
 		if(!instance) 
 			throw("cannot unbind events in null");
 
-		var events = instance.__events;
+		var events = instance.__levents;
 		if(!events)
 			return;
 
 		if(!target_instance) //remove all
 		{
-			delete instance.__events;
+			delete instance.__levents;
 			return;
 		}
 
@@ -111,6 +115,24 @@ var LEvent = global.LEvent = GL.LEvent = {
 	},
 
 	/**
+	* Unbinds all callbacks associated to one specific event from this instance
+	* @method LEvent.unbindAll
+	* @param {Object} instance where the events are binded
+	* @param {String} event name of the event you want to remove all binds
+	**/
+	unbindAllEvent: function( instance, event )
+	{
+		if(!instance) 
+			throw("cannot unbind events in null");
+
+		var events = instance.__levents;
+		if(!events)
+			return;
+		delete events[ event ];
+		return;
+	},
+
+	/**
 	* Tells if there is a binded callback that matches the criteria
 	* @method LEvent.isBind
 	* @param {Object} instance where the are the events binded
@@ -123,7 +145,7 @@ var LEvent = global.LEvent = GL.LEvent = {
 		if(!instance)
 			throw("LEvent cannot have null as instance");
 
-		var events = instance.__events;
+		var events = instance.__levents;
 		if( !events )
 			return;
 
@@ -150,7 +172,7 @@ var LEvent = global.LEvent = GL.LEvent = {
 	{
 		if(!instance)
 			throw("LEvent cannot have null as instance");
-		var events = instance.__events;
+		var events = instance.__levents;
 		if(!events || !events.hasOwnProperty( event_type ) || !events[event_type].length) 
 			return false;
 		return true;
@@ -167,7 +189,7 @@ var LEvent = global.LEvent = GL.LEvent = {
 	{
 		if(!instance)
 			throw("LEvent cannot have null as instance");
-		var events = instance.__events;
+		var events = instance.__levents;
 
 		//no events binded
 		if(!events || !events.hasOwnProperty( event_type ) || !events[event_type].length) 
@@ -197,7 +219,7 @@ var LEvent = global.LEvent = GL.LEvent = {
 		if(instance.constructor === String ) 
 			throw("cannot bind event to a string");
 
-		var events = instance.__events;
+		var events = instance.__levents;
 		if( !events || !events.hasOwnProperty(event_type) )
 			return true;
 
@@ -229,7 +251,7 @@ var LEvent = global.LEvent = GL.LEvent = {
 			if(instance.constructor === String ) 
 				throw("cannot bind event to a string");
 
-			var events = instance.__events;
+			var events = instance.__levents;
 			if( !events || !events.hasOwnProperty( event_type ) )
 				continue;
 

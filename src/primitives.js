@@ -4,7 +4,7 @@
 * @method Mesh.plane
 * @param {Object} options valid options: detail, detailX, detailY, size, width, heigth, xz (horizontal plane)
 */
-Mesh.plane = function(options) {
+Mesh.plane = function(options, gl) {
 	options = options || {};
 	options.triangles = [];
 	var mesh = {};
@@ -53,14 +53,14 @@ Mesh.plane = function(options) {
 
 	var bounding = BBox.fromCenterHalfsize( [0,0,0], xz ? [width,0,height] : [width,height,0] );
 	var mesh_info = {vertices:vertices, normals: normals, coords: coords, triangles: triangles };
-	return GL.Mesh.load( mesh_info, { bounding: bounding });
+	return GL.Mesh.load( mesh_info, { bounding: bounding }, gl);
 };
 
 /**
 * Returns a 2D Mesh (be careful, stream is vertices2D, used for 2D engines )
 * @method Mesh.plane2D
 */
-Mesh.plane2D = function(options) {
+Mesh.plane2D = function(options, gl) {
 	var vertices = new Float32Array([-1,1, 1,-1, 1,1, -1,1, -1,-1, 1,-1]);
 	var coords = new Float32Array([0,1, 1,0, 1,1, 0,1, 0,0, 1,0]);
 
@@ -70,7 +70,7 @@ Mesh.plane2D = function(options) {
 		for(var i = 0; i < vertices.length; ++i)
 			vertices[i] *= s;
 	}
-	return new GL.Mesh( {vertices2D: vertices, coords: coords } );
+	return new GL.Mesh( {vertices2D: vertices, coords: coords },null,gl );
 };
 
 /**
@@ -87,7 +87,7 @@ Mesh.point = function(options) {
 * @method Mesh.cube
 * @param {Object} options valid options: size 
 */
-Mesh.cube = function(options) {
+Mesh.cube = function(options, gl) {
 	options = options || {};
 	var halfsize = (options.size || 1) * 0.5;
 
@@ -105,7 +105,7 @@ Mesh.cube = function(options) {
 	if(options.wireframe)
 		buffers.wireframe = new Uint16Array([0,2, 2,5, 5,4, 4,0,   6,7, 7,10, 10,11, 11,6, 0,6, 2,7, 5,10, 4,11  ]);
 	options.bounding = BBox.fromCenterHalfsize( [0,0,0], [halfsize,halfsize,halfsize] );
-	return Mesh.load(buffers, options);
+	return GL.Mesh.load(buffers, options, gl);
 }
 
 
@@ -114,7 +114,7 @@ Mesh.cube = function(options) {
 * @method Mesh.cube
 * @param {Object} options valid options: size, sizex, sizey, sizez
 */
-Mesh.box = function(options) {
+Mesh.box = function(options, gl) {
 	options = options || {};
 	var sizex = options.sizex || 1;
 	var sizey = options.sizey || 1;
@@ -144,7 +144,7 @@ Mesh.box = function(options) {
 
 	options.bounding = BBox.fromCenterHalfsize( [0,0,0], [sizex,sizey,sizez] );
 
-	return Mesh.load(buffers, options);
+	return GL.Mesh.load(buffers, options, gl);
 }
 
 /**
@@ -152,7 +152,7 @@ Mesh.box = function(options) {
 * @method Mesh.circle
 * @param {Object} options valid options: size,radius, xz = in xz plane, otherwise xy plane
 */
-Mesh.circle = function(options) {
+Mesh.circle = function( options, gl ) {
 	options = options || {};
 	var size = options.size || options.radius || 1;
 	var slices = Math.ceil(options.slices || 24);
@@ -254,7 +254,7 @@ Mesh.circle = function(options) {
 		buffers.wireframe = wireframe;
 	}
 
-	return Mesh.load( buffers, options );
+	return GL.Mesh.load( buffers, options, gl );
 }
 
 /**
@@ -262,7 +262,7 @@ Mesh.circle = function(options) {
 * @method Mesh.cylinder
 * @param {Object} options valid options: radius, height, subdivisions 
 */
-Mesh.cylinder = function(options) {
+Mesh.cylinder = function( options, gl ) {
 	options = options || {};
 	var radius = options.radius || options.size || 1;
 	var height = options.height || options.size || 2;
@@ -367,7 +367,7 @@ Mesh.cylinder = function(options) {
 	}
 	options.bounding = BBox.fromCenterHalfsize( [0,0,0], [radius,height*0.5,radius] );
 
-	return Mesh.load(buffers, options);
+	return Mesh.load( buffers, options, gl );
 }
 
 /**
@@ -375,7 +375,7 @@ Mesh.cylinder = function(options) {
 * @method Mesh.sphere
 * @param {Object} options valid options: radius, lat, long, subdivisions, hemi
 */
-Mesh.sphere = function(options) {
+Mesh.sphere = function( options, gl ) {
 	options = options || {};
 	var radius = options.radius || options.size || 1;
 	var latitudeBands = options.lat || options.subdivisions || 16;
@@ -464,7 +464,7 @@ Mesh.sphere = function(options) {
 		options.bounding = BBox.fromCenterHalfsize( [0,radius*0.5,0], [radius,radius*0.5,radius], radius );
 	else
 		options.bounding = BBox.fromCenterHalfsize( [0,0,0], [radius,radius,radius], radius );
-	return Mesh.load(buffers, options);
+	return GL.Mesh.load( buffers, options, gl );
 }
 
 /**
@@ -472,7 +472,7 @@ Mesh.sphere = function(options) {
 * @method Mesh.grid
 * @param {Object} options valid options: size, lines
 */
-Mesh.grid = function(options)
+Mesh.grid = function( options, gl )
 {
 	options = options || {};
 	var num_lines = options.lines || 11;
@@ -502,7 +502,7 @@ Mesh.grid = function(options)
 		pos += 12;
 	}
 
-	return new GL.Mesh({vertices: vertexPositionData});
+	return new GL.Mesh({vertices: vertexPositionData}, options, gl );
 }
 
 
@@ -511,7 +511,7 @@ Mesh.grid = function(options)
 * @method Mesh.icosahedron
 * @param {Object} options valid options: radius, subdivisions (max: 6)
 */
-Mesh.icosahedron = function(options) {
+Mesh.icosahedron = function( options, gl ) {
 	options = options || {};
 	var radius = options.radius || options.size || 1;
 	var subdivisions = options.subdivisions === undefined ? 0 : options.subdivisions;
@@ -588,5 +588,5 @@ Mesh.icosahedron = function(options) {
 
 	options.bounding = BBox.fromCenterHalfsize( [0,0,0], [radius,radius,radius], radius );
 
-	return new GL.Mesh.load({vertices: vertices, coords: coords, normals: normals, triangles: indices},options);
+	return new GL.Mesh.load({vertices: vertices, coords: coords, normals: normals, triangles: indices},options,gl);
 }
