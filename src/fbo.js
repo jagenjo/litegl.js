@@ -83,15 +83,17 @@ FBO.prototype.setTextures = function( color_textures, depth_texture, skip_disabl
 			if(w == -1) 
 				w = t.width;
 			else if(w != t.width)
-				throw("Cannot use Texture.drawTo if textures have different dimensions");
+				throw("Cannot bind textures with different dimensions");
 			if(h == -1) 
 				h = t.height;
 			else if(h != t.height)
-				throw("Cannot use Texture.drawTo if textures have different dimensions");
+				throw("Cannot bind textures with different dimensions");
 			if(type == null) //first one defines the type
 				type = t.type;
 			else if (type != t.type)
-				throw("Cannot use Texture.drawTo if textures have different data type, all must have the same type");
+				throw("Cannot bind textures to a FBO with different pixel formats");
+			if (t.texture_type != gl.TEXTURE_2D)
+				throw("Cannot bind a Cubemap to a FBO");
 		}
 	else
 	{

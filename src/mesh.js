@@ -29,6 +29,9 @@ GL.Indexer.prototype = {
 * @param {enum} stream_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW 
 */
 global.Buffer = GL.Buffer = function Buffer( target, data, spacing, stream_type, gl ) {
+	if(GL.debug)
+		console.log("GL.Buffer created");
+
 	if(gl !== null)
 		gl = gl || global.gl;
 
@@ -227,6 +230,9 @@ GL.Buffer.prototype.clone = function(share)
 */
 global.Mesh = GL.Mesh = function Mesh( vertexbuffers, indexbuffers, options, gl )
 {
+	if(GL.debug)
+		console.log("GL.Mesh created");
+
 	if( gl !== null )
 	{
 		gl = gl || global.gl;

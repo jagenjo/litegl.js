@@ -884,12 +884,33 @@ global.BBox = GL.BBox = {
 
 	merge: function( out, a, b )
 	{
-		out = out || BBox.create();
 		var min = out.subarray(6,9);
 		var max = out.subarray(9,12);
 		vec3.min( min, a.subarray(6,9), b.subarray(6,9) );
 		vec3.max( max, a.subarray(9,12), b.subarray(9,12) );
 		return BBox.setMinMax( out, min, max );
+	},
+
+	extendToPoint: function( out, p )
+	{
+		if( p[0] < out[6] )	out[6] = p[0];
+		else if( p[0] > out[9] ) out[9] = p[0];
+
+		if( p[1] < out[7] )	out[7] = p[1];
+		else if( p[1] > out[10] ) out[10] = p[1];
+
+
+		if( p[2] < out[8] )	out[8] = p[2];
+		else if( p[2] > out[11] ) out[11] = p[2];
+
+		//recompute 
+		var min = out.subarray(6,9);
+		var max = out.subarray(9,12);
+		var center = vec3.add( out.subarray(0,3), min, max );
+		vec3.scale( center, center, 0.5);
+		vec3.subtract( out.subarray(3,6), max, center );
+		out[12] = vec3.length( out.subarray(3,6) ); //radius		
+		return out;
 	},
 
 	getCenter: function(bb) { return bb.subarray(0,3); },

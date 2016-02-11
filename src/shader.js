@@ -8,6 +8,9 @@
 */
 global.Shader = GL.Shader = function Shader( vertexSource, fragmentSource, macros )
 {
+	if(GL.debug)
+		console.log("GL.Shader created");
+
 	//used to avoid problems with resources moving between different webgl context
 	this._context_id = global.gl.context_id; 
 	var gl = this.gl = global.gl;
@@ -38,7 +41,7 @@ global.Shader = GL.Shader = function Shader( vertexSource, fragmentSource, macro
 
 Shader.expandMacros = function(macros)
 {
-	var extra_code = "";
+	var extra_code = ""; //add here preprocessor directives that should be above everything
 	if(macros)
 		for(var i in macros)
 			extra_code += "#define " + i + " " + (macros[i] ? macros[i] : "") + "\n";
@@ -785,6 +788,72 @@ Shader.getBlurShader = function(gl)
 			");
 	return gl.shaders[":blur"] = shader;
 }
+
+Shader.getCubemapCopyShader = function(gl)
+{
+	gl = gl || global.gl;
+	var shader = gl.shaders[":copy_cubemap"];
+	if(shader)
+		return shader;
+
+	var shader = new GL.Shader( Shader.SCREEN_VERTEX_SHADER,"\n\
+			precision highp float;\n\
+			varying vec2 v_coord;\n\
+			uniform samplerCube u_texture;\n\
+			uniform mat3 u_rotation;\n\
+			void main() {\n\
+				vec2 uv = vec2( v_coord.x, 1.0 - v_coord.y );\n\
+				vec3 dir = vec3( uv - vec2(0.5), -0.5 );\n\
+				dir = u_rotation * dir;\n\
+			   gl_FragColor = textureCube( u_texture, dir );\n\
+			}\n\
+			");
+	return gl.shaders[":copy_cubemap"] = shader;
+}
+
+
+Shader.getCubemapBlurShader = function(gl)
+{
+	gl = gl || global.gl;
+	var shader = gl.shaders[":blur_cubemap"];
+	if(shader)
+		return shader;
+
+	var shader = new GL.Shader( Shader.SCREEN_VERTEX_SHADER,"\n\
+			#ifndef NUM_SAMPLES\n\
+				#define NUM_SAMPLES 4\n\
+			#endif\n\
+			\n\
+			precision highp float;\n\
+			varying vec2 v_coord;\n\
+			uniform samplerCube u_texture;\n\
+			uniform mat3 u_rotation;\n\
+			uniform vec2 u_offset;\n\
+			uniform float u_intensity;\n\
+			void main() {\n\
+				vec4 sum = vec4(0.0);\n\
+				vec2 uv = vec2( v_coord.x, 1.0 - v_coord.y ) - vec2(0.5);\n\
+				vec3 dir = vec3(0.0);\n\
+				vec4 color = vec4(0.0);\n\
+				for( int x = -2; x <= 2; x++ )\n\
+				{\n\
+					for( int y = -2; y <= 2; y++ )\n\
+					{\n\
+						dir.xy = uv + vec2( u_offset.x * float(x), u_offset.y * float(y)) * 0.5;\n\
+						dir.z = -0.5;\n\
+						dir = u_rotation * dir;\n\
+						color = textureCube( u_texture, dir );\n\
+						color.xyz = color.xyz * color.xyz;/*linearize*/\n\
+						sum += color;\n\
+					}\n\
+				}\n\
+				sum /= 25.0;\n\
+			   gl_FragColor = vec4( sqrt( sum.xyz ), sum.w ) ;\n\
+			}\n\
+			");
+	return gl.shaders[":blur_cubemap"] = shader;
+}
+
 
 Shader.FXAA_FUNC = "\n\
 	uniform vec2 u_viewportSize;\n\

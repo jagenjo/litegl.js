@@ -64,7 +64,6 @@ Octree.prototype.buildFromMesh = function(mesh)
 						vertices[triangles[i+1]*3], vertices[triangles[i+1]*3+1],vertices[triangles[i+1]*3+2],
 						vertices[triangles[i+2]*3], vertices[triangles[i+2]*3+1],vertices[triangles[i+2]*3+2]]);
 			this.addToNode(face,root,0);
-			//if(i%3000 == 0) trace("Tris: " + i);
 		}
 	}
 	else
@@ -73,7 +72,6 @@ Octree.prototype.buildFromMesh = function(mesh)
 		{
 			var face = new Float32Array( vertices.subarray(i,i+9) );
 			this.addToNode(face,root,0);
-			//if(i%3000 == 0) trace("Tris: " + i);
 		}
 	}
 
@@ -101,7 +99,8 @@ Octree.prototype.addToNode = function(face,node, depth)
 		}
 		if(!added)
 		{
-			if(node.faces == null) node.faces = [];
+			if(node.faces == null)
+				node.faces = [];
 			node.faces.push(face);
 		}
 	}
@@ -138,7 +137,8 @@ Octree.prototype.addToNode = function(face,node, depth)
 				}
 				if (!added)
 				{
-					if(node.faces == null) node.faces = [];
+					if(node.faces == null)
+						node.faces = [];
 					node.faces.push(face);
 				}
 			}
