@@ -850,8 +850,16 @@ Texture.fromImage = function(image, options) {
 	options = options || {};
 
 	var texture = options.texture || new GL.Texture(image.width, image.height, options);
+
+	texture.uploadImage( image, options );
+
 	texture.bind();
-	texture.uploadImage(image, options);
+	gl.texParameteri(texture.texture_type, gl.TEXTURE_MAG_FILTER, texture.magFilter );
+	gl.texParameteri(texture.texture_type, gl.TEXTURE_MIN_FILTER, texture.minFilter );
+	gl.texParameteri(texture.texture_type, gl.TEXTURE_WRAP_S, texture.wrapS );
+	gl.texParameteri(texture.texture_type, gl.TEXTURE_WRAP_T, texture.wrapT );
+
+
 	if (GL.isPowerOfTwo(texture.width) && GL.isPowerOfTwo(texture.height) && options.minFilter && options.minFilter != gl.NEAREST && options.minFilter != gl.LINEAR) {
 		texture.bind();
 		gl.generateMipmap(texture.texture_type);
@@ -1228,7 +1236,7 @@ Texture.prototype.getPixels = function( type, force_rgba, cubemap_face )
 * @method toCanvas
 * @param {Canvas} canvas must have the same size, if different the canvas will be resized
 * @param {boolean} flip_y optional, flip vertically
-* @param {Number} max_size optional, if it is supplied the canvas wont be bigger of max_size (the iamge will be scaled down)
+* @param {Number} max_size optional, if it is supplied the canvas wont be bigger of max_size (the image will be scaled down)
 */
 Texture.prototype.toCanvas = function( canvas, flip_y, max_size )
 {

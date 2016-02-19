@@ -108,7 +108,7 @@ Shader.prototype.extractShaderInfo = function()
 			is_matrix = true;
 
 
-		//save the info so I the user doesnt have to specify types when uploading data to the shader
+		//save the info so the user doesnt have to specify types when uploading data to the shader
 		this.uniformInfo[ uniformName ] = { type: data.type, func: func, size: data.size, is_matrix: is_matrix, loc: gl.getUniformLocation(this.program, uniformName) };
 	}
 
