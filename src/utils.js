@@ -408,7 +408,7 @@ global.hexColorToRGBA = (function() {
 			color[3] = alpha;
 		else
 			color[3] *= alpha;
-		return;
+		return color;
 	}
 
 	//rgba colors

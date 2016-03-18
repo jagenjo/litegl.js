@@ -1072,7 +1072,8 @@ Mesh.prototype.getNumVertices = function() {
 */
 Mesh.computeBounding = function( vertices, bb ) {
 
-	if(!vertices) return;
+	if(!vertices)
+		return;
 
 	var min = vec3.clone( vertices.subarray(0,3) );
 	var max = vec3.clone( vertices.subarray(0,3) );
@@ -1082,6 +1083,14 @@ Mesh.computeBounding = function( vertices, bb ) {
 		v = vertices.subarray(i,i+3);
 		vec3.min( min,v, min);
 		vec3.max( max,v, max);
+	}
+
+	if( isNaN(min[0]) || isNaN(min[1]) || isNaN(min[2]) ||
+		isNaN(max[0]) || isNaN(max[1]) || isNaN(max[2]) )
+	{
+		min[0] = min[1] = min[2] = 0;
+		max[0] = max[1] = max[2] = 0;
+		console.warn("Warning: GL.Mesh has NaN values in vertices");
 	}
 
 	var center = vec3.add( vec3.create(), min,max );

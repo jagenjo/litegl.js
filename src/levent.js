@@ -192,14 +192,17 @@ var LEvent = global.LEvent = GL.LEvent = {
 		var events = instance.__levents;
 
 		//no events binded
-		if(!events || !events.hasOwnProperty( event_type ) || !events[event_type].length) 
+		if(!events) 
 			return false;
 
-		var binds = events[event_type];
-		for(var i = 0; i < binds.length; ++i)
+		for(var j in events)
 		{
-			if(binds[i][1] == target) //one found
-				return true;
+			var binds = events[j];
+			for(var i = 0; i < binds.length; ++i)
+			{
+				if(binds[i][1] === target) //one found
+					return true;
+			}
 		}
 
 		return false;

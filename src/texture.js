@@ -1313,10 +1313,10 @@ Texture.prototype.toCanvas = function( canvas, flip_y, max_size )
 * @method toBlob
 * @return {Blob} the blob containing the data
 */
-Texture.prototype.toBlob = function()
+Texture.prototype.toBlob = function(flip_y)
 {
 	//dump to canvas
-	var canvas = this.toCanvas();
+	var canvas = this.toCanvas(null,flip_y);
 	if(!canvas.toBlob)
 		throw "toBlob not supported on Canvas element";
 	return canvas.toBlob();
