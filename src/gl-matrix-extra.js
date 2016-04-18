@@ -25,6 +25,30 @@ vec2.rotate = function(out,vec,angle_in_rad)
 
 vec3.zero = function(a)
 {
+	a[0] = a[1] = 0.0;
+	return a;
+}
+
+//for signed angles
+vec2.perpdot = function(a,b)
+{
+	return a[1] * b[0] + -a[0] * b[1];
+}
+
+vec2.computeSignedAngle = function( a, b )
+{
+	return Math.atan2( vec2.perpdot(a,b), vec2.dot(a,b) );
+}
+
+vec2.random = function(vec)
+{
+	vec[0] = Math.random();
+	vec[1] = Math.random();
+	return vec;
+}
+
+vec3.zero = function(a)
+{
 	a[0] = a[1] = a[2] = 0.0;
 	return a;
 }
@@ -63,7 +87,6 @@ vec3.subValue = function(out,a,v)
 	out[1] = a[1] - v;
 	out[2] = a[2] - v;
 }
-
 
 vec3.toArray = function(vec)
 {
@@ -106,25 +129,6 @@ vec3.rotateZ = function(out,vec,angle_in_rad)
 	return out;
 }
 
-//signed angles
-vec2.perpdot = function(a,b)
-{
-	return a[1] * b[0] + -a[0] * b[1];
-}
-
-vec2.computeSignedAngle = function( a, b )
-{
-	return Math.atan2( vec2.perpdot(a,b), vec2.dot(a,b) );
-}
-
-//random value
-vec2.random = function(vec)
-{
-	vec[0] = Math.random();
-	vec[1] = Math.random();
-	return vec;
-}
-
 vec3.angle = function( a, b )
 {
 	return Math.acos( vec3.dot(a,b) );
@@ -138,16 +142,6 @@ vec3.random = function(vec)
 	return vec;
 }
 
-//random value
-vec4.random = function(vec)
-{
-	vec[0] = Math.random();
-	vec[1] = Math.random();
-	vec[2] = Math.random();
-	vec[3] = Math.random();	
-	return vec;
-}
-
 //converts a polar coordinate (radius, lat, long) to (x,y,z)
 vec3.polarToCartesian = function(out, v)
 {
@@ -158,6 +152,21 @@ vec3.polarToCartesian = function(out, v)
 	out[1] = r * Math.sin(lat);
 	out[2] = r * Math.cos(lat) * Math.cos(lon);
 	return out;
+}
+
+/* VEC4 */
+vec4.random = function(vec)
+{
+	vec[0] = Math.random();
+	vec[1] = Math.random();
+	vec[2] = Math.random();
+	vec[3] = Math.random();	
+	return vec;
+}
+
+vec4.toArray = function(vec)
+{
+	return [vec[0],vec[1],vec[2],vec[3]];
 }
 
 
@@ -413,8 +422,6 @@ quat.fromEuler = function(out, vec) {
 	return out;
 }
 */
-
-
 
 quat.toEuler = function(out, q)
 {

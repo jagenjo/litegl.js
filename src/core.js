@@ -283,7 +283,7 @@ GL.create = function(options) {
 				doc.removeEventListener("mouseup", onmouse);
 			}
 			e.click_time = now - last_click_time;
-			last_click_time = now;
+			//last_click_time = now; //commented to avoid reseting click time when unclicking two mouse buttons
 
 			if(gl.onmouseup)
 				gl.onmouseup(e);

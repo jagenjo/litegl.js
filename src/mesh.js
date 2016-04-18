@@ -245,6 +245,9 @@ global.Mesh = GL.Mesh = function Mesh( vertexbuffers, indexbuffers, options, gl 
 	this.vertexBuffers = {};
 	this.indexBuffers = {};
 
+	this.info = null; //here you can store extra info, like groups, which is an array of { name, start, length, material }
+	this.bounding = null; //here you can store a AABB in BBox format
+
 	if(vertexbuffers || indexbuffers)
 		this.addBuffers( vertexbuffers, indexbuffers, options ? options.stream_type : null );
 
@@ -461,6 +464,21 @@ Mesh.prototype.getVertexBuffer = function(name)
 */
 Mesh.prototype.createIndexBuffer = function(name, buffer_data, stream_type) {
 	//(target, data, spacing, stream_type, gl)
+
+	//cast to typed
+	if(buffer_data.constructor === Array)
+	{
+		var datatype = Uint16Array;
+		var vertices = this.vertexBuffers["vertices"];
+		if(vertices)
+		{
+			var num_vertices = vertices.data.length / 3;
+			if(num_vertices > 256*256)
+				datatype = Uint32Array;
+			buffer_data = new datatype( buffer_data );
+		}
+	}
+
 	var buffer = this.indexBuffers[name] = new GL.Buffer(gl.ELEMENT_ARRAY_BUFFER, buffer_data, 0, stream_type, this.gl );
 	return buffer;
 }
@@ -768,7 +786,7 @@ Mesh.prototype.flipNormals = function( stream_type  ) {
 	normals_buffer.upload( stream_type );
 
 	//reverse indices too
-	if(!this.indexBuffers["triangles"])
+	if(this.indexBuffers["triangles"])
 		this.computeIndices();
 
 	var triangles_buffer = this.indexBuffers["triangles"];
@@ -1273,9 +1291,10 @@ Mesh.mergeMeshes = function( meshes, options )
 
 	var vertex_buffers = {};
 	var index_buffers = {};
-	var offsets = {};
+	var offsets = {}; //tells how many positions indices must be offseted
 	var vertex_offsets = [];
 	var current_vertex_offset = 0;
+	var groups = [];
 
 	//vertex buffers
 	//compute size
@@ -1283,8 +1302,10 @@ Mesh.mergeMeshes = function( meshes, options )
 	{
 		var mesh_info = meshes[i];
 		var mesh = mesh_info.mesh;
-		vertex_offsets.push( current_vertex_offset );
-		current_vertex_offset += mesh.vertexBuffers["vertices"].data.length / 3;
+		var offset = current_vertex_offset;
+		vertex_offsets.push( offset );
+		var length = mesh.vertexBuffers["vertices"].data.length / 3;
+		current_vertex_offset += length;
 
 		for(var j in mesh.vertexBuffers)
 		{
@@ -1301,6 +1322,16 @@ Mesh.mergeMeshes = function( meshes, options )
 			else
 				index_buffers[j] += mesh.indexBuffers[j].data.length;
 		}
+
+		//groups
+		var group = {
+			name: "mesh_" + i,
+			start: offset,
+			length: length,
+			material: ""
+		};
+
+		groups.push( group );
 	}
 
 	//allocate
@@ -1331,11 +1362,16 @@ Mesh.mergeMeshes = function( meshes, options )
 	{
 		var mesh_info = meshes[i];
 		var mesh = mesh_info.mesh;
+		var offset = 0;
+		var length = 0;
 
 		for(var j in mesh.vertexBuffers)
 		{
 			if(!vertex_buffers[j])
 				continue;
+
+			if(j == "vertices")
+				length = mesh.vertexBuffers[j].data.length / 3;
 
 			vertex_buffers[j].set( mesh.vertexBuffers[j].data, offsets[j] );
 
@@ -1388,10 +1424,12 @@ Mesh.mergeMeshes = function( meshes, options )
 			array[i] += offset;
 	}
 
+	var extra = { info: { groups: groups } };
+
 	//return
 	if( typeof(gl) != "undefined" )
-		return new GL.Mesh( vertex_buffers,index_buffers );
-	return { vertexBuffers: vertex_buffers, indexBuffers: index_buffers };
+		return new GL.Mesh( vertex_buffers,index_buffers, extra );
+	return { vertexBuffers: vertex_buffers, indexBuffers: index_buffers, info: { groups: groups } };
 }
 
 
@@ -1426,30 +1464,45 @@ Mesh.fromURL = function(url, on_complete, gl, options)
 	return mesh;
 }
 
+/**
+* given some data an information about the format, it search for a parser in Mesh.parsers and tries to extract the mesh information
+* Only obj supported now
+* @method parse
+* @param {*} data could be string or ArrayBuffer
+* @param {String} format parser file format name (p.e. "obj")
+* @return {?} depending on the parser
+*/
 Mesh.prototype.parse = function( data, format )
 {
 	format = format.toLowerCase();
 	var parser = GL.Mesh.parsers[ format ];
 	if(parser)
 		return parser.call(null, data, {mesh: this});
-	else
-		throw("GL.Mesh.parse: no parser found for format " + format );
-	return null;
+	throw("GL.Mesh.parse: no parser found for format " + format );
 }
 
+/**
+* It returns the mesh data encoded in the format specified
+* Only obj supported now
+* @method encode
+* @param {String} format to encode the data to (p.e. "obj")
+* @return {?} String with the info
+*/
 Mesh.prototype.encode = function( format, options )
 {
 	format = format.toLowerCase();
 	var encoder = GL.Mesh.encoders[ format ];
 	if(encoder)
 		return encoder.call(null, this, options );
-	else
-		throw("GL.Mesh.encode: no encoder found for format " + format );
-	return null;
+	throw("GL.Mesh.encode: no encoder found for format " + format );
 }
 
-
-
+/**
+* Returns a shared mesh containing a quad to be used when rendering to the screen
+* Reusing the same quad helps not filling the memory
+* @method getScreenQuad
+* @return {GL.Mesh} the screen quad
+*/
 Mesh.getScreenQuad = function(gl)
 {
 	gl = gl || global.gl;

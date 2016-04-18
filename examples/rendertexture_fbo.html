@@ -26,6 +26,7 @@
 	var mesh = GL.Mesh.cube({size:10});
 	var sphere = GL.Mesh.sphere({size:100});
 	var texture = new GL.Texture(512,512, { magFilter: gl.LINEAR });
+	var fbo = new GL.FBO([texture]);
 
 	//create basic matrices for cameras and transformation
 	var persp = mat4.create();
@@ -100,7 +101,7 @@
 	{
 
 		//render something in the texture
-		texture.drawTo(function(){
+		fbo.bind();
 			gl.clearColor(0.1,0.3,0.4,1);
 			//gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
 
@@ -113,7 +114,7 @@
 				u_model: model2,
 				u_mvp: mvp
 			}).draw(sphere, gl.POINTS);
-		});
+		fbo.unbind();
 
 		gl.clearColor(0.1,0.1,0.1,1);
 		gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
