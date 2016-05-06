@@ -4,6 +4,11 @@ global.CLIP_OUTSIDE = GL.CLIP_OUTSIDE = 1;
 global.CLIP_OVERLAP = GL.CLIP_OVERLAP = 2;
 
 /**
+* @namespace
+*/
+
+
+/**
 * Computational geometry algorithms, is a static class
 * @class geo
 */

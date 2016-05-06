@@ -1,3 +1,8 @@
+
+/**
+* @namespace GL
+*/
+
 /**
 * Shader class to upload programs to the GPU
 * @class Shader
@@ -623,6 +628,17 @@ Shader.SCREEN_COLORED_FRAGMENT_SHADER = "\n\
 			}\n\
 			";
 
+Shader.BLEND_FRAGMENT_SHADER = "\n\
+			precision highp float;\n\
+			uniform sampler2D u_texture;\n\
+			uniform sampler2D u_texture2;\n\
+			uniform float u_factor;\n\
+			varying vec2 v_coord;\n\
+			void main() {\n\
+				gl_FragColor = mix( texture2D(u_texture, v_coord), texture2D(u_texture2, v_coord), u_factor);\n\
+			}\n\
+			";
+
 Shader.SCREEN_FLAT_FRAGMENT_SHADER = "\n\
 			precision highp float;\n\
 			uniform vec4 u_color;\n\
@@ -798,6 +814,20 @@ Shader.getPartialQuadShader = function(gl)
 	if(shader)
 		return shader;
 	return gl.shaders[":quad2"] = new GL.Shader( Shader.QUAD_VERTEX_SHADER, Shader.QUAD2_FRAGMENT_SHADER );
+}
+
+/**
+* Returns a shader that blends two textures
+* shader must have: u_factor, u_texture, u_texture2
+* @method Shader.getBlendShader
+*/
+Shader.getBlendShader = function(gl)
+{
+	gl = gl || global.gl;
+	var shader = gl.shaders[":blend"];
+	if(shader)
+		return shader;
+	return gl.shaders[":blend"] = new GL.Shader( Shader.SCREEN_VERTEX_SHADER, Shader.BLEND_FRAGMENT_SHADER );
 }
 
 /**

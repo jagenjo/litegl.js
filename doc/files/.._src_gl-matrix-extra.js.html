@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
-    <link rel="shortcut icon" type="image/png" href="../assets/favicon.png">
+    <link rel="icon" href="../assets/favicon.ico">
     <script src="http://yui.yahooapis.com/combo?3.9.1/build/yui/yui-min.js"></script>
 </head>
 <body class="yui3-skin-sam">
@@ -14,9 +14,7 @@
 <div id="doc">
     <div id="hd" class="yui3-g header">
         <div class="yui3-u-3-4">
-            
-                <h1><img src="../assets/css/logo.png" title=""></h1>
-            
+                <h1><img src="../assets/css/logo.png" title="" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
             <em>API Docs for: </em>
@@ -27,84 +25,70 @@
         <div class="yui3-u-1-4">
             <div id="docs-sidebar" class="sidebar apidocs">
                 <div id="api-list">
-    <h2 class="off-left">APIs</h2>
-    <div id="api-tabview" class="tabview">
-        <ul class="tabs">
-            <li><a href="#api-classes">Classes</a></li>
-            <li><a href="#api-modules">Modules</a></li>
-        </ul>
-
-        <div id="api-tabview-filter">
-            <input type="search" id="api-filter" placeholder="Type to filter APIs">
-        </div>
-
-        <div id="api-tabview-panel">
-            <ul id="api-classes" class="apis classes">
-            
-                <li><a href="../classes/BBox.html">BBox</a></li>
-            
-                <li><a href="../classes/Buffer.html">Buffer</a></li>
-            
-                <li><a href="../classes/FBO.html">FBO</a></li>
-            
-                <li><a href="../classes/geo.html">geo</a></li>
-            
-                <li><a href="../classes/gl.html">gl</a></li>
-            
-                <li><a href="../classes/GL.html">GL</a></li>
-            
-                <li><a href="../classes/Indexer.html">Indexer</a></li>
-            
-                <li><a href="../classes/LEvent.html">LEvent</a></li>
-            
-                <li><a href="../classes/Mesh.html">Mesh</a></li>
-            
-                <li><a href="../classes/Octree.html">Octree</a></li>
-            
-                <li><a href="../classes/Shader.html">Shader</a></li>
-            
-                <li><a href="../classes/Texture.html">Texture</a></li>
-            
-            </ul>
-
-            <ul id="api-modules" class="apis modules">
-            
-            </ul>
-        </div>
-    </div>
-</div>
-
+                    <h2 class="off-left">APIs</h2>
+                    <div id="api-tabview" class="tabview">
+                        <ul class="tabs">
+                            <li><a href="#api-classes">Classes</a></li>
+                            <li><a href="#api-modules">Modules</a></li>
+                        </ul>
+                
+                        <div id="api-tabview-filter">
+                            <input type="search" id="api-filter" placeholder="Type to filter APIs">
+                        </div>
+                
+                        <div id="api-tabview-panel">
+                            <ul id="api-classes" class="apis classes">
+                                <li><a href="../classes/BBox.html">BBox</a></li>
+                                <li><a href="../classes/geo.html">geo</a></li>
+                                <li><a href="../classes/gl.html">gl</a></li>
+                                <li><a href="../classes/GL.Buffer.html">GL.Buffer</a></li>
+                                <li><a href="../classes/GL.FBO.html">GL.FBO</a></li>
+                                <li><a href="../classes/GL.GL.html">GL.GL</a></li>
+                                <li><a href="../classes/GL.Indexer.html">GL.Indexer</a></li>
+                                <li><a href="../classes/GL.Mesh.html">GL.Mesh</a></li>
+                                <li><a href="../classes/GL.Octree.html">GL.Octree</a></li>
+                                <li><a href="../classes/GL.Shader.html">GL.Shader</a></li>
+                                <li><a href="../classes/GL.Texture.html">GL.Texture</a></li>
+                                <li><a href="../classes/LEvent.html">LEvent</a></li>
+                            </ul>
+                
+                
+                            <ul id="api-modules" class="apis modules">
+                                <li><a href="../modules/GL.html">GL</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="yui3-u-3-4">
                 <div id="api-options">
-        Show:
-        <label for="api-show-inherited">
-            <input type="checkbox" id="api-show-inherited" checked>
-            Inherited
-        </label>
-
-        <label for="api-show-protected">
-            <input type="checkbox" id="api-show-protected">
-            Protected
-        </label>
-
-        <label for="api-show-private">
-            <input type="checkbox" id="api-show-private">
-            Private
-        </label>
-        <label for="api-show-deprecated">
-            <input type="checkbox" id="api-show-deprecated">
-            Deprecated
-        </label>
-
-    </div>
-
-
+                    Show:
+                    <label for="api-show-inherited">
+                        <input type="checkbox" id="api-show-inherited" checked>
+                        Inherited
+                    </label>
+            
+                    <label for="api-show-protected">
+                        <input type="checkbox" id="api-show-protected">
+                        Protected
+                    </label>
+            
+                    <label for="api-show-private">
+                        <input type="checkbox" id="api-show-private">
+                        Private
+                    </label>
+                    <label for="api-show-deprecated">
+                        <input type="checkbox" id="api-show-deprecated">
+                        Deprecated
+                    </label>
+            
+                </div>
+            
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-                        <h1 class="file-heading">File: ../src/gl-matrix-extra.js</h1>
+<h1 class="file-heading">File: ../src/gl-matrix-extra.js</h1>
 
 <div class="file">
     <pre class="code prettyprint linenums">
@@ -131,6 +115,30 @@ vec2.rotate = function(out,vec,angle_in_rad)
 	out[0] = x * cos - y * sin;
 	out[1] = x * sin + y * cos;
 	return out;
+}
+
+vec3.zero = function(a)
+{
+	a[0] = a[1] = 0.0;
+	return a;
+}
+
+//for signed angles
+vec2.perpdot = function(a,b)
+{
+	return a[1] * b[0] + -a[0] * b[1];
+}
+
+vec2.computeSignedAngle = function( a, b )
+{
+	return Math.atan2( vec2.perpdot(a,b), vec2.dot(a,b) );
+}
+
+vec2.random = function(vec)
+{
+	vec[0] = Math.random();
+	vec[1] = Math.random();
+	return vec;
 }
 
 vec3.zero = function(a)
@@ -174,7 +182,6 @@ vec3.subValue = function(out,a,v)
 	out[2] = a[2] - v;
 }
 
-
 vec3.toArray = function(vec)
 {
 	return [vec[0],vec[1],vec[2]];
@@ -216,25 +223,6 @@ vec3.rotateZ = function(out,vec,angle_in_rad)
 	return out;
 }
 
-//signed angles
-vec2.perpdot = function(a,b)
-{
-	return a[1] * b[0] + -a[0] * b[1];
-}
-
-vec2.computeSignedAngle = function( a, b )
-{
-	return Math.atan2( vec2.perpdot(a,b), vec2.dot(a,b) );
-}
-
-//random value
-vec2.random = function(vec)
-{
-	vec[0] = Math.random();
-	vec[1] = Math.random();
-	return vec;
-}
-
 vec3.angle = function( a, b )
 {
 	return Math.acos( vec3.dot(a,b) );
@@ -248,16 +236,6 @@ vec3.random = function(vec)
 	return vec;
 }
 
-//random value
-vec4.random = function(vec)
-{
-	vec[0] = Math.random();
-	vec[1] = Math.random();
-	vec[2] = Math.random();
-	vec[3] = Math.random();	
-	return vec;
-}
-
 //converts a polar coordinate (radius, lat, long) to (x,y,z)
 vec3.polarToCartesian = function(out, v)
 {
@@ -268,6 +246,21 @@ vec3.polarToCartesian = function(out, v)
 	out[1] = r * Math.sin(lat);
 	out[2] = r * Math.cos(lat) * Math.cos(lon);
 	return out;
+}
+
+/* VEC4 */
+vec4.random = function(vec)
+{
+	vec[0] = Math.random();
+	vec[1] = Math.random();
+	vec[2] = Math.random();
+	vec[3] = Math.random();	
+	return vec;
+}
+
+vec4.toArray = function(vec)
+{
+	return [vec[0],vec[1],vec[2],vec[3]];
 }
 
 
@@ -487,6 +480,43 @@ quat.toEuler = function(out, quat) {
 }
 */
 
+/*
+//FROM https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+//doesnt work well
+quat.toEuler = function(out, q)
+{
+    var yaw = Math.atan2(2*q[0]*q[3] + 2*q[1]*q[2], 1 - 2*q[2]*q[2] - 2*q[3]*q[3]);
+    var pitch = Math.asin(2*q[0]*q[2] - 2*q[3]*q[1]);
+    var roll = Math.atan2(2*q[0]*q[1] + 2*q[2]*q[3], 1 - 2*q[1]*q[1] - 2*q[2]*q[2]);
+	if(!out)
+		out = vec3.create();
+	vec3.set(out, yaw, pitch, roll);
+	return out;
+}
+
+quat.fromEuler = function(out, vec) {
+	var yaw = vec[0];
+	var pitch = vec[1];
+	var roll = vec[2];
+
+	var C1 = Math.cos(yaw*0.5);
+	var C2 = Math.cos(pitch*0.5);
+	var C3 = Math.cos(roll*0.5);
+	var S1 = Math.sin(yaw*0.5);
+	var S2 = Math.sin(pitch*0.5);
+	var S3 = Math.sin(roll*0.5);
+
+	var x = C1*C2*C3 + S1*S2*S3;
+	var y = S1*C2*C3 - C1*S2*S3;
+	var z = C1*S2*C3 + S1*C2*S3;
+	var w = C1*C2*S3 - S1*S2*C3;
+
+	quat.set(out, x,y,z,w );
+	quat.normalize(out,out); //necessary?
+	return out;
+}
+*/
+
 quat.toEuler = function(out, q)
 {
     var heading = Math.atan2(2*q[1]*q[3] - 2*q[0]*q[2], 1 - 2*q[1]*q[1] - 2*q[2]*q[2]);
@@ -503,20 +533,29 @@ quat.fromEuler = function(out, vec) {
 	var attitude = vec[1];
 	var bank = vec[2];
 
-	var C1 = Math.cos(heading);
-	var C2 = Math.cos(attitude);
-	var C3 = Math.cos(bank);
+	var C1 = Math.cos(heading); //yaw
+	var C2 = Math.cos(attitude); //pitch
+	var C3 = Math.cos(bank); //roll
 	var S1 = Math.sin(heading);
 	var S2 = Math.sin(attitude);
 	var S3 = Math.sin(bank);
 
 	var w = Math.sqrt(1.0 + C1 * C2 + C1*C3 - S1 * S2 * S3 + C2*C3) * 0.5;
+	if(w == 0.0)
+	{
+		w = 0.000001;
+		//quat.set(out, 0,0,0,1 );
+		//return out;
+	}
+
 	var x = (C2 * S3 + C1 * S3 + S1 * S2 * C3) / (4.0 * w);
 	var y = (S1 * C2 + S1 * C3 + C1 * S2 * S3) / (4.0 * w);
 	var z = (-S1 * S3 + C1 * S2 * C3 + S2) /(4.0 * w);
 	quat.set(out, x,y,z,w );
+	quat.normalize(out,out);
 	return out;
 };
+
 
 //not tested
 quat.fromMat4 = function(out,m)
@@ -581,7 +620,6 @@ quat.fromMat4.lookAt = (function(){
 
     </pre>
 </div>
-
                     </div>
                 </div>
             </div>

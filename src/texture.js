@@ -1,18 +1,22 @@
 /**
-* Texture class to upload images to the GPU, default is gl.TEXTURE_2D, gl.RGBA of gl.UNSIGNED_BYTE with filters set to gl.LINEAR and wrap to gl.CLAMP_TO_EDGE
-	There is a list of options
-	==========================
-	- texture_type: gl.TEXTURE_2D, gl.TEXTURE_CUBE_MAP, default gl.TEXTURE_2D
-	- format: gl.RGB, gl.RGBA, gl.DEPTH_COMPONENT, default gl.RGBA
-	- type: gl.UNSIGNED_BYTE, gl.UNSIGNED_SHORT, gl.HALF_FLOAT_OES, gl.FLOAT, default gl.UNSIGNED_BYTE
-	- filter: filtering for mag and min: gl.NEAREST or gl.LINEAR, default gl.NEAREST
-	- magFilter: magnifying filter: gl.NEAREST, gl.LINEAR, default gl.NEAREST
-	- minFilter: minifying filter: gl.NEAREST, gl.LINEAR, gl.LINEAR_MIPMAP_LINEAR, default gl.NEAREST
-	- wrap: texture wrapping: gl.CLAMP_TO_EDGE, gl.REPEAT, gl.MIRROR, default gl.CLAMP_TO_EDGE (also accepts wrapT and wrapS for separate settings)
-	- pixel_data: ArrayBufferView with the pixel data to upload to the texture, otherwise the texture will be black
-	- premultiply_alpha : multiply the color by the alpha value when uploading, default FALSE
-	- no_flip : do not flip in Y, default TRUE
-	- anisotropic : number of anisotropic fetches, default 0
+* @namespace GL
+*/
+
+/**
+* Texture class to upload images to the GPU, default is gl.TEXTURE_2D, gl.RGBA of gl.UNSIGNED_BYTE with filters set to gl.LINEAR and wrap to gl.CLAMP_TO_EDGE <br/>
+	There is a list of options <br/>
+	========================== <br/>
+	- texture_type: gl.TEXTURE_2D, gl.TEXTURE_CUBE_MAP, default gl.TEXTURE_2D <br/>
+	- format: gl.RGB, gl.RGBA, gl.DEPTH_COMPONENT, default gl.RGBA <br/>
+	- type: gl.UNSIGNED_BYTE, gl.UNSIGNED_SHORT, gl.HALF_FLOAT_OES, gl.FLOAT, default gl.UNSIGNED_BYTE <br/>
+	- filter: filtering for mag and min: gl.NEAREST or gl.LINEAR, default gl.NEAREST <br/>
+	- magFilter: magnifying filter: gl.NEAREST, gl.LINEAR, default gl.NEAREST <br/>
+	- minFilter: minifying filter: gl.NEAREST, gl.LINEAR, gl.LINEAR_MIPMAP_LINEAR, default gl.NEAREST <br/>
+	- wrap: texture wrapping: gl.CLAMP_TO_EDGE, gl.REPEAT, gl.MIRROR, default gl.CLAMP_TO_EDGE (also accepts wrapT and wrapS for separate settings) <br/>
+	- pixel_data: ArrayBufferView with the pixel data to upload to the texture, otherwise the texture will be black <br/>
+	- premultiply_alpha : multiply the color by the alpha value when uploading, default FALSE <br/>
+	- no_flip : do not flip in Y, default TRUE <br/>
+	- anisotropic : number of anisotropic fetches, default 0 <br/>
 
 * @class Texture
 * @param {number} width texture width (any supported but Power of Two allows to have mipmaps), 0 means no memory reserved till its filled
@@ -42,13 +46,13 @@ global.Texture = GL.Texture = function Texture(width, height, options, gl) {
 	//set settings
 	this.width = width;
 	this.height = height;
-	this.format = options.format || gl.RGBA; //(if gl.DEPTH_COMPONENT remember format: gl.UNSIGNED_SHORT)
-	this.type = options.type || gl.UNSIGNED_BYTE; //gl.UNSIGNED_SHORT, gl.FLOAT or gl.HALF_FLOAT_OES (or gl.HIGH_PRECISION_FORMAT which could be half or float)
 	this.texture_type = options.texture_type || gl.TEXTURE_2D; //or gl.TEXTURE_CUBE_MAP
-	this.magFilter = options.magFilter || options.filter || gl.LINEAR;
-	this.minFilter = options.minFilter || options.filter || gl.LINEAR;
-	this.wrapS = options.wrap || options.wrapS || gl.CLAMP_TO_EDGE;
-	this.wrapT = options.wrap || options.wrapT || gl.CLAMP_TO_EDGE;
+	this.format = options.format || Texture.DEFAULT_FORMAT; //gl.RGBA (if gl.DEPTH_COMPONENT remember format: gl.UNSIGNED_SHORT)
+	this.type = options.type || Texture.DEFAULT_TYPE; //gl.UNSIGNED_BYTE, gl.UNSIGNED_SHORT, gl.FLOAT or gl.HALF_FLOAT_OES (or gl.HIGH_PRECISION_FORMAT which could be half or float)
+	this.magFilter = options.magFilter || options.filter || Texture.DEFAULT_MAG_FILTER;
+	this.minFilter = options.minFilter || options.filter || Texture.DEFAULT_MIN_FILTER;
+	this.wrapS = options.wrap || options.wrapS || Texture.DEFAULT_WRAP_S; 
+	this.wrapT = options.wrap || options.wrapT || Texture.DEFAULT_WRAP_T;
 
 	//precompute the max amount of texture units
 	if(!Texture.MAX_TEXTURE_IMAGE_UNITS)
@@ -62,7 +66,9 @@ global.Texture = GL.Texture = function Texture(width, height, options, gl) {
 		throw("Float Texture not supported");
 	if(this.type == gl.HALF_FLOAT_OES && !gl.extensions["OES_texture_half_float"])
 		throw("Half Float Texture not supported");
-	if(( (this.minFilter != gl.NEAREST && this.minFilter != gl.LINEAR) || this.wrapS != gl.CLAMP_TO_EDGE || this.wrapT != gl.CLAMP_TO_EDGE) && (!isPowerOfTwo(this.width) || !isPowerOfTwo(this.height)))
+	if( (!isPowerOfTwo(this.width) || !isPowerOfTwo(this.height)) && //non power of two
+		( (this.minFilter != gl.NEAREST && this.minFilter != gl.LINEAR) || //uses mipmaps
+		(this.wrapS != gl.CLAMP_TO_EDGE || this.wrapT != gl.CLAMP_TO_EDGE) ) ) //uses wrap
 	{
 		if(!options.ignore_pot)
 			throw("Cannot use texture-wrap or mipmaps in Non-Power-of-Two textures");
@@ -117,6 +123,13 @@ global.Texture = GL.Texture = function Texture(width, height, options, gl) {
 	}
 }
 
+Texture.DEFAULT_TYPE = GL.UNSIGNED_BYTE;
+Texture.DEFAULT_FORMAT = GL.RGBA;
+Texture.DEFAULT_MAG_FILTER = GL.LINEAR;
+Texture.DEFAULT_MIN_FILTER = GL.LINEAR;
+Texture.DEFAULT_WRAP_S = GL.CLAMP_TO_EDGE;
+Texture.DEFAULT_WRAP_T = GL.CLAMP_TO_EDGE;
+
 //used for render to FBOs
 Texture.framebuffer = null;
 Texture.renderbuffer = null;
@@ -124,8 +137,8 @@ Texture.loading_color = new Uint8Array([0,0,0,0]);
 Texture.use_renderbuffer_pool = true; //should improve performance
 
 /**
-* Free the texture memory, the handler is null
-* @method isDepthSupported
+* Free the texture memory from the GPU, sets the texture handler to null
+* @method delete
 */
 Texture.prototype.delete = function()
 {
@@ -158,6 +171,7 @@ Texture.prototype.toJSON = function()
 /**
 * Returns if depth texture is supported by the GPU
 * @method isDepthSupported
+* @return {Boolean} true if supported
 */
 Texture.isDepthSupported = function()
 {
@@ -1359,13 +1373,29 @@ Texture.prototype.toCanvas = function( canvas, flip_y, max_size )
 * @method toBlob
 * @return {Blob} the blob containing the data
 */
-Texture.prototype.toBlob = function(flip_y)
+Texture.prototype.toBlob = function(flip_y, type)
 {
 	//dump to canvas
 	var canvas = this.toCanvas(null,flip_y);
-	if(!canvas.toBlob)
-		throw "toBlob not supported on Canvas element";
-	return canvas.toBlob();
+	if(canvas.toBlob)
+	{
+		var blob = canvas.toBlob(null,type);
+		if(blob)
+			return blob;
+	}
+
+	//use the slow method
+	var data = this.toDataURL( type );
+	var index = data.indexOf(",");
+	var base64_data = data.substr(index+1);
+	var binStr = atob( base64_data );
+	var len = binStr.length,
+	arr = new Uint8Array(len);
+	for (var i=0; i<len; ++i ) {
+		arr[i] = binStr.charCodeAt(i);
+	}
+	var blob = new Blob( [arr], {type: type || 'image/png'} );
+	return blob;
 }
 
 /**
@@ -1382,7 +1412,7 @@ Texture.prototype.toBase64 = function( flip_y )
 	//Read pixels form WebGL
 	var buffer = this.getPixels();
 
-	//dump to canvas
+	//dump to canvas so we can encode it
 	var canvas = createCanvas(w,h);
 	var ctx = canvas.getContext("2d");
 	var pixels = ctx.getImageData(0,0,w,h);
@@ -1419,13 +1449,70 @@ Texture.prototype.generateMetadata = function()
 
 Texture.compareFormats = function(a,b)
 {
-	if(!a || !b) return false;
-	if(a == b) return true;
-	if(a.width != b.width || a.height != b.height || a.type != b.type || a.texture_type != b.texture_type) 
+	if(!a || !b) 
+		return false;
+	if(a == b) 
+		return true;
+
+	if( a.width != b.width || 
+		a.height != b.height || 
+		a.type != b.type || //gl.UNSIGNED_BYTE
+		a.format != b.format || //gl.RGB
+		a.texture_type != b.texture_type) //gl.TEXTURE_2D
 		return false;
 	return true;
 }
 
+/**
+* blends texture A and B and stores the result in OUT
+* @method blend
+* @param {Texture} a
+* @param {Texture} b
+* @param {Texture} out [optional]
+* @return {Object}
+*/
+Texture.blend = function( a, b, factor, out )
+{
+	if(!a || !b) 
+		return false;
+	if(a == b) 
+	{
+		if(out)
+			a.copyTo(out);
+		else
+			a.toViewport();
+		return true;
+	}
+
+	gl.disable( gl.BLEND );
+	gl.disable( gl.DEPTH_TEST );
+	gl.disable( gl.CULL_FACE );
+
+	var shader = GL.Shader.getBlendShader();
+	var mesh = GL.Mesh.getScreenQuad();
+	b.bind(1);
+	shader.uniforms({u_texture: 0, u_texture2: 1, u_factor: factor});
+
+	if(out)
+	{
+		out.drawTo( function(){
+			a.bind(0);
+			shader.draw( mesh, gl.TRIANGLES );
+		});
+		return true;
+	}
+
+	a.bind(0);
+	shader.draw( mesh, gl.TRIANGLES );
+	return true;
+}
+
+
+/**
+* returns a white texture of 1x1 pixel 
+* @method Texture.getWhiteTexture
+* @return {Texture} the white texture
+*/
 Texture.getWhiteTexture = function()
 {
 	var gl = this.gl;
@@ -1437,6 +1524,11 @@ Texture.getWhiteTexture = function()
 	return gl.textures[":white"] = new GL.Texture(1,1,{ pixel_data: color });
 }
 
+/**
+* returns a black texture of 1x1 pixel 
+* @method Texture.getBlackTexture
+* @return {Texture} the black texture
+*/
 Texture.getBlackTexture = function()
 {
 	var gl = this.gl;
@@ -1445,4 +1537,54 @@ Texture.getBlackTexture = function()
 		return tex;
 	var color = new Uint8Array([0,0,0,255]);
 	return gl.textures[":black"] = new GL.Texture(1,1,{ pixel_data: color });
+}
+
+
+/* Texture pool */
+Texture.getTemporary = function( width, height, options )
+{
+	if(!Texture.temporary_pool)
+		Texture.temporary_pool = [];
+
+	var pool = Texture.temporary_pool;
+	var result = null;
+
+	var texture_type = GL.TEXTURE_2D;
+	var type = Texture.DEFAULT_TYPE;
+	var format = Texture.DEFAULT_FORMAT;
+
+	if(options)
+	{
+		if(options.texture_type)
+			texture_type = options.texture_type;
+		if(options.type)
+			type = options.type;
+		if(options.format)
+			format = options.format;
+	}
+
+	for(var i = 0; i < pool.length; ++i)
+	{
+		var tex = pool[i];
+
+		if( tex.width != width || 
+			tex.height != height ||
+			tex.type != type ||
+			tex.texture_type != texture_type ||
+			tex.format != format )
+			continue;
+		pool.splice(i,1); //remove from the pool
+		return tex;
+	}
+
+	//not found, create it
+	var tex = new GL.Texture( width, height, { type: type, texture_type: texture_type, format: format });
+	return tex;
+}
+
+Texture.releaseTemporary = function( tex )
+{
+	if(!Texture.temporary_pool)
+		Texture.temporary_pool = [];
+	Texture.temporary_pool.push( tex );
 }

@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
-    <link rel="shortcut icon" type="image/png" href="../assets/favicon.png">
+    <link rel="icon" href="../assets/favicon.ico">
     <script src="http://yui.yahooapis.com/combo?3.9.1/build/yui/yui-min.js"></script>
 </head>
 <body class="yui3-skin-sam">
@@ -14,9 +14,7 @@
 <div id="doc">
     <div id="hd" class="yui3-g header">
         <div class="yui3-u-3-4">
-            
-                <h1><img src="../assets/css/logo.png" title=""></h1>
-            
+                <h1><img src="../assets/css/logo.png" title="" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
             <em>API Docs for: </em>
@@ -27,102 +25,92 @@
         <div class="yui3-u-1-4">
             <div id="docs-sidebar" class="sidebar apidocs">
                 <div id="api-list">
-    <h2 class="off-left">APIs</h2>
-    <div id="api-tabview" class="tabview">
-        <ul class="tabs">
-            <li><a href="#api-classes">Classes</a></li>
-            <li><a href="#api-modules">Modules</a></li>
-        </ul>
-
-        <div id="api-tabview-filter">
-            <input type="search" id="api-filter" placeholder="Type to filter APIs">
-        </div>
-
-        <div id="api-tabview-panel">
-            <ul id="api-classes" class="apis classes">
-            
-                <li><a href="../classes/BBox.html">BBox</a></li>
-            
-                <li><a href="../classes/Buffer.html">Buffer</a></li>
-            
-                <li><a href="../classes/FBO.html">FBO</a></li>
-            
-                <li><a href="../classes/geo.html">geo</a></li>
-            
-                <li><a href="../classes/gl.html">gl</a></li>
-            
-                <li><a href="../classes/GL.html">GL</a></li>
-            
-                <li><a href="../classes/Indexer.html">Indexer</a></li>
-            
-                <li><a href="../classes/LEvent.html">LEvent</a></li>
-            
-                <li><a href="../classes/Mesh.html">Mesh</a></li>
-            
-                <li><a href="../classes/Octree.html">Octree</a></li>
-            
-                <li><a href="../classes/Shader.html">Shader</a></li>
-            
-                <li><a href="../classes/Texture.html">Texture</a></li>
-            
-            </ul>
-
-            <ul id="api-modules" class="apis modules">
-            
-            </ul>
-        </div>
-    </div>
-</div>
-
+                    <h2 class="off-left">APIs</h2>
+                    <div id="api-tabview" class="tabview">
+                        <ul class="tabs">
+                            <li><a href="#api-classes">Classes</a></li>
+                            <li><a href="#api-modules">Modules</a></li>
+                        </ul>
+                
+                        <div id="api-tabview-filter">
+                            <input type="search" id="api-filter" placeholder="Type to filter APIs">
+                        </div>
+                
+                        <div id="api-tabview-panel">
+                            <ul id="api-classes" class="apis classes">
+                                <li><a href="../classes/BBox.html">BBox</a></li>
+                                <li><a href="../classes/geo.html">geo</a></li>
+                                <li><a href="../classes/gl.html">gl</a></li>
+                                <li><a href="../classes/GL.Buffer.html">GL.Buffer</a></li>
+                                <li><a href="../classes/GL.FBO.html">GL.FBO</a></li>
+                                <li><a href="../classes/GL.GL.html">GL.GL</a></li>
+                                <li><a href="../classes/GL.Indexer.html">GL.Indexer</a></li>
+                                <li><a href="../classes/GL.Mesh.html">GL.Mesh</a></li>
+                                <li><a href="../classes/GL.Octree.html">GL.Octree</a></li>
+                                <li><a href="../classes/GL.Shader.html">GL.Shader</a></li>
+                                <li><a href="../classes/GL.Texture.html">GL.Texture</a></li>
+                                <li><a href="../classes/LEvent.html">LEvent</a></li>
+                            </ul>
+                
+                
+                            <ul id="api-modules" class="apis modules">
+                                <li><a href="../modules/GL.html">GL</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="yui3-u-3-4">
                 <div id="api-options">
-        Show:
-        <label for="api-show-inherited">
-            <input type="checkbox" id="api-show-inherited" checked>
-            Inherited
-        </label>
-
-        <label for="api-show-protected">
-            <input type="checkbox" id="api-show-protected">
-            Protected
-        </label>
-
-        <label for="api-show-private">
-            <input type="checkbox" id="api-show-private">
-            Private
-        </label>
-        <label for="api-show-deprecated">
-            <input type="checkbox" id="api-show-deprecated">
-            Deprecated
-        </label>
-
-    </div>
-
-
+                    Show:
+                    <label for="api-show-inherited">
+                        <input type="checkbox" id="api-show-inherited" checked>
+                        Inherited
+                    </label>
+            
+                    <label for="api-show-protected">
+                        <input type="checkbox" id="api-show-protected">
+                        Protected
+                    </label>
+            
+                    <label for="api-show-private">
+                        <input type="checkbox" id="api-show-private">
+                        Private
+                    </label>
+                    <label for="api-show-deprecated">
+                        <input type="checkbox" id="api-show-deprecated">
+                        Deprecated
+                    </label>
+            
+                </div>
+            
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-                        <h1 class="file-heading">File: ../src/texture.js</h1>
+<h1 class="file-heading">File: ../src/texture.js</h1>
 
 <div class="file">
     <pre class="code prettyprint linenums">
 /**
-* Texture class to upload images to the GPU, default is gl.TEXTURE_2D, gl.RGBA of gl.UNSIGNED_BYTE with filters set to gl.LINEAR and wrap to gl.CLAMP_TO_EDGE
-	There is a list of options
-	==========================
-	- texture_type: gl.TEXTURE_2D, gl.TEXTURE_CUBE_MAP, default gl.TEXTURE_2D
-	- format: gl.RGB, gl.RGBA, gl.DEPTH_COMPONENT, default gl.RGBA
-	- type: gl.UNSIGNED_BYTE, gl.UNSIGNED_SHORT, gl.HALF_FLOAT_OES, gl.FLOAT, default gl.UNSIGNED_BYTE
-	- filter: filtering for mag and min: gl.NEAREST or gl.LINEAR, default gl.NEAREST
-	- magFilter: magnifying filter: gl.NEAREST, gl.LINEAR, default gl.NEAREST
-	- minFilter: minifying filter: gl.NEAREST, gl.LINEAR, gl.LINEAR_MIPMAP_LINEAR, default gl.NEAREST
-	- wrap: texture wrapping: gl.CLAMP_TO_EDGE, gl.REPEAT, gl.MIRROR, default gl.CLAMP_TO_EDGE (also accepts wrapT and wrapS for separate settings)
-	- pixel_data: ArrayBufferView with the pixel data to upload to the texture, otherwise the texture will be black
-	- premultiply_alpha : multiply the color by the alpha value when uploading, default FALSE
-	- no_flip : do not flip in Y, default TRUE
-	- anisotropic : number of anisotropic fetches, default 0
+* @namespace GL
+*/
+
+/**
+* Texture class to upload images to the GPU, default is gl.TEXTURE_2D, gl.RGBA of gl.UNSIGNED_BYTE with filters set to gl.LINEAR and wrap to gl.CLAMP_TO_EDGE &lt;br/&gt;
+	There is a list of options &lt;br/&gt;
+	========================== &lt;br/&gt;
+	- texture_type: gl.TEXTURE_2D, gl.TEXTURE_CUBE_MAP, default gl.TEXTURE_2D &lt;br/&gt;
+	- format: gl.RGB, gl.RGBA, gl.DEPTH_COMPONENT, default gl.RGBA &lt;br/&gt;
+	- type: gl.UNSIGNED_BYTE, gl.UNSIGNED_SHORT, gl.HALF_FLOAT_OES, gl.FLOAT, default gl.UNSIGNED_BYTE &lt;br/&gt;
+	- filter: filtering for mag and min: gl.NEAREST or gl.LINEAR, default gl.NEAREST &lt;br/&gt;
+	- magFilter: magnifying filter: gl.NEAREST, gl.LINEAR, default gl.NEAREST &lt;br/&gt;
+	- minFilter: minifying filter: gl.NEAREST, gl.LINEAR, gl.LINEAR_MIPMAP_LINEAR, default gl.NEAREST &lt;br/&gt;
+	- wrap: texture wrapping: gl.CLAMP_TO_EDGE, gl.REPEAT, gl.MIRROR, default gl.CLAMP_TO_EDGE (also accepts wrapT and wrapS for separate settings) &lt;br/&gt;
+	- pixel_data: ArrayBufferView with the pixel data to upload to the texture, otherwise the texture will be black &lt;br/&gt;
+	- premultiply_alpha : multiply the color by the alpha value when uploading, default FALSE &lt;br/&gt;
+	- no_flip : do not flip in Y, default TRUE &lt;br/&gt;
+	- anisotropic : number of anisotropic fetches, default 0 &lt;br/&gt;
 
 * @class Texture
 * @param {number} width texture width (any supported but Power of Two allows to have mipmaps), 0 means no memory reserved till its filled
@@ -142,6 +130,9 @@ global.Texture = GL.Texture = function Texture(width, height, options, gl) {
 	//round sizes
 	width = parseInt(width); 
 	height = parseInt(height);
+
+	if(GL.debug)
+		console.log(&quot;GL.Texture created: &quot;,width,height);
 
 	//create texture handler
 	this.handler = gl.createTexture();
@@ -169,7 +160,9 @@ global.Texture = GL.Texture = function Texture(width, height, options, gl) {
 		throw(&quot;Float Texture not supported&quot;);
 	if(this.type == gl.HALF_FLOAT_OES &amp;&amp; !gl.extensions[&quot;OES_texture_half_float&quot;])
 		throw(&quot;Half Float Texture not supported&quot;);
-	if(( (this.minFilter != gl.NEAREST &amp;&amp; this.minFilter != gl.LINEAR) || this.wrapS != gl.CLAMP_TO_EDGE || this.wrapT != gl.CLAMP_TO_EDGE) &amp;&amp; (!isPowerOfTwo(this.width) || !isPowerOfTwo(this.height)))
+	if( (!isPowerOfTwo(this.width) || !isPowerOfTwo(this.height)) &amp;&amp; //non power of two
+		( (this.minFilter != gl.NEAREST &amp;&amp; this.minFilter != gl.LINEAR) || //uses mipmaps
+		(this.wrapS != gl.CLAMP_TO_EDGE || this.wrapT != gl.CLAMP_TO_EDGE) ) ) //uses wrap
 	{
 		if(!options.ignore_pot)
 			throw(&quot;Cannot use texture-wrap or mipmaps in Non-Power-of-Two textures&quot;);
@@ -231,8 +224,8 @@ Texture.loading_color = new Uint8Array([0,0,0,0]);
 Texture.use_renderbuffer_pool = true; //should improve performance
 
 /**
-* Free the texture memory, the handler is null
-* @method isDepthSupported
+* Free the texture memory from the GPU, sets the texture handler to null
+* @method delete
 */
 Texture.prototype.delete = function()
 {
@@ -265,6 +258,7 @@ Texture.prototype.toJSON = function()
 /**
 * Returns if depth texture is supported by the GPU
 * @method isDepthSupported
+* @return {Boolean} true if supported
 */
 Texture.isDepthSupported = function()
 {
@@ -389,14 +383,28 @@ Texture.prototype.uploadData = function(data, options )
 	gl.bindTexture(this.texture_type, null); //disable
 }
 
+//When creating cubemaps this is helpful
 Texture.cubemap_camera_parameters = [
-	{ type:&quot;posX&quot;, dir: vec3.fromValues(1,0,0), 	up: vec3.fromValues(0,-1,0) }, //positive X
-	{ type:&quot;negX&quot;, dir: vec3.fromValues(-1,0,0),	up: vec3.fromValues(0,-1,0) }, //negative X
-	{ type:&quot;posY&quot;, dir: vec3.fromValues(0,1,0), 	up: vec3.fromValues(0,0,1) }, //positive Y
-	{ type:&quot;negY&quot;, dir: vec3.fromValues(0,-1,0),	up: vec3.fromValues(0,0,-1) }, //negative Y
-	{ type:&quot;posZ&quot;, dir: vec3.fromValues(0,0,1), 	up: vec3.fromValues(0,-1,0) }, //positive Z
-	{ type:&quot;negZ&quot;, dir: vec3.fromValues(0,0,-1),	up: vec3.fromValues(0,-1,0) } //negative Z
+	{ type:&quot;posX&quot;, dir: vec3.fromValues(-1,0,0), 	up: vec3.fromValues(0,1,0),	right: vec3.fromValues(0,0,-1) },
+	{ type:&quot;negX&quot;, dir: vec3.fromValues(1,0,0),		up: vec3.fromValues(0,1,0),	right: vec3.fromValues(0,0,1) },
+	{ type:&quot;posY&quot;, dir: vec3.fromValues(0,-1,0), 	up: vec3.fromValues(0,0,-1), right: vec3.fromValues(1,0,0) },
+	{ type:&quot;negY&quot;, dir: vec3.fromValues(0,1,0),		up: vec3.fromValues(0,0,1),	right: vec3.fromValues(-1,0,0) },
+	{ type:&quot;posZ&quot;, dir: vec3.fromValues(0,0,-1), 	up: vec3.fromValues(0,1,0),	right: vec3.fromValues(1,0,0) },
+	{ type:&quot;negZ&quot;, dir: vec3.fromValues(0,0,1),		up: vec3.fromValues(0,1,0),	right: vec3.fromValues(-1,0,0) }
 ];
+
+/* OLD VERSION, DOESNT MAKE SENSE
+Texture.cubemap_camera_parameters = [
+	{ type:&quot;posX&quot;, dir: vec3.fromValues(1,0,0), 	up: vec3.fromValues(0,-1,0),	right: vec3.fromValues(0,0,-1) }, //positive X
+	{ type:&quot;negX&quot;, dir: vec3.fromValues(-1,0,0),	up: vec3.fromValues(0,-1,0),	right: vec3.fromValues(0,0,1) }, //negative X
+	{ type:&quot;posY&quot;, dir: vec3.fromValues(0,1,0), 	up: vec3.fromValues(0,0,1),		right: vec3.fromValues(1,0,0) }, //positive Y
+	{ type:&quot;negY&quot;, dir: vec3.fromValues(0,-1,0),	up: vec3.fromValues(0,0,-1),	right: vec3.fromValues(-1,0,0) }, //negative Y
+	{ type:&quot;posZ&quot;, dir: vec3.fromValues(0,0,1), 	up: vec3.fromValues(0,-1,0),	right: vec3.fromValues(1,0,0) }, //positive Z
+	{ type:&quot;negZ&quot;, dir: vec3.fromValues(0,0,-1),	up: vec3.fromValues(0,-1,0),	right: vec3.fromValues(-1,0,0) } //negative Z
+];
+*/
+
+
 
 /**
 * Render to texture using FBO, just pass the callback to a rendering function and the content of the texture will be updated
@@ -411,8 +419,8 @@ Texture.prototype.drawTo = function(callback, params)
 {
 	var gl = this.gl;
 
-	if(this.format == gl.DEPTH_COMPONENT)
-		throw(&quot;cannot use drawTo in depth textures, use Texture.drawToColorAndDepth&quot;);
+	//if(this.format == gl.DEPTH_COMPONENT)
+	//	throw(&quot;cannot use drawTo in depth textures, use Texture.drawToColorAndDepth&quot;);
 
 	var v = gl.getViewport();
 	var now = GL.getTime();
@@ -446,7 +454,7 @@ Texture.prototype.drawTo = function(callback, params)
 			renderbuffer.time = now;
 			renderbuffer.width = this.width;
 			renderbuffer.height = this.height;
-			gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer );
+			gl.bindRenderbuffer( gl.RENDERBUFFER, renderbuffer );
 
 			//destroy after one minute 
 			setTimeout( inner_check_destroy.bind(renderbuffer), 1000*60 );
@@ -457,12 +465,15 @@ Texture.prototype.drawTo = function(callback, params)
 		renderbuffer = gl._renderbuffer = gl._renderbuffer || gl.createRenderbuffer();
 		renderbuffer.width = this.width;
 		renderbuffer.height = this.height;
-		gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer );
+		gl.bindRenderbuffer( gl.RENDERBUFFER, renderbuffer );
 	}
 
 
-	//bind buffer
-	gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.width, this.height);
+	//bind render buffer for depth or color
+	if( this.format === gl.DEPTH_COMPONENT )
+		gl.renderbufferStorage( gl.RENDERBUFFER, gl.RGBA4, this.width, this.height);
+	else
+		gl.renderbufferStorage( gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.width, this.height);
 
 
 	//clears memory from unused buffer
@@ -497,41 +508,39 @@ Texture.prototype.drawTo = function(callback, params)
 	gl._current_fbo_color = framebuffer;
 	gl._current_fbo_depth = renderbuffer;
 
-
-
-	//try
-	//{
-		if(this.texture_type == gl.TEXTURE_2D)
-		{
-			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.handler, 0);
-			gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
-			callback(this, params);
-		}
-		else if(this.texture_type == gl.TEXTURE_CUBE_MAP)
-		{
-			//var faces = [ gl.TEXTURE_CUBE_MAP_POSITIVE_X, gl.TEXTURE_CUBE_MAP_NEGATIVE_X, gl.TEXTURE_CUBE_MAP_POSITIVE_Y, gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, gl.TEXTURE_CUBE_MAP_POSITIVE_Z, gl.TEXTURE_CUBE_MAP_NEGATIVE_Z ];
-			for(var i = 0; i &lt; 6; i++)
-			{
-				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,  gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, this.handler, 0);
-				gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
-				callback(this,i, params);
-			}
-		}
-	/*
-	}
-	catch (err)
+	if(this.texture_type == gl.TEXTURE_2D)
 	{
-		//clean stuff
-		gl._current_texture_drawto = null;
-		gl._current_fbo_color = null;
-		gl._current_fbo_depth = null;
-		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-		gl.bindRenderbuffer(gl.RENDERBUFFER, null);
-		gl.viewport(v[0], v[1], v[2], v[3]);
-		console.trace();
-		throw(err);
+		if( this.format !== gl.DEPTH_COMPONENT )
+		{
+			gl.framebufferTexture2D( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.handler, 0 );
+			gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer );
+		}
+		else
+		{
+			gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, renderbuffer );
+			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D,  this.handler, 0);
+		}
+		callback(this, params);
 	}
-	*/
+	else if(this.texture_type == gl.TEXTURE_CUBE_MAP)
+	{
+		//bind the fixed ones out of the loop to save calls
+		if( this.format !== gl.DEPTH_COMPONENT )
+			gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer );
+		else
+			gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, renderbuffer );
+
+		//for every face of the cubemap
+		for(var i = 0; i &lt; 6; i++)
+		{
+			if( this.format !== gl.DEPTH_COMPONENT )
+				gl.framebufferTexture2D( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, this.handler, 0);
+			else
+				gl.framebufferTexture2D( gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_CUBE_MAP_POSITIVE_X + i,  this.handler, 0 );
+			callback(this,i, params);
+		}
+	}
+
 
 	gl._current_texture_drawto = null;
 	gl._current_fbo_color = null;
@@ -551,69 +560,96 @@ Texture.prototype.drawTo = function(callback, params)
 * @param {Texture} depth_texture
 * @param {Function} callback
 */
-Texture.drawTo = function(color_textures, callback, depth_texture)
+Texture.drawTo = function( color_textures, callback, depth_texture )
 {
 	var w = -1,
 		h = -1,
 		type = null;
 
-	for(var i = 0; i &lt; color_textures.length; i++)
+	if(!color_textures &amp;&amp; !depth_texture)
+		throw(&quot;Textures missing in drawTo&quot;);
+
+	if(color_textures &amp;&amp; color_textures.length)
 	{
-		var t = color_textures[i];
-		if(w == -1) 
-			w = t.width;
-		else if(w != t.width)
-			throw(&quot;Cannot use Texture.drawTo if textures have different dimensions&quot;);
-		if(h == -1) 
-			h = t.height;
-		else if(h != t.height)
-			throw(&quot;Cannot use Texture.drawTo if textures have different dimensions&quot;);
-		if(type == null) //first one defines the type
-			type = t.type;
-		else if (type != t.type)
-			throw(&quot;Cannot use Texture.drawTo if textures have different data type, all must have the same type&quot;);
+		for(var i = 0; i &lt; color_textures.length; i++)
+		{
+			var t = color_textures[i];
+			if(w == -1) 
+				w = t.width;
+			else if(w != t.width)
+				throw(&quot;Cannot use Texture.drawTo if textures have different dimensions&quot;);
+			if(h == -1) 
+				h = t.height;
+			else if(h != t.height)
+				throw(&quot;Cannot use Texture.drawTo if textures have different dimensions&quot;);
+			if(type == null) //first one defines the type
+				type = t.type;
+			else if (type != t.type)
+				throw(&quot;Cannot use Texture.drawTo if textures have different data type, all must have the same type&quot;);
+		}
 	}
+	else
+	{
+		w = depth_texture.width;
+		h = depth_texture.height;
+	}
+
+	var ext = gl.extensions[&quot;WEBGL_draw_buffers&quot;];
+	if(!ext &amp;&amp; color_textures &amp;&amp; color_textures.length &gt; 1)
+		throw(&quot;Rendering to several textures not supported&quot;);
 
 	var v = gl.getViewport();
 	gl._framebuffer =  gl._framebuffer || gl.createFramebuffer();
 	gl.bindFramebuffer( gl.FRAMEBUFFER,  gl._framebuffer );
 
 	gl.viewport( 0, 0, w, h );
-	var ext = gl.extensions[&quot;WEBGL_draw_buffers&quot;];
-	if(!ext &amp;&amp; color_textures.length &gt; 1)
-		throw(&quot;Rendering to several textures not supported&quot;);
 
 	var renderbuffer = null;
-	if( !depth_texture )
+	if( depth_texture &amp;&amp; depth_texture.format !== gl.DEPTH_COMPONENT || depth_texture.type != gl.UNSIGNED_INT )
+		throw(&quot;Depth texture must be of format: gl.DEPTH_COMPONENT and type: gl.UNSIGNED_INT&quot;);
+
+	if( depth_texture )
 	{
+		gl.framebufferTexture2D( gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depth_texture.handler, 0);
+	}
+	else //create a temporary depth renderbuffer
+	{
+		//create renderbuffer for depth
 		renderbuffer = gl._renderbuffer = gl._renderbuffer || gl.createRenderbuffer();
 		renderbuffer.width = w;
 		renderbuffer.height = h;
 		gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer );
-	}
-
-	if( depth_texture )
-	{
-		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depth_texture.handler, 0);
-	}
-	else //create a temporary renderbuffer
-	{
 		gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, w, h);
+
 		gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer );
 	}
 
-	var order = []; //draw_buffers request the use of an array with the order of the attachments
-	for(var i = 0; i &lt; color_textures.length; i++)
+	if( color_textures )
 	{
-		var t = color_textures[i];
-		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, t.handler, 0);
-		order.push( gl.COLOR_ATTACHMENT0 + i );
+		var order = []; //draw_buffers request the use of an array with the order of the attachments
+		for(var i = 0; i &lt; color_textures.length; i++)
+		{
+			var t = color_textures[i];
+			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, t.handler, 0);
+			order.push( gl.COLOR_ATTACHMENT0 + i );
+		}
+
+		if(color_textures.length &gt; 1)
+			ext.drawBuffersWEBGL( order );
+	}
+	else //create temporary color render buffer
+	{
+		var color_renderbuffer = this._color_renderbuffer = this._color_renderbuffer || gl.createRenderbuffer();
+		color_renderbuffer.width = w;
+		color_renderbuffer.height = h;
+
+		gl.bindRenderbuffer( gl.RENDERBUFFER, color_renderbuffer );
+		gl.renderbufferStorage( gl.RENDERBUFFER, gl.RGBA4, w, h );
+
+		gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, color_renderbuffer );
 	}
 
-	if(color_textures.length &gt; 1)
-		ext.drawBuffersWEBGL( order );
-
-	var complete = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+	var complete = gl.checkFramebufferStatus( gl.FRAMEBUFFER );
 	if(complete !== gl.FRAMEBUFFER_COMPLETE)
 		throw(&quot;FBO not complete: &quot; + complete);
 
@@ -631,7 +667,7 @@ Texture.drawTo = function(color_textures, callback, depth_texture)
 * @param {Texture} depth_texture
 * @param {Function} callback
 */
-Texture.drawToColorAndDepth = function(color_texture, depth_texture, callback) {
+Texture.drawToColorAndDepth = function( color_texture, depth_texture, callback ) {
 	var gl = color_texture.gl; //static function
 
 	if(depth_texture.width != color_texture.width || depth_texture.height != color_texture.height)
@@ -641,7 +677,7 @@ Texture.drawToColorAndDepth = function(color_texture, depth_texture, callback) {
 
 	gl._framebuffer =  gl._framebuffer || gl.createFramebuffer();
 
-	gl.bindFramebuffer(gl.FRAMEBUFFER,  gl._framebuffer);
+	gl.bindFramebuffer( gl.FRAMEBUFFER,  gl._framebuffer);
 
 	gl.viewport(0, 0, color_texture.width, color_texture.height);
 
@@ -662,8 +698,9 @@ Texture.drawToColorAndDepth = function(color_texture, depth_texture, callback) {
 * @method copyTo
 * @param {GL.Texture} target_texture
 * @param {GL.Shader} [shader=null] optional shader to apply while copying
+* @param {Object} [uniforms=null] optional uniforms for the shader
 */
-Texture.prototype.copyTo = function(target_texture, shader) {
+Texture.prototype.copyTo = function( target_texture, shader, uniforms ) {
 	var that = this;
 	var gl = this.gl;
 
@@ -671,16 +708,41 @@ Texture.prototype.copyTo = function(target_texture, shader) {
 	var current_fbo = gl.getParameter( gl.FRAMEBUFFER_BINDING );
 	var viewport = gl.getViewport(); 
 
-	//reuse fbo
-	var fbo = gl.__copy_fbo = gl.__copy_fbo || gl.createFramebuffer();
-	gl.bindFramebuffer( gl.FRAMEBUFFER, fbo );
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, target_texture.handler, 0);
-	gl.viewport(0,0,target_texture.width, target_texture.height);
+	if(!shader)
+		shader = this.texture_type == gl.TEXTURE_2D ? GL.Shader.getScreenShader() : GL.Shader.getCubemapCopyShader();
 
 	//render
 	gl.disable( gl.BLEND );
 	gl.disable( gl.DEPTH_TEST );
-	this.toViewport( shader );
+	if(shader &amp;&amp; uniforms)
+		shader.uniforms( uniforms );
+
+	//reuse fbo
+	var fbo = gl.__copy_fbo;
+	if(!fbo)
+		fbo = gl.__copy_fbo || gl.createFramebuffer();
+	gl.bindFramebuffer( gl.FRAMEBUFFER, fbo );
+
+	gl.viewport(0,0,target_texture.width, target_texture.height);
+	if(this.texture_type == gl.TEXTURE_2D)
+	{
+		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, target_texture.handler, 0);
+		this.toViewport( shader );
+	}
+	else if(this.texture_type == gl.TEXTURE_CUBE_MAP)
+	{
+		shader.uniforms({u_texture: 0});
+		var rot_matrix = mat3.create();
+		for(var i = 0; i &lt; 6; i++)
+		{
+			gl.framebufferTexture2D( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, target_texture.handler, 0);
+			var face_info = GL.Texture.cubemap_camera_parameters[ i ];
+			rot_matrix.set( face_info.right, 0 );
+			rot_matrix.set( face_info.up, 3 );
+			rot_matrix.set( face_info.dir, 6 );
+			this.toViewport( shader,{ u_rotation: rot_matrix });
+		}
+	}
 	
 	//restore previous state
 	gl.setViewport(viewport); //restore viewport
@@ -761,7 +823,7 @@ Texture.prototype.renderQuad = (function() {
 
 
 /**
-* Applies a blur filter of one pixel to the texture (be careful using it, it is slow)
+* Applies a blur filter of four pixels to the texture (be careful using it, it is slow)
 * @method applyBlur
 * @param {Number} offsetx scalar that multiplies the offset when fetching pixels horizontally (default 1)
 * @param {Number} offsety scalar that multiplies the offset when fetching pixels vertically (default 1)
@@ -770,30 +832,99 @@ Texture.prototype.renderQuad = (function() {
 * @param {Texture} output_texture [optional] if not passed the output is the own texture
 * @return {Texture} returns the temp_texture in case you want to reuse it
 */
-Texture.prototype.applyBlur = function(offsetx, offsety, intensity, temp_texture, output_texture)
+Texture.prototype.applyBlur = function( offsetx, offsety, intensity, temp_texture, output_texture )
 {
-	var self = this;
+	var that = this;
 	var gl = this.gl;
-	var shader = GL.Shader.getBlurShader();
-	if(!temp_texture)
-		temp_texture = new GL.Texture(this.width, this.height, this.getProperties() );
-
+	if(offsetx === undefined)
+		offsetx = 1;
+	if(offsety === undefined)
+		offsety = 1;
 	offsetx = offsetx / this.width;
 	offsety = offsety / this.height;
 	gl.disable( gl.DEPTH_TEST );
 	gl.disable( gl.BLEND );
 
-	temp_texture.drawTo( function() {
-		self.toViewport(shader, {u_texture: 0, u_intensity: intensity, u_offset: [0, offsety ] });
-	});	
+	if(this === output_texture &amp;&amp; this.texture_type === gl.TEXTURE_CUBE_MAP )
+		throw(&quot;cannot use applyBlur in a texture with itself when blurring a CUBE_MAP&quot;);
 
-	output_texture = output_texture || this;
-	output_texture.drawTo( function() {
-		temp_texture.toViewport(shader, {u_intensity: intensity, u_offset: [offsetx, 0] });
-	});	
-	return temp_texture;
+	if(output_texture &amp;&amp; this.texture_type !== output_texture.texture_type )
+		throw(&quot;cannot use applyBlur with textures of different texture_type&quot;);
+
+	var result_texture = null;
+
+	//save state
+	var current_fbo = gl.getParameter( gl.FRAMEBUFFER_BINDING );
+	var viewport = gl.getViewport(); 
+
+	//reuse fbo
+	var fbo = gl.__copy_fbo;
+	if(!fbo)
+		fbo = gl.__copy_fbo || gl.createFramebuffer();
+	gl.bindFramebuffer( gl.FRAMEBUFFER, fbo );
+	gl.viewport(0,0, this.width, this.height);
+
+	if( this.texture_type === gl.TEXTURE_2D )
+	{
+		var shader = GL.Shader.getBlurShader();
+
+		if(!temp_texture)
+			temp_texture = new GL.Texture( this.width, this.height, this.getProperties() );
+
+		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, temp_texture.handler, 0);
+		this.toViewport( shader, {u_texture: 0, u_intensity: intensity, u_offset: [0, offsety ] });
+
+		output_texture = output_texture || this;
+		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, output_texture.handler, 0);
+		temp_texture.toViewport( shader, {u_intensity: intensity, u_offset: [offsetx, 0] });
+
+		result_texture = temp_texture;
+	}
+	else if( this.texture_type === gl.TEXTURE_CUBE_MAP )
+	{
+		//var weights = new Float32Array([ 0.16/0.98, 0.15/0.98, 0.12/0.98, 0.09/0.98, 0.05/0.98 ]);
+		//var weights = new Float32Array([ 0.05/0.98, 0.09/0.98, 0.12/0.98, 0.15/0.98, 0.16/0.98, 0.15/0.98, 0.12/0.98, 0.09/0.98, 0.05/0.98, 0.0 ]); //extra 0 to avoid mat3
+
+		var shader = GL.Shader.getCubemapBlurShader();
+		shader.uniforms({u_texture: 0, u_intensity: intensity, u_offset: [ offsetx, offsety ] });
+		this.bind(0);
+		var mesh = Mesh.getScreenQuad();
+		mesh.bindBuffers( shader );
+		shader.bind();
+
+		if(!output_texture)
+			output_texture = new GL.Texture( this.width, this.height, this.getProperties() );
+
+		var rot_matrix = mat3.create();
+		for(var i = 0; i &lt; 6; ++i)
+		{
+			gl.framebufferTexture2D( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, output_texture.handler, 0);
+			var face_info = GL.Texture.cubemap_camera_parameters[ i ];
+			rot_matrix.set( face_info.right, 0 );
+			rot_matrix.set( face_info.up, 3 );
+			rot_matrix.set( face_info.dir, 6 );
+			shader._setUniform( &quot;u_rotation&quot;, rot_matrix );
+			gl.drawArrays( gl.TRIANGLES, 0, 6 );
+		}
+
+		mesh.unbindBuffers( shader );
+		result_texture = output_texture;
+	}
+
+	//restore previous state
+	gl.setViewport(viewport); //restore viewport
+	gl.bindFramebuffer( gl.FRAMEBUFFER, current_fbo ); //restore fbo
+
+	//generate mipmaps when needed
+	if (output_texture.minFilter &amp;&amp; output_texture.minFilter != gl.NEAREST &amp;&amp; output_texture.minFilter != gl.LINEAR) {
+		output_texture.bind();
+		gl.generateMipmap(output_texture.texture_type);
+		output_texture.has_mipmaps = true;
+	}
+
+	gl.bindTexture(output_texture.texture_type, null); //disable
+	return result_texture;
 }
-
 
 
 /**
@@ -866,8 +997,16 @@ Texture.fromImage = function(image, options) {
 	options = options || {};
 
 	var texture = options.texture || new GL.Texture(image.width, image.height, options);
+
+	texture.uploadImage( image, options );
+
 	texture.bind();
-	texture.uploadImage(image, options);
+	gl.texParameteri(texture.texture_type, gl.TEXTURE_MAG_FILTER, texture.magFilter );
+	gl.texParameteri(texture.texture_type, gl.TEXTURE_MIN_FILTER, texture.minFilter );
+	gl.texParameteri(texture.texture_type, gl.TEXTURE_WRAP_S, texture.wrapS );
+	gl.texParameteri(texture.texture_type, gl.TEXTURE_WRAP_T, texture.wrapT );
+
+
 	if (GL.isPowerOfTwo(texture.width) &amp;&amp; GL.isPowerOfTwo(texture.height) &amp;&amp; options.minFilter &amp;&amp; options.minFilter != gl.NEAREST &amp;&amp; options.minFilter != gl.LINEAR) {
 		texture.bind();
 		gl.generateMipmap(texture.texture_type);
@@ -909,12 +1048,21 @@ Texture.fromVideo = function(video, options) {
 * @param {Object} options
 * @return {Texture} the texture
 */
-Texture.fromTexture = function(old_texture, options) {
+Texture.fromTexture = function( old_texture, options) {
 	options = options || {};
 	var texture = new GL.Texture( old_texture.width, old_texture.height, options );
 	old_texture.copyTo( texture );
 	return texture;
 };
+
+Texture.prototype.clone = function( options )
+{
+	var old_options = this.getProperties();
+	if(options)
+		for(var i in options)
+			old_options[i] = options[i];
+	return Texture.fromTexture( this, old_options);
+}
 
 /**
 * Create a texture from an ArrayBuffer containing the pixels
@@ -1014,7 +1162,17 @@ Texture.cubemapFromImages = function(images, options) {
 	var height = images[0].height;
 	options.texture_type = gl.TEXTURE_CUBE_MAP;
 
-	var texture = options.texture || new Texture(width, height, options);
+	var texture = null;
+	
+	if(options.texture)
+	{
+		texture = options.texture;
+		texture.width = width;
+		texture.height = height;
+	}
+	else
+		texture = new GL.Texture( width, height, options );
+
 	Texture.setUploadOptions(options);
 	texture.bind();
 
@@ -1104,7 +1262,7 @@ Texture.cubemapFromImage = function( image, options ) {
 /**
 * Given the width and the height of an image, and in which column is the top and bottom sides of the cubemap, it gets the info to pass to Texture.cubemapFromImage in options.faces
 * @method Texture.generateCubemapCrossFaces
-* @param {number} width
+* @param {number} width of the CROSS image (not the side image)
 * @param {number} column the column where the top and the bottom is located
 * @return {Object} object to pass to Texture.cubemapFromImage in options.faces
 */
@@ -1172,7 +1330,7 @@ Texture.cubemapFromURL = function(url, options, on_complete) {
 * @param {bool} force_rgba if yo want to force the output to have 4 components per pixel (useful to transfer to canvas)
 * @return {ArrayBuffer} the data ( Uint8Array or Float32Array )
 */
-Texture.prototype.getPixels = function( type, force_rgba )
+Texture.prototype.getPixels = function( type, force_rgba, cubemap_face )
 {
 	var gl = this.gl;
 	var v = gl.getViewport();
@@ -1180,27 +1338,25 @@ Texture.prototype.getPixels = function( type, force_rgba )
 
 	type = type || this.type;
 
-	
-
-	var framebuffer = gl.createFramebuffer();
-	var renderbuffer = gl.createRenderbuffer();
 	if(this.format == gl.DEPTH_COMPONENT)
 		throw(&quot;cannot use getPixels in depth textures&quot;);
 
-	gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer );
-	gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer );
+	gl.disable( gl.DEPTH_TEST );
 
-	//create to store depth
-	renderbuffer.width = this.width;
-	renderbuffer.height = this.height;
-	gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.width, this.height);
+	//reuse fbo
+	var fbo = gl.__copy_fbo;
+	if(!fbo)
+		fbo = gl.__copy_fbo || gl.createFramebuffer();
+	gl.bindFramebuffer( gl.FRAMEBUFFER, fbo );
+
+	var buffer = null;
 
 	gl.viewport(0, 0, this.width, this.height);
-	if(this.texture_type != gl.TEXTURE_2D)
-		throw(&quot;getPixels only work with texture2D&quot;);
 
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.handler, 0);
-	gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
+	if(this.texture_type == gl.TEXTURE_2D)
+		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.handler, 0);
+	else if(this.texture_type == gl.TEXTURE_CUBE_MAP)
+		gl.framebufferTexture2D( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X + (cubemap_face || 0), this.handler, 0);
 
 	var channels = this.format == gl.RGB ? 3 : 4;
 	if(force_rgba)
@@ -1208,17 +1364,14 @@ Texture.prototype.getPixels = function( type, force_rgba )
 	channels = 4; //WEBGL DOES NOT SUPPORT READING 3 CHANNELS ONLY, YET...
 	//type = gl.UNSIGNED_BYTE; //WEBGL DOES NOT SUPPORT READING FLOAT seems, YET...
 
-	var buffer = null;
 	if(type == gl.UNSIGNED_BYTE)
 		buffer = new Uint8Array( this.width * this.height * channels );
 	else //half float and float forced to float
 		buffer = new Float32Array( this.width * this.height * channels );
 
-	//gl.readPixels(0,0, this.width, this.height, gl.RGBA, gl.UNSIGNED_BYTE, buffer ); 
-	gl.readPixels(0,0, this.width, this.height, channels == 3 ? gl.RGB : gl.RGBA, type, buffer ); //NOT SUPPORTED FLOAT or RGB BY WEBGL YET
+	gl.readPixels( 0,0, this.width, this.height, channels == 3 ? gl.RGB : gl.RGBA, type, buffer ); //NOT SUPPORTED FLOAT or RGB BY WEBGL YET
 
 	//restore
-	gl.bindRenderbuffer(gl.RENDERBUFFER, null );
 	gl.bindFramebuffer(gl.FRAMEBUFFER, old_fbo );
 	gl.viewport(v[0], v[1], v[2], v[3]);
 	return buffer;
@@ -1230,49 +1383,73 @@ Texture.prototype.getPixels = function( type, force_rgba )
 * @method toCanvas
 * @param {Canvas} canvas must have the same size, if different the canvas will be resized
 * @param {boolean} flip_y optional, flip vertically
-* @param {Number} max_size optional, if it is supplied the canvas wont be bigger of max_size (the iamge will be scaled down)
+* @param {Number} max_size optional, if it is supplied the canvas wont be bigger of max_size (the image will be scaled down)
 */
 Texture.prototype.toCanvas = function( canvas, flip_y, max_size )
 {
 	max_size = max_size || 8192;
 	var gl = this.gl;
 
-	if(this.texture_type != gl.TEXTURE_2D)
-		return null;
-
 	var w = Math.min( this.width, max_size );
 	var h = Math.min( this.height, max_size );
 
-	canvas = canvas || createCanvas(w,h);
+	if(this.texture_type == gl.TEXTURE_CUBE_MAP)
+	{
+		w = w * 4;
+		h = h * 3;
+	}
+
+	canvas = canvas || createCanvas( w, h );
 	if(canvas.width != w) 
 		canvas.width = w;
 	if(canvas.height != h)
 		canvas.height = h;
 
 	var buffer = null;
-	if(this.width != w || this.height != h )
+	if(this.texture_type == gl.TEXTURE_2D )
 	{
-		//create a temporary texture
-		var temp = new GL.Texture(w,h,{ format: gl.RGBA, filter: gl.NEAREST });
-		this.copyTo( temp );	
-		buffer = temp.getPixels( gl.UNSIGNED_BYTE, true );
+		if(this.width != w || this.height != h ) //resize image to fit the canvas
+		{
+			//create a temporary texture
+			var temp = new GL.Texture(w,h,{ format: gl.RGBA, filter: gl.NEAREST });
+			this.copyTo( temp );	
+			buffer = temp.getPixels( gl.UNSIGNED_BYTE, true );
+		}
+		else
+			buffer = this.getPixels( gl.UNSIGNED_BYTE, true );
+
+		var ctx = canvas.getContext(&quot;2d&quot;);
+		var pixels = ctx.getImageData(0,0,w,h);
+		pixels.data.set( buffer );
+		ctx.putImageData(pixels,0,0);
+
+		if(flip_y)
+		{
+			var temp = createCanvas(w,h);
+			var temp_ctx = temp.getContext(&quot;2d&quot;);
+			temp_ctx.translate(0,temp.height);
+			temp_ctx.scale(1,-1);
+			temp_ctx.drawImage( canvas, 0, 0, temp.width, temp.height );
+			ctx.drawImage( temp, 0, 0 );
+		}
 	}
-	else
-		buffer = this.getPixels( gl.UNSIGNED_BYTE, true );
-
-	var ctx = canvas.getContext(&quot;2d&quot;);
-	var pixels = ctx.getImageData(0,0,w,h);
-	pixels.data.set( buffer );
-	ctx.putImageData(pixels,0,0);
-
-	if(flip_y)
+	else if(this.texture_type == gl.TEXTURE_CUBE_MAP )
 	{
-		var temp = createCanvas(w,h);
-		var temp_ctx = temp.getContext(&quot;2d&quot;);
-		temp_ctx.translate(0,temp.height);
-		temp_ctx.scale(1,-1);
-		temp_ctx.drawImage( canvas, 0, 0, temp.width, temp.height );
-		ctx.drawImage( temp, 0, 0 );
+		var temp_canvas = createCanvas( this.width, this.height );
+		var temp_ctx = temp_canvas.getContext(&quot;2d&quot;);
+		var info = GL.Texture.generateCubemapCrossFacesInfo( canvas.width, 1 );
+		var ctx = canvas.getContext(&quot;2d&quot;);
+		ctx.fillStyle = &quot;black&quot;;
+		ctx.fillRect(0,0,canvas.width, canvas.height );
+
+		for(var i = 0; i &lt; 6; i++)
+		{
+			buffer = this.getPixels( gl.UNSIGNED_BYTE, true, i );
+			var pixels = temp_ctx.getImageData(0,0, temp_canvas.width, temp_canvas.height );
+			pixels.data.set( buffer );
+			temp_ctx.putImageData(pixels,0,0);
+			ctx.drawImage( temp_canvas, info[i].x, info[i].y, temp_canvas.width, temp_canvas.height );
+		}
 	}
 
 	return canvas;
@@ -1283,55 +1460,29 @@ Texture.prototype.toCanvas = function( canvas, flip_y, max_size )
 * @method toBlob
 * @return {Blob} the blob containing the data
 */
-Texture.prototype.toBlob = function()
+Texture.prototype.toBlob = function(flip_y, type)
 {
-	var w = this.width;
-	var h = this.height;
-
-	if(this.texture_type == gl.TEXTURE_CUBE_MAP)
+	//dump to canvas
+	var canvas = this.toCanvas(null,flip_y);
+	if(canvas.toBlob)
 	{
-		if(!this.image)
-		{
-			console.warning(&quot;Litegl: cannot call toBlob of a cubemap GL.Texture&quot;);
-			return null; //cannot blob
-		}
-		else
-		{
-			//use the associated image
-			var final_canvas = createCanvas(this.image.width,this.image.height);
-			var final_ctx = final_canvas.getContext(&quot;2d&quot;);
-			final_ctx.drawImage( this.image, 0, 0 );
-			return final_canvas.toBlob();
-		}
+		var blob = canvas.toBlob(null,type);
+		if(blob)
+			return blob;
 	}
 
-	//Read pixels form WebGL
-	var buffer = this.getPixels();
-	/*
-	var buffer = new Uint8Array(w*h*4);
-	this.drawTo( function() {
-		gl.readPixels(0,0,w,h,gl.RGBA,gl.UNSIGNED_BYTE,buffer);
-	});
-	*/
-
-	//dump to canvas
-	var canvas = createCanvas(w,h);
-	if(!canvas.toBlob)
-		throw &quot;toBlob not supported on Canvas element&quot;;
-
-	var ctx = canvas.getContext(&quot;2d&quot;);
-	var pixels = ctx.getImageData(0,0,w,h);
-	pixels.data.set( buffer );
-	ctx.putImageData(pixels,0,0);
-
-	//reverse
-	var final_canvas = createCanvas(w,h);
-	var final_ctx = final_canvas.getContext(&quot;2d&quot;);
-	final_ctx.translate(0,final_canvas.height);
-	final_ctx.scale(1,-1);
-	final_ctx.drawImage( canvas, 0, 0 );
-
-	return final_canvas.toBlob();
+	//use the slow method
+	var data = this.toDataURL( type );
+	var index = data.indexOf(&quot;,&quot;);
+	var base64_data = data.substr(index+1);
+	var binStr = atob( base64_data );
+	var len = binStr.length,
+	arr = new Uint8Array(len);
+	for (var i=0; i&lt;len; ++i ) {
+		arr[i] = binStr.charCodeAt(i);
+	}
+	var blob = new Blob( [arr], {type: type || &#x27;image/png&#x27;} );
+	return blob;
 }
 
 /**
@@ -1347,14 +1498,8 @@ Texture.prototype.toBase64 = function( flip_y )
 
 	//Read pixels form WebGL
 	var buffer = this.getPixels();
-	/*
-	var buffer = new Uint8Array(w*h*4);
-	this.drawTo( function() {
-		gl.readPixels(0,0,w,h,gl.RGBA,gl.UNSIGNED_BYTE,buffer);
-	});
-	*/
 
-	//dump to canvas
+	//dump to canvas so we can encode it
 	var canvas = createCanvas(w,h);
 	var ctx = canvas.getContext(&quot;2d&quot;);
 	var pixels = ctx.getImageData(0,0,w,h);
@@ -1398,6 +1543,11 @@ Texture.compareFormats = function(a,b)
 	return true;
 }
 
+/**
+* returns a white texture of 1x1 pixel 
+* @method Texture.getWhiteTexture
+* @return {Texture} the white texture
+*/
 Texture.getWhiteTexture = function()
 {
 	var gl = this.gl;
@@ -1409,6 +1559,11 @@ Texture.getWhiteTexture = function()
 	return gl.textures[&quot;:white&quot;] = new GL.Texture(1,1,{ pixel_data: color });
 }
 
+/**
+* returns a black texture of 1x1 pixel 
+* @method Texture.getBlackTexture
+* @return {Texture} the black texture
+*/
 Texture.getBlackTexture = function()
 {
 	var gl = this.gl;
@@ -1421,7 +1576,6 @@ Texture.getBlackTexture = function()
 
     </pre>
 </div>
-
                     </div>
                 </div>
             </div>

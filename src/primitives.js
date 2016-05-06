@@ -1,5 +1,9 @@
 
 /**
+* @class Mesh
+*/
+
+/**
 * Returns a planar mesh (you can choose how many subdivisions)
 * @method Mesh.plane
 * @param {Object} options valid options: detail, detailX, detailY, size, width, heigth, xz (horizontal plane)

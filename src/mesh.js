@@ -1,4 +1,8 @@
 /**
+* @namespace GL
+*/
+
+/**
 * Indexer used to reuse vertices among a mesh
 * @class Indexer
 * @constructor

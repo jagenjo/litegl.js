@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
-    <link rel="shortcut icon" type="image/png" href="../assets/favicon.png">
+    <link rel="icon" href="../assets/favicon.ico">
     <script src="http://yui.yahooapis.com/combo?3.9.1/build/yui/yui-min.js"></script>
 </head>
 <body class="yui3-skin-sam">
@@ -14,9 +14,7 @@
 <div id="doc">
     <div id="hd" class="yui3-g header">
         <div class="yui3-u-3-4">
-            
-                <h1><img src="../assets/css/logo.png" title=""></h1>
-            
+                <h1><img src="../assets/css/logo.png" title="" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
             <em>API Docs for: </em>
@@ -27,87 +25,77 @@
         <div class="yui3-u-1-4">
             <div id="docs-sidebar" class="sidebar apidocs">
                 <div id="api-list">
-    <h2 class="off-left">APIs</h2>
-    <div id="api-tabview" class="tabview">
-        <ul class="tabs">
-            <li><a href="#api-classes">Classes</a></li>
-            <li><a href="#api-modules">Modules</a></li>
-        </ul>
-
-        <div id="api-tabview-filter">
-            <input type="search" id="api-filter" placeholder="Type to filter APIs">
-        </div>
-
-        <div id="api-tabview-panel">
-            <ul id="api-classes" class="apis classes">
-            
-                <li><a href="../classes/BBox.html">BBox</a></li>
-            
-                <li><a href="../classes/Buffer.html">Buffer</a></li>
-            
-                <li><a href="../classes/FBO.html">FBO</a></li>
-            
-                <li><a href="../classes/geo.html">geo</a></li>
-            
-                <li><a href="../classes/gl.html">gl</a></li>
-            
-                <li><a href="../classes/GL.html">GL</a></li>
-            
-                <li><a href="../classes/Indexer.html">Indexer</a></li>
-            
-                <li><a href="../classes/LEvent.html">LEvent</a></li>
-            
-                <li><a href="../classes/Mesh.html">Mesh</a></li>
-            
-                <li><a href="../classes/Octree.html">Octree</a></li>
-            
-                <li><a href="../classes/Shader.html">Shader</a></li>
-            
-                <li><a href="../classes/Texture.html">Texture</a></li>
-            
-            </ul>
-
-            <ul id="api-modules" class="apis modules">
-            
-            </ul>
-        </div>
-    </div>
-</div>
-
+                    <h2 class="off-left">APIs</h2>
+                    <div id="api-tabview" class="tabview">
+                        <ul class="tabs">
+                            <li><a href="#api-classes">Classes</a></li>
+                            <li><a href="#api-modules">Modules</a></li>
+                        </ul>
+                
+                        <div id="api-tabview-filter">
+                            <input type="search" id="api-filter" placeholder="Type to filter APIs">
+                        </div>
+                
+                        <div id="api-tabview-panel">
+                            <ul id="api-classes" class="apis classes">
+                                <li><a href="../classes/BBox.html">BBox</a></li>
+                                <li><a href="../classes/geo.html">geo</a></li>
+                                <li><a href="../classes/gl.html">gl</a></li>
+                                <li><a href="../classes/GL.Buffer.html">GL.Buffer</a></li>
+                                <li><a href="../classes/GL.FBO.html">GL.FBO</a></li>
+                                <li><a href="../classes/GL.GL.html">GL.GL</a></li>
+                                <li><a href="../classes/GL.Indexer.html">GL.Indexer</a></li>
+                                <li><a href="../classes/GL.Mesh.html">GL.Mesh</a></li>
+                                <li><a href="../classes/GL.Octree.html">GL.Octree</a></li>
+                                <li><a href="../classes/GL.Shader.html">GL.Shader</a></li>
+                                <li><a href="../classes/GL.Texture.html">GL.Texture</a></li>
+                                <li><a href="../classes/LEvent.html">LEvent</a></li>
+                            </ul>
+                
+                
+                            <ul id="api-modules" class="apis modules">
+                                <li><a href="../modules/GL.html">GL</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="yui3-u-3-4">
                 <div id="api-options">
-        Show:
-        <label for="api-show-inherited">
-            <input type="checkbox" id="api-show-inherited" checked>
-            Inherited
-        </label>
-
-        <label for="api-show-protected">
-            <input type="checkbox" id="api-show-protected">
-            Protected
-        </label>
-
-        <label for="api-show-private">
-            <input type="checkbox" id="api-show-private">
-            Private
-        </label>
-        <label for="api-show-deprecated">
-            <input type="checkbox" id="api-show-deprecated">
-            Deprecated
-        </label>
-
-    </div>
-
-
+                    Show:
+                    <label for="api-show-inherited">
+                        <input type="checkbox" id="api-show-inherited" checked>
+                        Inherited
+                    </label>
+            
+                    <label for="api-show-protected">
+                        <input type="checkbox" id="api-show-protected">
+                        Protected
+                    </label>
+            
+                    <label for="api-show-private">
+                        <input type="checkbox" id="api-show-private">
+                        Private
+                    </label>
+                    <label for="api-show-deprecated">
+                        <input type="checkbox" id="api-show-deprecated">
+                        Deprecated
+                    </label>
+            
+                </div>
+            
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-                        <h1 class="file-heading">File: ../src/mesh.js</h1>
+<h1 class="file-heading">File: ../src/mesh.js</h1>
 
 <div class="file">
     <pre class="code prettyprint linenums">
+/**
+* @namespace GL
+*/
+
 /**
 * Indexer used to reuse vertices among a mesh
 * @class Indexer
@@ -139,7 +127,12 @@ GL.Indexer.prototype = {
 * @param {enum} stream_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW 
 */
 global.Buffer = GL.Buffer = function Buffer( target, data, spacing, stream_type, gl ) {
-	gl = gl || global.gl;
+	if(GL.debug)
+		console.log(&quot;GL.Buffer created&quot;);
+
+	if(gl !== null)
+		gl = gl || global.gl;
+
 	this.buffer = null; //webgl buffer
 	this.target = target;
 	this.gl = gl;
@@ -148,7 +141,7 @@ global.Buffer = GL.Buffer = function Buffer( target, data, spacing, stream_type,
 	this.data = data;
 	this.spacing = spacing || 3;
 
-	if(this.data)
+	if(this.data &amp;&amp; this.gl)
 		this.upload(stream_type);
 }
 
@@ -189,9 +182,11 @@ GL.Buffer.prototype.applyTransform = function(mat)
 * @method upload
 * @param {number} stream_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW 
 */
-GL.Buffer.prototype.upload = function(stream_type) { //default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW )
+GL.Buffer.prototype.upload = function( stream_type ) { //default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW )
 	var spacing = this.spacing || 3; //default spacing	
 	var gl = this.gl;
+	if(!gl)
+		return;
 
 	if(!this.data)
 		throw(&quot;No data supplied&quot;);
@@ -331,10 +326,16 @@ GL.Buffer.prototype.clone = function(share)
 * @param {WebGLContext} gl [Optional] gl context where to create the mesh
 * @constructor
 */
-global.Mesh = GL.Mesh = function Mesh(vertexbuffers, indexbuffers, options, gl)
+global.Mesh = GL.Mesh = function Mesh( vertexbuffers, indexbuffers, options, gl )
 {
-	gl = gl || global.gl;
-	this.gl = gl;
+	if(GL.debug)
+		console.log(&quot;GL.Mesh created&quot;);
+
+	if( gl !== null )
+	{
+		gl = gl || global.gl;
+		this.gl = gl;
+	}
 
 	//used to avoid problems with resources moving between different webgl context
 	this._context_id = gl.context_id; 
@@ -342,8 +343,11 @@ global.Mesh = GL.Mesh = function Mesh(vertexbuffers, indexbuffers, options, gl)
 	this.vertexBuffers = {};
 	this.indexBuffers = {};
 
+	this.info = null; //here you can store extra info, like groups, which is an array of { name, start, length, material }
+	this.bounding = null; //here you can store a AABB in BBox format
+
 	if(vertexbuffers || indexbuffers)
-		this.addBuffers(vertexbuffers, indexbuffers, options ? options.stream_type : null );
+		this.addBuffers( vertexbuffers, indexbuffers, options ? options.stream_type : null );
 
 	if(options)
 		for(var i in options)
@@ -396,7 +400,7 @@ Mesh.prototype.addBuffer = function(name, buffer)
 * @param {Object} indexBuffers object with all the indices streams
 * @param {enum} stream_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW )
 */
-Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers, stream_type)
+Mesh.prototype.addBuffers = function( vertexbuffers, indexbuffers, stream_type )
 {
 	var num_vertices = 0;
 
@@ -444,7 +448,7 @@ Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers, stream_type)
 		var attribute = &quot;a_&quot; + i;
 		if(stream_info &amp;&amp; stream_info.attribute)
 			attribute = stream_info.attribute;
-		this.createVertexBuffer( i, attribute, spacing, data, stream_type);
+		this.createVertexBuffer( i, attribute, spacing, data, stream_type );
 	}
 
 	if(indexbuffers)
@@ -459,10 +463,11 @@ Mesh.prototype.addBuffers = function(vertexbuffers, indexbuffers, stream_type)
 			}
 			if( typeof(data[0]) != &quot;number&quot;) //linearize
 			{
-				data = [];
-				for (var i = 0, chunk = 10000; i &lt; this.data.length; i += chunk) {
-				  data = Array.prototype.concat.apply(data, this.data.slice(i, i + chunk));
+				newdata = [];
+				for (var i = 0, chunk = 10000; i &lt; data.length; i += chunk) {
+				  newdata = Array.prototype.concat.apply(newdata, data.slice(i, i + chunk));
 				}
+				data = newdata;
 			}
 
 			//cast to typed
@@ -518,7 +523,7 @@ Mesh.prototype.createVertexBuffer = function(name, attribute, buffer_spacing, bu
 		throw(&quot;Buffer data MUST be typed array&quot;);
 
 	//used to ensure the buffers are held in the same gl context as the mesh
-	var buffer = this.vertexBuffers[name] = new GL.Buffer(gl.ARRAY_BUFFER, buffer_data, buffer_spacing, stream_type, this.gl );
+	var buffer = this.vertexBuffers[name] = new GL.Buffer( gl.ARRAY_BUFFER, buffer_data, buffer_spacing, stream_type, this.gl );
 	buffer.name = name;
 	buffer.attribute = attribute;
 
@@ -557,6 +562,21 @@ Mesh.prototype.getVertexBuffer = function(name)
 */
 Mesh.prototype.createIndexBuffer = function(name, buffer_data, stream_type) {
 	//(target, data, spacing, stream_type, gl)
+
+	//cast to typed
+	if(buffer_data.constructor === Array)
+	{
+		var datatype = Uint16Array;
+		var vertices = this.vertexBuffers[&quot;vertices&quot;];
+		if(vertices)
+		{
+			var num_vertices = vertices.data.length / 3;
+			if(num_vertices &gt; 256*256)
+				datatype = Uint32Array;
+			buffer_data = new datatype( buffer_data );
+		}
+	}
+
 	var buffer = this.indexBuffers[name] = new GL.Buffer(gl.ELEMENT_ARRAY_BUFFER, buffer_data, 0, stream_type, this.gl );
 	return buffer;
 }
@@ -864,7 +884,7 @@ Mesh.prototype.flipNormals = function( stream_type  ) {
 	normals_buffer.upload( stream_type );
 
 	//reverse indices too
-	if(!this.indexBuffers[&quot;triangles&quot;])
+	if(this.indexBuffers[&quot;triangles&quot;])
 		this.computeIndices();
 
 	var triangles_buffer = this.indexBuffers[&quot;triangles&quot;];
@@ -995,8 +1015,8 @@ Mesh.prototype.computeNormals = function( stream_type  ) {
 	if(this.indexBuffers[&quot;triangles&quot;])
 		triangles = this.indexBuffers[&quot;triangles&quot;].data;
 
-	var temp = vec3.create();
-	var temp2 = vec3.create();
+	var temp = GL.temp_vec3;
+	var temp2 = GL.temp2_vec3;
 
 	var i1,i2,i3,v1,v2,v3,n1,n2,n3;
 
@@ -1168,7 +1188,8 @@ Mesh.prototype.getNumVertices = function() {
 */
 Mesh.computeBounding = function( vertices, bb ) {
 
-	if(!vertices) return;
+	if(!vertices)
+		return;
 
 	var min = vec3.clone( vertices.subarray(0,3) );
 	var max = vec3.clone( vertices.subarray(0,3) );
@@ -1180,7 +1201,15 @@ Mesh.computeBounding = function( vertices, bb ) {
 		vec3.max( max,v, max);
 	}
 
-	var center = vec3.add(vec3.create(), min,max );
+	if( isNaN(min[0]) || isNaN(min[1]) || isNaN(min[2]) ||
+		isNaN(max[0]) || isNaN(max[1]) || isNaN(max[2]) )
+	{
+		min[0] = min[1] = min[2] = 0;
+		max[0] = max[1] = max[2] = 0;
+		console.warn(&quot;Warning: GL.Mesh has NaN values in vertices&quot;);
+	}
+
+	var center = vec3.add( vec3.create(), min,max );
 	vec3.scale( center, center, 0.5);
 	var half_size = vec3.subtract( vec3.create(), max, center );
 
@@ -1239,7 +1268,7 @@ Mesh.prototype.freeData = function()
 	}
 }
 
-Mesh.prototype.configure = function(o, options)
+Mesh.prototype.configure = function( o, options )
 {
 	var v = {};
 	var i = {};
@@ -1257,7 +1286,7 @@ Mesh.prototype.configure = function(o, options)
 			options[j] = o[j];
 	}
 
-	this.addBuffers(v, i);
+	this.addBuffers( v, i, options.stream_type );
 
 	for(var i in options)
 		this[i] = options[i];		
@@ -1336,14 +1365,16 @@ Mesh.prototype.simplify = function()
 * Static method for the class Mesh to create a mesh from a list of common streams
 * @method Mesh.load
 * @param {Object} buffers object will all the buffers
-* @param {Object} options
-* @param {Mesh} output_mesh optional mesh to store the mesh, otherwise is created
+* @param {Object} options [optional]
+* @param {Mesh} output_mesh [optional] mesh to store the mesh, otherwise is created
+* @param {WebGLContext} gl [optional] if omitted, the global.gl is used
 */
-Mesh.load = function(buffers, options, output_mesh) {
+Mesh.load = function( buffers, options, output_mesh, gl ) {
 	options = options || {};
-
-	var mesh = output_mesh || new GL.Mesh();
-	mesh.configure( buffers, options);
+	if(options.no_gl)
+		gl = null;
+	var mesh = output_mesh || new GL.Mesh(null,null,null,gl);
+	mesh.configure( buffers, options );
 	return mesh;
 }
 
@@ -1358,9 +1389,10 @@ Mesh.mergeMeshes = function( meshes, options )
 
 	var vertex_buffers = {};
 	var index_buffers = {};
-	var offsets = {};
+	var offsets = {}; //tells how many positions indices must be offseted
 	var vertex_offsets = [];
 	var current_vertex_offset = 0;
+	var groups = [];
 
 	//vertex buffers
 	//compute size
@@ -1368,8 +1400,10 @@ Mesh.mergeMeshes = function( meshes, options )
 	{
 		var mesh_info = meshes[i];
 		var mesh = mesh_info.mesh;
-		vertex_offsets.push( current_vertex_offset );
-		current_vertex_offset += mesh.vertexBuffers[&quot;vertices&quot;].data.length / 3;
+		var offset = current_vertex_offset;
+		vertex_offsets.push( offset );
+		var length = mesh.vertexBuffers[&quot;vertices&quot;].data.length / 3;
+		current_vertex_offset += length;
 
 		for(var j in mesh.vertexBuffers)
 		{
@@ -1386,6 +1420,16 @@ Mesh.mergeMeshes = function( meshes, options )
 			else
 				index_buffers[j] += mesh.indexBuffers[j].data.length;
 		}
+
+		//groups
+		var group = {
+			name: &quot;mesh_&quot; + i,
+			start: offset,
+			length: length,
+			material: &quot;&quot;
+		};
+
+		groups.push( group );
 	}
 
 	//allocate
@@ -1416,11 +1460,16 @@ Mesh.mergeMeshes = function( meshes, options )
 	{
 		var mesh_info = meshes[i];
 		var mesh = mesh_info.mesh;
+		var offset = 0;
+		var length = 0;
 
 		for(var j in mesh.vertexBuffers)
 		{
 			if(!vertex_buffers[j])
 				continue;
+
+			if(j == &quot;vertices&quot;)
+				length = mesh.vertexBuffers[j].data.length / 3;
 
 			vertex_buffers[j].set( mesh.vertexBuffers[j].data, offsets[j] );
 
@@ -1473,10 +1522,12 @@ Mesh.mergeMeshes = function( meshes, options )
 			array[i] += offset;
 	}
 
+	var extra = { info: { groups: groups } };
+
 	//return
 	if( typeof(gl) != &quot;undefined&quot; )
-		return new GL.Mesh( vertex_buffers,index_buffers );
-	return { vertexBuffers: vertex_buffers, indexBuffers: index_buffers };
+		return new GL.Mesh( vertex_buffers,index_buffers, extra );
+	return { vertexBuffers: vertex_buffers, indexBuffers: index_buffers, info: { groups: groups } };
 }
 
 
@@ -1511,30 +1562,45 @@ Mesh.fromURL = function(url, on_complete, gl, options)
 	return mesh;
 }
 
+/**
+* given some data an information about the format, it search for a parser in Mesh.parsers and tries to extract the mesh information
+* Only obj supported now
+* @method parse
+* @param {*} data could be string or ArrayBuffer
+* @param {String} format parser file format name (p.e. &quot;obj&quot;)
+* @return {?} depending on the parser
+*/
 Mesh.prototype.parse = function( data, format )
 {
 	format = format.toLowerCase();
 	var parser = GL.Mesh.parsers[ format ];
 	if(parser)
 		return parser.call(null, data, {mesh: this});
-	else
-		throw(&quot;GL.Mesh.parse: no parser found for format &quot; + format );
-	return null;
+	throw(&quot;GL.Mesh.parse: no parser found for format &quot; + format );
 }
 
+/**
+* It returns the mesh data encoded in the format specified
+* Only obj supported now
+* @method encode
+* @param {String} format to encode the data to (p.e. &quot;obj&quot;)
+* @return {?} String with the info
+*/
 Mesh.prototype.encode = function( format, options )
 {
 	format = format.toLowerCase();
 	var encoder = GL.Mesh.encoders[ format ];
 	if(encoder)
 		return encoder.call(null, this, options );
-	else
-		throw(&quot;GL.Mesh.encode: no encoder found for format &quot; + format );
-	return null;
+	throw(&quot;GL.Mesh.encode: no encoder found for format &quot; + format );
 }
 
-
-
+/**
+* Returns a shared mesh containing a quad to be used when rendering to the screen
+* Reusing the same quad helps not filling the memory
+* @method getScreenQuad
+* @return {GL.Mesh} the screen quad
+*/
 Mesh.getScreenQuad = function(gl)
 {
 	gl = gl || global.gl;
@@ -1550,7 +1616,6 @@ Mesh.getScreenQuad = function(gl)
 
     </pre>
 </div>
-
                     </div>
                 </div>
             </div>

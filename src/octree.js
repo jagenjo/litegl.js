@@ -1,4 +1,8 @@
 /**
+* @namespace GL
+*/
+
+/**
 *   Octree generator for fast ray triangle collision with meshes
 *	Dependencies: glmatrix.js (for vector and matrix operations)
 * @class Octree

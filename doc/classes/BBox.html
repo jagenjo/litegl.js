@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
-    <link rel="shortcut icon" type="image/png" href="../assets/favicon.png">
+    <link rel="icon" href="../assets/favicon.ico">
     <script src="http://yui.yahooapis.com/combo?3.9.1/build/yui/yui-min.js"></script>
 </head>
 <body class="yui3-skin-sam">
@@ -14,9 +14,7 @@
 <div id="doc">
     <div id="hd" class="yui3-g header">
         <div class="yui3-u-3-4">
-            
-                <h1><img src="../assets/css/logo.png" title=""></h1>
-            
+                <h1><img src="../assets/css/logo.png" title="" width="117" height="52"></h1>
         </div>
         <div class="yui3-u-1-4 version">
             <em>API Docs for: </em>
@@ -27,100 +25,80 @@
         <div class="yui3-u-1-4">
             <div id="docs-sidebar" class="sidebar apidocs">
                 <div id="api-list">
-    <h2 class="off-left">APIs</h2>
-    <div id="api-tabview" class="tabview">
-        <ul class="tabs">
-            <li><a href="#api-classes">Classes</a></li>
-            <li><a href="#api-modules">Modules</a></li>
-        </ul>
-
-        <div id="api-tabview-filter">
-            <input type="search" id="api-filter" placeholder="Type to filter APIs">
-        </div>
-
-        <div id="api-tabview-panel">
-            <ul id="api-classes" class="apis classes">
-            
-                <li><a href="../classes/BBox.html">BBox</a></li>
-            
-                <li><a href="../classes/Buffer.html">Buffer</a></li>
-            
-                <li><a href="../classes/FBO.html">FBO</a></li>
-            
-                <li><a href="../classes/geo.html">geo</a></li>
-            
-                <li><a href="../classes/gl.html">gl</a></li>
-            
-                <li><a href="../classes/GL.html">GL</a></li>
-            
-                <li><a href="../classes/Indexer.html">Indexer</a></li>
-            
-                <li><a href="../classes/LEvent.html">LEvent</a></li>
-            
-                <li><a href="../classes/Mesh.html">Mesh</a></li>
-            
-                <li><a href="../classes/Octree.html">Octree</a></li>
-            
-                <li><a href="../classes/Shader.html">Shader</a></li>
-            
-                <li><a href="../classes/Texture.html">Texture</a></li>
-            
-            </ul>
-
-            <ul id="api-modules" class="apis modules">
-            
-            </ul>
-        </div>
-    </div>
-</div>
-
+                    <h2 class="off-left">APIs</h2>
+                    <div id="api-tabview" class="tabview">
+                        <ul class="tabs">
+                            <li><a href="#api-classes">Classes</a></li>
+                            <li><a href="#api-modules">Modules</a></li>
+                        </ul>
+                
+                        <div id="api-tabview-filter">
+                            <input type="search" id="api-filter" placeholder="Type to filter APIs">
+                        </div>
+                
+                        <div id="api-tabview-panel">
+                            <ul id="api-classes" class="apis classes">
+                                <li><a href="../classes/BBox.html">BBox</a></li>
+                                <li><a href="../classes/geo.html">geo</a></li>
+                                <li><a href="../classes/gl.html">gl</a></li>
+                                <li><a href="../classes/GL.Buffer.html">GL.Buffer</a></li>
+                                <li><a href="../classes/GL.FBO.html">GL.FBO</a></li>
+                                <li><a href="../classes/GL.GL.html">GL.GL</a></li>
+                                <li><a href="../classes/GL.Indexer.html">GL.Indexer</a></li>
+                                <li><a href="../classes/GL.Mesh.html">GL.Mesh</a></li>
+                                <li><a href="../classes/GL.Octree.html">GL.Octree</a></li>
+                                <li><a href="../classes/GL.Shader.html">GL.Shader</a></li>
+                                <li><a href="../classes/GL.Texture.html">GL.Texture</a></li>
+                                <li><a href="../classes/LEvent.html">LEvent</a></li>
+                            </ul>
+                
+                
+                            <ul id="api-modules" class="apis modules">
+                                <li><a href="../modules/GL.html">GL</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="yui3-u-3-4">
                 <div id="api-options">
-        Show:
-        <label for="api-show-inherited">
-            <input type="checkbox" id="api-show-inherited" checked>
-            Inherited
-        </label>
-
-        <label for="api-show-protected">
-            <input type="checkbox" id="api-show-protected">
-            Protected
-        </label>
-
-        <label for="api-show-private">
-            <input type="checkbox" id="api-show-private">
-            Private
-        </label>
-        <label for="api-show-deprecated">
-            <input type="checkbox" id="api-show-deprecated">
-            Deprecated
-        </label>
-
-    </div>
-
-
+                    Show:
+                    <label for="api-show-inherited">
+                        <input type="checkbox" id="api-show-inherited" checked>
+                        Inherited
+                    </label>
+            
+                    <label for="api-show-protected">
+                        <input type="checkbox" id="api-show-protected">
+                        Protected
+                    </label>
+            
+                    <label for="api-show-private">
+                        <input type="checkbox" id="api-show-private">
+                        Private
+                    </label>
+                    <label for="api-show-deprecated">
+                        <input type="checkbox" id="api-show-deprecated">
+                        Deprecated
+                    </label>
+            
+                </div>
+            
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-                        <h1>BBox Class</h1>
+<h1>BBox Class</h1>
 <div class="box meta">
-    
 
-    
 
-    
         <div class="foundat">
-            Defined in: <a href="../files/.._src_geo.js.html#l634"><code>..&#x2F;src&#x2F;geo.js:634</code></a>
+            Defined in: <a href="../files/.._src_geo.js.html#l639"><code>..&#x2F;src&#x2F;geo.js:639</code></a>
         </div>
-    
 
-    
+            Module: <a href="../modules/GL.html">GL</a>
 
-    
 </div>
-
 
 
 <div class="box intro">
@@ -130,173 +108,102 @@ The bounding box is stored as center,halfsize,min,max,radius (total of 13 floats
 </div>
 
 
-
 <div id="classdocs" class="tabview">
     <ul class="api-class-tabs">
         <li class="api-class-tab index"><a href="#index">Index</a></li>
 
-        
             <li class="api-class-tab methods"><a href="#methods">Methods</a></li>
-        
-        
-        
-        
     </ul>
 
     <div>
         <div id="index" class="api-class-tabpanel index">
             <h2 class="off-left">Item Index</h2>
 
-            
                 <div class="index-section methods">
                     <h3>Methods</h3>
 
                     <ul class="index-list methods">
-                        
                             <li class="index-item method">
                                 <a href="#method_clone">clone</a>
 
-                                
-                                
                             </li>
-                        
                             <li class="index-item method">
                                 <a href="#method_copy">copy</a>
 
-                                
-                                
                             </li>
-                        
                             <li class="index-item method">
                                 <a href="#method_create">create</a>
 
-                                
-                                
                             </li>
-                        
                             <li class="index-item method">
                                 <a href="#method_fromCenterHalfsize">fromCenterHalfsize</a>
 
-                                
-                                
                             </li>
-                        
                             <li class="index-item method">
                                 <a href="#method_fromMinMax">fromMinMax</a>
 
-                                
-                                
                             </li>
-                        
                             <li class="index-item method">
                                 <a href="#method_fromPoint">fromPoint</a>
 
-                                
-                                
                             </li>
-                        
                             <li class="index-item method">
                                 <a href="#method_fromPoints">fromPoints</a>
 
-                                
-                                
                             </li>
-                        
                             <li class="index-item method">
                                 <a href="#method_getCorners">getCorners</a>
 
-                                
-                                
                             </li>
-                        
                             <li class="index-item method">
                                 <a href="#method_setCenterHalfsize">setCenterHalfsize</a>
 
-                                
-                                
                             </li>
-                        
                             <li class="index-item method">
                                 <a href="#method_setCenterHalfsize">setCenterHalfsize</a>
 
-                                
-                                
                             </li>
-                        
                             <li class="index-item method">
                                 <a href="#method_setFromPoints">setFromPoints</a>
 
-                                
-                                
                             </li>
-                        
                             <li class="index-item method">
                                 <a href="#method_setMinMax">setMinMax</a>
 
-                                
-                                
                             </li>
-                        
                     </ul>
                 </div>
-            
 
-            
 
-            
 
-            
         </div>
 
-        
             <div id="methods" class="api-class-tabpanel">
                 <h2 class="off-left">Methods</h2>
 
-                
-                    <div id="method_clone" class="method item">
+<div id="method_clone" class="method item">
     <h3 class="name"><code>clone</code></h3>
 
-    
         <span class="paren">()</span>
-    
 
-    
         <span class="returns-inline">
             <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>
         </span>
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
     <div class="meta">
-        
-            
-                
                 <p>
-                
                 Defined in
-                
-            
-        
-        
-        <a href="../files/.._src_geo.js.html#l660"><code>..&#x2F;src&#x2F;geo.js:660</code></a>
-        
+        <a href="../files/.._src_geo.js.html#l665"><code>..&#x2F;src&#x2F;geo.js:665</code></a>
         </p>
 
 
-        
 
-        
     </div>
 
     <div class="description">
@@ -304,88 +211,51 @@ The bounding box is stored as center,halfsize,min,max,radius (total of 13 floats
 
     </div>
 
-    
 
-    
         <div class="returns">
             <h4>Returns:</h4>
 
             <div class="returns-description">
-                
-                    
                         <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>:
-                    
                     <p>returns a float32array with the bbox</p>
 
-                
             </div>
         </div>
-    
 
-    
+
 </div>
-
-                
-                    <div id="method_copy" class="method item">
+<div id="method_copy" class="method item">
     <h3 class="name"><code>copy</code></h3>
 
-    
         <div class="args">
             <span class="paren">(</span><ul class="args-list inline commas">
-            
                 <li class="arg">
-                    
                         <code>out</code>
-                    
                 </li>
-            
                 <li class="arg">
-                    
                         <code>where</code>
-                    
                 </li>
-            
             </ul><span class="paren">)</span>
         </div>
-    
 
-    
         <span class="returns-inline">
             <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>
         </span>
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
     <div class="meta">
-        
-            
-                
                 <p>
-                
                 Defined in
-                
-            
-        
-        
-        <a href="../files/.._src_geo.js.html#l670"><code>..&#x2F;src&#x2F;geo.js:670</code></a>
-        
+        <a href="../files/.._src_geo.js.html#l675"><code>..&#x2F;src&#x2F;geo.js:675</code></a>
         </p>
 
 
-        
 
-        
     </div>
 
     <div class="description">
@@ -393,112 +263,70 @@ The bounding box is stored as center,halfsize,min,max,radius (total of 13 floats
 
     </div>
 
-    
         <div class="params">
             <h4>Parameters:</h4>
 
             <ul class="params-list">
-            
                 <li class="param">
-                    
                         <code class="param-name">out</code>
                         <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>
-                    
 
-                    
 
                     <div class="param-description">
                         <p>where to store the result</p>
 
                     </div>
 
-                    
                 </li>
-            
                 <li class="param">
-                    
                         <code class="param-name">where</code>
                         <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>
-                    
 
-                    
 
                     <div class="param-description">
                         <p>to read the bbox</p>
 
                     </div>
 
-                    
                 </li>
-            
             </ul>
         </div>
-    
 
-    
         <div class="returns">
             <h4>Returns:</h4>
 
             <div class="returns-description">
-                
-                    
                         <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>:
-                    
                     <p>returns out</p>
 
-                
             </div>
         </div>
-    
 
-    
+
 </div>
-
-                
-                    <div id="method_create" class="method item">
+<div id="method_create" class="method item">
     <h3 class="name"><code>create</code></h3>
 
-    
         <span class="paren">()</span>
-    
 
-    
         <span class="returns-inline">
             <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>
         </span>
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
     <div class="meta">
-        
-            
-                
                 <p>
-                
                 Defined in
-                
-            
-        
-        
-        <a href="../files/.._src_geo.js.html#l650"><code>..&#x2F;src&#x2F;geo.js:650</code></a>
-        
+        <a href="../files/.._src_geo.js.html#l655"><code>..&#x2F;src&#x2F;geo.js:655</code></a>
         </p>
 
 
-        
 
-        
     </div>
 
     <div class="description">
@@ -506,88 +334,51 @@ The bounding box is stored as center,halfsize,min,max,radius (total of 13 floats
 
     </div>
 
-    
 
-    
         <div class="returns">
             <h4>Returns:</h4>
 
             <div class="returns-description">
-                
-                    
                         <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>:
-                    
                     <p>returns a float32array with the bbox</p>
 
-                
             </div>
         </div>
-    
 
-    
+
 </div>
-
-                
-                    <div id="method_fromCenterHalfsize" class="method item">
+<div id="method_fromCenterHalfsize" class="method item">
     <h3 class="name"><code>fromCenterHalfsize</code></h3>
 
-    
         <div class="args">
             <span class="paren">(</span><ul class="args-list inline commas">
-            
                 <li class="arg">
-                    
                         <code>center</code>
-                    
                 </li>
-            
                 <li class="arg">
-                    
                         <code>halfsize</code>
-                    
                 </li>
-            
             </ul><span class="paren">)</span>
         </div>
-    
 
-    
         <span class="returns-inline">
             <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>
         </span>
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
     <div class="meta">
-        
-            
-                
                 <p>
-                
                 Defined in
-                
-            
-        
-        
-        <a href="../files/.._src_geo.js.html#l712"><code>..&#x2F;src&#x2F;geo.js:712</code></a>
-        
+        <a href="../files/.._src_geo.js.html#l717"><code>..&#x2F;src&#x2F;geo.js:717</code></a>
         </p>
 
 
-        
 
-        
     </div>
 
     <div class="description">
@@ -595,126 +386,77 @@ The bounding box is stored as center,halfsize,min,max,radius (total of 13 floats
 
     </div>
 
-    
         <div class="params">
             <h4>Parameters:</h4>
 
             <ul class="params-list">
-            
                 <li class="param">
-                    
                         <code class="param-name">center</code>
                         <span class="type">Vec3</span>
-                    
 
-                    
 
                     <div class="param-description">
                          
                     </div>
 
-                    
                 </li>
-            
                 <li class="param">
-                    
                         <code class="param-name">halfsize</code>
                         <span class="type">Vec3</span>
-                    
 
-                    
 
                     <div class="param-description">
                          
                     </div>
 
-                    
                 </li>
-            
             </ul>
         </div>
-    
 
-    
         <div class="returns">
             <h4>Returns:</h4>
 
             <div class="returns-description">
-                
-                    
                         <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>:
-                    
                     <p>returns a float32array with the bbox</p>
 
-                
             </div>
         </div>
-    
 
-    
+
 </div>
-
-                
-                    <div id="method_fromMinMax" class="method item">
+<div id="method_fromMinMax" class="method item">
     <h3 class="name"><code>fromMinMax</code></h3>
 
-    
         <div class="args">
             <span class="paren">(</span><ul class="args-list inline commas">
-            
                 <li class="arg">
-                    
                         <code>min</code>
-                    
                 </li>
-            
                 <li class="arg">
-                    
                         <code>max</code>
-                    
                 </li>
-            
             </ul><span class="paren">)</span>
         </div>
-    
 
-    
         <span class="returns-inline">
             <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>
         </span>
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
     <div class="meta">
-        
-            
-                
                 <p>
-                
                 Defined in
-                
-            
-        
-        
-        <a href="../files/.._src_geo.js.html#l698"><code>..&#x2F;src&#x2F;geo.js:698</code></a>
-        
+        <a href="../files/.._src_geo.js.html#l703"><code>..&#x2F;src&#x2F;geo.js:703</code></a>
         </p>
 
 
-        
 
-        
     </div>
 
     <div class="description">
@@ -722,120 +464,74 @@ The bounding box is stored as center,halfsize,min,max,radius (total of 13 floats
 
     </div>
 
-    
         <div class="params">
             <h4>Parameters:</h4>
 
             <ul class="params-list">
-            
                 <li class="param">
-                    
                         <code class="param-name">min</code>
                         <span class="type">Vec3</span>
-                    
 
-                    
 
                     <div class="param-description">
                          
                     </div>
 
-                    
                 </li>
-            
                 <li class="param">
-                    
                         <code class="param-name">max</code>
                         <span class="type">Vec3</span>
-                    
 
-                    
 
                     <div class="param-description">
                          
                     </div>
 
-                    
                 </li>
-            
             </ul>
         </div>
-    
 
-    
         <div class="returns">
             <h4>Returns:</h4>
 
             <div class="returns-description">
-                
-                    
                         <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>:
-                    
                     <p>returns a float32array with the bbox</p>
 
-                
             </div>
         </div>
-    
 
-    
+
 </div>
-
-                
-                    <div id="method_fromPoint" class="method item">
+<div id="method_fromPoint" class="method item">
     <h3 class="name"><code>fromPoint</code></h3>
 
-    
         <div class="args">
             <span class="paren">(</span><ul class="args-list inline commas">
-            
                 <li class="arg">
-                    
                         <code>point</code>
-                    
                 </li>
-            
             </ul><span class="paren">)</span>
         </div>
-    
 
-    
         <span class="returns-inline">
             <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>
         </span>
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
     <div class="meta">
-        
-            
-                
                 <p>
-                
                 Defined in
-                
-            
-        
-        
-        <a href="../files/.._src_geo.js.html#l683"><code>..&#x2F;src&#x2F;geo.js:683</code></a>
-        
+        <a href="../files/.._src_geo.js.html#l688"><code>..&#x2F;src&#x2F;geo.js:688</code></a>
         </p>
 
 
-        
 
-        
     </div>
 
     <div class="description">
@@ -843,105 +539,64 @@ The bounding box is stored as center,halfsize,min,max,radius (total of 13 floats
 
     </div>
 
-    
         <div class="params">
             <h4>Parameters:</h4>
 
             <ul class="params-list">
-            
                 <li class="param">
-                    
                         <code class="param-name">point</code>
                         <span class="type">Vec3</span>
-                    
 
-                    
 
                     <div class="param-description">
                          
                     </div>
 
-                    
                 </li>
-            
             </ul>
         </div>
-    
 
-    
         <div class="returns">
             <h4>Returns:</h4>
 
             <div class="returns-description">
-                
-                    
                         <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>:
-                    
                     <p>returns a float32array with the bbox</p>
 
-                
             </div>
         </div>
-    
 
-    
+
 </div>
-
-                
-                    <div id="method_fromPoints" class="method item">
+<div id="method_fromPoints" class="method item">
     <h3 class="name"><code>fromPoints</code></h3>
 
-    
         <div class="args">
             <span class="paren">(</span><ul class="args-list inline commas">
-            
                 <li class="arg">
-                    
                         <code>points</code>
-                    
                 </li>
-            
             </ul><span class="paren">)</span>
         </div>
-    
 
-    
         <span class="returns-inline">
             <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>
         </span>
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
     <div class="meta">
-        
-            
-                
                 <p>
-                
                 Defined in
-                
-            
-        
-        
-        <a href="../files/.._src_geo.js.html#l726"><code>..&#x2F;src&#x2F;geo.js:726</code></a>
-        
+        <a href="../files/.._src_geo.js.html#l731"><code>..&#x2F;src&#x2F;geo.js:731</code></a>
         </p>
 
 
-        
 
-        
     </div>
 
     <div class="description">
@@ -949,111 +604,67 @@ The bounding box is stored as center,halfsize,min,max,radius (total of 13 floats
 
     </div>
 
-    
         <div class="params">
             <h4>Parameters:</h4>
 
             <ul class="params-list">
-            
                 <li class="param">
-                    
                         <code class="param-name">points</code>
                         <span class="type">Float32Array</span>
-                    
 
-                    
 
                     <div class="param-description">
                          
                     </div>
 
-                    
                 </li>
-            
             </ul>
         </div>
-    
 
-    
         <div class="returns">
             <h4>Returns:</h4>
 
             <div class="returns-description">
-                
-                    
                         <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>:
-                    
                     <p>returns a float32array with the bbox</p>
 
-                
             </div>
         </div>
-    
 
-    
+
 </div>
-
-                
-                    <div id="method_getCorners" class="method item">
+<div id="method_getCorners" class="method item">
     <h3 class="name"><code>getCorners</code></h3>
 
-    
         <div class="args">
             <span class="paren">(</span><ul class="args-list inline commas">
-            
                 <li class="arg">
-                    
                         <code>bb</code>
-                    
                 </li>
-            
                 <li class="arg">
-                    
                         <code>result</code>
-                    
                 </li>
-            
             </ul><span class="paren">)</span>
         </div>
-    
 
-    
         <span class="returns-inline">
             <span class="type">Float32Array</span>
         </span>
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
     <div class="meta">
-        
-            
-                
                 <p>
-                
                 Defined in
-                
-            
-        
-        
-        <a href="../files/.._src_geo.js.html#l854"><code>..&#x2F;src&#x2F;geo.js:854</code></a>
-        
+        <a href="../files/.._src_geo.js.html#l859"><code>..&#x2F;src&#x2F;geo.js:859</code></a>
         </p>
 
 
-        
 
-        
     </div>
 
     <div class="description">
@@ -1061,140 +672,85 @@ The bounding box is stored as center,halfsize,min,max,radius (total of 13 floats
 
     </div>
 
-    
         <div class="params">
             <h4>Parameters:</h4>
 
             <ul class="params-list">
-            
                 <li class="param">
-                    
                         <code class="param-name">bb</code>
                         <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>
-                    
 
-                    
 
                     <div class="param-description">
                         <p>the bounding box</p>
 
                     </div>
 
-                    
                 </li>
-            
                 <li class="param">
-                    
                         <code class="param-name">result</code>
                         <span class="type">Float32Array</span>
-                    
 
-                    
 
                     <div class="param-description">
                         <p>optional, should be 8 * 3</p>
 
                     </div>
 
-                    
                 </li>
-            
             </ul>
         </div>
-    
 
-    
         <div class="returns">
             <h4>Returns:</h4>
 
             <div class="returns-description">
-                
-                    
                         <span class="type">Float32Array</span>:
-                    
                     <p>returns the 8 corners</p>
 
-                
             </div>
         </div>
-    
 
-    
+
 </div>
-
-                
-                    <div id="method_setCenterHalfsize" class="method item">
+<div id="method_setCenterHalfsize" class="method item">
     <h3 class="name"><code>setCenterHalfsize</code></h3>
 
-    
         <div class="args">
             <span class="paren">(</span><ul class="args-list inline commas">
-            
                 <li class="arg">
-                    
                         <code>out</code>
-                    
                 </li>
-            
                 <li class="arg">
-                    
                         <code>min</code>
-                    
                 </li>
-            
                 <li class="arg">
-                    
                         <code>max</code>
-                    
                 </li>
-            
                 <li class="arg">
-                    
                         <code>radius</code>
-                    
                 </li>
-            
             </ul><span class="paren">)</span>
         </div>
-    
 
-    
         <span class="returns-inline">
             <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>
         </span>
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
     <div class="meta">
-        
-            
-                
                 <p>
-                
                 Defined in
-                
-            
-        
-        
-        <a href="../files/.._src_geo.js.html#l800"><code>..&#x2F;src&#x2F;geo.js:800</code></a>
-        
+        <a href="../files/.._src_geo.js.html#l805"><code>..&#x2F;src&#x2F;geo.js:805</code></a>
         </p>
 
 
-        
 
-        
     </div>
 
     <div class="description">
@@ -1202,164 +758,102 @@ The bounding box is stored as center,halfsize,min,max,radius (total of 13 floats
 
     </div>
 
-    
         <div class="params">
             <h4>Parameters:</h4>
 
             <ul class="params-list">
-            
                 <li class="param">
-                    
                         <code class="param-name">out</code>
                         <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>
-                    
 
-                    
 
                     <div class="param-description">
                         <p>where to store the result</p>
 
                     </div>
 
-                    
                 </li>
-            
                 <li class="param">
-                    
                         <code class="param-name">min</code>
                         <span class="type">Vec3</span>
-                    
 
-                    
 
                     <div class="param-description">
                          
                     </div>
 
-                    
                 </li>
-            
                 <li class="param">
-                    
                         <code class="param-name">max</code>
                         <span class="type">Vec3</span>
-                    
 
-                    
 
                     <div class="param-description">
                          
                     </div>
 
-                    
                 </li>
-            
                 <li class="param">
-                    
                         <code class="param-name">radius</code>
                         <span class="type">Number</span>
-                    
 
-                    
 
                     <div class="param-description">
                         <p>[optional] (the minimum distance from the center to the further point)</p>
 
                     </div>
 
-                    
                 </li>
-            
             </ul>
         </div>
-    
 
-    
         <div class="returns">
             <h4>Returns:</h4>
 
             <div class="returns-description">
-                
-                    
                         <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>:
-                    
                     <p>returns out</p>
 
-                
             </div>
         </div>
-    
 
-    
+
 </div>
-
-                
-                    <div id="method_setCenterHalfsize" class="method item">
+<div id="method_setCenterHalfsize" class="method item">
     <h3 class="name"><code>setCenterHalfsize</code></h3>
 
-    
         <div class="args">
             <span class="paren">(</span><ul class="args-list inline commas">
-            
                 <li class="arg">
-                    
                         <code>out</code>
-                    
                 </li>
-            
                 <li class="arg">
-                    
                         <code>bb</code>
-                    
                 </li>
-            
                 <li class="arg">
-                    
                         <code>mat</code>
-                    
                 </li>
-            
             </ul><span class="paren">)</span>
         </div>
-    
 
-    
         <span class="returns-inline">
             <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>
         </span>
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
     <div class="meta">
-        
-            
-                
                 <p>
-                
                 Defined in
-                
-            
-        
-        
-        <a href="../files/.._src_geo.js.html#l827"><code>..&#x2F;src&#x2F;geo.js:827</code></a>
-        
+        <a href="../files/.._src_geo.js.html#l832"><code>..&#x2F;src&#x2F;geo.js:832</code></a>
         </p>
 
 
-        
 
-        
     </div>
 
     <div class="description">
@@ -1367,144 +861,90 @@ The bounding box is stored as center,halfsize,min,max,radius (total of 13 floats
 
     </div>
 
-    
         <div class="params">
             <h4>Parameters:</h4>
 
             <ul class="params-list">
-            
                 <li class="param">
-                    
                         <code class="param-name">out</code>
                         <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>
-                    
 
-                    
 
                     <div class="param-description">
                         <p>where to store the result</p>
 
                     </div>
 
-                    
                 </li>
-            
                 <li class="param">
-                    
                         <code class="param-name">bb</code>
                         <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>
-                    
 
-                    
 
                     <div class="param-description">
                         <p>bbox you want to transform</p>
 
                     </div>
 
-                    
                 </li>
-            
                 <li class="param">
-                    
                         <code class="param-name">mat</code>
                         <span class="type">Mat4</span>
-                    
 
-                    
 
                     <div class="param-description">
                         <p>transformation</p>
 
                     </div>
 
-                    
                 </li>
-            
             </ul>
         </div>
-    
 
-    
         <div class="returns">
             <h4>Returns:</h4>
 
             <div class="returns-description">
-                
-                    
                         <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>:
-                    
                     <p>returns out</p>
 
-                
             </div>
         </div>
-    
 
-    
+
 </div>
-
-                
-                    <div id="method_setFromPoints" class="method item">
+<div id="method_setFromPoints" class="method item">
     <h3 class="name"><code>setFromPoints</code></h3>
 
-    
         <div class="args">
             <span class="paren">(</span><ul class="args-list inline commas">
-            
                 <li class="arg">
-                    
                         <code>out</code>
-                    
                 </li>
-            
                 <li class="arg">
-                    
                         <code>points</code>
-                    
                 </li>
-            
             </ul><span class="paren">)</span>
         </div>
-    
 
-    
         <span class="returns-inline">
             <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>
         </span>
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
     <div class="meta">
-        
-            
-                
                 <p>
-                
                 Defined in
-                
-            
-        
-        
-        <a href="../files/.._src_geo.js.html#l739"><code>..&#x2F;src&#x2F;geo.js:739</code></a>
-        
+        <a href="../files/.._src_geo.js.html#l744"><code>..&#x2F;src&#x2F;geo.js:744</code></a>
         </p>
 
 
-        
 
-        
     </div>
 
     <div class="description">
@@ -1512,133 +952,81 @@ The bounding box is stored as center,halfsize,min,max,radius (total of 13 floats
 
     </div>
 
-    
         <div class="params">
             <h4>Parameters:</h4>
 
             <ul class="params-list">
-            
                 <li class="param">
-                    
                         <code class="param-name">out</code>
                         <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>
-                    
 
-                    
 
                     <div class="param-description">
                         <p>where to store the result</p>
 
                     </div>
 
-                    
                 </li>
-            
                 <li class="param">
-                    
                         <code class="param-name">points</code>
                         <span class="type">Float32Array</span>
-                    
 
-                    
 
                     <div class="param-description">
                          
                     </div>
 
-                    
                 </li>
-            
             </ul>
         </div>
-    
 
-    
         <div class="returns">
             <h4>Returns:</h4>
 
             <div class="returns-description">
-                
-                    
                         <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>:
-                    
                     <p>returns a float32array with the bbox</p>
 
-                
             </div>
         </div>
-    
 
-    
+
 </div>
-
-                
-                    <div id="method_setMinMax" class="method item">
+<div id="method_setMinMax" class="method item">
     <h3 class="name"><code>setMinMax</code></h3>
 
-    
         <div class="args">
             <span class="paren">(</span><ul class="args-list inline commas">
-            
                 <li class="arg">
-                    
                         <code>out</code>
-                    
                 </li>
-            
                 <li class="arg">
-                    
                         <code>min</code>
-                    
                 </li>
-            
                 <li class="arg">
-                    
                         <code>max</code>
-                    
                 </li>
-            
             </ul><span class="paren">)</span>
         </div>
-    
 
-    
         <span class="returns-inline">
             <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>
         </span>
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
-    
 
     <div class="meta">
-        
-            
-                
                 <p>
-                
                 Defined in
-                
-            
-        
-        
-        <a href="../files/.._src_geo.js.html#l769"><code>..&#x2F;src&#x2F;geo.js:769</code></a>
-        
+        <a href="../files/.._src_geo.js.html#l774"><code>..&#x2F;src&#x2F;geo.js:774</code></a>
         </p>
 
 
-        
 
-        
     </div>
 
     <div class="description">
@@ -1646,93 +1034,62 @@ The bounding box is stored as center,halfsize,min,max,radius (total of 13 floats
 
     </div>
 
-    
         <div class="params">
             <h4>Parameters:</h4>
 
             <ul class="params-list">
-            
                 <li class="param">
-                    
                         <code class="param-name">out</code>
                         <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>
-                    
 
-                    
 
                     <div class="param-description">
                         <p>where to store the result</p>
 
                     </div>
 
-                    
                 </li>
-            
                 <li class="param">
-                    
                         <code class="param-name">min</code>
                         <span class="type">Vec3</span>
-                    
 
-                    
 
                     <div class="param-description">
                          
                     </div>
 
-                    
                 </li>
-            
                 <li class="param">
-                    
                         <code class="param-name">max</code>
                         <span class="type">Vec3</span>
-                    
 
-                    
 
                     <div class="param-description">
                          
                     </div>
 
-                    
                 </li>
-            
             </ul>
         </div>
-    
 
-    
         <div class="returns">
             <h4>Returns:</h4>
 
             <div class="returns-description">
-                
-                    
                         <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>:
-                    
                     <p>returns out</p>
 
-                
             </div>
         </div>
-    
 
-    
+
 </div>
-
-                
             </div>
-        
 
-        
 
-        
 
-        
     </div>
 </div>
-
                     </div>
                 </div>
             </div>

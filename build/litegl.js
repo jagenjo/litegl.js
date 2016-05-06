@@ -7,6 +7,8 @@
 
 /**
 * The static module that contains all the features
+* @module GL
+* @namespace GL
 * @class GL
 */
 var GL = global.GL = {};
@@ -24,8 +26,11 @@ GL.MIDDLE_MOUSE_BUTTON = 2;
 GL.last_context_id = 0;
 
 
-//Define WEBGL ENUMS as statics
-//sometimes I need some gl enums before having the gl context, solution: define them globally because the specs says they are constant:
+//Define WEBGL ENUMS as statics (more to come in WebGL 2)
+//sometimes we need some gl enums before having the gl context, solution: define them globally because the specs says they are constant)
+
+GL.TEXTURE_2D = 3553;
+GL.TEXTURE_CUBE_MAP = 34067;
 
 GL.BYTE = 5120;
 GL.UNSIGNED_BYTE = 5121;
@@ -34,6 +39,26 @@ GL.UNSIGNED_SHORT = 5123;
 GL.INT = 5124;
 GL.UNSIGNED_INT = 5125;
 GL.FLOAT = 5126;
+GL.HALF_FLOAT_OES = 36193;
+GL.DEPTH_COMPONENT16 = 33189;
+
+GL.ALPHA = 6406;
+GL.RGB = 6407;
+GL.RGBA = 6408;
+GL.LUMINANCE = 6409;
+GL.LUMINANCE_ALPHA = 6410;
+GL.DEPTH_COMPONENT = 6402;
+
+GL.NEAREST = 9728;
+GL.LINEAR = 9729;
+GL.NEAREST_MIPMAP_NEAREST = 9984;
+GL.LINEAR_MIPMAP_NEAREST = 9985;
+GL.NEAREST_MIPMAP_LINEAR = 9986;
+GL.LINEAR_MIPMAP_LINEAR = 9987;
+
+GL.REPEAT = 10497;
+GL.CLAMP_TO_EDGE = 33071;
+GL.MIRRORED_REPEAT = 33648;
 
 GL.ZERO = 0;
 GL.ONE = 1;
@@ -54,6 +79,7 @@ GL.ONE_MINUS_CONSTANT_ALPHA = 32772;
 GL.temp_vec3 = vec3.create();
 GL.temp2_vec3 = vec3.create();
 GL.temp_vec4 = vec4.create();
+GL.temp_quat = quat.create();
 GL.temp_mat4 = mat4.create();
 
 
@@ -1657,6 +1683,10 @@ quat.fromMat4.lookAt = (function(){
 
 
 /**
+* @namespace GL
+*/
+
+/**
 * Indexer used to reuse vertices among a mesh
 * @class Indexer
 * @constructor
@@ -3176,6 +3206,10 @@ Mesh.getScreenQuad = function(gl)
 
 
 /**
+* @class Mesh
+*/
+
+/**
 * Returns a planar mesh (you can choose how many subdivisions)
 * @method Mesh.plane
 * @param {Object} options valid options: detail, detailX, detailY, size, width, heigth, xz (horizontal plane)
@@ -3767,20 +3801,24 @@ Mesh.icosahedron = function( options, gl ) {
 	return new GL.Mesh.load({vertices: vertices, coords: coords, normals: normals, triangles: indices},options,gl);
 }
 /**
-* Texture class to upload images to the GPU, default is gl.TEXTURE_2D, gl.RGBA of gl.UNSIGNED_BYTE with filters set to gl.LINEAR and wrap to gl.CLAMP_TO_EDGE
-	There is a list of options
-	==========================
-	- texture_type: gl.TEXTURE_2D, gl.TEXTURE_CUBE_MAP, default gl.TEXTURE_2D
-	- format: gl.RGB, gl.RGBA, gl.DEPTH_COMPONENT, default gl.RGBA
-	- type: gl.UNSIGNED_BYTE, gl.UNSIGNED_SHORT, gl.HALF_FLOAT_OES, gl.FLOAT, default gl.UNSIGNED_BYTE
-	- filter: filtering for mag and min: gl.NEAREST or gl.LINEAR, default gl.NEAREST
-	- magFilter: magnifying filter: gl.NEAREST, gl.LINEAR, default gl.NEAREST
-	- minFilter: minifying filter: gl.NEAREST, gl.LINEAR, gl.LINEAR_MIPMAP_LINEAR, default gl.NEAREST
-	- wrap: texture wrapping: gl.CLAMP_TO_EDGE, gl.REPEAT, gl.MIRROR, default gl.CLAMP_TO_EDGE (also accepts wrapT and wrapS for separate settings)
-	- pixel_data: ArrayBufferView with the pixel data to upload to the texture, otherwise the texture will be black
-	- premultiply_alpha : multiply the color by the alpha value when uploading, default FALSE
-	- no_flip : do not flip in Y, default TRUE
-	- anisotropic : number of anisotropic fetches, default 0
+* @namespace GL
+*/
+
+/**
+* Texture class to upload images to the GPU, default is gl.TEXTURE_2D, gl.RGBA of gl.UNSIGNED_BYTE with filters set to gl.LINEAR and wrap to gl.CLAMP_TO_EDGE <br/>
+	There is a list of options <br/>
+	========================== <br/>
+	- texture_type: gl.TEXTURE_2D, gl.TEXTURE_CUBE_MAP, default gl.TEXTURE_2D <br/>
+	- format: gl.RGB, gl.RGBA, gl.DEPTH_COMPONENT, default gl.RGBA <br/>
+	- type: gl.UNSIGNED_BYTE, gl.UNSIGNED_SHORT, gl.HALF_FLOAT_OES, gl.FLOAT, default gl.UNSIGNED_BYTE <br/>
+	- filter: filtering for mag and min: gl.NEAREST or gl.LINEAR, default gl.NEAREST <br/>
+	- magFilter: magnifying filter: gl.NEAREST, gl.LINEAR, default gl.NEAREST <br/>
+	- minFilter: minifying filter: gl.NEAREST, gl.LINEAR, gl.LINEAR_MIPMAP_LINEAR, default gl.NEAREST <br/>
+	- wrap: texture wrapping: gl.CLAMP_TO_EDGE, gl.REPEAT, gl.MIRROR, default gl.CLAMP_TO_EDGE (also accepts wrapT and wrapS for separate settings) <br/>
+	- pixel_data: ArrayBufferView with the pixel data to upload to the texture, otherwise the texture will be black <br/>
+	- premultiply_alpha : multiply the color by the alpha value when uploading, default FALSE <br/>
+	- no_flip : do not flip in Y, default TRUE <br/>
+	- anisotropic : number of anisotropic fetches, default 0 <br/>
 
 * @class Texture
 * @param {number} width texture width (any supported but Power of Two allows to have mipmaps), 0 means no memory reserved till its filled
@@ -3810,13 +3848,13 @@ global.Texture = GL.Texture = function Texture(width, height, options, gl) {
 	//set settings
 	this.width = width;
 	this.height = height;
-	this.format = options.format || gl.RGBA; //(if gl.DEPTH_COMPONENT remember format: gl.UNSIGNED_SHORT)
-	this.type = options.type || gl.UNSIGNED_BYTE; //gl.UNSIGNED_SHORT, gl.FLOAT or gl.HALF_FLOAT_OES (or gl.HIGH_PRECISION_FORMAT which could be half or float)
 	this.texture_type = options.texture_type || gl.TEXTURE_2D; //or gl.TEXTURE_CUBE_MAP
-	this.magFilter = options.magFilter || options.filter || gl.LINEAR;
-	this.minFilter = options.minFilter || options.filter || gl.LINEAR;
-	this.wrapS = options.wrap || options.wrapS || gl.CLAMP_TO_EDGE;
-	this.wrapT = options.wrap || options.wrapT || gl.CLAMP_TO_EDGE;
+	this.format = options.format || Texture.DEFAULT_FORMAT; //gl.RGBA (if gl.DEPTH_COMPONENT remember format: gl.UNSIGNED_SHORT)
+	this.type = options.type || Texture.DEFAULT_TYPE; //gl.UNSIGNED_BYTE, gl.UNSIGNED_SHORT, gl.FLOAT or gl.HALF_FLOAT_OES (or gl.HIGH_PRECISION_FORMAT which could be half or float)
+	this.magFilter = options.magFilter || options.filter || Texture.DEFAULT_MAG_FILTER;
+	this.minFilter = options.minFilter || options.filter || Texture.DEFAULT_MIN_FILTER;
+	this.wrapS = options.wrap || options.wrapS || Texture.DEFAULT_WRAP_S; 
+	this.wrapT = options.wrap || options.wrapT || Texture.DEFAULT_WRAP_T;
 
 	//precompute the max amount of texture units
 	if(!Texture.MAX_TEXTURE_IMAGE_UNITS)
@@ -3830,7 +3868,9 @@ global.Texture = GL.Texture = function Texture(width, height, options, gl) {
 		throw("Float Texture not supported");
 	if(this.type == gl.HALF_FLOAT_OES && !gl.extensions["OES_texture_half_float"])
 		throw("Half Float Texture not supported");
-	if(( (this.minFilter != gl.NEAREST && this.minFilter != gl.LINEAR) || this.wrapS != gl.CLAMP_TO_EDGE || this.wrapT != gl.CLAMP_TO_EDGE) && (!isPowerOfTwo(this.width) || !isPowerOfTwo(this.height)))
+	if( (!isPowerOfTwo(this.width) || !isPowerOfTwo(this.height)) && //non power of two
+		( (this.minFilter != gl.NEAREST && this.minFilter != gl.LINEAR) || //uses mipmaps
+		(this.wrapS != gl.CLAMP_TO_EDGE || this.wrapT != gl.CLAMP_TO_EDGE) ) ) //uses wrap
 	{
 		if(!options.ignore_pot)
 			throw("Cannot use texture-wrap or mipmaps in Non-Power-of-Two textures");
@@ -3885,6 +3925,13 @@ global.Texture = GL.Texture = function Texture(width, height, options, gl) {
 	}
 }
 
+Texture.DEFAULT_TYPE = GL.UNSIGNED_BYTE;
+Texture.DEFAULT_FORMAT = GL.RGBA;
+Texture.DEFAULT_MAG_FILTER = GL.LINEAR;
+Texture.DEFAULT_MIN_FILTER = GL.LINEAR;
+Texture.DEFAULT_WRAP_S = GL.CLAMP_TO_EDGE;
+Texture.DEFAULT_WRAP_T = GL.CLAMP_TO_EDGE;
+
 //used for render to FBOs
 Texture.framebuffer = null;
 Texture.renderbuffer = null;
@@ -3892,8 +3939,8 @@ Texture.loading_color = new Uint8Array([0,0,0,0]);
 Texture.use_renderbuffer_pool = true; //should improve performance
 
 /**
-* Free the texture memory, the handler is null
-* @method isDepthSupported
+* Free the texture memory from the GPU, sets the texture handler to null
+* @method delete
 */
 Texture.prototype.delete = function()
 {
@@ -3926,6 +3973,7 @@ Texture.prototype.toJSON = function()
 /**
 * Returns if depth texture is supported by the GPU
 * @method isDepthSupported
+* @return {Boolean} true if supported
 */
 Texture.isDepthSupported = function()
 {
@@ -5127,13 +5175,29 @@ Texture.prototype.toCanvas = function( canvas, flip_y, max_size )
 * @method toBlob
 * @return {Blob} the blob containing the data
 */
-Texture.prototype.toBlob = function(flip_y)
+Texture.prototype.toBlob = function(flip_y, type)
 {
 	//dump to canvas
 	var canvas = this.toCanvas(null,flip_y);
-	if(!canvas.toBlob)
-		throw "toBlob not supported on Canvas element";
-	return canvas.toBlob();
+	if(canvas.toBlob)
+	{
+		var blob = canvas.toBlob(null,type);
+		if(blob)
+			return blob;
+	}
+
+	//use the slow method
+	var data = this.toDataURL( type );
+	var index = data.indexOf(",");
+	var base64_data = data.substr(index+1);
+	var binStr = atob( base64_data );
+	var len = binStr.length,
+	arr = new Uint8Array(len);
+	for (var i=0; i<len; ++i ) {
+		arr[i] = binStr.charCodeAt(i);
+	}
+	var blob = new Blob( [arr], {type: type || 'image/png'} );
+	return blob;
 }
 
 /**
@@ -5150,7 +5214,7 @@ Texture.prototype.toBase64 = function( flip_y )
 	//Read pixels form WebGL
 	var buffer = this.getPixels();
 
-	//dump to canvas
+	//dump to canvas so we can encode it
 	var canvas = createCanvas(w,h);
 	var ctx = canvas.getContext("2d");
 	var pixels = ctx.getImageData(0,0,w,h);
@@ -5187,13 +5251,70 @@ Texture.prototype.generateMetadata = function()
 
 Texture.compareFormats = function(a,b)
 {
-	if(!a || !b) return false;
-	if(a == b) return true;
-	if(a.width != b.width || a.height != b.height || a.type != b.type || a.texture_type != b.texture_type) 
+	if(!a || !b) 
+		return false;
+	if(a == b) 
+		return true;
+
+	if( a.width != b.width || 
+		a.height != b.height || 
+		a.type != b.type || //gl.UNSIGNED_BYTE
+		a.format != b.format || //gl.RGB
+		a.texture_type != b.texture_type) //gl.TEXTURE_2D
 		return false;
 	return true;
 }
 
+/**
+* blends texture A and B and stores the result in OUT
+* @method blend
+* @param {Texture} a
+* @param {Texture} b
+* @param {Texture} out [optional]
+* @return {Object}
+*/
+Texture.blend = function( a, b, factor, out )
+{
+	if(!a || !b) 
+		return false;
+	if(a == b) 
+	{
+		if(out)
+			a.copyTo(out);
+		else
+			a.toViewport();
+		return true;
+	}
+
+	gl.disable( gl.BLEND );
+	gl.disable( gl.DEPTH_TEST );
+	gl.disable( gl.CULL_FACE );
+
+	var shader = GL.Shader.getBlendShader();
+	var mesh = GL.Mesh.getScreenQuad();
+	b.bind(1);
+	shader.uniforms({u_texture: 0, u_texture2: 1, u_factor: factor});
+
+	if(out)
+	{
+		out.drawTo( function(){
+			a.bind(0);
+			shader.draw( mesh, gl.TRIANGLES );
+		});
+		return true;
+	}
+
+	a.bind(0);
+	shader.draw( mesh, gl.TRIANGLES );
+	return true;
+}
+
+
+/**
+* returns a white texture of 1x1 pixel 
+* @method Texture.getWhiteTexture
+* @return {Texture} the white texture
+*/
 Texture.getWhiteTexture = function()
 {
 	var gl = this.gl;
@@ -5205,6 +5326,11 @@ Texture.getWhiteTexture = function()
 	return gl.textures[":white"] = new GL.Texture(1,1,{ pixel_data: color });
 }
 
+/**
+* returns a black texture of 1x1 pixel 
+* @method Texture.getBlackTexture
+* @return {Texture} the black texture
+*/
 Texture.getBlackTexture = function()
 {
 	var gl = this.gl;
@@ -5215,9 +5341,59 @@ Texture.getBlackTexture = function()
 	return gl.textures[":black"] = new GL.Texture(1,1,{ pixel_data: color });
 }
 
+
+/* Texture pool */
+Texture.getTemporary = function( width, height, options )
+{
+	if(!Texture.temporary_pool)
+		Texture.temporary_pool = [];
+
+	var pool = Texture.temporary_pool;
+	var result = null;
+
+	var texture_type = GL.TEXTURE_2D;
+	var type = Texture.DEFAULT_TYPE;
+	var format = Texture.DEFAULT_FORMAT;
+
+	if(options)
+	{
+		if(options.texture_type)
+			texture_type = options.texture_type;
+		if(options.type)
+			type = options.type;
+		if(options.format)
+			format = options.format;
+	}
+
+	for(var i = 0; i < pool.length; ++i)
+	{
+		var tex = pool[i];
+
+		if( tex.width != width || 
+			tex.height != height ||
+			tex.type != type ||
+			tex.texture_type != texture_type ||
+			tex.format != format )
+			continue;
+		pool.splice(i,1); //remove from the pool
+		return tex;
+	}
+
+	//not found, create it
+	var tex = new GL.Texture( width, height, { type: type, texture_type: texture_type, format: format });
+	return tex;
+}
+
+Texture.releaseTemporary = function( tex )
+{
+	if(!Texture.temporary_pool)
+		Texture.temporary_pool = [];
+	Texture.temporary_pool.push( tex );
+}
 /** 
 * FBO for FrameBufferObjects, FBOs are used to store the render inside one or several textures 
 * Supports multibuffer and depthbuffer texture, useful for deferred rendering
+* @namespace GL
 * @class FBO
 * @param {Array} color_textures an array containing the color textures, if not supplied a render buffer will be used
 * @param {GL.Texture} depth_texture the depth texture, if not supplied a render buffer will be used
@@ -5291,7 +5467,12 @@ FBO.prototype.setTextures = function( color_textures, depth_texture, skip_disabl
 	if( this.color_textures )
 		previously_attached = this.color_textures.length;
 
-	this.color_textures = color_textures || [];
+	//copy textures in place
+	this.color_textures.length = color_textures ? color_textures.length : 0;
+	if(color_textures)
+		for(var i = 0; i < color_textures.length; ++i)
+			this.color_textures[i] = color_textures[i];
+
 	this.depth_texture = depth_texture;
 
 	//compute the W and H (and check they have the same size)
@@ -5424,6 +5605,11 @@ FBO.prototype.unbind = function()
 }
 
 
+
+
+/**
+* @namespace GL
+*/
 
 /**
 * Shader class to upload programs to the GPU
@@ -6050,6 +6236,17 @@ Shader.SCREEN_COLORED_FRAGMENT_SHADER = "\n\
 			}\n\
 			";
 
+Shader.BLEND_FRAGMENT_SHADER = "\n\
+			precision highp float;\n\
+			uniform sampler2D u_texture;\n\
+			uniform sampler2D u_texture2;\n\
+			uniform float u_factor;\n\
+			varying vec2 v_coord;\n\
+			void main() {\n\
+				gl_FragColor = mix( texture2D(u_texture, v_coord), texture2D(u_texture2, v_coord), u_factor);\n\
+			}\n\
+			";
+
 Shader.SCREEN_FLAT_FRAGMENT_SHADER = "\n\
 			precision highp float;\n\
 			uniform vec4 u_color;\n\
@@ -6225,6 +6422,20 @@ Shader.getPartialQuadShader = function(gl)
 	if(shader)
 		return shader;
 	return gl.shaders[":quad2"] = new GL.Shader( Shader.QUAD_VERTEX_SHADER, Shader.QUAD2_FRAGMENT_SHADER );
+}
+
+/**
+* Returns a shader that blends two textures
+* shader must have: u_factor, u_texture, u_texture2
+* @method Shader.getBlendShader
+*/
+Shader.getBlendShader = function(gl)
+{
+	gl = gl || global.gl;
+	var shader = gl.shaders[":blend"];
+	if(shader)
+		return shader;
+	return gl.shaders[":blend"] = new GL.Shader( Shader.SCREEN_VERTEX_SHADER, Shader.BLEND_FRAGMENT_SHADER );
 }
 
 /**
@@ -7200,6 +7411,10 @@ GL.augmentEvent = function(e, root_element)
 }
 
 /**
+* @namespace 
+*/
+
+/**
 * LEvent is a lightweight events library focused in low memory footprint and fast delivery.
 * It works by creating a property called "__levents" inside the object that has the bindings, and storing arrays with all the bindings.
 * @class LEvent
@@ -7207,7 +7422,6 @@ GL.augmentEvent = function(e, root_element)
 */
 
 var LEvent = global.LEvent = GL.LEvent = {
-	//map: new Weakmap(),
 
 	/**
 	* Binds an event to an instance
@@ -7283,7 +7497,7 @@ var LEvent = global.LEvent = GL.LEvent = {
 	* @param {Object} instance where the events are binded
 	* @param {Object} target_instance [Optional] target_instance of the events to remove
 	**/
-	unbindAll: function( instance, target_instance )
+	unbindAll: function( instance, target_instance, callback )
 	{
 		if(!instance) 
 			throw("cannot unbind events in null");
@@ -7305,13 +7519,11 @@ var LEvent = global.LEvent = GL.LEvent = {
 			var array = events[i];
 			for(var j = array.length - 1; j >= 0; --j) //iterate backwards to avoid problems after removing
 			{
-				if( array[j][1] != target_instance ) 
+				if( array[j][1] != target_instance || (callback && callback !== array[j][0]) ) 
 					continue;
+
 				array.splice(j,1);//remove
 			}
-
-			//if(array.length == 0) //add two passes to avoid read and delete
-			//	delete events[i];
 		}
 	},
 
@@ -7468,182 +7680,82 @@ var LEvent = global.LEvent = GL.LEvent = {
 		}
 
 		return true;
-	}
-};
-
-// NOT FINISHED, STILL HAS SOME ISSUES TO SOLVE, TEST OR DELETE
-//There is a secondary implementation using WeakMap, this implementation clears the events from the objects
-//and moves them to one global object, so objects are not constantly changing, but I must test performance.
-/*
-if(global.WeakMap && 0)
-{
-	(function(){
-
-	//local scope
-	var map = new WeakMap;
-
-	LEvent.bind = function( instance, event_type, callback, target_instance )
-	{
-		if(!instance) 
-			throw("cannot bind event to null");
-		if(!callback) 
-			throw("cannot bind to null callback");
-		if(instance.constructor === String ) 
-			throw("cannot bind event to a string");
-		var name = event_type;
-
-		var obj = map[instance];
-		if(!obj)
-			obj = map[instance] = {};
-
-		if(obj.hasOwnProperty(name))
-			obj[name].push([callback,target_instance]);
-		else
-			obj[name] = [[callback,target_instance]];
-	}
-
-	LEvent.unbind = function( instance, event_type, callback, target_instance )
-	{
-		if(!instance) 
-			throw("cannot unbind event to null");
-		if(!callback) 
-			throw("cannot unbind from null callback");
-		if(instance.constructor === String ) 
-			throw("cannot bind event to a string");
-
-		var obj = map[instance];
-		if(!obj)
-			return;
-
-		var name = event_type;
-		if(!obj[name]) 
-			return;
-
-		for(var i = 0, l = obj[name].length; i < l; ++i)
-		{
-			var v = obj[name][i];
-			if(v[0] === callback && v[1] === target_instance)
-			{
-				obj[name].splice( i, 1);
-				break;
-			}
-		}
-
-		if (obj[name].length == 0)
-			delete obj[name];
 	},
 
-	LEvent.unbindAll = function(instance, target_instance)
+	extendObject: function( object )
 	{
-		if(!instance) 
-			throw("cannot unbind events in null");
-		if(!target_instance) //remove all
-		{
-			map.delete(instance);
-			return;
-		}
-
-		//remove only the target_instance
-		//for every property in the instance
-		var obj = map[instance];
-		if(!obj)
-			return;
-
-		for(var i in obj)
-		{
-			var array = obj[i];
-			for(var j=0; j < array.length; ++j)
+		object.on = function( event_type, callback, instance ){
+			if(!callback) 
+				throw("cannot bind to null callback");
+			var events = this.__levents;
+			if(!this)
 			{
-				if( array[j][1] != target_instance ) 
-					continue;
-				array.splice(j,1);//remove
-				--j;//iterate from the gap
+				Object.defineProperty( this, "__levents", {value: {}, enumerable: false });
+				events = this.__levents;
 			}
 
-			if(array.length == 0)
-				delete obj[i];
-		}
-	}
+			if( events.hasOwnProperty( event_type ) )
+				events[event_type].push([callback,instance]);
+			else
+				events[event_type] = [[callback,instance]];
+		};
 
-	LEvent.isBind = function( instance, event_type, callback, target_instance )
-	{
-		var name = event_type;
-		var obj = map[instance];
-		if(!obj || !obj.hasOwnProperty(name)) 
-			return false;
-		for(var i = 0, l = obj[name].length; i < l; ++i)
-		{
-			var v = obj[name][i];
-			if(v[0] === callback && v[1] === target_instance)
+		object.trigger = function( event_type, params ){
+			var events = this.__levents;
+			if( !events || !events.hasOwnProperty(event_type) )
 				return true;
-		}
-		return false;
-	}
 
-	LEvent.trigger = function( instance, event_type, params, skip_jquery )
-	{
-		if(!instance) 
-			throw("cannot trigger event from null");
-		if(instance.constructor === String ) 
-			throw("cannot bind event to a string");
-
-		
-
-		//you can resend the events as jQuery events, but to avoid collisions with system events, we use ":" at the begining
-		if(LEvent.jQuery && !skip_jquery)
-			$(instance).trigger( ":" + event_type, params );
-
-		var name = event_type;
-
-		var obj = map[instance];
-
-		if(!obj.hasOwnProperty(name)) 
-			return;
-		var inst = obj[name];
-		for(var i = 0, l = inst.length; i < l; ++i)
-		{
-			var v = inst[i];
-			if( v[0].call(v[1], event_type, params) == false)// || event.stop)
-				break; //stopPropagation
-		}
-	}
-
-	LEvent.triggerArray = function( instances, event_type, params, skip_jquery )
-	{
-		for(var i = 0, l = instances.length; i < l; ++i)
-		{
-			var instance = instances[i];
-			if(!instance) 
-				throw("cannot trigger event from null");
-			if(instance.constructor === String ) 
-				throw("cannot bind event to a string");
-
-			var obj = map[instance];
-
-			//you can resend the events as jQuery events, but to avoid collisions with system events, we use ":" at the begining
-			if(LEvent.jQuery && !skip_jquery) 
-				$(instance).trigger( ":" + event_type, params );
-
-			var name = event_type;
-			if(!obj.hasOwnProperty(name)) 
-				continue;
-			for(var j = 0, l = obj[name].length; j < l; ++j)
+			var inst = events[event_type];
+			for(var i = 0, l = inst.length; i < l; ++i)
 			{
-				var v = obj[name][j];
-				if( v[0].call(v[1], event_type, params) == false)// || event.stop)
-					break; //stopPropagation
+				var v = inst[i];
+				if( v && v[0].call(v[1], event_type, params) == false)// || event.stop)
+					return false; //stopPropagation
 			}
+			return true;
+		};
+
+		object.unbind = function( event_type, callback, target_instance )
+		{
+			if(!callback) 
+				throw("cannot unbind from null callback");
+			var events = this.__levents;
+			if(!events)
+				return;
+
+			if(!events.hasOwnProperty( event_type ))
+				return;
+
+			for(var i = 0, l = events[event_type].length; i < l; ++i)
+			{
+				var v = events[event_type][i];
+				if(v[0] === callback && v[1] === target_instance)
+				{
+					events[event_type].splice( i, 1 );
+					break;
+				}
+			}
+
+			if (events[event_type].length == 0)
+				delete events[event_type];
 		}
+	},
+
+	extendClass: function( constructor )
+	{
+		this.extendObject( constructor.prototype );
 	}
 
-
-	})(); //local scope end
-}
-*/
+};
 /* geometric utilities */
 global.CLIP_INSIDE = GL.CLIP_INSIDE = 0;
 global.CLIP_OUTSIDE = GL.CLIP_OUTSIDE = 1;
 global.CLIP_OVERLAP = GL.CLIP_OVERLAP = 2;
+
+/**
+* @namespace
+*/
+
 
 /**
 * Computational geometry algorithms, is a static class
@@ -8588,6 +8700,10 @@ global.planeBoxOverlap = GL.planeBoxOverlap = function planeBoxOverlap(plane, bo
 	else if (distance <= radius) return CLIP_OVERLAP;
 	else return CLIP_INSIDE;
 }
+
+/**
+* @namespace GL
+*/
 
 /**
 *   Octree generator for fast ray triangle collision with meshes
