@@ -71,7 +71,12 @@ GL.create = function(options) {
 		if(v) { v[0] = gl.viewport_data[0]; v[1] = gl.viewport_data[1]; v[2] = gl.viewport_data[2]; v[3] = gl.viewport_data[3]; return v; }
 		return new Float32Array( gl.viewport_data );
 	};
-	gl.setViewport = function(v) { gl.viewport_data.set(v); this._viewport_func(v[0],v[1],v[2],v[3]); };
+	gl.setViewport = function( v, flip_y ) {
+		gl.viewport_data.set(v);
+		if(flip_y)
+			gl.viewport_data[1] = this.drawingBufferHeight-v[1]-v[3];
+		this._viewport_func(v[0],gl.viewport_data[1],v[2],v[3]);
+	};
 	
 	//just some checks
 	if(typeof(glMatrix) == "undefined")
@@ -318,7 +323,7 @@ GL.create = function(options) {
 	//translates touch events in mouseevents
 	function ontouch(e)
 	{
-		var touches = event.changedTouches,
+		var touches = e.changedTouches,
 			first = touches[0],
 			type = "";
 
@@ -329,7 +334,7 @@ GL.create = function(options) {
 		if(touches > 1)
 			return;
 
-		 switch(event.type)
+		 switch(e.type)
 		{
 			case "touchstart": type = "mousedown"; break;
 			case "touchmove":  type = "mousemove"; break;        
@@ -343,7 +348,7 @@ GL.create = function(options) {
 								  first.clientX, first.clientY, false,
 								  false, false, false, 0/*left*/, null);
 		first.target.dispatchEvent(simulatedEvent);
-		event.preventDefault();
+		e.preventDefault();
 	}
 
 	function ongesture(e)
