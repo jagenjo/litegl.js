@@ -20,8 +20,8 @@ GL.blockable_keys = {"Up":true,"Down":true,"Left":true,"Right":true};
 
 //some consts
 GL.LEFT_MOUSE_BUTTON = 1;
-GL.RIGHT_MOUSE_BUTTON = 3;
 GL.MIDDLE_MOUSE_BUTTON = 2;
+GL.RIGHT_MOUSE_BUTTON = 3;
 GL.last_context_id = 0;
 
 
