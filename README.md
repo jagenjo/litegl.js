@@ -2,6 +2,28 @@ litegl.js
 =========
 
 Litegl.js is a library that wraps WebGL to make it more user-friendly by creating classes for managing different items like Buffer, Mesh, Texture, Shader and other common aspects of any WebGL applications.
+
+It helps simplifying working with WebGL without having to handle all the low-level calls but without loosing any freedom.
+
+Some features are:
+
+* Easy context creation
+* Classes for: 
+	- *Meshes and Buffers*: Fill a buffer easily and upload it to the GPU
+	- *Textures*: load, fill, clone, copy (even blur) for TEXTURE_2D and TEXTURE_CUBE_MAP
+	- *Shaders*: compile from string, from file, insert preprocessor macros, extracts all the uniform locations 
+	- *FrameBufferObjects*: to render to a texture, to multiple textures, to depth texture.
+* Some basic primitive shapes (plane, cube, sphere, cylinder, hemisphere).
+* OBJ parser and encoder (easy to add new ones)
+* Loaders for Images and Meshes from URL (uses a placeholder till its loaded)
+* Uses typed-arrays for everything (uses glMatrix for all operations)
+* No garbage generated (reuses containers)
+* Basic Raytracing (for ray-sphere and ray-plane collision)
+* Events system 
+* Cross-browser input handling for mouse, keyboard and gamepad
+* Supports multiple WebGL contexts
+* Octree class
+
 It is a fork from [LightGL.js](https://github.com/evanw/lightgl.js/) by [Evan Wallace](http://madebyevan.com), but some major changes have been made.
 Some of the main differences:
 
