@@ -9,6 +9,7 @@ global.HitTest = GL.HitTest = function HitTest(t, hit, normal) {
   this.t = arguments.length ? t : Number.MAX_VALUE;
   this.hit = hit;
   this.normal = normal;
+  this.face = null;
 }
 
 // ### .mergeWith(other)
@@ -20,6 +21,7 @@ HitTest.prototype = {
       this.t = other.t;
       this.hit = other.hit;
       this.normal = other.normal;
+	  this.face = other.face;
     }
   }
 };

@@ -199,24 +199,28 @@ global.extendClass = GL.extendClass = function extendClass( target, origin ) {
 	}
 
 	if(origin.prototype) //copy prototype properties
-		for(var i in origin.prototype) //only enumerables
+	{
+		var prop_names = Object.getOwnPropertyNames( origin.prototype );
+		for(var i = 0; i < prop_names.length; ++i) //only enumerables
 		{
-			if(!origin.prototype.hasOwnProperty(i)) 
-				continue;
+			var name = prop_names[i];
+			//if(!origin.prototype.hasOwnProperty(name)) 
+			//	continue;
 
-			if(target.prototype.hasOwnProperty(i)) //avoid overwritting existing ones
+			if(target.prototype.hasOwnProperty(name)) //avoid overwritting existing ones
 				continue;
 
 			//copy getters 
-			if(origin.prototype.__lookupGetter__(i))
-				target.prototype.__defineGetter__(i, origin.prototype.__lookupGetter__(i));
+			if(origin.prototype.__lookupGetter__(name))
+				target.prototype.__defineGetter__(name, origin.prototype.__lookupGetter__(name));
 			else 
-				target.prototype[i] = origin.prototype[i];
+				target.prototype[name] = origin.prototype[name];
 
 			//and setters
-			if(origin.prototype.__lookupSetter__(i))
-				target.prototype.__defineSetter__(i, origin.prototype.__lookupSetter__(i));
+			if(origin.prototype.__lookupSetter__(name))
+				target.prototype.__defineSetter__(name, origin.prototype.__lookupSetter__(name));
 		}
+	}
 
 	if(!target.hasOwnProperty("superclass")) 
 		Object.defineProperty(target, "superclass", {
@@ -381,6 +385,33 @@ global.hexColorToRGBA = (function() {
 		transparent: [0,0,0,0]
 	};
 
+	function hue2rgb( p, q, t ){
+		if(t < 0) t += 1;
+		if(t > 1) t -= 1;
+		if(t < 1/6) return p + (q - p) * 6 * t;
+		if(t < 1/2) return q;
+		if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+		return p;
+	}
+
+	function hslToRgb( h, s, l, out ){
+		var r, g, b;
+		out = out || vec3.create();
+		if(s == 0){
+			r = g = b = l; // achromatic
+		}else{
+			var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+			var p = 2 * l - q;
+			r = hue2rgb(p, q, h + 1/3);
+			g = hue2rgb(p, q, h);
+			b = hue2rgb(p, q, h - 1/3);
+		}
+		out[0] = r;
+		out[1] = g;
+		out[2] = b;
+		return out;
+	}
+
 	return function( hex, color, alpha )
 	{
 	alpha = (alpha === undefined ? 1 : alpha);
@@ -416,6 +447,16 @@ global.hexColorToRGBA = (function() {
 		return color;
 	}
 
+	var pos = hex.indexOf("hsla(");
+	if(pos != -1)
+	{
+		var str = hex.substr(5);
+		str = str.split(",");
+		hslToRgb( parseInt( str[0] ) / 360, parseInt( str[1] ) / 100, parseInt( str[2] ) / 100, color );
+		color[3] = parseFloat( str[3] ) * alpha;
+		return color;
+	}
+
 	color[3] = alpha;
 
 	//rgb colors
@@ -429,6 +470,16 @@ global.hexColorToRGBA = (function() {
 		color[2] = parseInt( str[2] ) / 255;
 		return color;
 	}
+
+	var pos = hex.indexOf("hsl(");
+	if(pos != -1)
+	{
+		var str = hex.substr(5);
+		str = str.split(",");
+		hslToRgb( parseInt( str[0] ) / 360, parseInt( str[1] ) / 100, parseInt( str[2] ) / 100, color );
+		return color;
+	}
+
 
 	//the rest
 	// Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")

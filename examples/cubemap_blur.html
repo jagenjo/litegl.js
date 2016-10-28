@@ -37,7 +37,7 @@
 
 		//build the mesh
 		var mesh = GL.Mesh.sphere({size:10, subdivisions: 32});
-		var texture = GL.Texture.cubemapFromURL("cross-cubemap.png",{temp_color:[80,80,80,255], is_cross: 1, minFilter: gl.NEAREST });
+		var texture = GL.Texture.cubemapFromURL("cross-skybox.jpg",{temp_color:[80,80,80,255], is_cross: 1, minFilter: gl.NEAREST });
 		var blur_texture = null;
 
 		//create basic matrices for cameras and transformation
@@ -138,9 +138,14 @@
 			console.log(error);
 		}
 
-		function blurCubemap( e )
+		window.blurCubemap = function blurCubemap(num)
 		{
-			var num = parseInt( this.dataset["num"] ) || 1;
+			num = parseInt(num);
+			if(num == -1)
+			{
+				texture = texture.clone();
+				return;
+			}
 			
 			if(!blur_texture)
 				blur_texture = texture.clone();
@@ -152,7 +157,7 @@
 			}
 		}
 
-		function toCross()
+		window.toCross = function toCross()
 		{
 			var canvas = texture.toCanvas();
 			var a = document.createElement("a");
@@ -163,21 +168,17 @@
 			var new_window = window.open();
 			new_window.document.body.appendChild(a);
 		}
-
-		var blurs = document.querySelectorAll("button.blur");
-		for(var i = 0; i < blurs.length; i++)
-			blurs[i].addEventListener("click", blurCubemap );
-		document.querySelector("button.tocross").addEventListener("click", toCross );
 	}	
 	
 	</script>
 </head>
 <body>
 	<div class="tools">
-		<button class="blur" data-num="5">Blur +1</button>
-		<button class="blur" data-num="10">Blur +10</button>
-		<button class="blur" data-num="20">Blur +20</button>
-		<button class="tocross">To Cross Image</button>
+		<button onclick="blurCubemap(5);">Blur +5</button>
+		<button onclick="blurCubemap(5);">Blur +10</button>
+		<button onclick="blurCubemap(5);">Blur +20</button>
+		<button onclick="blurCubemap(-1);">Clone</button>
+		<button onclick="toCross();">To Cross</button>
 	</div>
 	<script>init();</script>
 </body>

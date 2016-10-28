@@ -191,6 +191,7 @@ Octree.prototype.computeAABB = function(vertices)
 	return {min: min, max: max, size: vec3.sub( vec3.create(), max, min) };
 }
 
+//remove empty nodes
 Octree.prototype.trim = function(node)
 {
 	node = node || this.root;
@@ -300,6 +301,7 @@ Octree.testRayInNode = function( node, origin, direction )
 			test = Octree.hitTestTriangle( origin, direction, face.subarray(0,3) , face.subarray(3,6), face.subarray(6,9) );
 			if (test==null)
 				continue;
+			test.face = face;
 			if(prev_test)
 				prev_test.mergeWith( test );
 			else

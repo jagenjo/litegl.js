@@ -32,7 +32,7 @@ GL.Indexer.prototype = {
 * @param {number} spacing number of numbers per component (3 per vertex, 2 per uvs...), default 3
 * @param {enum} stream_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW 
 */
-global.Buffer = GL.Buffer = function Buffer( target, data, spacing, stream_type, gl ) {
+GL.Buffer = function Buffer( target, data, spacing, stream_type, gl ) {
 	if(GL.debug)
 		console.log("GL.Buffer created");
 

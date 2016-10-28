@@ -332,8 +332,14 @@ Shader.prototype.uniforms = function(uniforms) {
 	gl._current_shader = this;
 
 	for (var name in uniforms)
-		this.setUniform( name, uniforms[name] );
+	{
+		var info = this.uniformInfo[ name ];
+		if (!info)
+			continue;
+		this._setUniform( name, uniforms[name] );
+		//this.setUniform( name, uniforms[name] );
 		//this._assing_uniform(uniforms, name, gl );
+	}
 
 	return this;
 }//uniforms
@@ -372,10 +378,7 @@ Shader.prototype.setUniform = function(name, value)
 	if(info.loc === null)
 		return;
 
-	//if(info.loc.constructor !== Function)
-	//	return;
-
-	if(value == null) 
+	if(value == null) //strict?
 		return;
 
 	if(value.constructor === Array)
@@ -576,6 +579,38 @@ Shader.dumpErrorToConsole = function(err, vscode, fscode)
 	console.groupCollapsed("Shader code");
 	console.log( lines.join("\n") );
 	console.groupEnd();
+}
+
+//helps to check if a variable value is valid to an specific uniform in a shader
+Shader.validateValue = function( value, uniform_info )
+{
+	if(value === null || value === undefined)
+		return false;
+
+	switch (uniform_info.type)
+	{
+		//used to validate shaders
+		case GL.INT: 
+		case GL.FLOAT: 
+		case GL.SAMPLER_2D: 
+		case GL.SAMPLER_CUBE: 
+			return isNumber(value);
+		case GL.INT_VEC2: 
+		case GL.FLOAT_VEC2:
+			return value.length === 2;
+		case GL.INT_VEC3: 
+		case GL.FLOAT_VEC3:
+			return value.length === 3;
+		case GL.INT_VEC4: 
+		case GL.FLOAT_VEC4:
+		case GL.FLOAT_MAT2:
+			 return value.length === 4;
+		case GL.FLOAT_MAT3:
+			 return value.length === 8;
+		case GL.FLOAT_MAT4:
+			 return value.length === 16;
+	}
+	return true;
 }
 
 //**************** SHADERS ***********************************
@@ -879,14 +914,13 @@ Shader.getCubemapCopyShader = function(gl)
 			uniform mat3 u_rotation;\n\
 			void main() {\n\
 				vec2 uv = vec2( v_coord.x, 1.0 - v_coord.y );\n\
-				vec3 dir = vec3( uv - vec2(0.5), -0.5 );\n\
+				vec3 dir = vec3( uv - vec2(0.5), 0.5 );\n\
 				dir = u_rotation * dir;\n\
 			   gl_FragColor = textureCube( u_texture, dir );\n\
 			}\n\
 			");
 	return gl.shaders[":copy_cubemap"] = shader;
 }
-
 
 Shader.getCubemapBlurShader = function(gl)
 {
@@ -916,7 +950,7 @@ Shader.getCubemapBlurShader = function(gl)
 					for( int y = -2; y <= 2; y++ )\n\
 					{\n\
 						dir.xy = uv + vec2( u_offset.x * float(x), u_offset.y * float(y)) * 0.5;\n\
-						dir.z = -0.5;\n\
+						dir.z = 0.5;\n\
 						dir = u_rotation * dir;\n\
 						color = textureCube( u_texture, dir );\n\
 						color.xyz = color.xyz * color.xyz;/*linearize*/\n\
