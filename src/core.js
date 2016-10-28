@@ -33,6 +33,7 @@ GL.create = function(options) {
 	var gl = global.gl;
 
 	canvas.is_webgl = true;
+	canvas.gl = gl;
 	gl.context_id = this.last_context_id++;
 
 	//get some common extensions
