@@ -77,6 +77,23 @@ Shader.compileSource = function( type, source, gl, shader )
 	return shader;
 }
 
+Shader.parseError = function( error_str, vs_code, fs_code )
+{
+	if(!error_str)
+		return null;
+
+	var t = error_str.split(" ");
+	var nums = t[5].split(":");
+
+	return {
+		type: t[0],
+		line_number: parseInt( nums[1] ),
+		line_pos: parseInt( nums[0] ),
+		line_code: ( t[0] == "Fragment" ? fs_code : vs_code ).split("\n")[ parseInt( nums[1] ) ],
+		err: error_str
+	};
+}
+
 /**
 * It updates the code inside one shader
 * @method updateShader

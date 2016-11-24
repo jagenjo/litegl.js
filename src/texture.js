@@ -47,7 +47,7 @@ global.Texture = GL.Texture = function Texture( width, height, options, gl ) {
 	this.width = width;
 	this.height = height;
 	this.texture_type = options.texture_type || gl.TEXTURE_2D; //or gl.TEXTURE_CUBE_MAP
-	this.format = options.format || Texture.DEFAULT_FORMAT; //gl.RGBA (if gl.DEPTH_COMPONENT remember format: gl.UNSIGNED_SHORT)
+	this.format = options.format || Texture.DEFAULT_FORMAT; //gl.RGBA (if gl.DEPTH_COMPONENT remember type: gl.UNSIGNED_SHORT)
 	this.type = options.type || Texture.DEFAULT_TYPE; //gl.UNSIGNED_BYTE, gl.UNSIGNED_SHORT, gl.FLOAT or gl.HALF_FLOAT_OES (or gl.HIGH_PRECISION_FORMAT which could be half or float)
 	this.magFilter = options.magFilter || options.filter || Texture.DEFAULT_MAG_FILTER;
 	this.minFilter = options.minFilter || options.filter || Texture.DEFAULT_MIN_FILTER;
@@ -165,6 +165,13 @@ Texture.prototype.getProperties = function()
 	};
 }
 
+
+Texture.prototype.hasSameSize = function(t)
+{
+	if(!t)
+		return false;
+	return t.width == this.width && t.height == this.height;
+}
 //textures cannot be stored in JSON
 Texture.prototype.toJSON = function()
 {
@@ -722,8 +729,9 @@ Texture.prototype.toViewport = function(shader, uniforms)
 * Fills the texture with a constant color (uses gl.clear)
 * @method fill
 * @param {vec4} color rgba
+* @param {boolean} skip_mipmaps if true the mipmaps wont be updated
 */
-Texture.prototype.fill = function(color)
+Texture.prototype.fill = function(color, skip_mipmaps )
 {
 	var old_color = gl.getParameter( gl.COLOR_CLEAR_VALUE );
 	gl.clearColor( color[0], color[1], color[2], color[3] );
@@ -731,6 +739,12 @@ Texture.prototype.fill = function(color)
 		gl.clear( gl.COLOR_BUFFER_BIT );	
 	});
 	gl.clearColor( old_color[0], old_color[1], old_color[2], old_color[3] );
+
+	if (!skip_mipmaps && this.minFilter && this.minFilter != gl.NEAREST && this.minFilter != gl.LINEAR ) {
+		this.bind();
+		gl.generateMipmap( this.texture_type );
+		this.has_mipmaps = true;
+	}
 }
 
 /**

@@ -65,7 +65,7 @@
 	}
 
 	//set the camera position
-	mat4.perspective(proj, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 5, 1000);
+	mat4.perspective(proj, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 50, 1000);
 	mat4.lookAt(view, camera_position, [0,0,0], [0,1,0]);
 
 	//basic shader: renders the gbuffers

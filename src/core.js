@@ -19,12 +19,24 @@ GL.create = function(options) {
 			canvas = options.canvas;
 	}
 	else
+	{
+		var root = null;
+		if(options.container)
+			root = options.container.constructor === String ? document.querySelector( options.container ) : options.container;
+		if(root && !options.width)
+		{
+			var rect = root.getBoundingClientRect();
+			options.width = rect.width;
+			options.height = rect.height;
+		}
+
 		canvas = createCanvas(  options.width || 800, options.height || 600 );
+		if(root)
+			root.appendChild(canvas);
+	}
 
 	if (!('alpha' in options)) options.alpha = false;
-	try { global.gl = canvas.getContext('webgl', options); } catch (e) {}
-	try { global.gl = global.gl || canvas.getContext('experimental-webgl', options); } catch (e) {}
-	if (!global.gl) { throw 'WebGL not supported'; }
+
 
 	/**
 	* the webgl context returned by GL.create, its a WebGLRenderingContext with some extra methods added
@@ -32,6 +44,19 @@ GL.create = function(options) {
 	*/
 	var gl = global.gl;
 
+	if(options.webgl2)
+	{
+		try { gl = canvas.getContext('webgl2', options); gl.webgl_version = 2; } catch (e) {}
+		try { gl = gl || canvas.getContext('experimental-webgl2', options); gl.webgl_version = 2; } catch (e) {}
+	}
+	try { gl = gl || canvas.getContext('webgl', options); } catch (e) {}
+	try { gl = gl || canvas.getContext('experimental-webgl', options); } catch (e) {}
+	if (!gl) { throw 'WebGL not supported'; }
+
+	if(gl.webgl_version === undefined)
+		gl.webgl_version = 1;
+
+	global.gl = gl;
 	canvas.is_webgl = true;
 	canvas.gl = gl;
 	gl.context_id = this.last_context_id++;
@@ -825,8 +850,16 @@ GL.augmentEvent = function(e, root_element)
 			this.dragging = false;
 	}
 
-	e.deltax = e.mousex - this.last_pos[0];
-	e.deltay = e.mousey - this.last_pos[1];
+	if(e.movementX !== undefined) //pointer lock
+	{
+		e.deltax = e.movementX;
+		e.deltay = e.movementY;
+	}
+	else
+	{
+		e.deltax = e.mousex - this.last_pos[0];
+		e.deltay = e.mousey - this.last_pos[1];
+	}
 	this.last_pos[0] = e.mousex;
 	this.last_pos[1] = e.mousey;
 

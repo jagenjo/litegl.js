@@ -52,6 +52,49 @@ global.geo = {
 	},
 
 	/**
+	* Projects a 3D point on a 3D line
+	* @method projectPointOnLine
+	* @param {vec3} P
+	* @param {vec3} A line start
+	* @param {vec3} B line end
+	* @param {vec3} result to store result (optional)
+	* @return {vec3} projectec point
+	*/
+	projectPointOnLine: function( P, A, B, result )
+	{
+		result = result || vec3.create();
+		//A + dot(AP,AB) / dot(AB,AB) * AB
+		var AP = vec3.fromValues( P[0] - A[0], P[1] - A[1], P[2] - A[2]);
+		var AB = vec3.fromValues( B[0] - A[0], B[1] - A[1], B[2] - A[2]);
+		var div = vec3.dot(AP,AB) / vec3.dot(AB,AB);
+		result[0] = A[0] + div[0] * AB[0];
+		result[1] = A[1] + div[1] * AB[1];
+		result[2] = A[2] + div[2] * AB[2];
+		return result;
+	},
+
+	/**
+	* Projects a 2D point on a 2D line
+	* @method project2DPointOnLine
+	* @param {vec2} P
+	* @param {vec2} A line start
+	* @param {vec2} B line end
+	* @param {vec2} result to store result (optional)
+	* @return {vec2} projectec point
+	*/
+	project2DPointOnLine: function( P, A, B, result )
+	{
+		result = result || vec2.create();
+		//A + dot(AP,AB) / dot(AB,AB) * AB
+		var AP = vec2.fromValues(P[0] - A[0], P[1] - A[1]);
+		var AB = vec2.fromValues(B[0] - A[0], B[1] - A[1]);
+		var div = vec2.dot(AP,AB) / vec2.dot(AB,AB);
+		result[0] = A[0] + div[0] * AB[0];
+		result[1] = A[1] + div[1] * AB[1];
+		return result;
+	},
+
+	/**
 	* Projects point on plane
 	* @method projectPointOnPlane
 	* @param {vec3} point
