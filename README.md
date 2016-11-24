@@ -98,10 +98,13 @@ gl.ondraw = function() {
 gl.animate(); //calls the requestAnimFrame constantly, which will call ondraw
 ```
 
+For better understanding of all the features and how to use them check the [guides](guides) folder.
 
 Documentation
 -------------
 The doc folder contains the documentation. For info about [http://glmatrix.com](glMatrix) check the documentation in its website.
+
+Check the [guides](guides) folder to see how to use all the features.
 
 Utils
 -----
