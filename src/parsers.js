@@ -53,6 +53,15 @@ Mesh.parseOBJ = function(text, options)
 	var groups = [];
 	var materials_found = {};
 
+	var V_CODE = 1;
+	var VT_CODE = 2;
+	var VN_CODE = 3;
+	var F_CODE = 4;
+	var G_CODE = 5;
+	var O_CODE = 6;
+	var codes = { v: V_CODE, vt: VT_CODE, vn: VN_CODE, f: F_CODE, g: G_CODE, o: O_CODE };
+
+
 	var lines = text.split("\n");
 	var length = lines.length;
 	for (var lineIndex = 0;  lineIndex < length; ++lineIndex) {
@@ -62,30 +71,51 @@ Mesh.parseOBJ = function(text, options)
 		if(line == "") continue;
 
 		tokens = line.split(" ");
+		var code = codes[ tokens[0] ];
 
-		if(parsingFaces && tokens[0] == "v") //another mesh?
+		if(parsingFaces && code == V_CODE) //another mesh?
 		{
 			indices_offset = index;
 			parsingFaces = false;
+			//trace("multiple meshes: " + indices_offset);
 		}
 
-		if (tokens[0] == "v") {
+		//read and parse numbers
+		if( code <= VN_CODE ) //v,vt,vn
+		{
+			x = parseFloat(tokens[1]);
+			y = parseFloat(tokens[2]);
+			if( code != VT_CODE )
+			{
+				if(tokens[3] == '\\') //super weird case, OBJ allows to break lines with slashes...
+				{
+					//HACK! only works if the var is the thirth position...
+					++lineIndex;
+					line = lines[lineIndex].replace(/[ \t]+/g, " ").replace(/\s\s*$/, ""); //better than trim
+					z = parseFloat(line);
+				}
+				else
+					z = parseFloat(tokens[3]);
+			}
+		}
+
+		if (code == V_CODE) {
 			if(flip_axis) //maya and max notation style
-				positions.push(-1*parseFloat(tokens[1]),parseFloat(tokens[3]),parseFloat(tokens[2]));
+				positions.push(-1*x,z,y);
 			else
-				positions.push(parseFloat(tokens[1]),parseFloat(tokens[2]),parseFloat(tokens[3]));
+				positions.push(x,y,z);
 		}
-		else if (tokens[0] == "vt") {
-			texcoords.push(parseFloat(tokens[1]),parseFloat(tokens[2]));
+		else if (code == VT_CODE) {
+			texcoords.push(x,y);
 		}
-		else if (tokens[0] == "vn") {
+		else if (code == VN_CODE) {
 
 			if(flip_normals)  //maya and max notation style
-				normals.push(-parseFloat(tokens[2]),-parseFloat(tokens[3]),parseFloat(tokens[1]));
+				normals.push(-y,-z,x);
 			else
-				normals.push(parseFloat(tokens[1]),parseFloat(tokens[2]),parseFloat(tokens[3]));
+				normals.push(x,y,z);
 		}
-		else if (tokens[0] == "f") {
+		else if (code == F_CODE) {
 			parsingFaces = true;
 
 			if (tokens.length < 4) continue; //faces with less that 3 vertices? nevermind
@@ -195,7 +225,7 @@ Mesh.parseOBJ = function(text, options)
 				}
 			}
 		}
-		else if (tokens[0] == "g" || tokens[0] == "usemtl") {
+		else if (code == G_CODE || tokens[0] == "usemtl") {
 			negative_offset = positions.length / 3 - 1;
 
 			if(tokens.length > 1)

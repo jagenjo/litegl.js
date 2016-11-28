@@ -380,7 +380,9 @@ GL.create = function(options) {
 								  first.screenX, first.screenY,
 								  first.clientX, first.clientY, false,
 								  false, false, false, 0/*left*/, null);
-		first.target.dispatchEvent(simulatedEvent);
+		simulatedEvent.originalEvent = simulatedEvent;
+		simulatedEvent.is_touch = true;
+		first.target.dispatchEvent(simulatedEvent);		
 		e.preventDefault();
 	}
 
