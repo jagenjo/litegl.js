@@ -4277,6 +4277,16 @@ Texture.prototype.getProperties = function()
 	};
 }
 
+Texture.prototype.hasSameProperties = function(t)
+{
+	if(!t)
+		return false;
+	return t.width == this.width && 
+		t.height == this.height &&
+		t.type == this.type &&
+		t.format == this.format &&
+		t.texture_type == this.texture_type;
+}
 
 Texture.prototype.hasSameSize = function(t)
 {
@@ -4763,7 +4773,7 @@ Texture.prototype.copyTo = function( target_texture, shader, uniforms ) {
 	var gl = this.gl;
 
 	//save state
-	var current_fbo = gl.getParameter( gl.FRAMEBUFFER_BINDING );
+	var previous_fbo = gl.getParameter( gl.FRAMEBUFFER_BINDING );
 	var viewport = gl.getViewport(); 
 
 	if(!shader)
@@ -4784,8 +4794,43 @@ Texture.prototype.copyTo = function( target_texture, shader, uniforms ) {
 	gl.viewport(0,0,target_texture.width, target_texture.height);
 	if(this.texture_type == gl.TEXTURE_2D)
 	{
-		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, target_texture.handler, 0);
-		this.toViewport( shader );
+		if(this.format !== gl.DEPTH_COMPONENT && this.format !== gl.DEPTH_STENCIL )
+		{
+			gl.framebufferTexture2D( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, target_texture.handler, 0);
+			this.toViewport( shader );
+		}
+		else //copying a depth texture is harder
+		{
+			var color_renderbuffer = gl._color_renderbuffer = gl._color_renderbuffer || gl.createRenderbuffer();
+			var w = color_renderbuffer.width = target_texture.width;
+			var h = color_renderbuffer.height = target_texture.height;
+			
+			//attach color render buffer
+			gl.bindRenderbuffer( gl.RENDERBUFFER, color_renderbuffer );
+			gl.renderbufferStorage( gl.RENDERBUFFER, gl.RGBA4, w, h );
+			gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, color_renderbuffer );
+
+			//attach depth texture
+			var attachment_point = target_texture.format == gl.DEPTH_STENCIL ? gl.DEPTH_STENCIL_ATTACHMENT : gl.DEPTH_ATTACHMENT;
+			gl.framebufferTexture2D( gl.FRAMEBUFFER, attachment_point, gl.TEXTURE_2D, target_texture.handler, 0);
+
+			var complete = gl.checkFramebufferStatus( gl.FRAMEBUFFER );
+			if(complete !== gl.FRAMEBUFFER_COMPLETE)
+				throw("FBO not complete: " + complete);
+
+			//enable depth test?
+			gl.enable( gl.DEPTH_TEST );
+			gl.depthFunc( gl.ALWAYS );
+			gl.colorMask( false,false,false,false );
+			//call shader that overwrites depth values
+			shader = GL.Shader.getCopyDepthShader();
+			this.toViewport( shader );
+			gl.colorMask( true,true,true,true );
+			gl.disable( gl.DEPTH_TEST );
+			gl.depthFunc( gl.LEQUAL );
+			gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, null );
+			gl.framebufferTexture2D( gl.FRAMEBUFFER, attachment_point, gl.TEXTURE_2D, null, 0);
+		}
 	}
 	else if(this.texture_type == gl.TEXTURE_CUBE_MAP)
 	{
@@ -4806,7 +4851,7 @@ Texture.prototype.copyTo = function( target_texture, shader, uniforms ) {
 	
 	//restore previous state
 	gl.setViewport(viewport); //restore viewport
-	gl.bindFramebuffer( gl.FRAMEBUFFER, current_fbo ); //restore fbo
+	gl.bindFramebuffer( gl.FRAMEBUFFER, previous_fbo ); //restore fbo
 
 	//generate mipmaps when needed
 	if (target_texture.minFilter && target_texture.minFilter != gl.NEAREST && target_texture.minFilter != gl.LINEAR) {
@@ -4816,7 +4861,7 @@ Texture.prototype.copyTo = function( target_texture, shader, uniforms ) {
 	}
 
 	target_texture.data = null;
-	gl.bindTexture(target_texture.texture_type, null); //disable
+	gl.bindTexture( target_texture.texture_type, null ); //disable
 	return this;
 }
 
@@ -5810,7 +5855,7 @@ function FBO( textures, depth_texture, stencil, gl )
 		this.setTextures( textures, depth_texture );
 
 	//save state
-	this._old_fbo = null;
+	this._old_fbo_handler = null;
 	this._old_viewport = new Float32Array(4);
 }
 
@@ -5825,7 +5870,7 @@ GL.FBO = FBO;
 */
 FBO.prototype.setTextures = function( color_textures, depth_texture, skip_disable )
 {
-	if( depth_texture && 
+	if( depth_texture && depth_texture.constructor === GL.Texture &&
 		( (depth_texture.format !== gl.DEPTH_COMPONENT && depth_texture.format !== gl.DEPTH_STENCIL) || 
 		( depth_texture.type != gl.UNSIGNED_INT && depth_texture.type != GL.UNSIGNED_INT_24_8_WEBGL ) ) )
 		throw("FBO Depth texture must be of format: gl.DEPTH_COMPONENT and type: gl.UNSIGNED_INT");
@@ -5834,6 +5879,8 @@ FBO.prototype.setTextures = function( color_textures, depth_texture, skip_disabl
 	var same = this.depth_texture == depth_texture;
 	if( same && color_textures )
 	{
+		if( color_textures.constructor !== Array )
+			throw("FBO: color_textures parameter must be an array containing all the textures to be binded in the color");
 		if( color_textures.length == this.color_textures.length )
 		{
 			for(var i = 0; i < color_textures.length; ++i)
@@ -5872,7 +5919,7 @@ FBO.prototype.setTextures = function( color_textures, depth_texture, skip_disabl
 FBO.prototype.update = function( skip_disable )
 {
 	//save state to restore afterwards
-	this._old_fbo = gl.getParameter( gl.FRAMEBUFFER_BINDING );
+	this._old_fbo_handler = gl.getParameter( gl.FRAMEBUFFER_BINDING );
 
 	if(!this.handler)
 		this.handler = gl.createFramebuffer();
@@ -5889,6 +5936,8 @@ FBO.prototype.update = function( skip_disable )
 		for(var i = 0; i < color_textures.length; i++)
 		{
 			var t = color_textures[i];
+			if(t.constructor !== GL.Texture)
+				throw("FBO can only bind instances of GL.Texture");
 			if(w == -1) 
 				w = t.width;
 			else if(w != t.width)
@@ -5925,9 +5974,10 @@ FBO.prototype.update = function( skip_disable )
 
 	gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, null );
 	gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, null );
+	//detach color too?
 
 	//bind a buffer for the depth
-	if( depth_texture )
+	if( depth_texture && depth_texture.constructor === GL.Texture )
 	{
 		if(this.stencil && depth_texture.format !== gl.DEPTH_STENCIL )
 			console.warn("Stencil cannot be enabled if there is a depth texture with a DEPTH_STENCIL format");
@@ -5939,19 +5989,29 @@ FBO.prototype.update = function( skip_disable )
 	}
 	else //create a renderbuffer to store depth
 	{
-		var renderbuffer = this._renderbuffer = this._renderbuffer || gl.createRenderbuffer();
-		renderbuffer.width = w;
-		renderbuffer.height = h;
-		gl.bindRenderbuffer( gl.RENDERBUFFER, renderbuffer );
+		var depth_renderbuffer = null;
+		
+		//allows to reuse a renderbuffer between FBOs
+		if( depth_texture && depth_texture.constructor === WebGLRenderbuffer && depth_texture.width == w && depth_texture.height == h ) 
+			depth_renderbuffer = this._depth_renderbuffer = depth_texture;
+		else
+		{
+			//create one
+			depth_renderbuffer = this._depth_renderbuffer = this._depth_renderbuffer || gl.createRenderbuffer();
+			depth_renderbuffer.width = w;
+			depth_renderbuffer.height = h;
+		}
+		
+		gl.bindRenderbuffer( gl.RENDERBUFFER, depth_renderbuffer );
 		if(this.stencil)
 		{
 			gl.renderbufferStorage( gl.RENDERBUFFER, gl.DEPTH_STENCIL, w, h );
-			gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, renderbuffer );
+			gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, depth_renderbuffer );
 		}
 		else
 		{
 			gl.renderbufferStorage( gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, w, h );
-			gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer );
+			gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, depth_renderbuffer );
 		}
 	}
 
@@ -5969,12 +6029,12 @@ FBO.prototype.update = function( skip_disable )
 	}
 	else //create renderbuffer to store color
 	{
-		var renderbuffer = this._renderbuffer = this._renderbuffer || gl.createRenderbuffer();
-		renderbuffer.width = w;
-		renderbuffer.height = h;
-		gl.bindRenderbuffer( gl.RENDERBUFFER, renderbuffer );
+		var color_renderbuffer = this._color_renderbuffer = this._color_renderbuffer || gl.createRenderbuffer();
+		color_renderbuffer.width = w;
+		color_renderbuffer.height = h;
+		gl.bindRenderbuffer( gl.RENDERBUFFER, color_renderbuffer );
 		gl.renderbufferStorage( gl.RENDERBUFFER, gl.RGBA4, w, h );
-		gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, renderbuffer );
+		gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, color_renderbuffer );
 	}
 
 	//detach old ones (only if is reusing a FBO with a different set of textures)
@@ -6016,7 +6076,7 @@ FBO.prototype.update = function( skip_disable )
 	gl.bindTexture(gl.TEXTURE_2D, null);
 	gl.bindRenderbuffer(gl.RENDERBUFFER, null);
 	if(!skip_disable)
-		gl.bindFramebuffer( gl.FRAMEBUFFER, this._old_fbo );
+		gl.bindFramebuffer( gl.FRAMEBUFFER, this._old_fbo_handler );
 }
 
 /**
@@ -6032,12 +6092,19 @@ FBO.prototype.bind = function( keep_old )
 	this._old_viewport.set( gl.viewport_data );
 
 	if(keep_old)
-		this._old_fbo = gl.getParameter( gl.FRAMEBUFFER_BINDING );
+		this._old_fbo_handler = gl.getParameter( gl.FRAMEBUFFER_BINDING );
 	else
-		this._old_fbo = null;
+		this._old_fbo_handler = null;
 
-	if(this._old_fbo != this.handler )
+	if(this._old_fbo_handler != this.handler )
 		gl.bindFramebuffer( gl.FRAMEBUFFER, this.handler );
+
+	//mark them as in use in the FBO
+	for(var i = 0; i < this.color_textures.length; ++i)
+		this.color_textures[i]._in_current_fbo = true;
+	if(this.depth_texture)
+		this.depth_texture._in_current_fbo = true;
+
 	gl.viewport( 0,0, this.width, this.height );
 }
 
@@ -6048,10 +6115,37 @@ FBO.prototype.bind = function( keep_old )
 */
 FBO.prototype.unbind = function()
 {
-	gl.bindFramebuffer( gl.FRAMEBUFFER, this._old_fbo );
-	this._old_fbo = null;
-
+	gl.bindFramebuffer( gl.FRAMEBUFFER, this._old_fbo_handler );
+	this._old_fbo_handler = null;
 	gl.setViewport( this._old_viewport );
+
+	//mark the textures as no longer in use
+	for(var i = 0; i < this.color_textures.length; ++i)
+		this.color_textures[i]._in_current_fbo = false;
+	if(this.depth_texture)
+		this.depth_texture._in_current_fbo = false;
+}
+
+//binds another FBO without switch back to previous (faster)
+FBO.prototype.switchTo = function( next_fbo )
+{
+	next_fbo._old_fbo_handler = this._old_fbo_handler;
+	next_fbo._old_viewport.set( this._old_viewport );
+	gl.bindFramebuffer( gl.FRAMEBUFFER, next_fbo.handler );
+	this._old_fbo_handler = null;
+	gl.viewport( 0,0, this.width, this.height );
+
+	//mark the textures as no longer in use
+	for(var i = 0; i < this.color_textures.length; ++i)
+		this.color_textures[i]._in_current_fbo = false;
+	if(this.depth_texture)
+		this.depth_texture._in_current_fbo = false;
+
+	//mark them as in use in the FBO
+	for(var i = 0; i < next_fbo.color_textures.length; ++i)
+		next_fbo.color_textures[i]._in_current_fbo = true;
+	if(next_fbo.depth_texture)
+		next_fbo.depth_texture._in_current_fbo = true;
 }
 
 
@@ -6975,6 +7069,28 @@ Shader.getBlurShader = function(gl)
 	return gl.shaders[":blur"] = shader;
 }
 
+//shader to copy a depth texture into another one
+Shader.getCopyDepthShader = function(gl)
+{
+	gl = gl || global.gl;
+	var shader = gl.shaders[":copy_depth"];
+	if(shader)
+		return shader;
+
+	var shader = new GL.Shader( Shader.SCREEN_VERTEX_SHADER,"\n\
+			#extension GL_EXT_frag_depth : enable\n\
+			precision highp float;\n\
+			varying vec2 v_coord;\n\
+			uniform sampler2D u_texture;\n\
+			void main() {\n\
+			   gl_FragDepthEXT = texture2D( u_texture, v_coord ).x;\n\
+			   gl_FragColor = vec4(1.0);\n\
+			}\n\
+			");
+	return gl.shaders[":copy_depth"] = shader;
+}
+
+//shader to copy a cubemap into another 
 Shader.getCubemapCopyShader = function(gl)
 {
 	gl = gl || global.gl;
@@ -6997,6 +7113,7 @@ Shader.getCubemapCopyShader = function(gl)
 	return gl.shaders[":copy_cubemap"] = shader;
 }
 
+//shader to blur a cubemap
 Shader.getCubemapBlurShader = function(gl)
 {
 	gl = gl || global.gl;
@@ -7039,7 +7156,7 @@ Shader.getCubemapBlurShader = function(gl)
 	return gl.shaders[":blur_cubemap"] = shader;
 }
 
-
+//shader to do FXAA (antialiasing)
 Shader.FXAA_FUNC = "\n\
 	uniform vec2 u_viewportSize;\n\
 	uniform vec2 u_iViewportSize;\n\

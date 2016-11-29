@@ -917,6 +917,28 @@ Shader.getBlurShader = function(gl)
 	return gl.shaders[":blur"] = shader;
 }
 
+//shader to copy a depth texture into another one
+Shader.getCopyDepthShader = function(gl)
+{
+	gl = gl || global.gl;
+	var shader = gl.shaders[":copy_depth"];
+	if(shader)
+		return shader;
+
+	var shader = new GL.Shader( Shader.SCREEN_VERTEX_SHADER,"\n\
+			#extension GL_EXT_frag_depth : enable\n\
+			precision highp float;\n\
+			varying vec2 v_coord;\n\
+			uniform sampler2D u_texture;\n\
+			void main() {\n\
+			   gl_FragDepthEXT = texture2D( u_texture, v_coord ).x;\n\
+			   gl_FragColor = vec4(1.0);\n\
+			}\n\
+			");
+	return gl.shaders[":copy_depth"] = shader;
+}
+
+//shader to copy a cubemap into another 
 Shader.getCubemapCopyShader = function(gl)
 {
 	gl = gl || global.gl;
@@ -939,6 +961,7 @@ Shader.getCubemapCopyShader = function(gl)
 	return gl.shaders[":copy_cubemap"] = shader;
 }
 
+//shader to blur a cubemap
 Shader.getCubemapBlurShader = function(gl)
 {
 	gl = gl || global.gl;
@@ -981,7 +1004,7 @@ Shader.getCubemapBlurShader = function(gl)
 	return gl.shaders[":blur_cubemap"] = shader;
 }
 
-
+//shader to do FXAA (antialiasing)
 Shader.FXAA_FUNC = "\n\
 	uniform vec2 u_viewportSize;\n\
 	uniform vec2 u_iViewportSize;\n\

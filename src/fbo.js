@@ -32,7 +32,7 @@ function FBO( textures, depth_texture, stencil, gl )
 		this.setTextures( textures, depth_texture );
 
 	//save state
-	this._old_fbo = null;
+	this._old_fbo_handler = null;
 	this._old_viewport = new Float32Array(4);
 }
 
@@ -47,7 +47,7 @@ GL.FBO = FBO;
 */
 FBO.prototype.setTextures = function( color_textures, depth_texture, skip_disable )
 {
-	if( depth_texture && 
+	if( depth_texture && depth_texture.constructor === GL.Texture &&
 		( (depth_texture.format !== gl.DEPTH_COMPONENT && depth_texture.format !== gl.DEPTH_STENCIL) || 
 		( depth_texture.type != gl.UNSIGNED_INT && depth_texture.type != GL.UNSIGNED_INT_24_8_WEBGL ) ) )
 		throw("FBO Depth texture must be of format: gl.DEPTH_COMPONENT and type: gl.UNSIGNED_INT");
@@ -56,6 +56,8 @@ FBO.prototype.setTextures = function( color_textures, depth_texture, skip_disabl
 	var same = this.depth_texture == depth_texture;
 	if( same && color_textures )
 	{
+		if( color_textures.constructor !== Array )
+			throw("FBO: color_textures parameter must be an array containing all the textures to be binded in the color");
 		if( color_textures.length == this.color_textures.length )
 		{
 			for(var i = 0; i < color_textures.length; ++i)
@@ -94,7 +96,7 @@ FBO.prototype.setTextures = function( color_textures, depth_texture, skip_disabl
 FBO.prototype.update = function( skip_disable )
 {
 	//save state to restore afterwards
-	this._old_fbo = gl.getParameter( gl.FRAMEBUFFER_BINDING );
+	this._old_fbo_handler = gl.getParameter( gl.FRAMEBUFFER_BINDING );
 
 	if(!this.handler)
 		this.handler = gl.createFramebuffer();
@@ -111,6 +113,8 @@ FBO.prototype.update = function( skip_disable )
 		for(var i = 0; i < color_textures.length; i++)
 		{
 			var t = color_textures[i];
+			if(t.constructor !== GL.Texture)
+				throw("FBO can only bind instances of GL.Texture");
 			if(w == -1) 
 				w = t.width;
 			else if(w != t.width)
@@ -147,9 +151,10 @@ FBO.prototype.update = function( skip_disable )
 
 	gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, null );
 	gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, null );
+	//detach color too?
 
 	//bind a buffer for the depth
-	if( depth_texture )
+	if( depth_texture && depth_texture.constructor === GL.Texture )
 	{
 		if(this.stencil && depth_texture.format !== gl.DEPTH_STENCIL )
 			console.warn("Stencil cannot be enabled if there is a depth texture with a DEPTH_STENCIL format");
@@ -161,19 +166,29 @@ FBO.prototype.update = function( skip_disable )
 	}
 	else //create a renderbuffer to store depth
 	{
-		var renderbuffer = this._renderbuffer = this._renderbuffer || gl.createRenderbuffer();
-		renderbuffer.width = w;
-		renderbuffer.height = h;
-		gl.bindRenderbuffer( gl.RENDERBUFFER, renderbuffer );
+		var depth_renderbuffer = null;
+		
+		//allows to reuse a renderbuffer between FBOs
+		if( depth_texture && depth_texture.constructor === WebGLRenderbuffer && depth_texture.width == w && depth_texture.height == h ) 
+			depth_renderbuffer = this._depth_renderbuffer = depth_texture;
+		else
+		{
+			//create one
+			depth_renderbuffer = this._depth_renderbuffer = this._depth_renderbuffer || gl.createRenderbuffer();
+			depth_renderbuffer.width = w;
+			depth_renderbuffer.height = h;
+		}
+		
+		gl.bindRenderbuffer( gl.RENDERBUFFER, depth_renderbuffer );
 		if(this.stencil)
 		{
 			gl.renderbufferStorage( gl.RENDERBUFFER, gl.DEPTH_STENCIL, w, h );
-			gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, renderbuffer );
+			gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, depth_renderbuffer );
 		}
 		else
 		{
 			gl.renderbufferStorage( gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, w, h );
-			gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer );
+			gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, depth_renderbuffer );
 		}
 	}
 
@@ -191,12 +206,12 @@ FBO.prototype.update = function( skip_disable )
 	}
 	else //create renderbuffer to store color
 	{
-		var renderbuffer = this._renderbuffer = this._renderbuffer || gl.createRenderbuffer();
-		renderbuffer.width = w;
-		renderbuffer.height = h;
-		gl.bindRenderbuffer( gl.RENDERBUFFER, renderbuffer );
+		var color_renderbuffer = this._color_renderbuffer = this._color_renderbuffer || gl.createRenderbuffer();
+		color_renderbuffer.width = w;
+		color_renderbuffer.height = h;
+		gl.bindRenderbuffer( gl.RENDERBUFFER, color_renderbuffer );
 		gl.renderbufferStorage( gl.RENDERBUFFER, gl.RGBA4, w, h );
-		gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, renderbuffer );
+		gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, color_renderbuffer );
 	}
 
 	//detach old ones (only if is reusing a FBO with a different set of textures)
@@ -238,7 +253,7 @@ FBO.prototype.update = function( skip_disable )
 	gl.bindTexture(gl.TEXTURE_2D, null);
 	gl.bindRenderbuffer(gl.RENDERBUFFER, null);
 	if(!skip_disable)
-		gl.bindFramebuffer( gl.FRAMEBUFFER, this._old_fbo );
+		gl.bindFramebuffer( gl.FRAMEBUFFER, this._old_fbo_handler );
 }
 
 /**
@@ -254,12 +269,19 @@ FBO.prototype.bind = function( keep_old )
 	this._old_viewport.set( gl.viewport_data );
 
 	if(keep_old)
-		this._old_fbo = gl.getParameter( gl.FRAMEBUFFER_BINDING );
+		this._old_fbo_handler = gl.getParameter( gl.FRAMEBUFFER_BINDING );
 	else
-		this._old_fbo = null;
+		this._old_fbo_handler = null;
 
-	if(this._old_fbo != this.handler )
+	if(this._old_fbo_handler != this.handler )
 		gl.bindFramebuffer( gl.FRAMEBUFFER, this.handler );
+
+	//mark them as in use in the FBO
+	for(var i = 0; i < this.color_textures.length; ++i)
+		this.color_textures[i]._in_current_fbo = true;
+	if(this.depth_texture)
+		this.depth_texture._in_current_fbo = true;
+
 	gl.viewport( 0,0, this.width, this.height );
 }
 
@@ -270,10 +292,37 @@ FBO.prototype.bind = function( keep_old )
 */
 FBO.prototype.unbind = function()
 {
-	gl.bindFramebuffer( gl.FRAMEBUFFER, this._old_fbo );
-	this._old_fbo = null;
-
+	gl.bindFramebuffer( gl.FRAMEBUFFER, this._old_fbo_handler );
+	this._old_fbo_handler = null;
 	gl.setViewport( this._old_viewport );
+
+	//mark the textures as no longer in use
+	for(var i = 0; i < this.color_textures.length; ++i)
+		this.color_textures[i]._in_current_fbo = false;
+	if(this.depth_texture)
+		this.depth_texture._in_current_fbo = false;
+}
+
+//binds another FBO without switch back to previous (faster)
+FBO.prototype.switchTo = function( next_fbo )
+{
+	next_fbo._old_fbo_handler = this._old_fbo_handler;
+	next_fbo._old_viewport.set( this._old_viewport );
+	gl.bindFramebuffer( gl.FRAMEBUFFER, next_fbo.handler );
+	this._old_fbo_handler = null;
+	gl.viewport( 0,0, this.width, this.height );
+
+	//mark the textures as no longer in use
+	for(var i = 0; i < this.color_textures.length; ++i)
+		this.color_textures[i]._in_current_fbo = false;
+	if(this.depth_texture)
+		this.depth_texture._in_current_fbo = false;
+
+	//mark them as in use in the FBO
+	for(var i = 0; i < next_fbo.color_textures.length; ++i)
+		next_fbo.color_textures[i]._in_current_fbo = true;
+	if(next_fbo.depth_texture)
+		next_fbo.depth_texture._in_current_fbo = true;
 }
 
 

@@ -165,6 +165,16 @@ Texture.prototype.getProperties = function()
 	};
 }
 
+Texture.prototype.hasSameProperties = function(t)
+{
+	if(!t)
+		return false;
+	return t.width == this.width && 
+		t.height == this.height &&
+		t.type == this.type &&
+		t.format == this.format &&
+		t.texture_type == this.texture_type;
+}
 
 Texture.prototype.hasSameSize = function(t)
 {
@@ -651,7 +661,7 @@ Texture.prototype.copyTo = function( target_texture, shader, uniforms ) {
 	var gl = this.gl;
 
 	//save state
-	var current_fbo = gl.getParameter( gl.FRAMEBUFFER_BINDING );
+	var previous_fbo = gl.getParameter( gl.FRAMEBUFFER_BINDING );
 	var viewport = gl.getViewport(); 
 
 	if(!shader)
@@ -672,8 +682,43 @@ Texture.prototype.copyTo = function( target_texture, shader, uniforms ) {
 	gl.viewport(0,0,target_texture.width, target_texture.height);
 	if(this.texture_type == gl.TEXTURE_2D)
 	{
-		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, target_texture.handler, 0);
-		this.toViewport( shader );
+		if(this.format !== gl.DEPTH_COMPONENT && this.format !== gl.DEPTH_STENCIL )
+		{
+			gl.framebufferTexture2D( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, target_texture.handler, 0);
+			this.toViewport( shader );
+		}
+		else //copying a depth texture is harder
+		{
+			var color_renderbuffer = gl._color_renderbuffer = gl._color_renderbuffer || gl.createRenderbuffer();
+			var w = color_renderbuffer.width = target_texture.width;
+			var h = color_renderbuffer.height = target_texture.height;
+			
+			//attach color render buffer
+			gl.bindRenderbuffer( gl.RENDERBUFFER, color_renderbuffer );
+			gl.renderbufferStorage( gl.RENDERBUFFER, gl.RGBA4, w, h );
+			gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, color_renderbuffer );
+
+			//attach depth texture
+			var attachment_point = target_texture.format == gl.DEPTH_STENCIL ? gl.DEPTH_STENCIL_ATTACHMENT : gl.DEPTH_ATTACHMENT;
+			gl.framebufferTexture2D( gl.FRAMEBUFFER, attachment_point, gl.TEXTURE_2D, target_texture.handler, 0);
+
+			var complete = gl.checkFramebufferStatus( gl.FRAMEBUFFER );
+			if(complete !== gl.FRAMEBUFFER_COMPLETE)
+				throw("FBO not complete: " + complete);
+
+			//enable depth test?
+			gl.enable( gl.DEPTH_TEST );
+			gl.depthFunc( gl.ALWAYS );
+			gl.colorMask( false,false,false,false );
+			//call shader that overwrites depth values
+			shader = GL.Shader.getCopyDepthShader();
+			this.toViewport( shader );
+			gl.colorMask( true,true,true,true );
+			gl.disable( gl.DEPTH_TEST );
+			gl.depthFunc( gl.LEQUAL );
+			gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, null );
+			gl.framebufferTexture2D( gl.FRAMEBUFFER, attachment_point, gl.TEXTURE_2D, null, 0);
+		}
 	}
 	else if(this.texture_type == gl.TEXTURE_CUBE_MAP)
 	{
@@ -694,7 +739,7 @@ Texture.prototype.copyTo = function( target_texture, shader, uniforms ) {
 	
 	//restore previous state
 	gl.setViewport(viewport); //restore viewport
-	gl.bindFramebuffer( gl.FRAMEBUFFER, current_fbo ); //restore fbo
+	gl.bindFramebuffer( gl.FRAMEBUFFER, previous_fbo ); //restore fbo
 
 	//generate mipmaps when needed
 	if (target_texture.minFilter && target_texture.minFilter != gl.NEAREST && target_texture.minFilter != gl.LINEAR) {
@@ -704,7 +749,7 @@ Texture.prototype.copyTo = function( target_texture, shader, uniforms ) {
 	}
 
 	target_texture.data = null;
-	gl.bindTexture(target_texture.texture_type, null); //disable
+	gl.bindTexture( target_texture.texture_type, null ); //disable
 	return this;
 }
 
