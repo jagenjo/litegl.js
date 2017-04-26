@@ -40,10 +40,10 @@
                             <ul id="api-classes" class="apis classes">
                                 <li><a href="../classes/BBox.html">BBox</a></li>
                                 <li><a href="../classes/geo.html">geo</a></li>
+                                <li><a href="../classes/GL.html">GL</a></li>
                                 <li><a href="../classes/gl.html">gl</a></li>
                                 <li><a href="../classes/GL.Buffer.html">GL.Buffer</a></li>
                                 <li><a href="../classes/GL.FBO.html">GL.FBO</a></li>
-                                <li><a href="../classes/GL.GL.html">GL.GL</a></li>
                                 <li><a href="../classes/GL.Indexer.html">GL.Indexer</a></li>
                                 <li><a href="../classes/GL.Mesh.html">GL.Mesh</a></li>
                                 <li><a href="../classes/GL.Octree.html">GL.Octree</a></li>
@@ -54,7 +54,6 @@
                 
                 
                             <ul id="api-modules" class="apis modules">
-                                <li><a href="../modules/GL.html">GL</a></li>
                             </ul>
                         </div>
                     </div>
@@ -104,7 +103,6 @@
 */
 
 var LEvent = global.LEvent = GL.LEvent = {
-	//map: new Weakmap(),
 
 	/**
 	* Binds an event to an instance
@@ -134,6 +132,8 @@ var LEvent = global.LEvent = GL.LEvent = {
 			events[event_type].push([callback,target_instance]);
 		else
 			events[event_type] = [[callback,target_instance]];
+		if( instance.onLEventBinded )
+			instance.onLEventBinded( event_type, callback, target_instance );
 	},
 
 	/**
@@ -172,6 +172,9 @@ var LEvent = global.LEvent = GL.LEvent = {
 
 		if (events[event_type].length == 0)
 			delete events[event_type];
+
+		if( instance.onLEventUnbinded )
+			instance.onLEventUnbinded( event_type, callback, target_instance );
 	},
 
 	/**
@@ -180,7 +183,7 @@ var LEvent = global.LEvent = GL.LEvent = {
 	* @param {Object} instance where the events are binded
 	* @param {Object} target_instance [Optional] target_instance of the events to remove
 	**/
-	unbindAll: function( instance, target_instance )
+	unbindAll: function( instance, target_instance, callback )
 	{
 		if(!instance) 
 			throw(&quot;cannot unbind events in null&quot;);
@@ -188,6 +191,9 @@ var LEvent = global.LEvent = GL.LEvent = {
 		var events = instance.__levents;
 		if(!events)
 			return;
+
+		if( instance.onLEventUnbindAll )
+			instance.onLEventUnbindAll( target_instance, callback );
 
 		if(!target_instance) //remove all
 		{
@@ -202,13 +208,11 @@ var LEvent = global.LEvent = GL.LEvent = {
 			var array = events[i];
 			for(var j = array.length - 1; j &gt;= 0; --j) //iterate backwards to avoid problems after removing
 			{
-				if( array[j][1] != target_instance ) 
+				if( array[j][1] != target_instance || (callback &amp;&amp; callback !== array[j][0]) ) 
 					continue;
+
 				array.splice(j,1);//remove
 			}
-
-			//if(array.length == 0) //add two passes to avoid read and delete
-			//	delete events[i];
 		}
 	},
 
@@ -218,7 +222,7 @@ var LEvent = global.LEvent = GL.LEvent = {
 	* @param {Object} instance where the events are binded
 	* @param {String} event name of the event you want to remove all binds
 	**/
-	unbindAllEvent: function( instance, event )
+	unbindAllEvent: function( instance, event_type )
 	{
 		if(!instance) 
 			throw(&quot;cannot unbind events in null&quot;);
@@ -226,7 +230,9 @@ var LEvent = global.LEvent = GL.LEvent = {
 		var events = instance.__levents;
 		if(!events)
 			return;
-		delete events[ event ];
+		delete events[ event_type ];
+		if( instance.onLEventUnbindAll )
+			instance.onLEventUnbindAll( event_type, target_instance, callback );
 		return;
 	},
 
@@ -312,8 +318,9 @@ var LEvent = global.LEvent = GL.LEvent = {
 	* @param {Object} instance that triggers the event
 	* @param {String} event_name string defining the event name
 	* @param {*} parameters that will be received by the binded function
+	* @param {bool} reverse_order trigger in reverse order (binded last get called first)
 	**/
-	trigger: function( instance, event_type, params )
+	trigger: function( instance, event_type, params, reverse_order )
 	{
 		if(!instance) 
 			throw(&quot;cannot trigger event from null&quot;);
@@ -325,11 +332,23 @@ var LEvent = global.LEvent = GL.LEvent = {
 			return true;
 
 		var inst = events[event_type];
-		for(var i = 0, l = inst.length; i &lt; l; ++i)
+		if( reverse_order )
 		{
-			var v = inst[i];
-			if( v &amp;&amp; v[0].call(v[1], event_type, params) == false)// || event.stop)
-				return false; //stopPropagation
+			for(var i = inst.length - 1; i &gt;= 0; --i)
+			{
+				var v = inst[i];
+				if( v &amp;&amp; v[0].call(v[1], event_type, params) == false)// || event.stop)
+					return false; //stopPropagation
+			}
+		}
+		else
+		{
+			for(var i = 0, l = inst.length; i &lt; l; ++i)
+			{
+				var v = inst[i];
+				if( v &amp;&amp; v[0].call(v[1], event_type, params) == false)// || event.stop)
+					return false; //stopPropagation
+			}
 		}
 
 		return true;
@@ -341,8 +360,9 @@ var LEvent = global.LEvent = GL.LEvent = {
 	* @param {Array} array contains all instances to triggers the event
 	* @param {String} event_name string defining the event name
 	* @param {*} parameters that will be received by the binded function
+	* @param {bool} reverse_order trigger in reverse order (binded last get called first)
 	**/
-	triggerArray: function( instances, event_type, params )
+	triggerArray: function( instances, event_type, params, reverse_order )
 	{
 		for(var i = 0, l = instances.length; i &lt; l; ++i)
 		{
@@ -356,187 +376,60 @@ var LEvent = global.LEvent = GL.LEvent = {
 			if( !events || !events.hasOwnProperty( event_type ) )
 				continue;
 
-			for(var j = 0, ll = events[event_type].length; j &lt; ll; ++j)
+			if( reverse_order )
 			{
-				var v = events[event_type][j];
-				if( v[0].call(v[1], event_type, params) == false)// || event.stop)
-					break; //stopPropagation
+				for(var j = events[event_type].length - 1; j &gt;= 0; --j)
+				{
+					var v = events[event_type][j];
+					if( v[0].call(v[1], event_type, params) == false)// || event.stop)
+						break; //stopPropagation
+				}
+			}
+			else
+			{
+				for(var j = 0, ll = events[event_type].length; j &lt; ll; ++j)
+				{
+					var v = events[event_type][j];
+					if( v[0].call(v[1], event_type, params) == false)// || event.stop)
+						break; //stopPropagation
+				}
 			}
 		}
 
 		return true;
-	}
-};
-
-// NOT FINISHED, STILL HAS SOME ISSUES TO SOLVE, TEST OR DELETE
-//There is a secondary implementation using WeakMap, this implementation clears the events from the objects
-//and moves them to one global object, so objects are not constantly changing, but I must test performance.
-/*
-if(global.WeakMap &amp;&amp; 0)
-{
-	(function(){
-
-	//local scope
-	var map = new WeakMap;
-
-	LEvent.bind = function( instance, event_type, callback, target_instance )
-	{
-		if(!instance) 
-			throw(&quot;cannot bind event to null&quot;);
-		if(!callback) 
-			throw(&quot;cannot bind to null callback&quot;);
-		if(instance.constructor === String ) 
-			throw(&quot;cannot bind event to a string&quot;);
-		var name = event_type;
-
-		var obj = map[instance];
-		if(!obj)
-			obj = map[instance] = {};
-
-		if(obj.hasOwnProperty(name))
-			obj[name].push([callback,target_instance]);
-		else
-			obj[name] = [[callback,target_instance]];
-	}
-
-	LEvent.unbind = function( instance, event_type, callback, target_instance )
-	{
-		if(!instance) 
-			throw(&quot;cannot unbind event to null&quot;);
-		if(!callback) 
-			throw(&quot;cannot unbind from null callback&quot;);
-		if(instance.constructor === String ) 
-			throw(&quot;cannot bind event to a string&quot;);
-
-		var obj = map[instance];
-		if(!obj)
-			return;
-
-		var name = event_type;
-		if(!obj[name]) 
-			return;
-
-		for(var i = 0, l = obj[name].length; i &lt; l; ++i)
-		{
-			var v = obj[name][i];
-			if(v[0] === callback &amp;&amp; v[1] === target_instance)
-			{
-				obj[name].splice( i, 1);
-				break;
-			}
-		}
-
-		if (obj[name].length == 0)
-			delete obj[name];
 	},
 
-	LEvent.unbindAll = function(instance, target_instance)
+	extendObject: function( object )
 	{
-		if(!instance) 
-			throw(&quot;cannot unbind events in null&quot;);
-		if(!target_instance) //remove all
+		object.bind = function( event_type, callback, instance ){
+			return LEvent.bind( this, event_type, callback, instance );
+		};
+
+		object.trigger = function( event_type, params ){
+			return LEvent.trigger( this, event_type, params );
+		};
+
+		object.unbind = function( event_type, callback, target_instance )
 		{
-			map.delete(instance);
-			return;
-		}
+			return LEvent.unbind( this, event_type, callback, instance );
+		};
 
-		//remove only the target_instance
-		//for every property in the instance
-		var obj = map[instance];
-		if(!obj)
-			return;
-
-		for(var i in obj)
+		object.unbindAll = function( target_instance, callback )
 		{
-			var array = obj[i];
-			for(var j=0; j &lt; array.length; ++j)
-			{
-				if( array[j][1] != target_instance ) 
-					continue;
-				array.splice(j,1);//remove
-				--j;//iterate from the gap
-			}
+			return LEvent.unbindAll( this, target_instance, callback );
+		};
+	},
 
-			if(array.length == 0)
-				delete obj[i];
-		}
-	}
-
-	LEvent.isBind = function( instance, event_type, callback, target_instance )
+	/**
+	* Adds the methods to bind, trigger and unbind to this class prototype
+	* @method LEvent.extendClass
+	* @param {Object} constructor
+	**/
+	extendClass: function( constructor )
 	{
-		var name = event_type;
-		var obj = map[instance];
-		if(!obj || !obj.hasOwnProperty(name)) 
-			return false;
-		for(var i = 0, l = obj[name].length; i &lt; l; ++i)
-		{
-			var v = obj[name][i];
-			if(v[0] === callback &amp;&amp; v[1] === target_instance)
-				return true;
-		}
-		return false;
+		this.extendObject( constructor.prototype );
 	}
-
-	LEvent.trigger = function( instance, event_type, params, skip_jquery )
-	{
-		if(!instance) 
-			throw(&quot;cannot trigger event from null&quot;);
-		if(instance.constructor === String ) 
-			throw(&quot;cannot bind event to a string&quot;);
-
-		
-
-		//you can resend the events as jQuery events, but to avoid collisions with system events, we use &quot;:&quot; at the begining
-		if(LEvent.jQuery &amp;&amp; !skip_jquery)
-			$(instance).trigger( &quot;:&quot; + event_type, params );
-
-		var name = event_type;
-
-		var obj = map[instance];
-
-		if(!obj.hasOwnProperty(name)) 
-			return;
-		var inst = obj[name];
-		for(var i = 0, l = inst.length; i &lt; l; ++i)
-		{
-			var v = inst[i];
-			if( v[0].call(v[1], event_type, params) == false)// || event.stop)
-				break; //stopPropagation
-		}
-	}
-
-	LEvent.triggerArray = function( instances, event_type, params, skip_jquery )
-	{
-		for(var i = 0, l = instances.length; i &lt; l; ++i)
-		{
-			var instance = instances[i];
-			if(!instance) 
-				throw(&quot;cannot trigger event from null&quot;);
-			if(instance.constructor === String ) 
-				throw(&quot;cannot bind event to a string&quot;);
-
-			var obj = map[instance];
-
-			//you can resend the events as jQuery events, but to avoid collisions with system events, we use &quot;:&quot; at the begining
-			if(LEvent.jQuery &amp;&amp; !skip_jquery) 
-				$(instance).trigger( &quot;:&quot; + event_type, params );
-
-			var name = event_type;
-			if(!obj.hasOwnProperty(name)) 
-				continue;
-			for(var j = 0, l = obj[name].length; j &lt; l; ++j)
-			{
-				var v = obj[name][j];
-				if( v[0].call(v[1], event_type, params) == false)// || event.stop)
-					break; //stopPropagation
-			}
-		}
-	}
-
-
-	})(); //local scope end
-}
-*/
+};
     </pre>
 </div>
                     </div>

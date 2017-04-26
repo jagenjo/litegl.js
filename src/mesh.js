@@ -224,6 +224,17 @@ GL.Buffer.prototype.clone = function(share)
 }
 
 /**
+* Deletes the content from the GPU and destroys the handler
+* @method delete
+*/
+GL.Buffer.prototype.delete = function()
+{
+	var gl = this.gl;
+	gl.deleteBuffer( this.buffer );
+	this.buffer = null;
+}
+
+/**
 * Base class for meshes, it wraps several buffers and some global info like the bounding box
 * @class Mesh
 * @param {Object} vertexBuffers object with all the vertex streams
@@ -440,10 +451,14 @@ Mesh.prototype.createVertexBuffer = function(name, attribute, buffer_spacing, bu
 * Removes a vertex buffer from the mesh
 * @method removeVertexBuffer
 * @param {String} name "vertices","normals"...
+* @param {Boolean} free if you want to remove the data from the GPU
 */
-Mesh.prototype.removeVertexBuffer = function(name) {
+Mesh.prototype.removeVertexBuffer = function(name, free) {
 	var buffer = this.vertexBuffers[name];
-	if(!buffer) return;
+	if(!buffer)
+		return;
+	if(free)
+		buffer.delete();
 	delete this.vertexBuffers[name];
 }
 
@@ -510,6 +525,22 @@ Mesh.prototype.getIndexBuffer = function(name)
 }
 
 /**
+* Removes an index buffer from the mesh
+* @method removeIndexBuffer
+* @param {String} name "vertices","normals"...
+* @param {Boolean} free if you want to remove the data from the GPU
+*/
+Mesh.prototype.removeIndexBuffer = function(name, free) {
+	var buffer = this.indexBuffers[name];
+	if(!buffer)
+		return;
+	if(free)
+		buffer.delete();
+	delete this.indexBuffers[name];
+}
+
+
+/**
 * Uploads data inside buffers to VRAM.
 * @method upload
 * @param {number} buffer_type gl.STATIC_DRAW, gl.DYNAMIC_DRAW, gl.STREAM_DRAW
@@ -537,19 +568,19 @@ Mesh.prototype.deleteBuffers = function()
 	for(var i in this.vertexBuffers)
 	{
 		var buffer = this.vertexBuffers[i];
-		this.gl.deleteBuffer( buffer.buffer );
+		buffer.delete();
 	}
 	this.vertexBuffers = {};
 
 	for(var i in this.indexBuffers)
 	{
 		var buffer = this.indexBuffers[i];
-		this.gl.deleteBuffer( buffer.buffer );
+		buffer.delete();
 	}
-	this.indexBuffers[i] = {};
+	this.indexBuffers = {};
 }
 
-
+Mesh.prototype.delete = Mesh.prototype.deleteBuffers;
 
 Mesh.prototype.bindBuffers = function( shader )
 {
@@ -1052,7 +1083,8 @@ Mesh.prototype.computeNormals = function( stream_type  ) {
 * Creates a new stream with the tangents
 * @method computeTangents
 */
-Mesh.prototype.computeTangents = function( ) {
+Mesh.prototype.computeTangents = function()
+{
 	var vertices = this.vertexBuffers["vertices"].data;
 	var normals = this.vertexBuffers["normals"].data;
 	var uvs = this.vertexBuffers["coords"].data;
@@ -1152,7 +1184,7 @@ Mesh.prototype.computeTextureCoordinates = function( stream_type )
 	var num_vertices = vertices.length / 3;
 
 	var uvs_buffer = this.vertexBuffers["coords"];
-	var uvs = uvs_buffer ? uvs_buffer.data : new Float32Array( num_vertices * 2 );
+	var uvs = new Float32Array( num_vertices * 2 );
 
 	var triangles_buffer = this.indexBuffers["triangles"];
 	var triangles = null;
@@ -1240,7 +1272,10 @@ Mesh.prototype.computeTextureCoordinates = function( stream_type )
 	}
 
 	if(uvs_buffer)
+	{
+		uvs_buffer.data = uvs;
 		uvs_buffer.upload( stream_type );
+	}
 	else
 		this.createVertexBuffer('coords', Mesh.common_buffers["coords"].attribute, 2, uvs );
 }
@@ -1310,9 +1345,10 @@ Mesh.prototype.getBoundingBox = function()
 * @method updateBounding
 */
 Mesh.prototype.updateBounding = function() {
-	var vertices = this.vertexBuffers["vertices"].data;
-	if(!vertices) return;
-	this.bounding = GL.Mesh.computeBounding(vertices, this.bounding);
+	var vertices = this.vertexBuffers["vertices"];
+	if(!vertices)
+		return;
+	this.bounding = GL.Mesh.computeBounding( vertices.data, this.bounding );
 }
 
 
@@ -1353,7 +1389,22 @@ Mesh.prototype.configure = function( o, options )
 
 	for(var j in o)
 	{
-		if(!o[j]) continue;
+		if(!o[j])
+			continue;
+
+		if(j == "vertexBuffers")
+		{
+			for(i in o[j])
+				v[i] = o[j][i];
+			continue;
+		}
+		
+		if(j == "indexBuffers")
+		{
+			for(i in o[j])
+				i[i] = o[j][i];
+			continue;
+		}
 
 		if(j == "indices" || j == "lines" ||  j == "wireframe" || j == "triangles")
 			i[j] = o[j];
@@ -1367,6 +1418,9 @@ Mesh.prototype.configure = function( o, options )
 
 	for(var i in options)
 		this[i] = options[i];		
+
+	if(!this.bounding)
+		this.updateBounding();
 }
 
 /**
@@ -1459,6 +1513,8 @@ Mesh.load = function( buffers, options, output_mesh, gl ) {
 * Returns a mesh with all the meshes merged (you can apply transforms individually to every buffer)
 * @method Mesh.mergeMeshes
 * @param {Array} meshes array containing object like { mesh:, matrix:, texture_matrix: }
+* @param {Object} options { only_data: to get the mesh data without uploading it }
+* @return {GL.Mesh|Object} the mesh in GL.Mesh format or Object format (if options.only_data is true)
 */
 Mesh.mergeMeshes = function( meshes, options )
 {
@@ -1602,7 +1658,7 @@ Mesh.mergeMeshes = function( meshes, options )
 	var extra = { info: { groups: groups } };
 
 	//return
-	if( typeof(gl) != "undefined" )
+	if( typeof(gl) != "undefined" || options.only_data )
 		return new GL.Mesh( vertex_buffers,index_buffers, extra );
 	return { vertexBuffers: vertex_buffers, indexBuffers: index_buffers, info: { groups: groups } };
 }

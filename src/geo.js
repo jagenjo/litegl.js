@@ -327,22 +327,28 @@ global.geo = {
 	* @param {vec3} result collision position
 	* @return {boolean} returns if the ray collides the box
 	*/
-	testRayBox: function(start, direction, minB, maxB, result, max_dist)
+	testRayBox: (function() { 
+	
+		var quadrant = new Float32Array(3);
+		var candidatePlane = new Float32Array(3);
+		var maxT = new Float32Array(3);
+	
+	return function(start, direction, minB, maxB, result, max_dist)
 	{
 		//#define NUMDIM	3
 		//#define RIGHT		0
 		//#define LEFT		1
 		//#define MIDDLE	2
 
-		result = result || vec3.create();
 		max_dist = max_dist || Number.MAX_VALUE;
 
 		var inside = true;
-		var quadrant = new Float32Array(3);
 		var i = 0|0;
 		var whichPlane;
-		var maxT = new Float32Array(3);
-		var candidatePlane = new Float32Array(3);
+		
+		quadrant.fill(0);
+		maxT.fill(0);
+		candidatePlane.fill(0);
 
 		/* Find candidate planes; this loop can be avoided if
 		rays cast all from the eye(assume perpsective view) */
@@ -361,7 +367,8 @@ global.geo = {
 
 		/* Ray origin inside bounding box */
 		if(inside)	{
-			vec3.copy(result, start);
+			if(result)
+				vec3.copy(result, start);
 			return true;
 		}
 
@@ -385,42 +392,52 @@ global.geo = {
 
 		for (i = 0; i < 3; ++i)
 			if (whichPlane != i) {
-				result[i] = start[i] + maxT[whichPlane] * direction[i];
-				if (result[i] < minB[i] || result[i] > maxB[i])
+				var res = start[i] + maxT[whichPlane] * direction[i];
+				if (res < minB[i] || res > maxB[i])
 					return false;
+				if(result)
+					result[i] = res;
 			} else {
-				result[i] = candidatePlane[i];
+				if(result)
+					result[i] = candidatePlane[i];
 			}
 		return true;				/* ray hits box */
-	},	
+	}
+	})(),	
 
 	/**
 	* test a ray bounding-box collision, it uses the  BBox class and allows to use non-axis aligned bbox
 	* @method testRayBBox
-	* @param {vec3} start ray start
+	* @param {vec3} origin ray origin
 	* @param {vec3} direction ray direction
 	* @param {BBox} box in BBox format
-	* @param {mat4} model transformation of the BBox
-	* @param {vec3} result collision position
+	* @param {mat4} model transformation of the BBox [optional]
+	* @param {vec3} result collision position in world space unless in_local is true
 	* @return {boolean} returns if the ray collides the box
 	*/
-	testRayBBox: function(start, direction, box, model, result, max_dist)
+	testRayBBox: (function(){ 
+	var inv = mat4.create();	
+	var end = vec3.create();
+	var origin2 = vec3.create();
+	return function( origin, direction, box, model, result, max_dist, in_local )
 	{
+		if(!origin || !direction || !box)
+			throw("parameters missing");
 		if(model)
 		{
-			var inv = mat4.invert( mat4.create(), model );
-			var end = vec3.add( vec3.create(), start, direction );
-			start = vec3.transformMat4(vec3.create(), start, inv);
-			vec3.transformMat4(end, end, inv);
-			vec3.sub(end, end, start);
-			direction = vec3.normalize(end, end);
+			mat4.invert( inv, model );
+			vec3.add( end, origin, direction );
+			origin = vec3.transformMat4( origin2, origin, inv);
+			vec3.transformMat4( end, end, inv );
+			vec3.sub( end, end, origin );
+			direction = vec3.normalize( end, end );
 		}
-		var r = this.testRayBox(start, direction, box.subarray(6,9), box.subarray(9,12), result, max_dist );
-		if(model)
+		var r = this.testRayBox( origin, direction, box.subarray(6,9), box.subarray(9,12), result, max_dist );
+		if(!in_local && model && result)
 			vec3.transformMat4(result, result, model);
 		return r;
-	},
-
+	}
+	})(),
 
 	/**
 	* test if a 3d point is inside a BBox

@@ -287,20 +287,22 @@ global.HttpRequest = GL.request = function HttpRequest(url,params, callback, err
 }
 
 //cheap simple promises
-if( !XMLHttpRequest.prototype.hasOwnProperty("done") )
-	Object.defineProperty( XMLHttpRequest.prototype, "done", { enumerable: false, value: function(callback)
-	{
-	  LEvent.bind(this,"done", function(e,err) { callback(err); } );
-	  return this;
-	}});
+if( global.XMLHttpRequest )
+{
+	if( !XMLHttpRequest.prototype.hasOwnProperty("done") )
+		Object.defineProperty( XMLHttpRequest.prototype, "done", { enumerable: false, value: function(callback)
+		{
+		  LEvent.bind(this,"done", function(e,err) { callback(err); } );
+		  return this;
+		}});
 
-if( !XMLHttpRequest.prototype.hasOwnProperty("fail") )
-	Object.defineProperty( XMLHttpRequest.prototype, "fail", { enumerable: false, value: function(callback)
-	{
-	  LEvent.bind(this,"fail", function(e,err) { callback(err); } );
-	  return this;
-	}});
-
+	if( !XMLHttpRequest.prototype.hasOwnProperty("fail") )
+		Object.defineProperty( XMLHttpRequest.prototype, "fail", { enumerable: false, value: function(callback)
+		{
+		  LEvent.bind(this,"fail", function(e,err) { callback(err); } );
+		  return this;
+		}});
+}
 
 global.getFileExtension = function getFileExtension(url)
 {
@@ -362,6 +364,14 @@ global.processFileAtlas = GL.processFileAtlas = function(data, skip_trim)
 	return files;
 }
 
+global.typedArrayToArray = function(array)
+{
+	var r = [];
+	r.length = array.length;
+	for(var i = 0; i < array.length; i++)
+		r[i] = array[i];
+	return r;
+}
 
 global.hexColorToRGBA = (function() {
 	//to change the color: from http://www.w3schools.com/cssref/css_colorsfull.asp

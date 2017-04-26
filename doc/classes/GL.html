@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>../src/header.js</title>
+    <title>GL</title>
     <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -40,10 +40,10 @@
                             <ul id="api-classes" class="apis classes">
                                 <li><a href="../classes/BBox.html">BBox</a></li>
                                 <li><a href="../classes/geo.html">geo</a></li>
+                                <li><a href="../classes/GL.html">GL</a></li>
                                 <li><a href="../classes/gl.html">gl</a></li>
                                 <li><a href="../classes/GL.Buffer.html">GL.Buffer</a></li>
                                 <li><a href="../classes/GL.FBO.html">GL.FBO</a></li>
-                                <li><a href="../classes/GL.GL.html">GL.GL</a></li>
                                 <li><a href="../classes/GL.Indexer.html">GL.Indexer</a></li>
                                 <li><a href="../classes/GL.Mesh.html">GL.Mesh</a></li>
                                 <li><a href="../classes/GL.Octree.html">GL.Octree</a></li>
@@ -54,7 +54,6 @@
                 
                 
                             <ul id="api-modules" class="apis modules">
-                                <li><a href="../modules/GL.html">GL</a></li>
                             </ul>
                         </div>
                     </div>
@@ -88,70 +87,130 @@
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-<h1 class="file-heading">File: ../src/header.js</h1>
-
-<div class="file">
-    <pre class="code prettyprint linenums">
-//litegl.js by Javi Agenjo 2014 @tamat (tamats.com)
-//forked from lightgl.js by Evan Wallace (madebyevan.com)
-&quot;use strict&quot;;
-
-(function(global){
-
-/**
-* The static module that contains all the features
-* @module GL
-* @namespace GL
-* @class GL
-*/
-var GL = global.GL = {};
+<h1>GL Class</h1>
+<div class="box meta">
 
 
-//polyfill
-global.requestAnimationFrame = global.requestAnimationFrame || global.mozRequestAnimationFrame || global.webkitRequestAnimationFrame || function(callback) { setTimeout(callback, 1000 / 60); };
-
-GL.blockable_keys = {&quot;Up&quot;:true,&quot;Down&quot;:true,&quot;Left&quot;:true,&quot;Right&quot;:true};
-
-//some consts
-GL.LEFT_MOUSE_BUTTON = 1;
-GL.RIGHT_MOUSE_BUTTON = 3;
-GL.MIDDLE_MOUSE_BUTTON = 2;
-GL.last_context_id = 0;
+        <div class="foundat">
+            Defined in: <a href="../files/.._src_core.js.html#l2"><code>..&#x2F;src&#x2F;core.js:2</code></a>
+        </div>
 
 
-//Define WEBGL ENUMS as statics
-//sometimes I need some gl enums before having the gl context, solution: define them globally because the specs says they are constant:
+</div>
 
-GL.BYTE = 5120;
-GL.UNSIGNED_BYTE = 5121;
-GL.SHORT = 5122;
-GL.UNSIGNED_SHORT = 5123;
-GL.INT = 5124;
-GL.UNSIGNED_INT = 5125;
-GL.FLOAT = 5126;
 
-GL.ZERO = 0;
-GL.ONE = 1;
-GL.SRC_COLOR = 768;
-GL.ONE_MINUS_SRC_COLOR = 769;
-GL.SRC_ALPHA = 770;
-GL.ONE_MINUS_SRC_ALPHA = 771;
-GL.DST_ALPHA = 772;
-GL.ONE_MINUS_DST_ALPHA = 773;
-GL.DST_COLOR = 774;
-GL.ONE_MINUS_DST_COLOR = 775;
-GL.SRC_ALPHA_SATURATE = 776;
-GL.CONSTANT_COLOR = 32769;
-GL.ONE_MINUS_CONSTANT_COLOR = 32770;
-GL.CONSTANT_ALPHA = 32771;
-GL.ONE_MINUS_CONSTANT_ALPHA = 32772;
+<div class="box intro">
+    <p>The global scope that contains all the classes from LiteGL and also all the enums of WebGL so you dont need to create a context to use the values.</p>
 
-GL.temp_vec3 = vec3.create();
-GL.temp2_vec3 = vec3.create();
-GL.temp_vec4 = vec4.create();
-GL.temp_mat4 = mat4.create();
+</div>
 
-    </pre>
+
+<div id="classdocs" class="tabview">
+    <ul class="api-class-tabs">
+        <li class="api-class-tab index"><a href="#index">Index</a></li>
+
+            <li class="api-class-tab methods"><a href="#methods">Methods</a></li>
+    </ul>
+
+    <div>
+        <div id="index" class="api-class-tabpanel index">
+            <h2 class="off-left">Item Index</h2>
+
+                <div class="index-section methods">
+                    <h3>Methods</h3>
+
+                    <ul class="index-list methods">
+                            <li class="index-item method">
+                                <a href="#method_create">create</a>
+
+                            </li>
+                    </ul>
+                </div>
+
+
+
+        </div>
+
+            <div id="methods" class="api-class-tabpanel">
+                <h2 class="off-left">Methods</h2>
+
+<div id="method_create" class="method item">
+    <h3 class="name"><code>create</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>options</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+        <span class="returns-inline">
+            <span class="type">WebGLRenderingContext</span>
+        </span>
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/.._src_core.js.html#l7"><code>..&#x2F;src&#x2F;core.js:7</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>creates a new WebGL context (it can create the canvas or use an existing one)</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">options</code>
+                        <span class="type">Object</span>
+
+
+                    <div class="param-description">
+                        <p>supported are:</p>
+<ul>
+<li>width</li>
+<li>height</li>
+<li>canvas</li>
+<li>container (string or element)</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                        <span class="type">WebGLRenderingContext</span>:
+                    <p>webgl context with all the extra functions (check gl in the doc for more info)</p>
+
+            </div>
+        </div>
+
+
+</div>
+            </div>
+
+
+
+    </div>
 </div>
                     </div>
                 </div>

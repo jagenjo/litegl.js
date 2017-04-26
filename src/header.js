@@ -4,12 +4,6 @@
 
 (function(global){
 
-/**
-* The static module that contains all the features
-* @module GL
-* @namespace GL
-* @class GL
-*/
 var GL = global.GL = {};
 
 
@@ -34,6 +28,11 @@ GL.STENCIL_BUFFER_BIT = 1024;
 
 GL.TEXTURE_2D = 3553;
 GL.TEXTURE_CUBE_MAP = 34067;
+
+GL.TEXTURE_MAG_FILTER = 10240;
+GL.TEXTURE_MIN_FILTER = 10241;
+GL.TEXTURE_WRAP_S = 10242;
+GL.TEXTURE_WRAP_T = 10243;
 
 GL.BYTE = 5120;
 GL.UNSIGNED_BYTE = 5121;
@@ -122,6 +121,14 @@ GL.INVERT = 5386;
 GL.STREAM_DRAW = 35040;
 GL.STATIC_DRAW = 35044;
 GL.DYNAMIC_DRAW = 35048;
+
+GL.POINTS = 0;
+GL.LINES = 1;
+GL.LINE_LOOP = 2;
+GL.LINE_STRIP = 3;
+GL.TRIANGLES = 4;
+GL.TRIANGLE_STRIP = 5;
+GL.TRIANGLE_FAN = 6;
 
 GL.CW = 2304;
 GL.CCW = 2305;

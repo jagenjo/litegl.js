@@ -1,9 +1,18 @@
 
 /**
+* The global scope that contains all the classes from LiteGL and also all the enums of WebGL so you dont need to create a context to use the values.
+* @class GL
+*/
+
+/**
 * creates a new WebGL context (it can create the canvas or use an existing one)
 * @method create
-* @param {Object} options supported are: width, height, canvas
-* @return {gl} gl context for webgl
+* @param {Object} options supported are: 
+* - width
+* - height
+* - canvas
+* - container (string or element)
+* @return {WebGLRenderingContext} webgl context with all the extra functions (check gl in the doc for more info)
 */
 GL.create = function(options) {
 	options = options || {};
@@ -42,7 +51,7 @@ GL.create = function(options) {
 	* the webgl context returned by GL.create, its a WebGLRenderingContext with some extra methods added
 	* @class gl
 	*/
-	var gl = global.gl;
+	var gl = null;
 
 	if(options.webgl2)
 	{
@@ -89,20 +98,25 @@ GL.create = function(options) {
 
 	gl.max_texture_units = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
 
-	//viewport hack to retrieve it without using getParameter (which is slow)
-	gl._viewport_func = gl.viewport;
-	gl.viewport_data = new Float32Array([0,0,gl.canvas.width,gl.canvas.height]); //32000 max viewport, I guess its fine
-	gl.viewport = function(a,b,c,d) { var v = this.viewport_data; v[0] = a|0; v[1] = b|0; v[2] = c|0; v[3] = d|0; this._viewport_func(a,b,c,d); }
-	gl.getViewport = function(v) { 
-		if(v) { v[0] = gl.viewport_data[0]; v[1] = gl.viewport_data[1]; v[2] = gl.viewport_data[2]; v[3] = gl.viewport_data[3]; return v; }
-		return new Float32Array( gl.viewport_data );
-	};
-	gl.setViewport = function( v, flip_y ) {
-		gl.viewport_data.set(v);
-		if(flip_y)
-			gl.viewport_data[1] = this.drawingBufferHeight-v[1]-v[3];
-		this._viewport_func(v[0],gl.viewport_data[1],v[2],v[3]);
-	};
+	//viewport hack to retrieve it without using getParameter (which is slow and generates garbage)
+	if(!gl._viewport_func)
+	{
+		gl._viewport_func = gl.viewport;
+		gl.viewport_data = new Float32Array([0,0,gl.canvas.width,gl.canvas.height]); //32000 max viewport, I guess its fine
+		gl.viewport = function(a,b,c,d) { var v = this.viewport_data; v[0] = a|0; v[1] = b|0; v[2] = c|0; v[3] = d|0; this._viewport_func(a,b,c,d); }
+		gl.getViewport = function(v) { 
+			if(v) { v[0] = gl.viewport_data[0]; v[1] = gl.viewport_data[1]; v[2] = gl.viewport_data[2]; v[3] = gl.viewport_data[3]; return v; }
+			return new Float32Array( gl.viewport_data );
+		};
+		gl.setViewport = function( v, flip_y ) {
+			gl.viewport_data.set(v);
+			if(flip_y)
+				gl.viewport_data[1] = this.drawingBufferHeight-v[1]-v[3];
+			this._viewport_func(v[0],gl.viewport_data[1],v[2],v[3]);
+		};
+	}
+	else
+		console.warn("Creating LiteGL context over the same canvas twice");
 	
 	//just some checks
 	if(typeof(glMatrix) == "undefined")
@@ -248,7 +262,7 @@ GL.create = function(options) {
 	* @method captureMouse
 	* @param {boolean} capture_wheel capture also the mouse wheel
 	*/
-	gl.captureMouse = function(capture_wheel) {
+	gl.captureMouse = function(capture_wheel, translate_touchs ) {
 
 		canvas.addEventListener("mousedown", onmouse);
 		canvas.addEventListener("mousemove", onmouse);
@@ -261,14 +275,8 @@ GL.create = function(options) {
 		//prevent right click context menu
 		canvas.addEventListener("contextmenu", function(e) { e.preventDefault(); return false; });
 
-		canvas.addEventListener("touchstart", ontouch, true);
-		canvas.addEventListener("touchmove", ontouch, true);
-		canvas.addEventListener("touchend", ontouch, true);
-		canvas.addEventListener("touchcancel", ontouch, true);   
-
-		canvas.addEventListener('gesturestart', ongesture );
-		canvas.addEventListener('gesturechange', ongesture );
-		canvas.addEventListener('gestureend', ongesture );
+		if( translate_touchs )
+			this.captureTouch( true );
 	}
 
 	function onmouse(e) {
@@ -353,12 +361,37 @@ GL.create = function(options) {
 		return false;
 	}
 
+	var translate_touches = false;
+
+	gl.captureTouch = function( translate_to_mouse_events )
+	{
+		translate_touches = translate_to_mouse_events;
+
+		canvas.addEventListener("touchstart", ontouch, true);
+		canvas.addEventListener("touchmove", ontouch, true);
+		canvas.addEventListener("touchend", ontouch, true);
+		canvas.addEventListener("touchcancel", ontouch, true);   
+
+		canvas.addEventListener('gesturestart', ongesture );
+		canvas.addEventListener('gesturechange', ongesture );
+		canvas.addEventListener('gestureend', ongesture );
+	}
+
 	//translates touch events in mouseevents
-	function ontouch(e)
+	function ontouch( e )
 	{
 		var touches = e.changedTouches,
 			first = touches[0],
 			type = "";
+
+		if( gl.ontouch && gl.ontouch(e) === false )
+			return;
+
+		if( LEvent.trigger( gl, e.type, e ) === false )
+			return;
+
+		if(!translate_touches)
+			return;
 
 		//ignore secondary touches
         if(e.touches.length && e.changedTouches[0].identifier !== e.touches[0].identifier)
@@ -382,18 +415,21 @@ GL.create = function(options) {
 								  false, false, false, 0/*left*/, null);
 		simulatedEvent.originalEvent = simulatedEvent;
 		simulatedEvent.is_touch = true;
-		first.target.dispatchEvent(simulatedEvent);		
+		first.target.dispatchEvent( simulatedEvent );
 		e.preventDefault();
 	}
 
 	function ongesture(e)
 	{
-		if(gl.ongesture)
-		{ 
-			e.eventType = e.type;
-			gl.ongesture(e);
-		}
-		event.preventDefault();
+		e.eventType = e.type;
+
+		if(gl.ongesture && gl.ongesture(e) === false )
+			return;
+
+		if( LEvent.trigger( gl, e.type, e ) === false )
+			return;
+
+		e.preventDefault();
 	}
 
 	var keys = gl.keys = {};
@@ -852,8 +888,9 @@ GL.augmentEvent = function(e, root_element)
 			this.dragging = false;
 	}
 
-	if(e.movementX !== undefined) //pointer lock
+	if( e.movementX !== undefined && !GL.isMobile() ) //pointer lock (mobile gives always zero)
 	{
+		//console.log( e.movementX )
 		e.deltax = e.movementX;
 		e.deltay = e.movementY;
 	}
@@ -872,4 +909,26 @@ GL.augmentEvent = function(e, root_element)
 	e.middleButton = gl.mouse.buttons & (1<<GL.MIDDLE_MOUSE_BUTTON);
 	e.rightButton = gl.mouse.buttons & (1<<GL.RIGHT_MOUSE_BUTTON);
 	e.isButtonPressed = function(num) { return this.buttons_mask & (1<<num); }
+}
+
+/**
+* Tells you if the app is running on a mobile device (iOS or Android)
+* @method isMobile
+* @return {boolean} true if is running on a iOS or Android device
+*/
+GL.isMobile = function()
+{
+	if(this.mobile !== undefined)
+		return this.mobile;
+
+	if(!global.navigator) //server side js?
+		return this.mobile = false;
+
+	if( (navigator.userAgent.match(/iPhone/i)) || 
+		(navigator.userAgent.match(/iPod/i)) || 
+		(navigator.userAgent.match(/iPad/i)) || 
+		(navigator.userAgent.match(/Android/i))) {
+		return this.mobile = true;
+	}
+	return this.mobile = false;
 }

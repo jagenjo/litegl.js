@@ -183,8 +183,12 @@ Shader.prototype.extractShaderInfo = function()
 		var data = gl.getActiveAttrib( this.program, i);
 		if(!data) break;
 		var func = Shader.getUniformFunc(data);
-		//this.uniformInfo[ data.name ] = { type: data.gl.getUniformLocation(this.program, data.name) };
-		this.uniformInfo[ data.name ] = { type: data.type, func: func, size: data.size, loc: null }; //gl.getAttribLocation( this.program, data.name )
+		this.uniformInfo[ data.name ] = { 
+			type: data.type,
+			func: func,
+			size: data.size,
+			loc: null 
+		}; //gl.getAttribLocation( this.program, data.name )
 		this.attributes[ data.name ] = gl.getAttribLocation(this.program, data.name );	
 	}
 }
@@ -383,54 +387,84 @@ Shader.prototype.uniformsArray = function(array) {
 * @param {string} name
 * @param {*} value
 */
-Shader.prototype.setUniform = function(name, value)
-{
-	if(	this.gl._current_shader != this )
-		this.bind();
+Shader.prototype.setUniform = (function(){
+	var temps = [];
+	for(var i = 2; i <= 16; ++i)
+		temps[i] = new Float32Array(i);
 
-	var info = this.uniformInfo[name];
-	if (!info)
-		return;
+	return (function(name, value)
+	{
+		if(	this.gl._current_shader != this )
+			this.bind();
 
-	if(info.loc === null)
-		return;
+		var info = this.uniformInfo[name];
+		if (!info)
+			return;
 
-	if(value == null) //strict?
-		return;
+		if(info.loc === null)
+			return;
 
-	if(value.constructor === Array)
-		value = new Float32Array( value );  //garbage generated...
+		if(value == null) //strict?
+			return;
 
-	if(info.is_matrix)
-		info.func.call( this.gl, info.loc, false, value );
-	else
-		info.func.call( this.gl, info.loc, value );
-}
+		if(value.constructor === Array)
+		{
+			var v = temps[ value.length ]; //reuse same container
+			if(v)
+			{
+				v.set(value);
+				value = v;
+			}
+			else
+				value = new Float32Array( value );  //garbage generated...
+		}
+
+		if(info.is_matrix)
+			info.func.call( this.gl, info.loc, false, value );
+		else
+			info.func.call( this.gl, info.loc, value );
+	});
+})();
 
 //skips enabling shader
-Shader.prototype._setUniform = function(name, value)
-{
-	var info = this.uniformInfo[ name ];
-	if (!info)
-		return;
+Shader.prototype._setUniform = (function(){
+	var temps = [];
+	for(var i = 2; i <= 16; ++i)
+		temps[i] = new Float32Array(i);
 
-	if(info.loc === null)
-		return;
+	return (function(name, value)
+	{
+		var info = this.uniformInfo[ name ];
+		if (!info)
+			return;
 
-	//if(info.loc.constructor !== Function)
-	//	return;
+		if(info.loc === null)
+			return;
 
-	if(value == null) 
-		return;
+		//if(info.loc.constructor !== Function)
+		//	return;
 
-	if(value.constructor === Array)
-		value = new Float32Array( value );  //garbage generated...
+		if(value == null) 
+			return;
 
-	if(info.is_matrix)
-		info.func.call( this.gl, info.loc, false, value );
-	else
-		info.func.call( this.gl, info.loc, value );
-}
+		if(value.constructor === Array)
+		{
+			var v = temps[ value.length ]; //reuse same container
+			if(v)
+			{
+				v.set(value);
+				value = v;
+			}
+			else
+				value = new Float32Array( value );  //garbage generated...
+		}
+
+		if(info.is_matrix)
+			info.func.call( this.gl, info.loc, false, value );
+		else
+			info.func.call( this.gl, info.loc, value );
+	});
+})();
 
 /**
 * Renders a mesh using this shader, remember to use the function uniforms before to enable the shader

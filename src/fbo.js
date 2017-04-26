@@ -325,4 +325,9 @@ FBO.prototype.switchTo = function( next_fbo )
 		next_fbo.depth_texture._in_current_fbo = true;
 }
 
+FBO.prototype.delete = function()
+{
+	gl.deleteFramebuffer( this.handler );
+	this.handler = null;
+}
 

@@ -40,10 +40,10 @@
                             <ul id="api-classes" class="apis classes">
                                 <li><a href="../classes/BBox.html">BBox</a></li>
                                 <li><a href="../classes/geo.html">geo</a></li>
+                                <li><a href="../classes/GL.html">GL</a></li>
                                 <li><a href="../classes/gl.html">gl</a></li>
                                 <li><a href="../classes/GL.Buffer.html">GL.Buffer</a></li>
                                 <li><a href="../classes/GL.FBO.html">GL.FBO</a></li>
-                                <li><a href="../classes/GL.GL.html">GL.GL</a></li>
                                 <li><a href="../classes/GL.Indexer.html">GL.Indexer</a></li>
                                 <li><a href="../classes/GL.Mesh.html">GL.Mesh</a></li>
                                 <li><a href="../classes/GL.Octree.html">GL.Octree</a></li>
@@ -54,7 +54,6 @@
                 
                 
                             <ul id="api-modules" class="apis modules">
-                                <li><a href="../modules/GL.html">GL</a></li>
                             </ul>
                         </div>
                     </div>
@@ -147,6 +146,15 @@ Mesh.parseOBJ = function(text, options)
 	var groups = [];
 	var materials_found = {};
 
+	var V_CODE = 1;
+	var VT_CODE = 2;
+	var VN_CODE = 3;
+	var F_CODE = 4;
+	var G_CODE = 5;
+	var O_CODE = 6;
+	var codes = { v: V_CODE, vt: VT_CODE, vn: VN_CODE, f: F_CODE, g: G_CODE, o: O_CODE };
+
+
 	var lines = text.split(&quot;\n&quot;);
 	var length = lines.length;
 	for (var lineIndex = 0;  lineIndex &lt; length; ++lineIndex) {
@@ -156,30 +164,51 @@ Mesh.parseOBJ = function(text, options)
 		if(line == &quot;&quot;) continue;
 
 		tokens = line.split(&quot; &quot;);
+		var code = codes[ tokens[0] ];
 
-		if(parsingFaces &amp;&amp; tokens[0] == &quot;v&quot;) //another mesh?
+		if(parsingFaces &amp;&amp; code == V_CODE) //another mesh?
 		{
 			indices_offset = index;
 			parsingFaces = false;
+			//trace(&quot;multiple meshes: &quot; + indices_offset);
 		}
 
-		if (tokens[0] == &quot;v&quot;) {
+		//read and parse numbers
+		if( code &lt;= VN_CODE ) //v,vt,vn
+		{
+			x = parseFloat(tokens[1]);
+			y = parseFloat(tokens[2]);
+			if( code != VT_CODE )
+			{
+				if(tokens[3] == &#x27;\\&#x27;) //super weird case, OBJ allows to break lines with slashes...
+				{
+					//HACK! only works if the var is the thirth position...
+					++lineIndex;
+					line = lines[lineIndex].replace(/[ \t]+/g, &quot; &quot;).replace(/\s\s*$/, &quot;&quot;); //better than trim
+					z = parseFloat(line);
+				}
+				else
+					z = parseFloat(tokens[3]);
+			}
+		}
+
+		if (code == V_CODE) {
 			if(flip_axis) //maya and max notation style
-				positions.push(-1*parseFloat(tokens[1]),parseFloat(tokens[3]),parseFloat(tokens[2]));
+				positions.push(-1*x,z,y);
 			else
-				positions.push(parseFloat(tokens[1]),parseFloat(tokens[2]),parseFloat(tokens[3]));
+				positions.push(x,y,z);
 		}
-		else if (tokens[0] == &quot;vt&quot;) {
-			texcoords.push(parseFloat(tokens[1]),parseFloat(tokens[2]));
+		else if (code == VT_CODE) {
+			texcoords.push(x,y);
 		}
-		else if (tokens[0] == &quot;vn&quot;) {
+		else if (code == VN_CODE) {
 
 			if(flip_normals)  //maya and max notation style
-				normals.push(-parseFloat(tokens[2]),-parseFloat(tokens[3]),parseFloat(tokens[1]));
+				normals.push(-y,-z,x);
 			else
-				normals.push(parseFloat(tokens[1]),parseFloat(tokens[2]),parseFloat(tokens[3]));
+				normals.push(x,y,z);
 		}
-		else if (tokens[0] == &quot;f&quot;) {
+		else if (code == F_CODE) {
 			parsingFaces = true;
 
 			if (tokens.length &lt; 4) continue; //faces with less that 3 vertices? nevermind
@@ -289,7 +318,7 @@ Mesh.parseOBJ = function(text, options)
 				}
 			}
 		}
-		else if (tokens[0] == &quot;g&quot; || tokens[0] == &quot;usemtl&quot;) {
+		else if (code == G_CODE || tokens[0] == &quot;usemtl&quot;) {
 			negative_offset = positions.length / 3 - 1;
 
 			if(tokens.length &gt; 1)

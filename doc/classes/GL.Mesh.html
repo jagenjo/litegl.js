@@ -40,10 +40,10 @@
                             <ul id="api-classes" class="apis classes">
                                 <li><a href="../classes/BBox.html">BBox</a></li>
                                 <li><a href="../classes/geo.html">geo</a></li>
+                                <li><a href="../classes/GL.html">GL</a></li>
                                 <li><a href="../classes/gl.html">gl</a></li>
                                 <li><a href="../classes/GL.Buffer.html">GL.Buffer</a></li>
                                 <li><a href="../classes/GL.FBO.html">GL.FBO</a></li>
-                                <li><a href="../classes/GL.GL.html">GL.GL</a></li>
                                 <li><a href="../classes/GL.Indexer.html">GL.Indexer</a></li>
                                 <li><a href="../classes/GL.Mesh.html">GL.Mesh</a></li>
                                 <li><a href="../classes/GL.Octree.html">GL.Octree</a></li>
@@ -54,7 +54,6 @@
                 
                 
                             <ul id="api-modules" class="apis modules">
-                                <li><a href="../modules/GL.html">GL</a></li>
                             </ul>
                         </div>
                     </div>
@@ -96,7 +95,6 @@
             Defined in: <a href="../files/.._src_primitives.js.html#l2"><code>..&#x2F;src&#x2F;primitives.js:2</code></a>
         </div>
 
-            Module: <a href="../modules/GL.html">GL</a>
 
 </div>
 
@@ -150,6 +148,10 @@
 
                             </li>
                             <li class="index-item method">
+                                <a href="#method_computeTextureCoordinates">computeTextureCoordinates</a>
+
+                            </li>
+                            <li class="index-item method">
                                 <a href="#method_computeWireframe">computeWireframe</a>
 
                             </li>
@@ -163,6 +165,10 @@
                             </li>
                             <li class="index-item method">
                                 <a href="#method_encode">encode</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_explodeIndices">explodeIndices</a>
 
                             </li>
                             <li class="index-item method">
@@ -270,6 +276,10 @@
 
                             </li>
                             <li class="index-item method">
+                                <a href="#method_removeIndexBuffer">removeIndexBuffer</a>
+
+                            </li>
+                            <li class="index-item method">
                                 <a href="#method_removeVertexBuffer">removeVertexBuffer</a>
 
                             </li>
@@ -327,7 +337,7 @@
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_mesh.js.html#l283"><code>..&#x2F;src&#x2F;mesh.js:283</code></a>
+        <a href="../files/.._src_mesh.js.html#l294"><code>..&#x2F;src&#x2F;mesh.js:294</code></a>
         </p>
 
 
@@ -396,7 +406,7 @@
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_mesh.js.html#l302"><code>..&#x2F;src&#x2F;mesh.js:302</code></a>
+        <a href="../files/.._src_mesh.js.html#l313"><code>..&#x2F;src&#x2F;mesh.js:313</code></a>
         </p>
 
 
@@ -466,7 +476,7 @@
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_mesh.js.html#l608"><code>..&#x2F;src&#x2F;mesh.js:608</code></a>
+        <a href="../files/.._src_mesh.js.html#l639"><code>..&#x2F;src&#x2F;mesh.js:639</code></a>
         </p>
 
 
@@ -497,7 +507,7 @@
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_mesh.js.html#l584"><code>..&#x2F;src&#x2F;mesh.js:584</code></a>
+        <a href="../files/.._src_mesh.js.html#l615"><code>..&#x2F;src&#x2F;mesh.js:615</code></a>
         </p>
 
 
@@ -528,7 +538,7 @@
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_mesh.js.html#l810"><code>..&#x2F;src&#x2F;mesh.js:810</code></a>
+        <a href="../files/.._src_mesh.js.html#l841"><code>..&#x2F;src&#x2F;mesh.js:841</code></a>
         </p>
 
 
@@ -565,7 +575,7 @@
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_mesh.js.html#l908"><code>..&#x2F;src&#x2F;mesh.js:908</code></a>
+        <a href="../files/.._src_mesh.js.html#l1000"><code>..&#x2F;src&#x2F;mesh.js:1000</code></a>
         </p>
 
 
@@ -613,7 +623,7 @@
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_mesh.js.html#l990"><code>..&#x2F;src&#x2F;mesh.js:990</code></a>
+        <a href="../files/.._src_mesh.js.html#l1082"><code>..&#x2F;src&#x2F;mesh.js:1082</code></a>
         </p>
 
 
@@ -622,6 +632,37 @@
 
     <div class="description">
         <p>Creates a new stream with the tangents</p>
+
+    </div>
+
+
+
+
+</div>
+<div id="method_computeTextureCoordinates" class="method item">
+    <h3 class="name"><code>computeTextureCoordinates</code></h3>
+
+        <span class="paren">()</span>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/.._src_mesh.js.html#l1171"><code>..&#x2F;src&#x2F;mesh.js:1171</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Creates texture coordinates using a triplanar aproximation</p>
 
     </div>
 
@@ -644,7 +685,7 @@
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_mesh.js.html#l726"><code>..&#x2F;src&#x2F;mesh.js:726</code></a>
+        <a href="../files/.._src_mesh.js.html#l757"><code>..&#x2F;src&#x2F;mesh.js:757</code></a>
         </p>
 
 
@@ -687,7 +728,7 @@
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_mesh.js.html#l462"><code>..&#x2F;src&#x2F;mesh.js:462</code></a>
+        <a href="../files/.._src_mesh.js.html#l477"><code>..&#x2F;src&#x2F;mesh.js:477</code></a>
         </p>
 
 
@@ -773,7 +814,7 @@
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_mesh.js.html#l392"><code>..&#x2F;src&#x2F;mesh.js:392</code></a>
+        <a href="../files/.._src_mesh.js.html#l403"><code>..&#x2F;src&#x2F;mesh.js:403</code></a>
         </p>
 
 
@@ -874,7 +915,7 @@
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_mesh.js.html#l1488"><code>..&#x2F;src&#x2F;mesh.js:1488</code></a>
+        <a href="../files/.._src_mesh.js.html#l1715"><code>..&#x2F;src&#x2F;mesh.js:1715</code></a>
         </p>
 
 
@@ -917,6 +958,37 @@ Only obj supported now</p>
 
 
 </div>
+<div id="method_explodeIndices" class="method item">
+    <h3 class="name"><code>explodeIndices</code></h3>
+
+        <span class="paren">()</span>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/.._src_mesh.js.html#l937"><code>..&#x2F;src&#x2F;mesh.js:937</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Breaks the indices</p>
+
+    </div>
+
+
+
+
+</div>
 <div id="method_flipNormals" class="method item">
     <h3 class="name"><code>flipNormals</code></h3>
 
@@ -938,7 +1010,7 @@ Only obj supported now</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_mesh.js.html#l777"><code>..&#x2F;src&#x2F;mesh.js:777</code></a>
+        <a href="../files/.._src_mesh.js.html#l808"><code>..&#x2F;src&#x2F;mesh.js:808</code></a>
         </p>
 
 
@@ -946,7 +1018,7 @@ Only obj supported now</p>
     </div>
 
     <div class="description">
-        <p>Multiplies every normal vy -1 and uploads it</p>
+        <p>Multiplies every normal by -1 and uploads it</p>
 
     </div>
 
@@ -986,7 +1058,7 @@ Only obj supported now</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_mesh.js.html#l1159"><code>..&#x2F;src&#x2F;mesh.js:1159</code></a>
+        <a href="../files/.._src_mesh.js.html#l1366"><code>..&#x2F;src&#x2F;mesh.js:1366</code></a>
         </p>
 
 
@@ -1017,7 +1089,7 @@ Only obj supported now</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_mesh.js.html#l647"><code>..&#x2F;src&#x2F;mesh.js:647</code></a>
+        <a href="../files/.._src_mesh.js.html#l678"><code>..&#x2F;src&#x2F;mesh.js:678</code></a>
         </p>
 
 
@@ -1051,7 +1123,7 @@ Only obj supported now</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_mesh.js.html#l1125"><code>..&#x2F;src&#x2F;mesh.js:1125</code></a>
+        <a href="../files/.._src_mesh.js.html#l1331"><code>..&#x2F;src&#x2F;mesh.js:1331</code></a>
         </p>
 
 
@@ -1100,7 +1172,7 @@ Only obj supported now</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_mesh.js.html#l490"><code>..&#x2F;src&#x2F;mesh.js:490</code></a>
+        <a href="../files/.._src_mesh.js.html#l505"><code>..&#x2F;src&#x2F;mesh.js:505</code></a>
         </p>
 
 
@@ -1166,7 +1238,7 @@ Only obj supported now</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_mesh.js.html#l501"><code>..&#x2F;src&#x2F;mesh.js:501</code></a>
+        <a href="../files/.._src_mesh.js.html#l516"><code>..&#x2F;src&#x2F;mesh.js:516</code></a>
         </p>
 
 
@@ -1226,7 +1298,7 @@ Only obj supported now</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_mesh.js.html#l1201"><code>..&#x2F;src&#x2F;mesh.js:1201</code></a>
+        <a href="../files/.._src_mesh.js.html#l1426"><code>..&#x2F;src&#x2F;mesh.js:1426</code></a>
         </p>
 
 
@@ -1269,7 +1341,7 @@ Only obj supported now</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_mesh.js.html#l1504"><code>..&#x2F;src&#x2F;mesh.js:1504</code></a>
+        <a href="../files/.._src_mesh.js.html#l1731"><code>..&#x2F;src&#x2F;mesh.js:1731</code></a>
         </p>
 
 
@@ -1319,7 +1391,7 @@ Reusing the same quad helps not filling the memory</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_mesh.js.html#l450"><code>..&#x2F;src&#x2F;mesh.js:450</code></a>
+        <a href="../files/.._src_mesh.js.html#l465"><code>..&#x2F;src&#x2F;mesh.js:465</code></a>
         </p>
 
 
@@ -1382,7 +1454,7 @@ Reusing the same quad helps not filling the memory</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_mesh.js.html#l1078"><code>..&#x2F;src&#x2F;mesh.js:1078</code></a>
+        <a href="../files/.._src_mesh.js.html#l1284"><code>..&#x2F;src&#x2F;mesh.js:1284</code></a>
         </p>
 
 
@@ -1490,7 +1562,7 @@ Reusing the same quad helps not filling the memory</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_mesh.js.html#l1090"><code>..&#x2F;src&#x2F;mesh.js:1090</code></a>
+        <a href="../files/.._src_mesh.js.html#l1296"><code>..&#x2F;src&#x2F;mesh.js:1296</code></a>
         </p>
 
 
@@ -1513,60 +1585,6 @@ Reusing the same quad helps not filling the memory</p>
 
                     <div class="param-description">
                         <p>array containing all the vertices</p>
-
-                    </div>
-
-                </li>
-            </ul>
-        </div>
-
-
-
-</div>
-<div id="method_Mesh.cube" class="method item">
-    <h3 class="name"><code>Mesh.cube</code></h3>
-
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-                <li class="arg">
-                        <code>options</code>
-                </li>
-            </ul><span class="paren">)</span>
-        </div>
-
-
-
-
-
-
-
-
-    <div class="meta">
-                <p>
-                Defined in
-        <a href="../files/.._src_primitives.js.html#l116"><code>..&#x2F;src&#x2F;primitives.js:116</code></a>
-        </p>
-
-
-
-    </div>
-
-    <div class="description">
-        <p>Returns a cube mesh of a given size</p>
-
-    </div>
-
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-                <li class="param">
-                        <code class="param-name">options</code>
-                        <span class="type">Object</span>
-
-
-                    <div class="param-description">
-                        <p>valid options: size, sizex, sizey, sizez</p>
 
                     </div>
 
@@ -1621,6 +1639,60 @@ Reusing the same quad helps not filling the memory</p>
 
                     <div class="param-description">
                         <p>valid options: size</p>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_Mesh.cube" class="method item">
+    <h3 class="name"><code>Mesh.cube</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>options</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/.._src_primitives.js.html#l116"><code>..&#x2F;src&#x2F;primitives.js:116</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Returns a cube mesh of a given size</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">options</code>
+                        <span class="type">Object</span>
+
+
+                    <div class="param-description">
+                        <p>valid options: size, sizex, sizey, sizez</p>
 
                     </div>
 
@@ -1706,7 +1778,7 @@ Reusing the same quad helps not filling the memory</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_mesh.js.html#l1445"><code>..&#x2F;src&#x2F;mesh.js:1445</code></a>
+        <a href="../files/.._src_mesh.js.html#l1672"><code>..&#x2F;src&#x2F;mesh.js:1672</code></a>
         </p>
 
 
@@ -1877,7 +1949,7 @@ Reusing the same quad helps not filling the memory</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_mesh.js.html#l1270"><code>..&#x2F;src&#x2F;mesh.js:1270</code></a>
+        <a href="../files/.._src_mesh.js.html#l1495"><code>..&#x2F;src&#x2F;mesh.js:1495</code></a>
         </p>
 
 
@@ -1951,9 +2023,15 @@ Reusing the same quad helps not filling the memory</p>
                 <li class="arg">
                         <code>meshes</code>
                 </li>
+                <li class="arg">
+                        <code>options</code>
+                </li>
             </ul><span class="paren">)</span>
         </div>
 
+        <span class="returns-inline">
+            <span class="type"><a href="../classes/GL.Mesh.html" class="crosslink">GL.Mesh</a> | Object</span>
+        </span>
 
 
 
@@ -1964,7 +2042,7 @@ Reusing the same quad helps not filling the memory</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_mesh.js.html#l1287"><code>..&#x2F;src&#x2F;mesh.js:1287</code></a>
+        <a href="../files/.._src_mesh.js.html#l1512"><code>..&#x2F;src&#x2F;mesh.js:1512</code></a>
         </p>
 
 
@@ -1991,9 +2069,29 @@ Reusing the same quad helps not filling the memory</p>
                     </div>
 
                 </li>
+                <li class="param">
+                        <code class="param-name">options</code>
+                        <span class="type">Object</span>
+
+
+                    <div class="param-description">
+                        <p>{ only_data: to get the mesh data without uploading it }</p>
+
+                    </div>
+
+                </li>
             </ul>
         </div>
 
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                        <span class="type"><a href="../classes/GL.Mesh.html" class="crosslink">GL.Mesh</a> | Object</span>:
+                    <p>the mesh in GL.Mesh format or Object format (if options.only_data is true)</p>
+
+            </div>
+        </div>
 
 
 </div>
@@ -2296,7 +2394,7 @@ Reusing the same quad helps not filling the memory</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_mesh.js.html#l1471"><code>..&#x2F;src&#x2F;mesh.js:1471</code></a>
+        <a href="../files/.._src_mesh.js.html#l1698"><code>..&#x2F;src&#x2F;mesh.js:1698</code></a>
         </p>
 
 
@@ -2350,13 +2448,16 @@ Only obj supported now</p>
 
 
 </div>
-<div id="method_removeVertexBuffer" class="method item">
-    <h3 class="name"><code>removeVertexBuffer</code></h3>
+<div id="method_removeIndexBuffer" class="method item">
+    <h3 class="name"><code>removeIndexBuffer</code></h3>
 
         <div class="args">
             <span class="paren">(</span><ul class="args-list inline commas">
                 <li class="arg">
                         <code>name</code>
+                </li>
+                <li class="arg">
+                        <code>free</code>
                 </li>
             </ul><span class="paren">)</span>
         </div>
@@ -2371,7 +2472,75 @@ Only obj supported now</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_mesh.js.html#l439"><code>..&#x2F;src&#x2F;mesh.js:439</code></a>
+        <a href="../files/.._src_mesh.js.html#l527"><code>..&#x2F;src&#x2F;mesh.js:527</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Removes an index buffer from the mesh</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">name</code>
+                        <span class="type">String</span>
+
+
+                    <div class="param-description">
+                        <p>&quot;vertices&quot;,&quot;normals&quot;...</p>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">free</code>
+                        <span class="type">Boolean</span>
+
+
+                    <div class="param-description">
+                        <p>if you want to remove the data from the GPU</p>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_removeVertexBuffer" class="method item">
+    <h3 class="name"><code>removeVertexBuffer</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>name</code>
+                </li>
+                <li class="arg">
+                        <code>free</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/.._src_mesh.js.html#l450"><code>..&#x2F;src&#x2F;mesh.js:450</code></a>
         </p>
 
 
@@ -2394,6 +2563,17 @@ Only obj supported now</p>
 
                     <div class="param-description">
                         <p>&quot;vertices&quot;,&quot;normals&quot;...</p>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">free</code>
+                        <span class="type">Boolean</span>
+
+
+                    <div class="param-description">
+                        <p>if you want to remove the data from the GPU</p>
 
                     </div>
 
@@ -2428,7 +2608,7 @@ Only obj supported now</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_mesh.js.html#l1148"><code>..&#x2F;src&#x2F;mesh.js:1148</code></a>
+        <a href="../files/.._src_mesh.js.html#l1355"><code>..&#x2F;src&#x2F;mesh.js:1355</code></a>
         </p>
 
 
@@ -2490,7 +2670,7 @@ Only obj supported now</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_mesh.js.html#l1218"><code>..&#x2F;src&#x2F;mesh.js:1218</code></a>
+        <a href="../files/.._src_mesh.js.html#l1443"><code>..&#x2F;src&#x2F;mesh.js:1443</code></a>
         </p>
 
 
@@ -2530,7 +2710,7 @@ Only obj supported now</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_mesh.js.html#l619"><code>..&#x2F;src&#x2F;mesh.js:619</code></a>
+        <a href="../files/.._src_mesh.js.html#l650"><code>..&#x2F;src&#x2F;mesh.js:650</code></a>
         </p>
 
 
@@ -2561,7 +2741,7 @@ Only obj supported now</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_mesh.js.html#l1137"><code>..&#x2F;src&#x2F;mesh.js:1137</code></a>
+        <a href="../files/.._src_mesh.js.html#l1343"><code>..&#x2F;src&#x2F;mesh.js:1343</code></a>
         </p>
 
 
@@ -2598,7 +2778,7 @@ Only obj supported now</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_mesh.js.html#l512"><code>..&#x2F;src&#x2F;mesh.js:512</code></a>
+        <a href="../files/.._src_mesh.js.html#l543"><code>..&#x2F;src&#x2F;mesh.js:543</code></a>
         </p>
 
 

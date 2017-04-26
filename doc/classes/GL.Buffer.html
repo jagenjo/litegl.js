@@ -40,10 +40,10 @@
                             <ul id="api-classes" class="apis classes">
                                 <li><a href="../classes/BBox.html">BBox</a></li>
                                 <li><a href="../classes/geo.html">geo</a></li>
+                                <li><a href="../classes/GL.html">GL</a></li>
                                 <li><a href="../classes/gl.html">gl</a></li>
                                 <li><a href="../classes/GL.Buffer.html">GL.Buffer</a></li>
                                 <li><a href="../classes/GL.FBO.html">GL.FBO</a></li>
-                                <li><a href="../classes/GL.GL.html">GL.GL</a></li>
                                 <li><a href="../classes/GL.Indexer.html">GL.Indexer</a></li>
                                 <li><a href="../classes/GL.Mesh.html">GL.Mesh</a></li>
                                 <li><a href="../classes/GL.Octree.html">GL.Octree</a></li>
@@ -54,7 +54,6 @@
                 
                 
                             <ul id="api-modules" class="apis modules">
-                                <li><a href="../modules/GL.html">GL</a></li>
                             </ul>
                         </div>
                     </div>
@@ -96,7 +95,6 @@
             Defined in: <a href="../files/.._src_mesh.js.html#l26"><code>..&#x2F;src&#x2F;mesh.js:26</code></a>
         </div>
 
-            Module: <a href="../modules/GL.html">GL</a>
 
 </div>
 
@@ -155,7 +153,7 @@
             <ul class="params-list">
                 <li class="param">
                         <code class="param-name">target</code>
-                        <span class="type">String</span>
+                        <span class="type">Number</span>
 
 
                     <div class="param-description">
@@ -229,6 +227,10 @@
 
                             </li>
                             <li class="index-item method">
+                                <a href="#method_delete">delete</a>
+
+                            </li>
+                            <li class="index-item method">
                                 <a href="#method_forEach">forEach</a>
 
                             </li>
@@ -284,7 +286,7 @@
 
     <div class="description">
         <p>Applies a mat4 transform to every triplets in the buffer (assuming they are points)
-No upload is performed (to ensure efficiency in case there are several operations performed</p>
+No upload is performed (to ensure efficiency in case there are several operations performed)</p>
 
     </div>
 
@@ -359,6 +361,37 @@ return {GL.Buffer} buffer cloned</p>
                 </li>
             </ul>
         </div>
+
+
+
+</div>
+<div id="method_delete" class="method item">
+    <h3 class="name"><code>delete</code></h3>
+
+        <span class="paren">()</span>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/.._src_mesh.js.html#l226"><code>..&#x2F;src&#x2F;mesh.js:226</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Deletes the content from the GPU and destroys the handler</p>
+
+    </div>
+
 
 
 

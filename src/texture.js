@@ -1013,10 +1013,22 @@ Texture.fromImage = function(image, options) {
 	gl.texParameteri(texture.texture_type, gl.TEXTURE_WRAP_S, texture.wrapS );
 	gl.texParameteri(texture.texture_type, gl.TEXTURE_WRAP_T, texture.wrapT );
 
-	if (GL.isPowerOfTwo(texture.width) && GL.isPowerOfTwo(texture.height) && options.minFilter && options.minFilter != gl.NEAREST && options.minFilter != gl.LINEAR) {
-		texture.bind();
-		gl.generateMipmap(texture.texture_type);
-		texture.has_mipmaps = true;
+	if (GL.isPowerOfTwo(texture.width) && GL.isPowerOfTwo(texture.height) )
+	{
+		if( options.minFilter && options.minFilter != gl.NEAREST && options.minFilter != gl.LINEAR)
+		{
+			texture.bind();
+			gl.generateMipmap(texture.texture_type);
+			texture.has_mipmaps = true;
+		}
+	}
+	else
+	{
+		//no mipmaps supported
+		gl.texParameteri(texture.texture_type, gl.TEXTURE_MIN_FILTER, GL.LINEAR );
+		gl.texParameteri(texture.texture_type, gl.TEXTURE_WRAP_S, GL.CLAMP_TO_EDGE );
+		gl.texParameteri(texture.texture_type, gl.TEXTURE_WRAP_T, GL.CLAMP_TO_EDGE );
+		texture.has_mipmaps = false;
 	}
 	gl.bindTexture(texture.texture_type, null); //disable
 	texture.data = image;

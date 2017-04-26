@@ -40,10 +40,10 @@
                             <ul id="api-classes" class="apis classes">
                                 <li><a href="../classes/BBox.html">BBox</a></li>
                                 <li><a href="../classes/geo.html">geo</a></li>
+                                <li><a href="../classes/GL.html">GL</a></li>
                                 <li><a href="../classes/gl.html">gl</a></li>
                                 <li><a href="../classes/GL.Buffer.html">GL.Buffer</a></li>
                                 <li><a href="../classes/GL.FBO.html">GL.FBO</a></li>
-                                <li><a href="../classes/GL.GL.html">GL.GL</a></li>
                                 <li><a href="../classes/GL.Indexer.html">GL.Indexer</a></li>
                                 <li><a href="../classes/GL.Mesh.html">GL.Mesh</a></li>
                                 <li><a href="../classes/GL.Octree.html">GL.Octree</a></li>
@@ -54,7 +54,6 @@
                 
                 
                             <ul id="api-modules" class="apis modules">
-                                <li><a href="../modules/GL.html">GL</a></li>
                             </ul>
                         </div>
                     </div>
@@ -94,10 +93,19 @@
     <pre class="code prettyprint linenums">
 
 /**
+* The global scope that contains all the classes from LiteGL and also all the enums of WebGL so you dont need to create a context to use the values.
+* @class GL
+*/
+
+/**
 * creates a new WebGL context (it can create the canvas or use an existing one)
 * @method create
-* @param {Object} options supported are: width, height, canvas
-* @return {gl} gl context for webgl
+* @param {Object} options supported are: 
+* - width
+* - height
+* - canvas
+* - container (string or element)
+* @return {WebGLRenderingContext} webgl context with all the extra functions (check gl in the doc for more info)
 */
 GL.create = function(options) {
 	options = options || {};
@@ -113,12 +121,24 @@ GL.create = function(options) {
 			canvas = options.canvas;
 	}
 	else
+	{
+		var root = null;
+		if(options.container)
+			root = options.container.constructor === String ? document.querySelector( options.container ) : options.container;
+		if(root &amp;&amp; !options.width)
+		{
+			var rect = root.getBoundingClientRect();
+			options.width = rect.width;
+			options.height = rect.height;
+		}
+
 		canvas = createCanvas(  options.width || 800, options.height || 600 );
+		if(root)
+			root.appendChild(canvas);
+	}
 
 	if (!(&#x27;alpha&#x27; in options)) options.alpha = false;
-	try { global.gl = canvas.getContext(&#x27;webgl&#x27;, options); } catch (e) {}
-	try { global.gl = global.gl || canvas.getContext(&#x27;experimental-webgl&#x27;, options); } catch (e) {}
-	if (!global.gl) { throw &#x27;WebGL not supported&#x27;; }
+
 
 	/**
 	* the webgl context returned by GL.create, its a WebGLRenderingContext with some extra methods added
@@ -126,7 +146,21 @@ GL.create = function(options) {
 	*/
 	var gl = global.gl;
 
+	if(options.webgl2)
+	{
+		try { gl = canvas.getContext(&#x27;webgl2&#x27;, options); gl.webgl_version = 2; } catch (e) {}
+		try { gl = gl || canvas.getContext(&#x27;experimental-webgl2&#x27;, options); gl.webgl_version = 2; } catch (e) {}
+	}
+	try { gl = gl || canvas.getContext(&#x27;webgl&#x27;, options); } catch (e) {}
+	try { gl = gl || canvas.getContext(&#x27;experimental-webgl&#x27;, options); } catch (e) {}
+	if (!gl) { throw &#x27;WebGL not supported&#x27;; }
+
+	if(gl.webgl_version === undefined)
+		gl.webgl_version = 1;
+
+	global.gl = gl;
 	canvas.is_webgl = true;
+	canvas.gl = gl;
 	gl.context_id = this.last_context_id++;
 
 	//get some common extensions
@@ -165,14 +199,18 @@ GL.create = function(options) {
 		if(v) { v[0] = gl.viewport_data[0]; v[1] = gl.viewport_data[1]; v[2] = gl.viewport_data[2]; v[3] = gl.viewport_data[3]; return v; }
 		return new Float32Array( gl.viewport_data );
 	};
-	gl.setViewport = function(v) { gl.viewport_data.set(v); this._viewport_func(v[0],v[1],v[2],v[3]); };
+	gl.setViewport = function( v, flip_y ) {
+		gl.viewport_data.set(v);
+		if(flip_y)
+			gl.viewport_data[1] = this.drawingBufferHeight-v[1]-v[3];
+		this._viewport_func(v[0],gl.viewport_data[1],v[2],v[3]);
+	};
 	
 	//just some checks
 	if(typeof(glMatrix) == &quot;undefined&quot;)
 		throw(&quot;glMatrix not found, LiteGL requires glMatrix to be included&quot;);
 
 	var last_click_time = 0;
-	gl.mouse_buttons = 0;
 
 	//some global containers, use them to reuse assets
 	gl.shaders = {};
@@ -277,13 +315,17 @@ GL.create = function(options) {
 	}
 
 	var mouse = gl.mouse = {
+		buttons: 0, //this should always be up-to-date with mouse state
 		left_button: false,
 		middle_button: false,
 		right_button: false,
-		x:0,
+		position: new Float32Array(2),
+		x:0, //in canvas coordinates
 		y:0,
 		deltax: 0,
 		deltay: 0,
+		clientx:0, //in client coordinates
+		clienty:0,
 		isInsideRect: function(x,y,w,h, flip_y )
 		{
 			var mouse_y = this.y;
@@ -293,6 +335,10 @@ GL.create = function(options) {
 				mouse_y &gt; y &amp;&amp; mouse_y &lt; y + h)
 				return true;
 			return false;
+		},
+		isButtonPressed: function(num)
+		{
+			return this.buttons &amp; (1&lt;&lt;GL.RIGHT_MOUSE_BUTTON);
 		}
 	};
 
@@ -328,26 +374,25 @@ GL.create = function(options) {
 	}
 
 	function onmouse(e) {
-		var old_mouse_mask = gl.mouse_buttons;
+		var old_mouse_mask = gl.mouse.buttons;
 		GL.augmentEvent(e, canvas);
 		e.eventType = e.eventType || e.type; //type cannot be overwritten, so I make a clone to allow me to overwrite
 		var now = getTime();
 
 		//gl.mouse info
 		mouse.dragging = e.dragging;
+		mouse.position[0] = e.canvasx;
+		mouse.position[1] = e.canvasy;
 		mouse.x = e.canvasx;
 		mouse.y = e.canvasy;
-		mouse.left_button = gl.mouse_buttons &amp; (1&lt;&lt;GL.LEFT_MOUSE_BUTTON);
-		mouse.right_button = gl.mouse_buttons &amp; (1&lt;&lt;GL.RIGHT_MOUSE_BUTTON);
-		//console.log(e.eventType, e.mousex, e.mousey, e.deltax, e.deltay );
+		mouse.clientx = e.mousex;
+		mouse.clienty = e.mousey;
+		mouse.left_button = mouse.buttons &amp; (1&lt;&lt;GL.LEFT_MOUSE_BUTTON);
+		mouse.middle_button = mouse.buttons &amp; (1&lt;&lt;GL.MIDDLE_MOUSE_BUTTON);
+		mouse.right_button = mouse.buttons &amp; (1&lt;&lt;GL.RIGHT_MOUSE_BUTTON);
 
 		if(e.eventType == &quot;mousedown&quot;)
 		{
-			if(e.leftButton)
-				mouse.left_button = true;
-			if(e.rightButton)
-				mouse.right_button = true;
-
 			if(old_mouse_mask == 0) //no mouse button was pressed till now
 			{
 				canvas.removeEventListener(&quot;mousemove&quot;, onmouse);
@@ -369,7 +414,7 @@ GL.create = function(options) {
 		} 
 		else if(e.eventType == &quot;mouseup&quot;)
 		{
-			if(gl.mouse_buttons == 0) //no more buttons pressed
+			if(gl.mouse.buttons == 0) //no more buttons pressed
 			{
 				canvas.addEventListener(&quot;mousemove&quot;, onmouse);
 				var doc = canvas.ownerDocument;
@@ -387,12 +432,13 @@ GL.create = function(options) {
 		{ 
 			e.eventType = &quot;mousewheel&quot;;
 			if(e.type == &quot;wheel&quot;)
-				e.wheel = -e.deltaY;
+				e.wheel = -e.deltaY; //in firefox deltaY is 1 while in Chrome is 120
 			else
 				e.wheel = (e.wheelDeltaY != null ? e.wheelDeltaY : e.detail * -60);
 
 			//from stack overflow
-			e.delta = e.wheelDelta ? e.wheelDelta/40 : e.deltaY ? -e.deltaY/3 : 0;
+			//firefox doesnt have wheelDelta
+			e.delta = e.wheelDelta !== undefined ? (e.wheelDelta/40) : (e.deltaY ? -e.deltaY/3 : 0);
 			//console.log(e.delta);
 			if(gl.onmousewheel)
 				gl.onmousewheel(e);
@@ -412,7 +458,7 @@ GL.create = function(options) {
 	//translates touch events in mouseevents
 	function ontouch(e)
 	{
-		var touches = event.changedTouches,
+		var touches = e.changedTouches,
 			first = touches[0],
 			type = &quot;&quot;;
 
@@ -423,7 +469,7 @@ GL.create = function(options) {
 		if(touches &gt; 1)
 			return;
 
-		 switch(event.type)
+		 switch(e.type)
 		{
 			case &quot;touchstart&quot;: type = &quot;mousedown&quot;; break;
 			case &quot;touchmove&quot;:  type = &quot;mousemove&quot;; break;        
@@ -436,8 +482,10 @@ GL.create = function(options) {
 								  first.screenX, first.screenY,
 								  first.clientX, first.clientY, false,
 								  false, false, false, 0/*left*/, null);
-		first.target.dispatchEvent(simulatedEvent);
-		event.preventDefault();
+		simulatedEvent.originalEvent = simulatedEvent;
+		simulatedEvent.is_touch = true;
+		first.target.dispatchEvent(simulatedEvent);		
+		e.preventDefault();
 	}
 
 	function ongesture(e)
@@ -516,6 +564,7 @@ GL.create = function(options) {
 
 	//gamepads
 	gl.gamepads = null;
+	/*
 	function onButton(e, pressed)
 	{
 		console.log(e);
@@ -527,13 +576,13 @@ GL.create = function(options) {
 			gl.onbutton(e);
 		LEvent.trigger(gl, pressed ? &quot;buttondown&quot; : &quot;buttonup&quot;, e );
 	}
-	
 	function onGamepad(e)
 	{
 		console.log(e);
 		if(gl.ongamepad) 
 			gl.ongamepad(e);
 	}
+	*/
 
 	/**
 	* Tells the system to capture gamepad events on the canvas. 
@@ -545,76 +594,133 @@ GL.create = function(options) {
 		if(!getGamepads) return;
 		this.gamepads = getGamepads.call(navigator);
 
-		//only in firefox
+		//only in firefox, so I cannot rely on this
+		/*
 		window.addEventListener(&quot;gamepadButtonDown&quot;, function(e) { onButton(e, true); }, false);
 		window.addEventListener(&quot;MozGamepadButtonDown&quot;, function(e) { onButton(e, true); }, false);
 		window.addEventListener(&quot;WebkitGamepadButtonDown&quot;, function(e) { onButton(e, true); }, false);
 		window.addEventListener(&quot;gamepadButtonUp&quot;, function(e) { onButton(e, false); }, false);
 		window.addEventListener(&quot;MozGamepadButtonUp&quot;, function(e) { onButton(e, false); }, false);
 		window.addEventListener(&quot;WebkitGamepadButtonUp&quot;, function(e) { onButton(e, false); }, false);
-
 		window.addEventListener(&quot;gamepadconnected&quot;, onGamepad, false);
 		window.addEventListener(&quot;gamepaddisconnected&quot;, onGamepad, false);
+		*/
+
 	}
 
 	/**
 	* returns the detected gamepads on the system
 	* @method getGamepads
+	* @param {bool} skip_mapping if set to true it returns the basic gamepad, otherwise it returns a class with mapping info to XBOX controller
 	*/
-	gl.getGamepads = function()
+	gl.getGamepads = function(skip_mapping)
 	{
 		//gamepads
 		var getGamepads = navigator.getGamepads || navigator.webkitGetGamepads || navigator.mozGetGamepads; 
-		if(!getGamepads) return;
+		if(!getGamepads)
+			return;
 		var gamepads = getGamepads.call(navigator);
-		var gamepad = null;
+		if(!this.gamepads)
+			this.gamepads = [];
 		for(var i = 0; i &lt; 4; i++)
-			if (gamepads[i])
-			{
-				gamepad = gamepads[i];
-				if(this.gamepads) //launch connected gamepads: NOT TESTED
-				{
-					if(!this.gamepads[i] &amp;&amp; gamepads[i] &amp;&amp; this.ongamepadconnected)
-						this.ongamepadconnected(gamepad);
-					else if(this.gamepads[i] &amp;&amp; !gamepads[i] &amp;&amp; this.ongamepaddisconnected)
-						this.ongamepaddisconnected(this.gamepads[i]);
-				}
-				//xbox controller mapping
-				var xbox = { axes:[], buttons:{}, hat: &quot;&quot;};
-				xbox.axes[&quot;lx&quot;] = gamepad.axes[0];
-				xbox.axes[&quot;ly&quot;] = gamepad.axes[1];
-				xbox.axes[&quot;rx&quot;] = gamepad.axes[2];
-				xbox.axes[&quot;ry&quot;] = gamepad.axes[3];
-				xbox.axes[&quot;triggers&quot;] = gamepad.axes[4];
+		{
+			var gamepad = gamepads[i]; //current state
 
-				for(var i = 0; i &lt; gamepad.buttons.length; i++)
+			if(gamepad &amp;&amp; !skip_mapping)
+				addGamepadXBOXmapping(gamepad);
+
+			var old_gamepad = this.gamepads[i]; //old state
+
+			//launch connected gamepads events
+			if(!old_gamepad &amp;&amp; gamepad)
+			{
+				var event = new CustomEvent(&quot;gamepadconnected&quot;);
+				event.eventType = event.type;
+				event.gamepad = gamepad;;
+				if(this.ongamepadconnected)
+					this.ongamepadconnected(event);
+				LEvent.trigger(gl,&quot;gamepadconnected&quot;,event);
+			}
+			else if(old_gamepad &amp;&amp; !gamepad)
+			{
+				var event = new CustomEvent(&quot;gamepaddisconnected&quot;);
+				event.eventType = event.type;
+				event.gamepad = old_gamepad;
+				if(this.ongamepaddisconnected)
+					this.ongamepaddisconnected(event);
+				LEvent.trigger(gl,&quot;gamepaddisconnected&quot;,event);
+			}
+
+			//seek buttons changes to trigger events
+			if(gamepad)
+			{
+				for(var j = 0; j &lt; gamepad.buttons.length; ++j)
 				{
-					switch(i) //I use a switch to ensure that a player with another gamepad could play
+					var button = gamepad.buttons[j];
+					if( button.pressed &amp;&amp; (!old_gamepad || !old_gamepad.buttons[j].pressed))
 					{
-						case 0: xbox.buttons[&quot;a&quot;] = gamepad.buttons[i].pressed; break;
-						case 1: xbox.buttons[&quot;b&quot;] = gamepad.buttons[i].pressed; break;
-						case 2: xbox.buttons[&quot;x&quot;] = gamepad.buttons[i].pressed; break;
-						case 3: xbox.buttons[&quot;y&quot;] = gamepad.buttons[i].pressed; break;
-						case 4: xbox.buttons[&quot;lb&quot;] = gamepad.buttons[i].pressed; break;
-						case 5: xbox.buttons[&quot;rb&quot;] = gamepad.buttons[i].pressed; break;
-						case 6: xbox.buttons[&quot;lt&quot;] = gamepad.buttons[i].pressed; break;
-						case 7: xbox.buttons[&quot;rt&quot;] = gamepad.buttons[i].pressed; break;
-						case 8: xbox.buttons[&quot;back&quot;] = gamepad.buttons[i].pressed; break;
-						case 9: xbox.buttons[&quot;start&quot;] = gamepad.buttons[i].pressed; break;
-						case 10: xbox.buttons[&quot;ls&quot;] = gamepad.buttons[i].pressed; break;
-						case 11: xbox.buttons[&quot;rs&quot;] = gamepad.buttons[i].pressed; break;
-						case 12: if( gamepad.buttons[i].pressed) xbox.hat += &quot;up&quot;; break;
-						case 13: if( gamepad.buttons[i].pressed) xbox.hat += &quot;down&quot;; break;
-						case 14: if( gamepad.buttons[i].pressed) xbox.hat += &quot;left&quot;; break;
-						case 15: if( gamepad.buttons[i].pressed) xbox.hat += &quot;right&quot;; break;
-						case 16: xbox.buttons[&quot;home&quot;] = gamepad.buttons[i].pressed; break;
-						default:
+						var event = new CustomEvent(&quot;gamepadButtonDown&quot;);
+						event.eventType = event.type;
+						event.button = button;
+						event.which = j;
+						event.gamepad = gamepad;
+						if(gl.onbuttondown)
+							gl.onbuttondown(event);
+						LEvent.trigger(gl,&quot;buttondown&quot;,event);
+					}
+					else if( !button.pressed &amp;&amp; (old_gamepad &amp;&amp; old_gamepad.buttons[j].pressed))
+					{
+						var event = new CustomEvent(&quot;gamepadButtonUp&quot;);
+						event.eventType = event.type;
+						event.button = button;
+						event.which = j;
+						event.gamepad = gamepad;
+						if(gl.onbuttondown)
+							gl.onbuttondown(event);
+						LEvent.trigger(gl,&quot;buttonup&quot;,event);
 					}
 				}
-				gamepad.xbox = xbox;
 			}
+		}
 		this.gamepads = gamepads;
 		return gamepads;
+	}
+
+	function addGamepadXBOXmapping(gamepad)
+	{
+		//xbox controller mapping
+		var xbox = { axes:[], buttons:{}, hat: &quot;&quot;};
+		xbox.axes[&quot;lx&quot;] = gamepad.axes[0];
+		xbox.axes[&quot;ly&quot;] = gamepad.axes[1];
+		xbox.axes[&quot;rx&quot;] = gamepad.axes[2];
+		xbox.axes[&quot;ry&quot;] = gamepad.axes[3];
+		xbox.axes[&quot;triggers&quot;] = gamepad.axes[4];
+
+		for(var i = 0; i &lt; gamepad.buttons.length; i++)
+		{
+			switch(i) //I use a switch to ensure that a player with another gamepad could play
+			{
+				case 0: xbox.buttons[&quot;a&quot;] = gamepad.buttons[i].pressed; break;
+				case 1: xbox.buttons[&quot;b&quot;] = gamepad.buttons[i].pressed; break;
+				case 2: xbox.buttons[&quot;x&quot;] = gamepad.buttons[i].pressed; break;
+				case 3: xbox.buttons[&quot;y&quot;] = gamepad.buttons[i].pressed; break;
+				case 4: xbox.buttons[&quot;lb&quot;] = gamepad.buttons[i].pressed; break;
+				case 5: xbox.buttons[&quot;rb&quot;] = gamepad.buttons[i].pressed; break;
+				case 6: xbox.buttons[&quot;lt&quot;] = gamepad.buttons[i].pressed; break;
+				case 7: xbox.buttons[&quot;rt&quot;] = gamepad.buttons[i].pressed; break;
+				case 8: xbox.buttons[&quot;back&quot;] = gamepad.buttons[i].pressed; break;
+				case 9: xbox.buttons[&quot;start&quot;] = gamepad.buttons[i].pressed; break;
+				case 10: xbox.buttons[&quot;ls&quot;] = gamepad.buttons[i].pressed; break;
+				case 11: xbox.buttons[&quot;rs&quot;] = gamepad.buttons[i].pressed; break;
+				case 12: if( gamepad.buttons[i].pressed) xbox.hat += &quot;up&quot;; break;
+				case 13: if( gamepad.buttons[i].pressed) xbox.hat += &quot;down&quot;; break;
+				case 14: if( gamepad.buttons[i].pressed) xbox.hat += &quot;left&quot;; break;
+				case 15: if( gamepad.buttons[i].pressed) xbox.hat += &quot;right&quot;; break;
+				case 16: xbox.buttons[&quot;home&quot;] = gamepad.buttons[i].pressed; break;
+				default:
+			}
+		}
+		gamepad.xbox = xbox;
 	}
 
 	/**
@@ -816,6 +922,7 @@ GL.mapKeyCode = function(code)
 GL.dragging = false;
 GL.last_pos = [0,0];
 
+//adds extra info to the MouseEvent (coordinates in canvas axis, deltas and button state)
 GL.augmentEvent = function(e, root_element)
 {
 	var offset_left = 0;
@@ -825,40 +932,47 @@ GL.augmentEvent = function(e, root_element)
 	root_element = root_element || e.target || gl.canvas;
 	b = root_element.getBoundingClientRect();
 		
-	e.mousex = e.pageX - b.left;
-	e.mousey = e.pageY - b.top;
+	e.mousex = e.clientX - b.left;
+	e.mousey = e.clientY - b.top;
 	e.canvasx = e.mousex;
 	e.canvasy = b.height - e.mousey;
 	e.deltax = 0;
 	e.deltay = 0;
 	
-	//console.log(&quot;WHICH: &quot;,e.which,&quot; BUTTON: &quot;,e.button, e.type);
 	if(e.type == &quot;mousedown&quot;)
 	{
 		this.dragging = true;
-		gl.mouse_buttons |= (1 &lt;&lt; e.which); //enable
+		gl.mouse.buttons |= (1 &lt;&lt; e.which); //enable
 	}
 	else if (e.type == &quot;mousemove&quot;)
 	{
 	}
 	else if (e.type == &quot;mouseup&quot;)
 	{
-		gl.mouse_buttons = gl.mouse_buttons &amp; ~(1 &lt;&lt; e.which);
-		//console.log(&quot;BUT:&quot;, e.button, &quot;MASK:&quot;, gl.mouse_buttons);
-		if(gl.mouse_buttons == 0)
+		gl.mouse.buttons = gl.mouse.buttons &amp; ~(1 &lt;&lt; e.which);
+		if(gl.mouse.buttons == 0)
 			this.dragging = false;
 	}
 
-	e.deltax = e.mousex - this.last_pos[0];
-	e.deltay = e.mousey - this.last_pos[1];
+	if(e.movementX !== undefined) //pointer lock
+	{
+		e.deltax = e.movementX;
+		e.deltay = e.movementY;
+	}
+	else
+	{
+		e.deltax = e.mousex - this.last_pos[0];
+		e.deltay = e.mousey - this.last_pos[1];
+	}
 	this.last_pos[0] = e.mousex;
 	this.last_pos[1] = e.mousey;
 
+	//insert info in event
 	e.dragging = this.dragging;
-	e.buttons_mask = gl.mouse_buttons;			
-
-	e.leftButton = gl.mouse_buttons &amp; (1&lt;&lt;GL.LEFT_MOUSE_BUTTON);
-	e.rightButton = gl.mouse_buttons &amp; (1&lt;&lt;GL.RIGHT_MOUSE_BUTTON);
+	e.buttons_mask = gl.mouse.buttons;
+	e.leftButton = gl.mouse.buttons &amp; (1&lt;&lt;GL.LEFT_MOUSE_BUTTON);
+	e.middleButton = gl.mouse.buttons &amp; (1&lt;&lt;GL.MIDDLE_MOUSE_BUTTON);
+	e.rightButton = gl.mouse.buttons &amp; (1&lt;&lt;GL.RIGHT_MOUSE_BUTTON);
 	e.isButtonPressed = function(num) { return this.buttons_mask &amp; (1&lt;&lt;num); }
 }
 

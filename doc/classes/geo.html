@@ -40,10 +40,10 @@
                             <ul id="api-classes" class="apis classes">
                                 <li><a href="../classes/BBox.html">BBox</a></li>
                                 <li><a href="../classes/geo.html">geo</a></li>
+                                <li><a href="../classes/GL.html">GL</a></li>
                                 <li><a href="../classes/gl.html">gl</a></li>
                                 <li><a href="../classes/GL.Buffer.html">GL.Buffer</a></li>
                                 <li><a href="../classes/GL.FBO.html">GL.FBO</a></li>
-                                <li><a href="../classes/GL.GL.html">GL.GL</a></li>
                                 <li><a href="../classes/GL.Indexer.html">GL.Indexer</a></li>
                                 <li><a href="../classes/GL.Mesh.html">GL.Mesh</a></li>
                                 <li><a href="../classes/GL.Octree.html">GL.Octree</a></li>
@@ -54,7 +54,6 @@
                 
                 
                             <ul id="api-modules" class="apis modules">
-                                <li><a href="../modules/GL.html">GL</a></li>
                             </ul>
                         </div>
                     </div>
@@ -96,7 +95,6 @@
             Defined in: <a href="../files/.._src_geo.js.html#l11"><code>..&#x2F;src&#x2F;geo.js:11</code></a>
         </div>
 
-            Module: <a href="../modules/GL.html">GL</a>
 
 </div>
 
@@ -144,6 +142,14 @@
                             </li>
                             <li class="index-item method">
                                 <a href="#method_frustumTestSphere">frustumTestSphere</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_project2DPointOnLine">project2DPointOnLine</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_projectPointOnLine">projectPointOnLine</a>
 
                             </li>
                             <li class="index-item method">
@@ -462,7 +468,7 @@
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_geo.js.html#l512"><code>..&#x2F;src&#x2F;geo.js:512</code></a>
+        <a href="../files/.._src_geo.js.html#l570"><code>..&#x2F;src&#x2F;geo.js:570</code></a>
         </p>
 
 
@@ -531,7 +537,7 @@
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_geo.js.html#l561"><code>..&#x2F;src&#x2F;geo.js:561</code></a>
+        <a href="../files/.._src_geo.js.html#l619"><code>..&#x2F;src&#x2F;geo.js:619</code></a>
         </p>
 
 
@@ -611,7 +617,7 @@
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_geo.js.html#l588"><code>..&#x2F;src&#x2F;geo.js:588</code></a>
+        <a href="../files/.._src_geo.js.html#l646"><code>..&#x2F;src&#x2F;geo.js:646</code></a>
         </p>
 
 
@@ -664,6 +670,220 @@
 
 
 </div>
+<div id="method_project2DPointOnLine" class="method item">
+    <h3 class="name"><code>project2DPointOnLine</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>P</code>
+                </li>
+                <li class="arg">
+                        <code>A</code>
+                </li>
+                <li class="arg">
+                        <code>B</code>
+                </li>
+                <li class="arg">
+                        <code>result</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+        <span class="returns-inline">
+            <span class="type">Vec2</span>
+        </span>
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/.._src_geo.js.html#l76"><code>..&#x2F;src&#x2F;geo.js:76</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Projects a 2D point on a 2D line</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">P</code>
+                        <span class="type">Vec2</span>
+
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">A</code>
+                        <span class="type">Vec2</span>
+
+
+                    <div class="param-description">
+                        <p>line start</p>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">B</code>
+                        <span class="type">Vec2</span>
+
+
+                    <div class="param-description">
+                        <p>line end</p>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">result</code>
+                        <span class="type">Vec2</span>
+
+
+                    <div class="param-description">
+                        <p>to store result (optional)</p>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                        <span class="type">Vec2</span>:
+                    <p>projectec point</p>
+
+            </div>
+        </div>
+
+
+</div>
+<div id="method_projectPointOnLine" class="method item">
+    <h3 class="name"><code>projectPointOnLine</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>P</code>
+                </li>
+                <li class="arg">
+                        <code>A</code>
+                </li>
+                <li class="arg">
+                        <code>B</code>
+                </li>
+                <li class="arg">
+                        <code>result</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+        <span class="returns-inline">
+            <span class="type">Vec3</span>
+        </span>
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/.._src_geo.js.html#l54"><code>..&#x2F;src&#x2F;geo.js:54</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Projects a 3D point on a 3D line</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">P</code>
+                        <span class="type">Vec3</span>
+
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">A</code>
+                        <span class="type">Vec3</span>
+
+
+                    <div class="param-description">
+                        <p>line start</p>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">B</code>
+                        <span class="type">Vec3</span>
+
+
+                    <div class="param-description">
+                        <p>line end</p>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">result</code>
+                        <span class="type">Vec3</span>
+
+
+                    <div class="param-description">
+                        <p>to store result (optional)</p>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                        <span class="type">Vec3</span>:
+                    <p>projectec point</p>
+
+            </div>
+        </div>
+
+
+</div>
 <div id="method_projectPointOnPlane" class="method item">
     <h3 class="name"><code>projectPointOnPlane</code></h3>
 
@@ -697,7 +917,7 @@
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_geo.js.html#l54"><code>..&#x2F;src&#x2F;geo.js:54</code></a>
+        <a href="../files/.._src_geo.js.html#l97"><code>..&#x2F;src&#x2F;geo.js:97</code></a>
         </p>
 
 
@@ -801,7 +1021,7 @@
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_geo.js.html#l71"><code>..&#x2F;src&#x2F;geo.js:71</code></a>
+        <a href="../files/.._src_geo.js.html#l114"><code>..&#x2F;src&#x2F;geo.js:114</code></a>
         </p>
 
 
@@ -892,7 +1112,7 @@
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_geo.js.html#l397"><code>..&#x2F;src&#x2F;geo.js:397</code></a>
+        <a href="../files/.._src_geo.js.html#l455"><code>..&#x2F;src&#x2F;geo.js:455</code></a>
         </p>
 
 
@@ -970,7 +1190,7 @@
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_geo.js.html#l623"><code>..&#x2F;src&#x2F;geo.js:623</code></a>
+        <a href="../files/.._src_geo.js.html#l681"><code>..&#x2F;src&#x2F;geo.js:681</code></a>
         </p>
 
 
@@ -1049,7 +1269,7 @@
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_geo.js.html#l382"><code>..&#x2F;src&#x2F;geo.js:382</code></a>
+        <a href="../files/.._src_geo.js.html#l440"><code>..&#x2F;src&#x2F;geo.js:440</code></a>
         </p>
 
 
@@ -1136,7 +1356,7 @@
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_geo.js.html#l354"><code>..&#x2F;src&#x2F;geo.js:354</code></a>
+        <a href="../files/.._src_geo.js.html#l408"><code>..&#x2F;src&#x2F;geo.js:408</code></a>
         </p>
 
 
@@ -1202,7 +1422,7 @@
 
 
                     <div class="param-description">
-                        <p>collision position</p>
+                        <p>collision position in world space unless in_local is true</p>
 
                     </div>
 
@@ -1258,7 +1478,7 @@
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_geo.js.html#l277"><code>..&#x2F;src&#x2F;geo.js:277</code></a>
+        <a href="../files/.._src_geo.js.html#l320"><code>..&#x2F;src&#x2F;geo.js:320</code></a>
         </p>
 
 
@@ -1380,7 +1600,7 @@
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_geo.js.html#l89"><code>..&#x2F;src&#x2F;geo.js:89</code></a>
+        <a href="../files/.._src_geo.js.html#l132"><code>..&#x2F;src&#x2F;geo.js:132</code></a>
         </p>
 
 
@@ -1478,142 +1698,6 @@
                         <code>direction</code>
                 </li>
                 <li class="arg">
-                        <code>p</code>
-                </li>
-                <li class="arg">
-                        <code>q</code>
-                </li>
-                <li class="arg">
-                        <code>r</code>
-                </li>
-                <li class="arg">
-                        <code>result</code>
-                </li>
-            </ul><span class="paren">)</span>
-        </div>
-
-        <span class="returns-inline">
-            <span class="type">Boolean</span>
-        </span>
-
-
-
-
-
-
-
-    <div class="meta">
-                <p>
-                Defined in
-        <a href="../files/.._src_geo.js.html#l191"><code>..&#x2F;src&#x2F;geo.js:191</code></a>
-        </p>
-
-
-
-    </div>
-
-    <div class="description">
-        <p>test a ray cylinder collision and retrieves the collision point</p>
-
-    </div>
-
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-                <li class="param">
-                        <code class="param-name">start</code>
-                        <span class="type">Vec3</span>
-
-
-                    <div class="param-description">
-                        <p>ray start</p>
-
-                    </div>
-
-                </li>
-                <li class="param">
-                        <code class="param-name">direction</code>
-                        <span class="type">Vec3</span>
-
-
-                    <div class="param-description">
-                        <p>ray direction</p>
-
-                    </div>
-
-                </li>
-                <li class="param">
-                        <code class="param-name">p</code>
-                        <span class="type">Vec3</span>
-
-
-                    <div class="param-description">
-                        <p>center of the cylinder</p>
-
-                    </div>
-
-                </li>
-                <li class="param">
-                        <code class="param-name">q</code>
-                        <span class="type">Number</span>
-
-
-                    <div class="param-description">
-                        <p>height of the cylinder</p>
-
-                    </div>
-
-                </li>
-                <li class="param">
-                        <code class="param-name">r</code>
-                        <span class="type">Number</span>
-
-
-                    <div class="param-description">
-                        <p>radius of the cylinder</p>
-
-                    </div>
-
-                </li>
-                <li class="param">
-                        <code class="param-name">result</code>
-                        <span class="type">Vec3</span>
-
-
-                    <div class="param-description">
-                        <p>collision position</p>
-
-                    </div>
-
-                </li>
-            </ul>
-        </div>
-
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                        <span class="type">Boolean</span>:
-                    <p>returns if the ray collides the cylinder</p>
-
-            </div>
-        </div>
-
-
-</div>
-<div id="method_testRaySphere" class="method item">
-    <h3 class="name"><code>testRaySphere</code></h3>
-
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-                <li class="arg">
-                        <code>start</code>
-                </li>
-                <li class="arg">
-                        <code>direction</code>
-                </li>
-                <li class="arg">
                         <code>center</code>
                 </li>
                 <li class="arg">
@@ -1641,7 +1725,7 @@
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_geo.js.html#l144"><code>..&#x2F;src&#x2F;geo.js:144</code></a>
+        <a href="../files/.._src_geo.js.html#l187"><code>..&#x2F;src&#x2F;geo.js:187</code></a>
         </p>
 
 
@@ -1738,6 +1822,142 @@
 
 
 </div>
+<div id="method_testRaySphere" class="method item">
+    <h3 class="name"><code>testRaySphere</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>start</code>
+                </li>
+                <li class="arg">
+                        <code>direction</code>
+                </li>
+                <li class="arg">
+                        <code>p</code>
+                </li>
+                <li class="arg">
+                        <code>q</code>
+                </li>
+                <li class="arg">
+                        <code>r</code>
+                </li>
+                <li class="arg">
+                        <code>result</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+        <span class="returns-inline">
+            <span class="type">Boolean</span>
+        </span>
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/.._src_geo.js.html#l234"><code>..&#x2F;src&#x2F;geo.js:234</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>test a ray cylinder collision and retrieves the collision point</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">start</code>
+                        <span class="type">Vec3</span>
+
+
+                    <div class="param-description">
+                        <p>ray start</p>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">direction</code>
+                        <span class="type">Vec3</span>
+
+
+                    <div class="param-description">
+                        <p>ray direction</p>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">p</code>
+                        <span class="type">Vec3</span>
+
+
+                    <div class="param-description">
+                        <p>center of the cylinder</p>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">q</code>
+                        <span class="type">Number</span>
+
+
+                    <div class="param-description">
+                        <p>height of the cylinder</p>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">r</code>
+                        <span class="type">Number</span>
+
+
+                    <div class="param-description">
+                        <p>radius of the cylinder</p>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">result</code>
+                        <span class="type">Vec3</span>
+
+
+                    <div class="param-description">
+                        <p>collision position</p>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                        <span class="type">Boolean</span>:
+                    <p>returns if the ray collides the cylinder</p>
+
+            </div>
+        </div>
+
+
+</div>
 <div id="method_testSegmentPlane" class="method item">
     <h3 class="name"><code>testSegmentPlane</code></h3>
 
@@ -1774,7 +1994,7 @@
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_geo.js.html#l113"><code>..&#x2F;src&#x2F;geo.js:113</code></a>
+        <a href="../files/.._src_geo.js.html#l156"><code>..&#x2F;src&#x2F;geo.js:156</code></a>
         </p>
 
 
@@ -1890,7 +2110,7 @@
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_geo.js.html#l429"><code>..&#x2F;src&#x2F;geo.js:429</code></a>
+        <a href="../files/.._src_geo.js.html#l487"><code>..&#x2F;src&#x2F;geo.js:487</code></a>
         </p>
 
 

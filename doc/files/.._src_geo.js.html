@@ -40,10 +40,10 @@
                             <ul id="api-classes" class="apis classes">
                                 <li><a href="../classes/BBox.html">BBox</a></li>
                                 <li><a href="../classes/geo.html">geo</a></li>
+                                <li><a href="../classes/GL.html">GL</a></li>
                                 <li><a href="../classes/gl.html">gl</a></li>
                                 <li><a href="../classes/GL.Buffer.html">GL.Buffer</a></li>
                                 <li><a href="../classes/GL.FBO.html">GL.FBO</a></li>
-                                <li><a href="../classes/GL.GL.html">GL.GL</a></li>
                                 <li><a href="../classes/GL.Indexer.html">GL.Indexer</a></li>
                                 <li><a href="../classes/GL.Mesh.html">GL.Mesh</a></li>
                                 <li><a href="../classes/GL.Octree.html">GL.Octree</a></li>
@@ -54,7 +54,6 @@
                 
                 
                             <ul id="api-modules" class="apis modules">
-                                <li><a href="../modules/GL.html">GL</a></li>
                             </ul>
                         </div>
                     </div>
@@ -143,6 +142,49 @@ global.geo = {
 	distance2PointToPlane: function(point, plane)
 	{
 		return (vec3.dot(point,plane) + plane[3])/(plane[0]*plane[0] + plane[1]*plane[1] + plane[2]*plane[2]);
+	},
+
+	/**
+	* Projects a 3D point on a 3D line
+	* @method projectPointOnLine
+	* @param {vec3} P
+	* @param {vec3} A line start
+	* @param {vec3} B line end
+	* @param {vec3} result to store result (optional)
+	* @return {vec3} projectec point
+	*/
+	projectPointOnLine: function( P, A, B, result )
+	{
+		result = result || vec3.create();
+		//A + dot(AP,AB) / dot(AB,AB) * AB
+		var AP = vec3.fromValues( P[0] - A[0], P[1] - A[1], P[2] - A[2]);
+		var AB = vec3.fromValues( B[0] - A[0], B[1] - A[1], B[2] - A[2]);
+		var div = vec3.dot(AP,AB) / vec3.dot(AB,AB);
+		result[0] = A[0] + div[0] * AB[0];
+		result[1] = A[1] + div[1] * AB[1];
+		result[2] = A[2] + div[2] * AB[2];
+		return result;
+	},
+
+	/**
+	* Projects a 2D point on a 2D line
+	* @method project2DPointOnLine
+	* @param {vec2} P
+	* @param {vec2} A line start
+	* @param {vec2} B line end
+	* @param {vec2} result to store result (optional)
+	* @return {vec2} projectec point
+	*/
+	project2DPointOnLine: function( P, A, B, result )
+	{
+		result = result || vec2.create();
+		//A + dot(AP,AB) / dot(AB,AB) * AB
+		var AP = vec2.fromValues(P[0] - A[0], P[1] - A[1]);
+		var AB = vec2.fromValues(B[0] - A[0], B[1] - A[1]);
+		var div = vec2.dot(AP,AB) / vec2.dot(AB,AB);
+		result[0] = A[0] + div[0] * AB[0];
+		result[1] = A[1] + div[1] * AB[1];
+		return result;
 	},
 
 	/**
@@ -378,22 +420,28 @@ global.geo = {
 	* @param {vec3} result collision position
 	* @return {boolean} returns if the ray collides the box
 	*/
-	testRayBox: function(start, direction, minB, maxB, result, max_dist)
+	testRayBox: (function() { 
+	
+		var quadrant = new Float32Array(3);
+		var candidatePlane = new Float32Array(3);
+		var maxT = new Float32Array(3);
+	
+	return function(start, direction, minB, maxB, result, max_dist)
 	{
 		//#define NUMDIM	3
 		//#define RIGHT		0
 		//#define LEFT		1
 		//#define MIDDLE	2
 
-		result = result || vec3.create();
 		max_dist = max_dist || Number.MAX_VALUE;
 
 		var inside = true;
-		var quadrant = new Float32Array(3);
 		var i = 0|0;
 		var whichPlane;
-		var maxT = new Float32Array(3);
-		var candidatePlane = new Float32Array(3);
+		
+		quadrant.fill(0);
+		maxT.fill(0);
+		candidatePlane.fill(0);
 
 		/* Find candidate planes; this loop can be avoided if
 		rays cast all from the eye(assume perpsective view) */
@@ -412,7 +460,8 @@ global.geo = {
 
 		/* Ray origin inside bounding box */
 		if(inside)	{
-			vec3.copy(result, start);
+			if(result)
+				vec3.copy(result, start);
 			return true;
 		}
 
@@ -436,14 +485,18 @@ global.geo = {
 
 		for (i = 0; i &lt; 3; ++i)
 			if (whichPlane != i) {
-				result[i] = start[i] + maxT[whichPlane] * direction[i];
-				if (result[i] &lt; minB[i] || result[i] &gt; maxB[i])
+				var res = start[i] + maxT[whichPlane] * direction[i];
+				if (res &lt; minB[i] || res &gt; maxB[i])
 					return false;
+				if(result)
+					result[i] = res;
 			} else {
-				result[i] = candidatePlane[i];
+				if(result)
+					result[i] = candidatePlane[i];
 			}
 		return true;				/* ray hits box */
-	},	
+	}
+	})(),	
 
 	/**
 	* test a ray bounding-box collision, it uses the  BBox class and allows to use non-axis aligned bbox
@@ -452,26 +505,30 @@ global.geo = {
 	* @param {vec3} direction ray direction
 	* @param {BBox} box in BBox format
 	* @param {mat4} model transformation of the BBox
-	* @param {vec3} result collision position
+	* @param {vec3} result collision position in world space unless in_local is true
 	* @return {boolean} returns if the ray collides the box
 	*/
-	testRayBBox: function(start, direction, box, model, result, max_dist)
+	testRayBBox: (function(){ 
+	var inv = mat4.create();	
+	var end = vec3.create();
+	var start2 = vec3.create();
+	return function(start, direction, box, model, result, max_dist, in_local )
 	{
 		if(model)
 		{
-			var inv = mat4.invert( mat4.create(), model );
-			var end = vec3.add( vec3.create(), start, direction );
-			start = vec3.transformMat4(vec3.create(), start, inv);
-			vec3.transformMat4(end, end, inv);
-			vec3.sub(end, end, start);
+			mat4.invert( inv, model );
+			vec3.add( end, start, direction );
+			start = vec3.transformMat4( start2, start, inv);
+			vec3.transformMat4( end, end, inv );
+			vec3.sub( end, end, start );
 			direction = vec3.normalize(end, end);
 		}
 		var r = this.testRayBox(start, direction, box.subarray(6,9), box.subarray(9,12), result, max_dist );
-		if(model)
+		if(!in_local &amp;&amp; model &amp;&amp; result)
 			vec3.transformMat4(result, result, model);
 		return r;
-	},
-
+	}
+	})(),
 
 	/**
 	* test if a 3d point is inside a BBox
