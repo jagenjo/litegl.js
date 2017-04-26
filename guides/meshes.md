@@ -49,6 +49,19 @@ Some useful methods are:
 - ```getVertexBuffer( name )``` returns the ```GL.Buffer``` with that name (not index buffers).
 - ```getIndexBuffer( name )``` returns the ```GL.Buffer``` for index buffers.
 
+### How to create a mesh ###
+
+You can create a mesh by creating every buffer individually and attaching them to a mesh or just using this method:
+
+```js
+var mesh = GL.Mesh.load({ 
+  vertices: [0,0,0, 1,0,0, 0,1,0], 
+  normals: [0,0,1, 0,0,1, 0,0,1], 
+  coords: [0,0, 1,0, 1,0], 
+  triangles: [0,1,2]
+});
+```
+
 ## Basic primitives ##
 
 If you want to generate procedurally some basic geometric shapes (like spheres, planes, cubes, etc) the class ```GL.Mesh``` comes with some handy functions.
