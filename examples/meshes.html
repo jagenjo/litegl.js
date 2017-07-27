@@ -23,10 +23,11 @@
 	var gl = GL.create({width: container.offsetWidth, height: container.offsetHeight});
 	container.appendChild(gl.canvas);
 	gl.animate(); //launch loop
+	gl.captureMouse(true);
 
 	//build the mesh
 	var objects = [];
-	for(var i = 0; i < 10; i++)
+	for(var i = 0; i < 11; i++)
 	{
 		var object = {};
 		object.primitive = gl.TRIANGLES;
@@ -46,6 +47,7 @@
 	objects[8].mesh = GL.Mesh.grid({size:1});
 	objects[8].primitive = gl.LINES;
 	objects[9].mesh = GL.Mesh.icosahedron({size:1,subdivisions:1});
+	objects[10].mesh = GL.Mesh.cone({radius:0.5,height:1});
 
 	//create basic matrices for cameras and transformation
 	var proj = mat4.create();
@@ -93,10 +95,13 @@
 		u_mvp: mvp
 	};
 
+	var height = 10;
+
 	//rendering loop
 	gl.ondraw = function()
 	{
 		gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
+		mat4.lookAt(view, [0,height,10],[0,0,0], [0,1,0]);
 
 		//create modelview and projection matrices
 		for(var i in objects)
@@ -118,6 +123,12 @@
 		for(var i in objects)
 			mat4.rotateY(objects[i].model, objects[i].model, dt*0.2);
 	};
+
+	gl.onmousemove = function(e)
+	{
+		if(e.dragging)
+			height += e.deltay * 0.1;
+	}
 	
 	</script>
 </body>

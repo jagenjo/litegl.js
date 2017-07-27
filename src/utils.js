@@ -14,6 +14,22 @@ global.isPowerOfTwo = GL.isPowerOfTwo = function isPowerOfTwo(v)
 	return ((Math.log(v) / Math.log(2)) % 1) == 0;
 }
 
+//Global Scope
+//better array conversion to string for serializing
+var typed_arrays = [ Uint8Array, Int8Array, Uint16Array, Int16Array, Uint32Array, Int32Array, Float32Array, Float64Array ];
+function typedToArray(){ 
+	return Array.prototype.slice.call(this);
+}
+typed_arrays.forEach( function(v) { 
+	if(!v.prototype.toJSON)
+		Object.defineProperty( v.prototype, "toJSON", {
+			value: typedToArray,
+			enumerable: false
+		});
+});
+
+
+
 /**
 * Get current time in milliseconds
 * @method getTime
@@ -38,6 +54,25 @@ global.isArray = function isArray(obj) {
 
 global.isNumber = function isNumber(obj) {
   return (obj != null && obj.constructor === Number );
+}
+
+global.getClassName = function getClassName(obj)
+{
+	if (!obj)
+		return;
+
+	//from function info, but not standard
+	if(obj.name)
+		return obj.name;
+
+	//from sourcecode
+	if(obj.toString) {
+		var arr = obj.toString().match(
+			/function\s*(\w+)/);
+		if (arr && arr.length == 2) {
+			return arr[1];
+		}
+	}
 }
 
 /**
@@ -371,6 +406,13 @@ global.typedArrayToArray = function(array)
 	for(var i = 0; i < array.length; i++)
 		r[i] = array[i];
 	return r;
+}
+
+global.RGBToHex = function(r, g, b) { 
+	r = Math.min(255, r*255);
+	g = Math.min(255, g*255);
+	b = Math.min(255, b*255);
+	return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
 }
 
 global.hexColorToRGBA = (function() {

@@ -802,6 +802,7 @@ GL.create = function(options) {
 
 	gl.canvas.addEventListener("webglcontextlost", function(e) {
 		e.preventDefault();
+		gl.context_lost = true;
 		if(gl.onlosecontext)
 			gl.onlosecontext(e);
 	}, false);
@@ -825,6 +826,19 @@ GL.create = function(options) {
 		gl._current_texture_drawto = null;
 		gl._current_fbo_color = null;
 		gl._current_fbo_depth = null;
+	}
+
+	gl.dump = function()
+	{
+		console.log("userAgent: ", navigator.userAgent );
+		console.log("Supported extensions:");
+		var extensions = gl.getSupportedExtensions();
+		console.log( extensions.join(",") );
+		var info = [ "VENDOR", "VERSION", "MAX_VERTEX_ATTRIBS", "MAX_VARYING_VECTORS", "MAX_VERTEX_UNIFORM_VECTORS", "MAX_VERTEX_TEXTURE_IMAGE_UNITS", "MAX_FRAGMENT_UNIFORM_VECTORS", "MAX_TEXTURE_SIZE", "MAX_TEXTURE_IMAGE_UNITS" ];
+		console.log("WebGL info:");
+		for(var i in info)
+			console.log(" * " + info[i] + ": " + gl.getParameter( gl[info[i]] ));
+		console.log("*************************************************")
 	}
 
 	//Reset state

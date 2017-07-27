@@ -40,8 +40,9 @@ GL.Buffer = function Buffer( target, data, spacing, stream_type, gl ) {
 		gl = gl || global.gl;
 
 	this.buffer = null; //webgl buffer
-	this.target = target;
+	this.target = target; //GL.ARRAY_BUFFER, GL.ELEMENT_ARRAY_BUFFER
 	this.gl = gl;
+	this.attribute = null; //name of the attribute in the shader ("a_vertex","a_normal","a_coord",...)
 
 	//optional
 	this.data = data;
@@ -221,6 +222,34 @@ GL.Buffer.prototype.clone = function(share)
 		}
 	}
 	return buffer;
+}
+
+
+GL.Buffer.prototype.toJSON = function()
+{
+	if(!this.data)
+	{
+		console.error("cannot serialize a mesh without data");
+		return null;
+	}
+
+	return {
+		data_type: getClassName(this.data),
+		data: this.data.toJSON(),
+		target: this.target,
+		attribute: this.attribute,
+		spacing: this.spacing
+	};
+}
+
+GL.Buffer.prototype.fromJSON = function(o)
+{
+	var data_type = global[ o.data_type ] || Float32Array;
+	this.data = new data_type( o.data ); //cloned
+	this.target = o.target;
+	this.spacing = o.spacing || 3;
+	this.attribute = o.attribute;
+	this.upload( GL.STATIC_DRAW );
 }
 
 /**
@@ -672,8 +701,64 @@ Mesh.prototype.toObject = function()
 		}
 	}
 
-	return { vertexBuffers: vbs, indexBuffers: ibs };
+	return { 
+		vertexBuffers: vbs, 
+		indexBuffers: ibs,
+		info: this.info ? cloneObject( this.info ) : null,
+		bounding: this.bounding ? this.bounding.toJSON() : null
+	};
 }
+
+
+Mesh.prototype.toJSON = function()
+{
+	var r = {
+		vertexBuffers: {},
+		indexBuffers: {},
+		info: this.info ? cloneObject( this.info ) : null,
+		bounding: this.bounding ? this.bounding.toJSON() : null
+	};
+
+	for(var i in this.vertexBuffers)
+		r.vertexBuffers[i] = this.vertexBuffers[i].toJSON();
+
+	for(var i in this.indexBuffers)
+		r.indexBuffers[i] = this.indexBuffers[i].toJSON();
+
+	return r;
+}
+
+Mesh.prototype.fromJSON = function(o)
+{
+	this.vertexBuffers = {};
+	this.indexBuffers = {};
+
+	for(var i in o.vertexBuffers)
+	{
+		if(!o.vertexBuffers[i])
+			continue;
+		var buffer = new GL.Buffer();
+		buffer.fromJSON( o.vertexBuffers[i] );
+		if(!buffer.attribute && GL.Mesh.common_buffers[i])
+			buffer.attribute = GL.Mesh.common_buffers[i].attribute;
+		this.vertexBuffers[i] = buffer;
+	}
+
+	for(var i in o.indexBuffers)
+	{
+		if(!o.indexBuffers[i])
+			continue;
+		var buffer = new GL.Buffer();
+		buffer.fromJSON( o.indexBuffers[i] );
+		this.indexBuffers[i] = buffer;
+	}
+
+	if(o.info)
+		this.info = cloneObject( o.info );
+	if(o.bounding)
+		this.bounding = new Float32Array(o.bounding);
+}
+
 
 /**
 * Computes some data about the mesh
@@ -695,13 +780,6 @@ Mesh.prototype.generateMetadata = function()
 	metadata.indexed = !!this.metadata.faces;
 	this.metadata = metadata;
 }
-
-//Meshes cannot be stored in JSON
-Mesh.prototype.toJSON = function()
-{
-	return "";
-}
-
 
 //never tested
 /*
@@ -1003,6 +1081,10 @@ Mesh.prototype.explodeIndices = function( buffer_name ) {
 * @param {enum} stream_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW)
 */
 Mesh.prototype.computeNormals = function( stream_type  ) {
+	var vertices_buffer = this.vertexBuffers["vertices"];
+	if(!vertices_buffer)
+		return console.error("Cannot compute normals of a mesh without vertices");
+
 	var vertices = this.vertexBuffers["vertices"].data;
 	var num_vertices = vertices.length / 3;
 
@@ -1085,10 +1167,26 @@ Mesh.prototype.computeNormals = function( stream_type  ) {
 */
 Mesh.prototype.computeTangents = function()
 {
-	var vertices = this.vertexBuffers["vertices"].data;
-	var normals = this.vertexBuffers["normals"].data;
-	var uvs = this.vertexBuffers["coords"].data;
-	var triangles = this.indexBuffers["triangles"].data;
+	var vertices_buffer = this.vertexBuffers["vertices"];
+	if(!vertices_buffer)
+		return console.error("Cannot compute tangents of a mesh without vertices");
+
+	var normals_buffer = this.vertexBuffers["normals"];
+	if(!normals_buffer)
+		return console.error("Cannot compute tangents of a mesh without normals");
+
+	var uvs_buffer = this.vertexBuffers["coords"];
+	if(!uvs_buffer)
+		return console.error("Cannot compute tangents of a mesh without uvs");
+
+	var triangles_buffer = this.indexBuffers["triangles"];
+	if(!triangles_buffer)
+		return console.error("Cannot compute tangents of a mesh without indices");
+
+	var vertices = vertices_buffer.data;
+	var normals = normals_buffer.data;
+	var uvs = uvs_buffer.data;
+	var triangles = triangles_buffer.data;
 
 	if(!vertices || !normals || !uvs) return;
 
@@ -1176,7 +1274,7 @@ Mesh.prototype.computeTextureCoordinates = function( stream_type )
 {
 	var vertices_buffer = this.vertexBuffers["vertices"];
 	if(!vertices_buffer)
-		return;
+		return console.error("Cannot compute uvs of a mesh without vertices");
 
 	this.explodeIndices( "triangles" );
 
@@ -1660,7 +1758,11 @@ Mesh.mergeMeshes = function( meshes, options )
 	//return
 	if( typeof(gl) != "undefined" || options.only_data )
 		return new GL.Mesh( vertex_buffers,index_buffers, extra );
-	return { vertexBuffers: vertex_buffers, indexBuffers: index_buffers, info: { groups: groups } };
+	return { 
+		vertexBuffers: vertex_buffers, 
+		indexBuffers: index_buffers, 
+		info: { groups: groups } 
+	};
 }
 
 

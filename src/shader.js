@@ -512,9 +512,10 @@ Shader.prototype.drawRange = function(mesh, mode, start, length, index_buffer_na
 var temp_attribs_array = new Uint8Array(16);
 var temp_attribs_array_zero = new Uint8Array(16); //should be filled with zeros always
 
-Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_start, range_length)
+Shader.prototype.drawBuffers = function( vertexBuffers, indexBuffer, mode, range_start, range_length )
 {
-	if(range_length == 0) return;
+	if(range_length == 0)
+		return;
 
 	var gl = this.gl;
 
@@ -546,14 +547,18 @@ Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_
 	}
 
 	//range rendering
-	var offset = 0;
+	var offset = 0; //in bytes
 	if(range_start > 0) //render a polygon range
-		offset = range_start * ( (indexBuffer && indexBuffer.data) ? indexBuffer.data.constructor.BYTES_PER_ELEMENT : 1); //in bytes (Uint16 == 2 bytes)
+		offset = range_start; //in bytes (Uint16 == 2 bytes)
 
-	if(range_length > 0)
-		length = range_length;
-	else if (indexBuffer)
+	if (indexBuffer)
 		length = indexBuffer.buffer.length - offset;
+
+	if(range_length > 0 && range_length < length) //to avoid problems
+		length = range_length;
+
+	var BYTES_PER_ELEMENT = (indexBuffer && indexBuffer.data) ? indexBuffer.data.constructor.BYTES_PER_ELEMENT : 1;
+	offset *= BYTES_PER_ELEMENT;
 
 	// Force to disable buffers in this shader that are not in this mesh
 	for (var attribute in this.attributes)
@@ -568,7 +573,7 @@ Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_
 	if (length && (!indexBuffer || indexBuffer.buffer)) {
 	  if (indexBuffer) {
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer.buffer);
-		gl.drawElements(mode, length, indexBuffer.buffer.gl_type, offset); //gl.UNSIGNED_SHORT
+		gl.drawElements( mode, length, indexBuffer.buffer.gl_type, offset); //gl.UNSIGNED_SHORT
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 	  } else {
 		gl.drawArrays(mode, offset, length);
