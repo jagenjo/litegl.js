@@ -28,6 +28,12 @@ LiteGL only has one dependency, [gl-matrix](http://glmatrix.net/), which helps w
 
 To better understand the syntax check the [guide for gl-matrix](gl-matrix.md).
 
+## Usage ##
+
+If you want to see an example of application done in LiteGL I recommend to check the examples folder in the repository where you will find examples for every feature.
+
+Or you can check the [guide for a basic litegl application](basic_application.md).
+
 ## Classes ##
 
 There are four classes that any WebGL developer need to create to do a basic 3D application: ```GL.Buffer```, ```GL.Mesh```, ```GL.Shader```, ```GL.Texture```.
