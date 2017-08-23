@@ -37,14 +37,14 @@ WebGL supports rendering the scene to more than one texture, this is needed if y
 Here is how you can do it:
 
 ```js
-  //creating the textures for the FBO
-  var w = gl.canvas.width;
-  var h = gl.canvas.height;
-  var texture_albedo = new GL.Texture(w,h, { type: type, filter: gl.NEAREST });
-	var texture_normal = new GL.Texture(w,h, { type: type, filter: gl.NEAREST });
-	var texture_depth = new GL.Texture(w,h, { format: gl.DEPTH_COMPONENT, type: gl.UNSIGNED_INT, filter: gl.NEAREST }); 
-	var textures = [ texture_albedo, texture_normal ];
-	var fbo = new GL.FBO( textures, texture_depth ); //the second parameter can be a depth texture
+//creating the textures for the FBO
+var w = gl.canvas.width;
+var h = gl.canvas.height;
+var texture_albedo = new GL.Texture(w,h, { type: type, filter: gl.NEAREST });
+var texture_normal = new GL.Texture(w,h, { type: type, filter: gl.NEAREST });
+var texture_depth = new GL.Texture(w,h, { format: gl.DEPTH_COMPONENT, type: gl.UNSIGNED_INT, filter: gl.NEAREST }); 
+var textures = [ texture_albedo, texture_normal ];
+var fbo = new GL.FBO( textures, texture_depth ); //the second parameter can be a depth texture
 ```
 
 As you can see we not only created two color textures (texture_albedo and texture_normal), we also created a depth texture (texture_depth) that will contain the depth buffer.
