@@ -63,4 +63,4 @@ texture.drawTo( function(){
 });
 ```
 
-Check the examples to see more about FBOs.
+Check the [examples folder](https://github.com/jagenjo/litegl.js/tree/master/examples) to see more about FBOs.
