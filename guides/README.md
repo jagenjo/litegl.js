@@ -34,6 +34,11 @@ If you want to see an example of application done in LiteGL I recommend to check
 
 Or you can check the [guide for a basic litegl application](basic_application.md).
 
+## The Context ##
+
+To use WebGL we need to have a WebGL context, check [the context guide](context.md) to know how to do it.
+
+
 ## Classes ##
 
 There are four classes that any WebGL developer need to create to do a basic 3D application: ```GL.Buffer```, ```GL.Mesh```, ```GL.Shader```, ```GL.Texture```.
