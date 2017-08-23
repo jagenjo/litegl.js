@@ -42,4 +42,75 @@ To simplify that LiteGL provides some easy to use methods:
 
 ### Getting the Keyboard
 
+To capture key presses (and releases) you use the ```gl.onkeydown``` and ```gl.onkeyup``` callbacks after enabling the keyboard capture using the ```gl.captureKeys()```.
+
+```js
+gl.onkeydown = function(e)
+{
+	if(e.keyCode == 39) //using ascii keycodes
+	{
+	   //do something
+	}
+}
+
+gl.captureKeys();
+```
+
+### Getting the Mouse
+
+To capture mouse events you use the next methods:
+
+- ```gl.onmousedown``` to get when the user presses a mouse button.
+- ```gl.onmouseup``` to get when the user release a mouse button.
+- ```gl.onmousemove``` to get when the user moves the mouse
+- ```gl.onmousewheel``` to get when the user moves the mouse wheel (remember to set the captureMouse parameter to true)
+
+And to capture you must call ```gl.captureMouse(true)``` (true if you want to capture the mouse wheel).
+
+
+```js
+gl.onmousedown = function(e)
+{
+	if( e.leftButton ) //or e.rightButton or e.middleButton 
+	{
+	   //do something...
+	}
+}
+
+gl.onmousemove = function(e)
+{
+	// e.canvasx and e.canvasy contain the mouse position in bottom-left coordinates
+	// e.mousex and e.mousey contain the mouse position in top-left coordinates
+}
+
+gl.onmousewheel = function(e)
+{
+	// e.wheel 
+}
+
+gl.captureMouse(true);
+```
+
+### Getting the gamepad
+
+To get the gamepad:
+
+```js
+var gamepads = gl.getGamepads();
+if(gamepads)
+{
+	for(var i = 0; i < gamepads.length; i++)
+	{
+		var gamepad = gamepads[i];
+		if(!gamepad)
+			continue;
+		if(!player && gamepad.xbox && gamepad.xbox.buttons["a"])
+		{
+			//do something
+		}
+	}
+}
+
+gl.captureGamepads();
+``` 
 
