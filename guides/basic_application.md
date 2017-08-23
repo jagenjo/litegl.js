@@ -2,6 +2,14 @@
 
 Here is an example of a simple application using LiteGL
 
+First include the library and dependencies in your HTML:
+```html
+<script src="js/gl-matrix-min.js"></script>
+<script src="js/litegl.js"></script>
+```
+
+Then in your javascript you can create the context and set the callbacks:
+
 ```js
 //create the rendering context
 var container = document.body;
