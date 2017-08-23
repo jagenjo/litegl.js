@@ -114,3 +114,20 @@ if(gamepads)
 gl.captureGamepads();
 ``` 
 
+### Getting the input state
+
+You can also read the input state at any moment using the ```gl.mouse``` and ```gl.keys``` properties:
+
+```js
+if( gl.mouse.left_mouse )
+{
+
+}
+
+if( gl.keys["UP"] )
+{
+
+}
+
+```
+
