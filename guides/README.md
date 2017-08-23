@@ -87,13 +87,11 @@ Besides the basic classes LiteGL comes with others that could help with more com
 
 This class helps testing ray collision against mesh in an efficient way. An octree is constructed containing all the mesh data so it can be crawled faster when testing collisions.
 
-For more info read the [Octree guide](octree.md)
+To see an example of the Octree and the Raytracer check the [octree example](https://github.com/jagenjo/litegl.js/blob/master/examples/octree.html)
 
 ### geo ###
 
 Following the gl-matrix coding style we provide a class to do basic collision detection between basic shapes (ray-sphere, ray-box, ray-plane, box-box)
-
-For more info read the [geo guide](geo.md)
 
 ### LEvent ###
 
