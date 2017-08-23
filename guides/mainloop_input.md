@@ -11,10 +11,10 @@ Realtime applications require to constantly render a new frame, this render has 
 To do this browsers have a function called ```requestAnimationFrame```. LiteGL allows to create a simple animation loop by defining the ondraw and onupdate callback and launching the main loop by calling the ```gl.animate()``` method.
 
 ```js
-		//create the rendering context
-		var container = document.body;
-		var gl = GL.create({width: container.offsetWidth, height: container.offsetHeight});
-		container.appendChild(gl.canvas);
+    //create the rendering context
+    var container = document.body;
+    var gl = GL.create({width: container.offsetWidth, height: container.offsetHeight});
+    container.appendChild(gl.canvas);
     
     //define the draw callback
     gl.ondraw = function()
