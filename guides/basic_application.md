@@ -89,7 +89,7 @@ Here is an example of a simple application using LiteGL
 		};
     
 		//update loop
-		gl.onforceupdate = function(dt)
+		gl.onupdate = function(dt)
 		{
 			//rotate world
 			mat4.rotateY(model,model,dt*0.2);
