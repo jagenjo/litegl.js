@@ -7,12 +7,16 @@ Canvas2D.
 This is done in LiteGL by callding the ```GL.create``` method:
 
 ```js
+var settings = {
+  canvas: "mycanvas",
+  alpha: true
+}
 var gl = GL.create( settings );
 ```
 
 Where settings is an object with several optional settings that you can pass, here is a list:
 
-- *canvas* : it can be the HTMLCanvas element or a selector. This way the context will be attached to that canvas.
+- *canvas* : it can be the HTMLCanvas element or the ID of the element. This way the context will be attached to that canvas.
 - *container* : if no canvas is specified then a container can be specified where the canvas should be attached.
 - *width* and *height* : the size of the canvas in case there is no canvas speficied and must be created.
 - *webgl2* : forces to create a webgl2 canvas
