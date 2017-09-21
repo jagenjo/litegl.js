@@ -8,7 +8,7 @@ To pack and send every buffer to the GPU you can use the class ```GL.Buffer```.
 
 Because normally an object is composed by several buffers, LiteGL uses the class ```GL.Mesh``` to store and manage ```GL.Buffers```.
 
-## GL.Buffer ##
+## GL.Buffer 
 
 The class ```GL.Buffer``` contains several properties:
 
@@ -30,7 +30,7 @@ An example of how to create a buffer:
   var vertices_buffer = new GL.Buffer( gl.ARRAY_BUFFER, [0,0,0, 1,1,1, 0,1,0], 3 );
 ```
 
-## GL.Mesh ##
+## GL.Mesh 
 
 This is the container to store several buffers. You dont need to use this container but it helps loading and doing the render calls.
 
@@ -49,7 +49,7 @@ Some useful methods are:
 - ```getVertexBuffer( name )``` returns the ```GL.Buffer``` with that name (not index buffers).
 - ```getIndexBuffer( name )``` returns the ```GL.Buffer``` for index buffers.
 
-### How to create a mesh ###
+### How to create a mesh 
 
 You can create a mesh by creating every buffer individually and attaching them to a mesh or just using this method:
 
@@ -78,7 +78,7 @@ An example:
   var mymesh = GL.Mesh.sphere({radius: 10, subdivisions: 20});
 ```
 
-## Loading and Parsing ##
+## Loading and Parsing 
 
 In case you want to load a remote mesh and parse it, the ```GL.Mesh``` comes with a basic OBJ loader but it can be extended to support other formats.
 
@@ -87,4 +87,17 @@ In case you want to load a remote mesh and parse it, the ```GL.Mesh``` comes wit
 ```
 
 To extend the loader add your parser function to the ```GL.Mesh.parsers[ format ]``` container.
+
+## Using binary Meshes
+
+LiteGL supports storing meshes in its own binary format called WBin (a multi purpose binary codifier for JSONs).
+But the WBin library is not included in LiteGL, so if you want to use binary formats you need to download [the WBin library from the LiteScene repository](https://github.com/jagenjo/litescene.js/blob/master/src/utils/wbin.js), and include it before LiteGL.
+
+Here is an example of how to use it:
+
+```js
+//once you have loaded the mesh
+
+````
+
 
