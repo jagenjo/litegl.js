@@ -88,16 +88,36 @@ In case you want to load a remote mesh and parse it, the ```GL.Mesh``` comes wit
 
 To extend the loader add your parser function to the ```GL.Mesh.parsers[ format ]``` container.
 
-## Using binary Meshes
+## Encoding 
+
+If you have a mesh in your system that you want to download back to a file:
+
+```js
+var data = mesh.encode("obj");
+```
+
+## Using binary Meshes and saving them
 
 LiteGL supports storing meshes in its own binary format called WBin (a multi purpose binary codifier for JSONs).
-But the WBin library is not included in LiteGL, so if you want to use binary formats you need to download [the WBin library from the LiteScene repository](https://github.com/jagenjo/litescene.js/blob/master/src/utils/wbin.js), and include it before LiteGL.
+But the WBin library is not included in LiteGL, so if you want to use binary formats you need to download [the WBin library from the LiteGL repository](https://github.com/jagenjo/litegl.js/blob/master/external/wbin.js), and include it before LiteGL.
 
-Here is an example of how to use it:
+Here is an example of how to load, or encode an existing mesh to the WBin format:
 
 ```js
 //once you have loaded the mesh
+var mesh = GL.Mesh.fromURL("mesh.wbin");
 
+//or if you have a mesh that you want to save in WBin format, here is the code that encodes and downloads:
+var file = null;
+file = mesh.encode("wbin");
+var url = URL.createObjectURL( new Blob([file]) );
+var element = document.createElement("a");
+element.setAttribute('href', url);
+element.setAttribute('download', "mesh.wbin" );
+element.style.display = 'none';
+document.body.appendChild(element);
+element.click();
+document.body.removeChild(element);
 ````
 
 
