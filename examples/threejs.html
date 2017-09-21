@@ -101,7 +101,8 @@
 			gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
 
 			//Three.JS render 
-			renderer.resetGLState(); //IMPORTANT: reset the state, otherwise threejs assume some programs are enabled
+			if(renderer.resetGLState)
+				renderer.resetGLState(); //IMPORTANT: reset the state, otherwise threejs assume some programs are enabled
 			renderer.render( scene, camera ); //render the scene
 
 			//LiteGL render

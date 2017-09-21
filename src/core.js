@@ -53,24 +53,48 @@ GL.create = function(options) {
 	*/
 	var gl = null;
 
-	if(options.webgl2)
+	var seq = null;
+	if(options.version == 2)	
+		seq = ['webgl2','experimental-webgl2'];
+	else if(options.version == 1 || options.version === undefined) //default
+		seq = ['webgl','experimental-webgl'];
+	else if(options.version === 0) //latest
+		seq = ['webgl2','experimental-webgl2','webgl','experimental-webgl'];
+
+	if(!seq)
+		throw 'Incorrect WebGL version, must be 1 or 2';
+
+	var context_options = {
+		alpha: options.alpha === undefined ? true : options.alpha,
+		depth: options.depth === undefined ? true : options.depth,
+		stencil: options.stencil === undefined ? true : options.stencil,
+		antialias: options.antialias === undefined ? true : options.antialias,
+		premultipliedAlpha: options.premultipliedAlpha === undefined ? true : options.premultipliedAlpha,
+		preserveDrawingBuffer: options.preserveDrawingBuffer === undefined ? true : options.preserveDrawingBuffer
+	};
+
+	for(var i = 0; i < seq.length; ++i)
 	{
-		try { gl = canvas.getContext('webgl2', options); gl.webgl_version = 2; } catch (e) {}
-		try { gl = gl || canvas.getContext('experimental-webgl2', options); gl.webgl_version = 2; } catch (e) {}
+		try { gl = canvas.getContext( seq[i], context_options ); } catch (e) {}
+		if(gl)
+			break;
 	}
-	try { gl = gl || canvas.getContext('webgl', options); } catch (e) {}
-	try { gl = gl || canvas.getContext('experimental-webgl', options); } catch (e) {}
-	if (!gl) { throw 'WebGL not supported'; }
 
-	if(gl.webgl_version === undefined)
-		gl.webgl_version = 1;
+	if (!gl)
+	{
+		if( canvas.getContext( "webgl" ) )
+			throw 'WebGL supported but not with those parameters';
+		throw 'WebGL not supported';
+	}
 
+	//context globals
+	gl.webgl_version = gl.constructor.name === "WebGL2RenderingContext" ? 2 : 1;
 	global.gl = gl;
 	canvas.is_webgl = true;
 	canvas.gl = gl;
 	gl.context_id = this.last_context_id++;
 
-	//get some common extensions
+	//get some common extensions for webgl 1
 	gl.extensions = {};
 	gl.extensions["OES_standard_derivatives"] = gl.derivatives_supported = gl.getExtension('OES_standard_derivatives') || false;
 	gl.extensions["WEBGL_depth_texture"] = gl.getExtension("WEBGL_depth_texture") || gl.getExtension("WEBKIT_WEBGL_depth_texture") || gl.getExtension("MOZ_WEBGL_depth_texture");
@@ -86,15 +110,17 @@ GL.create = function(options) {
 	gl.extensions["OES_texture_float_linear"] = gl.getExtension("OES_texture_float_linear");
 	if(gl.extensions["OES_texture_float_linear"])
 		gl.extensions["OES_texture_float"] = gl.getExtension("OES_texture_float");
+	gl.extensions["EXT_color_buffer_float"] = gl.getExtension("EXT_color_buffer_float");
 
+	//for half float textures in webgl 1 require extension
 	gl.extensions["OES_texture_half_float_linear"] = gl.getExtension("OES_texture_half_float_linear");
 	if(gl.extensions["OES_texture_half_float_linear"])
 		gl.extensions["OES_texture_half_float"] = gl.getExtension("OES_texture_half_float");
 
-	gl.HALF_FLOAT_OES = 0x8D61; 
-	if(gl.extensions["OES_texture_half_float"])
-		gl.HALF_FLOAT_OES = gl.extensions["OES_texture_half_float"].HALF_FLOAT_OES;
-	gl.HIGH_PRECISION_FORMAT = gl.extensions["OES_texture_half_float"] ? gl.HALF_FLOAT_OES : (gl.extensions["OES_texture_float"] ? gl.FLOAT : gl.UNSIGNED_BYTE); //because Firefox dont support half float
+	if( gl.webgl_version == 1 )
+		gl.HIGH_PRECISION_FORMAT = gl.extensions["OES_texture_half_float"] ? GL.HALF_FLOAT_OES : (gl.extensions["OES_texture_float"] ? GL.FLOAT : GL.UNSIGNED_BYTE); //because Firefox dont support half float
+	else
+		gl.HIGH_PRECISION_FORMAT = GL.HALF_FLOAT_OES;
 
 	gl.max_texture_units = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
 
@@ -293,9 +319,9 @@ GL.create = function(options) {
 		mouse.y = e.canvasy;
 		mouse.clientx = e.mousex;
 		mouse.clienty = e.mousey;
-		mouse.left_button = mouse.buttons & (1<<GL.LEFT_MOUSE_BUTTON);
-		mouse.middle_button = mouse.buttons & (1<<GL.MIDDLE_MOUSE_BUTTON);
-		mouse.right_button = mouse.buttons & (1<<GL.RIGHT_MOUSE_BUTTON);
+		mouse.left_button = !!(mouse.buttons & (1<<GL.LEFT_MOUSE_BUTTON));
+		mouse.middle_button = !!(mouse.buttons & (1<<GL.MIDDLE_MOUSE_BUTTON));
+		mouse.right_button = !!(mouse.buttons & (1<<GL.RIGHT_MOUSE_BUTTON));
 
 		if(e.eventType == "mousedown")
 		{
@@ -709,6 +735,30 @@ GL.create = function(options) {
 		return final_canvas;
 	}
 
+	//from https://webgl2fundamentals.org/webgl/lessons/webgl1-to-webgl2.html
+	function getAndApplyExtension( gl, name ) {
+		var ext = gl.getExtension(name);
+		if (!ext) {
+			return false;
+		}
+		var suffix = name.split("_")[0];
+		var prefix = suffix = '_';
+		var suffixRE = new RegExp(suffix + '$');
+		var prefixRE = new RegExp('^' + prefix);
+		for (var key in ext) {
+			var val = ext[key];
+			if (typeof(val) === 'function') {
+				// remove suffix (eg: bindVertexArrayOES -> bindVertexArray)
+				var unsuffixedKey = key.replace(suffixRE, '');
+				if (key.substing)
+					gl[unprefixedKey] = ext[key].bind(ext);
+			} else {
+				var unprefixedKey = key.replace(prefixRE, '');
+				gl[unprefixedKey] = ext[key];
+			}
+		}
+	}
+
 
 	//mini textures manager
 	var loading_textures = {};
@@ -919,9 +969,9 @@ GL.augmentEvent = function(e, root_element)
 	//insert info in event
 	e.dragging = this.dragging;
 	e.buttons_mask = gl.mouse.buttons;
-	e.leftButton = gl.mouse.buttons & (1<<GL.LEFT_MOUSE_BUTTON);
-	e.middleButton = gl.mouse.buttons & (1<<GL.MIDDLE_MOUSE_BUTTON);
-	e.rightButton = gl.mouse.buttons & (1<<GL.RIGHT_MOUSE_BUTTON);
+	e.leftButton = !!(gl.mouse.buttons & (1<<GL.LEFT_MOUSE_BUTTON));
+	e.middleButton = !!(gl.mouse.buttons & (1<<GL.MIDDLE_MOUSE_BUTTON));
+	e.rightButton = !!(gl.mouse.buttons & (1<<GL.RIGHT_MOUSE_BUTTON));
 	e.isButtonPressed = function(num) { return this.buttons_mask & (1<<num); }
 }
 

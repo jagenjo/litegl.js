@@ -3,16 +3,30 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
 
-<title>litegl.js: obj mesh example</title>
+<title>litegl.js: mesh formats example</title>
 	<link rel="stylesheet" type="text/css" href="style.css" />
 	<style type='text/css'>
-		html, body { width: 100%; height: 100%; margin: 0; padding: 0 }
-		body { background-color: #DDD;}
-		h1 { color: #777; background-color: #CCC; }
+		html, body { background-color: #DDD; margin: 0; padding: 0; width: 100%; height: 100%;}
+		canvas { cursor: move; }
+		.tools {
+			position: fixed;
+			top: 10px;
+			left: 10px;
+		}
+		button {
+			border: 0;
+			border-radius: 10px;
+			font-size: 20px;
+			padding: 10px;
+			background-color: #334;
+		}
 	</style>
 	<script type="text/javascript" src="../external/gl-matrix.js"></script>
+	<script type="text/javascript" src="../external/wbin.js"></script>
 	<script type="text/javascript" src="../build/litegl.js"></script>
 	<script type="text/javascript">
+
+	var mesh = null;
 	
 	function init()
 	{
@@ -23,10 +37,19 @@
 		container.appendChild(gl.canvas);
 		gl.animate();
 
-		//build the mesh
-		var mesh = GL.Mesh.fromURL("man.obj");
+		//camera settings
 		var cam_pos = [0,100,250];
 		var cam_center = [0,100,0];
+
+		//adjust camera to mesh bounding
+		function adjustCameraToBounding( mesh ){
+			cam_center = BBox.getCenter( mesh.bounding );
+			var r = BBox.getRadius( mesh.bounding );
+			cam_pos = vec3.add( cam_pos, cam_center, [0,r*0.5, r*3] );
+		}
+
+		//build the mesh
+		mesh = GL.Mesh.fromURL( "girl.wbin", adjustCameraToBounding ); //load from URL
 
 		//create basic matrices for cameras and transformation
 		var proj = mat4.create();
@@ -35,19 +58,20 @@
 		var mvp = mat4.create();
 		var temp = mat4.create();
 
-		//get mouse actions
+		//get mouse actions to drag the mesh
 		gl.captureMouse();
 		gl.onmousemove = function(e)
 		{
 			if(e.dragging)
 			{
 				mat4.rotateY(model,model,e.deltax * 0.01);
-				cam_pos[2] += e.deltay;
+				var r = BBox.getRadius( mesh.bounding );
+				cam_pos[2] += e.deltay * r * 0.01;
 			}
 		}
 
 		//set the camera position
-		mat4.perspective(proj, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 0.1, 5000);
+		mat4.perspective(proj, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 0.1, 1000);
 
 		//basic phong shader
 		var shader = new Shader('\
@@ -85,7 +109,7 @@
 		gl.ondraw = function()
 		{
 			gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
-			mat4.lookAt( view, cam_pos, cam_center, [0,1,0] );
+			mat4.lookAt(view, cam_pos, cam_center, [0,1,0]);
 
 			//create modelview and projection matrices
 			mat4.multiply(temp,view,model);
@@ -141,23 +165,45 @@
 			{
 				var file = files[i];
 				var reader = new FileReader();
+				var index = file.name.lastIndexOf(".");
+				var extension = file.name.substr(index+1);
 				reader.onload = function(e) { 
 					var data = e.target.result;
-					mesh.parse( data, "obj" );
-					console.log(mesh.bounding);
-					cam_center = BBox.getCenter( mesh.bounding );
-					var r = BBox.getRadius( mesh.bounding );
-					cam_pos = vec3.add( cam_pos, cam_center, [0,r*0.5, r*2] );
+					mesh.parse( data, extension );
+					adjustCameraToBounding(mesh);
 				};
-			    reader.readAsText(file);
+				if(extension == "wbin")
+				    reader.readAsArrayBuffer(file);
+				else
+				    reader.readAsText(file);
 			}
+		}
+
+		window.download = function(format)
+		{
+			var file = null;
+			if(format == "wbin")
+				file = mesh.encode("wbin");
+			else
+				file = mesh.encode("obj");
+			var url = URL.createObjectURL( new Blob([file]) );
+			var element = document.createElement("a");
+			element.setAttribute('href', url);
+			element.setAttribute('download', "mesh." + format );
+			element.style.display = 'none';
+			document.body.appendChild(element);
+			element.click();
+			document.body.removeChild(element);
 		}
 	}	
 	
 	</script>
 </head>
 <body>
-<script>init();</script>
+	<div class="tools">
+		<button onclick="download('wbin');">Download as WBIN</button><button onclick="download('obj');">Download as OBJ</button> Drag and drop a mesh in OBJ or WBin format...
+	</div>
+	<script>init();</script>
 </body>
 </html>
 

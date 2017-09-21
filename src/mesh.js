@@ -38,10 +38,10 @@ GL.Buffer = function Buffer( target, data, spacing, stream_type, gl ) {
 
 	if(gl !== null)
 		gl = gl || global.gl;
+	this.gl = gl;
 
 	this.buffer = null; //webgl buffer
 	this.target = target; //GL.ARRAY_BUFFER, GL.ELEMENT_ARRAY_BUFFER
-	this.gl = gl;
 	this.attribute = null; //name of the attribute in the shader ("a_vertex","a_normal","a_coord",...)
 
 	//optional
@@ -394,7 +394,11 @@ Mesh.prototype.addBuffers = function( vertexbuffers, indexbuffers, stream_type )
 		var attribute = "a_" + i;
 		if(stream_info && stream_info.attribute)
 			attribute = stream_info.attribute;
-		this.createVertexBuffer( i, attribute, spacing, data, stream_type );
+	
+		if( this.vertexBuffers[i] )
+			this.updateVertexBuffer( i, attribute, spacing, data, stream_type );
+		else
+			this.createVertexBuffer( i, attribute, spacing, data, stream_type );
 	}
 
 	if(indexbuffers)
@@ -439,7 +443,7 @@ Mesh.prototype.addBuffers = function( vertexbuffers, indexbuffers, stream_type )
 * @param {enum} stream_type [optional, default = gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW ) ]
 */
 
-Mesh.prototype.createVertexBuffer = function(name, attribute, buffer_spacing, buffer_data, stream_type ) {
+Mesh.prototype.createVertexBuffer = function( name, attribute, buffer_spacing, buffer_data, stream_type ) {
 
 	var common = GL.Mesh.common_buffers[name]; //generic info about a buffer with the same name
 
@@ -475,6 +479,33 @@ Mesh.prototype.createVertexBuffer = function(name, attribute, buffer_spacing, bu
 
 	return buffer;
 }
+
+/**
+* Updates a vertex buffer 
+* @method updateVertexBuffer
+* @param {String} name the name of the buffer
+* @param {String} attribute the name of the attribute in the shader
+* @param {number} spacing number of numbers per component (3 per vertex, 2 per uvs...), default 3
+* @param {*} data the array with all the data
+* @param {enum} stream_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW 
+*/
+Mesh.prototype.updateVertexBuffer = function( name, attribute, buffer_spacing, buffer_data, stream_type ) {
+	var buffer = this.vertexBuffers[name];
+	if(!buffer)
+	{
+		console.log("buffer not found: ",name);
+		return;
+	}
+
+	if(!buffer_data.length)
+		return;
+
+	buffer.attribute = attribute;
+	buffer.spacing = buffer_spacing;
+	buffer.data = buffer_data;
+	buffer.upload( stream_type );
+}
+
 
 /**
 * Removes a vertex buffer from the mesh
@@ -1481,8 +1512,8 @@ Mesh.prototype.freeData = function()
 
 Mesh.prototype.configure = function( o, options )
 {
-	var v = {};
-	var i = {};
+	var vertex_buffers = {};
+	var index_buffers = {};
 	options = options || {};
 
 	for(var j in o)
@@ -1490,29 +1521,31 @@ Mesh.prototype.configure = function( o, options )
 		if(!o[j])
 			continue;
 
-		if(j == "vertexBuffers")
+		if(j == "vertexBuffers" || j == "vertex_buffers") //HACK: legacy code
 		{
 			for(i in o[j])
-				v[i] = o[j][i];
+				vertex_buffers[i] = o[j][i];
 			continue;
 		}
 		
-		if(j == "indexBuffers")
+		if(j == "indexBuffers" || j == "index_buffers")
 		{
 			for(i in o[j])
-				i[i] = o[j][i];
+				index_buffers[i] = o[j][i];
 			continue;
 		}
 
 		if(j == "indices" || j == "lines" ||  j == "wireframe" || j == "triangles")
-			i[j] = o[j];
-		else if(GL.Mesh.common_buffers[j])
-			v[j] = o[j];
-		else
+			index_buffers[j] = o[j];
+		else if( GL.Mesh.common_buffers[j])
+			vertex_buffers[j] = o[j];
+		else //global data like bounding, info of groups, etc
+		{
 			options[j] = o[j];
+		}
 	}
 
-	this.addBuffers( v, i, options.stream_type );
+	this.addBuffers( vertex_buffers, index_buffers, options.stream_type );
 
 	for(var i in options)
 		this[i] = options[i];		
@@ -1770,6 +1803,9 @@ Mesh.mergeMeshes = function( meshes, options )
 //Here we store all basic mesh parsers (OBJ, STL) and encoders
 Mesh.parsers = {};
 Mesh.encoders = {};
+Mesh.binary_file_formats = {}; //extensions that must be downloaded in binary
+Mesh.compressors = {}; //used to compress binary meshes
+Mesh.decompressors = {}; //used to decompress binary meshes
 
 /**
 * Returns am empty mesh and loads a mesh and parses it using the Mesh.parsers, by default only OBJ is supported
@@ -1780,20 +1816,23 @@ Mesh.fromURL = function(url, on_complete, gl, options)
 {
 	options = options || {};
 	gl = gl || global.gl;
+	
 	var mesh = new GL.Mesh(undefined,undefined,undefined,gl);
 	mesh.ready = false;
 
+	var pos = url.lastIndexOf(".");
+	var extension = url.substr(pos+1).toLowerCase();
+	options.binary = Mesh.binary_file_formats[ extension ];
+
 	HttpRequest( url, null, function(data) {
-		var pos = url.lastIndexOf(".");
-		var ext = url.substr(pos+1);
-		mesh.parse( data, ext );
+		mesh.parse( data, extension );
 		delete mesh["ready"];
 		if(on_complete)
 			on_complete.call(mesh,mesh, url);
 	}, function(err){
 		if(on_complete)
 			on_complete(null);
-	},options);
+	}, options );
 	return mesh;
 }
 
@@ -1869,3 +1908,9 @@ function linearizeArray( array, typed_array_class )
 			buffer[i*components + j] = array[i][j];
 	return buffer;
 }
+
+/* BINARY MESHES */
+//Add some functions to the classes in LiteGL to allow store in binary
+GL.Mesh.EXTENSION = "wbin";
+GL.Mesh.enable_wbin_compression = true;
+

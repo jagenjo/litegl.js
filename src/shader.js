@@ -16,6 +16,9 @@ global.Shader = GL.Shader = function Shader( vertexSource, fragmentSource, macro
 	if(GL.debug)
 		console.log("GL.Shader created");
 
+	if( !vertexSource || !fragmentSource )
+		throw("GL.Shader source code parameter missing");
+
 	//used to avoid problems with resources moving between different webgl context
 	this._context_id = global.gl.context_id; 
 	var gl = this.gl = global.gl;
@@ -23,10 +26,13 @@ global.Shader = GL.Shader = function Shader( vertexSource, fragmentSource, macro
 	//expand macros
 	var extra_code = Shader.expandMacros( macros );
 
+	var final_vertexSource = vertexSource.constructor === String ? Shader.injectCode( extra_code, vertexSource, gl ) : vertexSource;
+	var final_fragmentSource = fragmentSource.constructor === String ? Shader.injectCode( extra_code, fragmentSource, gl ) : fragmentSource;
+
 	this.program = gl.createProgram();
 
-	var vs = vertexSource.constructor === String ? GL.Shader.compileSource( gl.VERTEX_SHADER, extra_code + vertexSource ) : vertexSource;
-	var fs = fragmentSource.constructor === String ? GL.Shader.compileSource( gl.FRAGMENT_SHADER, extra_code + fragmentSource ) : fragmentSource;
+	var vs = vertexSource.constructor === String ? GL.Shader.compileSource( gl.VERTEX_SHADER, final_vertexSource ) : vertexSource;
+	var fs = fragmentSource.constructor === String ? GL.Shader.compileSource( gl.FRAGMENT_SHADER, final_fragmentSource ) : fragmentSource;
 
 	gl.attachShader( this.program, vs, gl );
 	gl.attachShader( this.program, fs, gl );
@@ -55,6 +61,18 @@ Shader.expandMacros = function(macros)
 			extra_code += "#define " + i + " " + (macros[i] ? macros[i] : "") + "\n";
 	return extra_code;
 }
+
+//this is done to avoid problems with the #version which must be in the first line
+Shader.injectCode = function( inject_code, code, gl )
+{
+	var index = code.indexOf("\n");
+	var version = ( gl ? "#define WEBGL" + gl.webgl_version + "\n" : "");
+	var first_line = code.substr(0,index).trim();
+	if( first_line.indexOf("#version") == -1 )
+		return version + inject_code + code;
+	return first_line + "\n" + version + inject_code + code.substr(index);
+}
+
 
 /**
 * Compiles one single shader source (could be gl.VERTEX_SHADER or gl.FRAGMENT_SHADER) and returns the webgl shader handler 
@@ -111,8 +129,13 @@ Shader.prototype.updateShader = function( vertexSource, fragmentSource, macros )
 	if(this.program)
 		this.program = gl.createProgram();
 
-	var vs = vertexSource.constructor === String ? GL.Shader.compileSource( gl.VERTEX_SHADER, extra_code + vertexSource, gl, this.vs_shader ) : vertexSource;
-	var fs = fragmentSource.constructor === String ? GL.Shader.compileSource( gl.FRAGMENT_SHADER, extra_code + fragmentSource, gl, this.fs_shader ) : fragmentSource;
+	var extra_code = Shader.expandMacros( macros );
+
+	var final_vertexSource = vertexSource.constructor === String ? Shader.injectCode( extra_code, vertexSource, gl ) : vertexSource;
+	var final_fragmentSource = fragmentSource.constructor === String ? Shader.injectCode( extra_code, fragmentSource, gl ) : fragmentSource;
+
+	var vs = vertexSource.constructor === String ? GL.Shader.compileSource( gl.VERTEX_SHADER, final_vertexSource ) : vertexSource;
+	var fs = fragmentSource.constructor === String ? GL.Shader.compileSource( gl.FRAGMENT_SHADER, final_fragmentSource ) : fragmentSource;
 
 	gl.attachShader( this.program, vs, gl );
 	gl.attachShader( this.program, fs, gl );
@@ -228,32 +251,33 @@ Shader.getUniformFunc = function( data )
 	var func = null;
 	switch (data.type)
 	{
-		case gl.FLOAT: 		
+		case GL.FLOAT: 		
 			if(data.size == 1)
 				func = gl.uniform1f; 
 			else
 				func = gl.uniform1fv; 
 			break;
-		case gl.FLOAT_MAT2: func = gl.uniformMatrix2fv; break;
-		case gl.FLOAT_MAT3:	func = gl.uniformMatrix3fv; break;
-		case gl.FLOAT_MAT4:	func = gl.uniformMatrix4fv; break;
-		case gl.FLOAT_VEC2: func = gl.uniform2fv; break;
-		case gl.FLOAT_VEC3: func = gl.uniform3fv; break;
-		case gl.FLOAT_VEC4: func = gl.uniform4fv; break;
+		case GL.FLOAT_MAT2: func = gl.uniformMatrix2fv; break;
+		case GL.FLOAT_MAT3:	func = gl.uniformMatrix3fv; break;
+		case GL.FLOAT_MAT4:	func = gl.uniformMatrix4fv; break;
+		case GL.FLOAT_VEC2: func = gl.uniform2fv; break;
+		case GL.FLOAT_VEC3: func = gl.uniform3fv; break;
+		case GL.FLOAT_VEC4: func = gl.uniform4fv; break;
 
-		case gl.UNSIGNED_INT: 
-		case gl.INT: 	  
+		case GL.UNSIGNED_INT: 
+		case GL.INT: 	  
 			if(data.size == 1)
 				func = gl.uniform1i; 
 			else
 				func = gl.uniform1iv; 
 			break;
-		case gl.INT_VEC2: func = gl.uniform2iv; break;
-		case gl.INT_VEC3: func = gl.uniform3iv; break;
-		case gl.INT_VEC4: func = gl.uniform4iv; break;
+		case GL.INT_VEC2: func = gl.uniform2iv; break;
+		case GL.INT_VEC3: func = gl.uniform3iv; break;
+		case GL.INT_VEC4: func = gl.uniform4iv; break;
 
-		case gl.SAMPLER_2D:
-		case gl.SAMPLER_CUBE:
+		case GL.SAMPLER_2D:
+		case GL.SAMPLER_3D:
+		case GL.SAMPLER_CUBE:
 			func = gl.uniform1i; break;
 		default: func = gl.uniform1f; break;
 	}	
@@ -637,6 +661,37 @@ Shader.dumpErrorToConsole = function(err, vscode, fscode)
 	console.groupEnd();
 }
 
+Shader.convertTo100 = function(code,type)
+{
+	//in VERTEX
+		//change in for attribute
+		//change out for varying
+		//add #extension GL_OES_standard_derivatives
+	//in FRAGMENT
+		//change in for varying 
+		//remove out vec4 _gl_FragColor
+		//rename _gl_FragColor for gl_FragColor
+	//in both
+		//change #version 300 es for #version 100
+		//replace 'texture(' for 'texture2D('
+}
+
+
+Shader.convertTo300 = function(code,type)
+{
+	//in VERTEX
+		//change attribute for in
+		//change varying for out
+		//remove #extension GL_OES_standard_derivatives
+	//in FRAGMENT
+		//change varying for in
+		//rename gl_FragColor for _gl_FragColor
+		//rename gl_FragData[0] for _gl_FragColor
+		//add out vec4 _gl_FragColor
+	//in both
+		//replace texture2D for texture
+}
+
 //helps to check if a variable value is valid to an specific uniform in a shader
 Shader.validateValue = function( value, uniform_info )
 {
@@ -824,6 +879,8 @@ Shader.FLAT_FRAGMENT_SHADER = "\n\
 */
 Shader.createFX = function(code, uniforms, shader)
 {
+	//remove comments
+	code = GL.Shader.removeComments( code, true ); //remove comments and breaklines to avoid problems with the macros
 	var macros = {
 		FX_CODE: code,
 		FX_UNIFORMS: uniforms || ""
@@ -832,6 +889,28 @@ Shader.createFX = function(code, uniforms, shader)
 		return new GL.Shader( GL.Shader.SCREEN_VERTEX_SHADER, GL.Shader.SCREEN_FRAGMENT_FX, macros );
 	shader.updateShader( GL.Shader.SCREEN_VERTEX_SHADER, GL.Shader.SCREEN_FRAGMENT_FX, macros );
 	return shader;
+}
+
+Shader.removeComments = function(code, one_line)
+{
+	if(!code)
+		return "";
+
+	var rx = /(\/\*([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*\*+\/)|(\/\/.*)/g;
+	var code = code.replace( rx ,"");
+	var lines = code.split("\n");
+	var result = [];
+	for(var i = 0; i < lines.length; ++i)
+	{
+		var line = lines[i]; 
+		var pos = line.indexOf("//");
+		if(pos != -1)
+			line = lines[i].substr(0,pos);
+		line = line.trim();
+		if(line.length)
+			result.push(line);
+	}
+	return result.join( one_line ? "" : "\n" );
 }
 
 /**

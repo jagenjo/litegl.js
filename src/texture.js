@@ -18,6 +18,8 @@
 	- no_flip : do not flip in Y, default TRUE <br/>
 	- anisotropic : number of anisotropic fetches, default 0 <br/>
 
+	check for more info about formats: https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texImage2D
+
 * @class Texture
 * @param {number} width texture width (any supported but Power of Two allows to have mipmaps), 0 means no memory reserved till its filled
 * @param {number} height texture height (any supported but Power of Two allows to have mipmaps), 0 means no memory reserved till its filled
@@ -46,8 +48,11 @@ global.Texture = GL.Texture = function Texture( width, height, options, gl ) {
 	//set settings
 	this.width = width;
 	this.height = height;
+	if(options.depth) //for texture_3d
+		this.depth = options.depth; 
 	this.texture_type = options.texture_type || gl.TEXTURE_2D; //or gl.TEXTURE_CUBE_MAP
 	this.format = options.format || Texture.DEFAULT_FORMAT; //gl.RGBA (if gl.DEPTH_COMPONENT remember type: gl.UNSIGNED_SHORT)
+	this.internalFormat = options.internalFormat; //LUMINANCE, and weird formats with bits
 	this.type = options.type || Texture.DEFAULT_TYPE; //gl.UNSIGNED_BYTE, gl.UNSIGNED_SHORT, gl.FLOAT or gl.HALF_FLOAT_OES (or gl.HIGH_PRECISION_FORMAT which could be half or float)
 	this.magFilter = options.magFilter || options.filter || Texture.DEFAULT_MAG_FILTER;
 	this.minFilter = options.minFilter || options.filter || Texture.DEFAULT_MIN_FILTER;
@@ -61,12 +66,20 @@ global.Texture = GL.Texture = function Texture( width, height, options, gl ) {
 
 	this.has_mipmaps = false;
 
-	if(this.format == gl.DEPTH_COMPONENT && !gl.extensions["WEBGL_depth_texture"])
+	if( this.format == gl.DEPTH_COMPONENT && gl.webgl_version == 1 && !gl.extensions["WEBGL_depth_texture"] )
 		throw("Depth Texture not supported");
-	if(this.type == gl.FLOAT && !gl.extensions["OES_texture_float"])
+	if( this.type == gl.FLOAT && !gl.extensions["OES_texture_float"] && gl.webgl_version == 1 )
 		throw("Float Texture not supported");
-	if(this.type == gl.HALF_FLOAT_OES && !gl.extensions["OES_texture_half_float"])
-		throw("Half Float Texture not supported");
+	if( this.type == gl.HALF_FLOAT_OES)
+	{
+		if( !gl.extensions["OES_texture_half_float"] && gl.webgl_version == 1 )
+			throw("Half Float Texture extension not supported.");
+		else if( gl.webgl_version > 1 )
+		{
+			console.warn("using HALF_FLOAT_OES in WebGL2 is deprecated, suing HALF_FLOAT instead");
+			this.type = this.format == gl.RGB ? gl.RGB16F : gl.RGBA16F;
+		}
+	}
 	if( (!isPowerOfTwo(this.width) || !isPowerOfTwo(this.height)) && //non power of two
 		( (this.minFilter != gl.NEAREST && this.minFilter != gl.LINEAR) || //uses mipmaps
 		(this.wrapS != gl.CLAMP_TO_EDGE || this.wrapT != gl.CLAMP_TO_EDGE) ) ) //uses wrap
@@ -80,51 +93,67 @@ global.Texture = GL.Texture = function Texture( width, height, options, gl ) {
 		}
 	}
 
-	if(width && height)
+	//empty textures are allowed to be created
+	if(!width || !height)
+		return;
+
+	//because sometimes the internal format is not so obvious
+	if(!this.internalFormat)
+		this.computeInternalFormat();
+
+	//this is done because in some cases the user binds a texture to slot 0 and then creates a new one, which overrides slot 0
+	gl.activeTexture( gl.TEXTURE0 + Texture.MAX_TEXTURE_IMAGE_UNITS - 1);
+	//I use an invalid gl enum to say this texture is a depth texture, ugly, I know...
+	gl.bindTexture( this.texture_type, this.handler);
+	gl.texParameteri( this.texture_type, gl.TEXTURE_MAG_FILTER, this.magFilter );
+	gl.texParameteri( this.texture_type, gl.TEXTURE_MIN_FILTER, this.minFilter );
+	gl.texParameteri( this.texture_type, gl.TEXTURE_WRAP_S, this.wrapS );
+	gl.texParameteri( this.texture_type, gl.TEXTURE_WRAP_T, this.wrapT );
+
+	if(options.anisotropic && gl.extensions["EXT_texture_filter_anisotropic"])
+		gl.texParameterf( GL.TEXTURE_2D, gl.extensions["EXT_texture_filter_anisotropic"].TEXTURE_MAX_ANISOTROPY_EXT, options.anisotropic);
+
+	var pixel_data = options.pixel_data;
+	if(pixel_data && !pixel_data.buffer)
 	{
-		//this is done because in some cases the user binds a texture to slot 0 and then creates a new one, which overrides slot 0
-		gl.activeTexture(gl.TEXTURE0 + Texture.MAX_TEXTURE_IMAGE_UNITS - 1);
-		//I use an invalid gl enum to say this texture is a depth texture, ugly, I know...
-		gl.bindTexture(this.texture_type, this.handler);
-		gl.texParameteri(this.texture_type, gl.TEXTURE_MAG_FILTER, this.magFilter );
-		gl.texParameteri(this.texture_type, gl.TEXTURE_MIN_FILTER, this.minFilter );
-		gl.texParameteri(this.texture_type, gl.TEXTURE_WRAP_S, this.wrapS );
-		gl.texParameteri(this.texture_type, gl.TEXTURE_WRAP_T, this.wrapT );
-
-		if(options.anisotropic && gl.extensions["EXT_texture_filter_anisotropic"])
-			gl.texParameterf(gl.TEXTURE_2D, gl.extensions["EXT_texture_filter_anisotropic"].TEXTURE_MAX_ANISOTROPY_EXT, options.anisotropic);
-
-		var pixel_data = options.pixel_data;
-		if(pixel_data && !pixel_data.buffer)
-		{
-			pixel_data = new (this.type == gl.FLOAT ? Float32Array : Uint8Array)( pixel_data );
-			this.data = pixel_data;
-		}
-
-		//gl.TEXTURE_1D is not supported by WebGL...
-		if(this.texture_type == gl.TEXTURE_2D)
-		{
-			gl.texImage2D(gl.TEXTURE_2D, 0, this.format, width, height, 0, this.format, this.type, pixel_data || null );
-
-			//only generate mipmaps if pixel_data is provided?
-			if ( GL.isPowerOfTwo(width) && GL.isPowerOfTwo(height) && options.minFilter && options.minFilter != gl.NEAREST && options.minFilter != gl.LINEAR)
-			{
-				gl.generateMipmap( this.texture_type );
-				this.has_mipmaps = true;
-			}
-		}
-		else if(this.texture_type == gl.TEXTURE_CUBE_MAP)
-		{
-			gl.texImage2D( gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, this.format, this.width, this.height, 0, this.format, this.type, pixel_data || null );
-			gl.texImage2D( gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, this.format, this.width, this.height, 0, this.format, this.type, pixel_data || null );
-			gl.texImage2D( gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, this.format, this.width, this.height, 0, this.format, this.type, pixel_data || null );
-			gl.texImage2D( gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, this.format, this.width, this.height, 0, this.format, this.type, pixel_data || null );
-			gl.texImage2D( gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, this.format, this.width, this.height, 0, this.format, this.type, pixel_data || null );
-			gl.texImage2D( gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, this.format, this.width, this.height, 0, this.format, this.type, pixel_data || null );
-		}
-		gl.bindTexture(this.texture_type, null); //disable
-		gl.activeTexture(gl.TEXTURE0);
+		pixel_data = new (this.type == gl.FLOAT ? Float32Array : Uint8Array)( pixel_data );
+		this.data = pixel_data;
 	}
+
+	//gl.TEXTURE_1D is not supported by WebGL...
+
+	//here we create all **********************************
+	if(this.texture_type == GL.TEXTURE_2D)
+	{
+		//create the texture
+		gl.texImage2D( GL.TEXTURE_2D, 0, this.internalFormat, width, height, 0, this.format, this.type, pixel_data || null );
+
+		//generate empty mipmaps (necessary?)
+		if ( GL.isPowerOfTwo(width) && GL.isPowerOfTwo(height) && options.minFilter && options.minFilter != gl.NEAREST && options.minFilter != gl.LINEAR)
+		{
+			gl.generateMipmap( this.texture_type );
+			this.has_mipmaps = true;
+		}
+	}
+	else if(this.texture_type == GL.TEXTURE_CUBE_MAP)
+	{
+		gl.texImage2D( gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, this.internalFormat, this.width, this.height, 0, this.format, this.type, pixel_data || null );
+		gl.texImage2D( gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, this.internalFormat, this.width, this.height, 0, this.format, this.type, pixel_data || null );
+		gl.texImage2D( gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, this.internalFormat, this.width, this.height, 0, this.format, this.type, pixel_data || null );
+		gl.texImage2D( gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, this.internalFormat, this.width, this.height, 0, this.format, this.type, pixel_data || null );
+		gl.texImage2D( gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, this.internalFormat, this.width, this.height, 0, this.format, this.type, pixel_data || null );
+		gl.texImage2D( gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, this.internalFormat, this.width, this.height, 0, this.format, this.type, pixel_data || null );
+	}
+	else if(this.texture_type == GL.TEXTURE_3D)
+	{
+		if(this.gl.webgl_version == 1)
+			throw("TEXTURE_3D not supported in WebGL 1. Enable WebGL 2 in the context by pasing webgl2:true");
+		if(!options.depth)
+			throw("3d texture depth must be set in the options.depth");
+		gl.texImage3D( GL.TEXTURE_3D, 0, this.internalFormat, width, height, options.depth, 0, this.format, this.type, pixel_data || null );
+	}
+	gl.bindTexture(this.texture_type, null); //disable
+	gl.activeTexture(gl.TEXTURE0);
 }
 
 Texture.DEFAULT_TYPE = GL.UNSIGNED_BYTE;
@@ -133,12 +162,80 @@ Texture.DEFAULT_MAG_FILTER = GL.LINEAR;
 Texture.DEFAULT_MIN_FILTER = GL.LINEAR;
 Texture.DEFAULT_WRAP_S = GL.CLAMP_TO_EDGE;
 Texture.DEFAULT_WRAP_T = GL.CLAMP_TO_EDGE;
+Texture.EXTENSION = "png"; //used when saving it to file
 
 //used for render to FBOs
 Texture.framebuffer = null;
 Texture.renderbuffer = null;
 Texture.loading_color = new Uint8Array([0,0,0,0]);
 Texture.use_renderbuffer_pool = true; //should improve performance
+
+//because usually you dont want to specify the internalFormat, this tries to guess it from its format
+//check https://webgl2fundamentals.org/webgl/lessons/webgl-data-textures.html for more info
+Texture.prototype.computeInternalFormat = function()
+{
+	this.internalFormat = this.format; //default
+
+	//automatic selection of internal format for depth textures to avoid problems between webgl1 and 2
+	if( this.format == GL.DEPTH_COMPONENT )
+	{
+		this.minFilter = this.magFilter = GL.NEAREST;
+
+		if( gl.webgl_version == 2 ) 
+		{
+			if( this.type == GL.UNSIGNED_SHORT )
+				this.internalFormat = GL.DEPTH_COMPONENT16;
+			else if( this.type == GL.UNSIGNED_INT )
+				this.internalFormat = GL.DEPTH_COMPONENT24;
+			else if( this.type == GL.FLOAT )
+				this.internalFormat = GL.DEPTH_COMPONENT32F;
+			else 
+				throw("unsupported type for a depth texture");
+		}
+		else if( gl.webgl_version == 1 )
+		{
+			if( this.type == GL.FLOAT )
+				throw("WebGL 1.0 does not support float depth textures");
+			this.internalFormat = GL.DEPTH_COMPONENT;
+		}
+	}
+	else if( this.format == gl.RGBA )
+	{
+		if( gl.webgl_version == 2 ) 
+		{
+			if( this.type == GL.FLOAT )
+				this.internalFormat = GL.RGBA32F;
+			else if( this.type == GL.HALF_FLOAT )
+				this.internalFormat = GL.RGBA16F;
+			else if( this.type == GL.HALF_FLOAT_OES )
+			{
+				console.warn("webgl 2 does not use HALF_FLOAT_OES, converting to HALF_FLOAT")
+				this.type = GL.HALF_FLOAT;
+				this.internalFormat = GL.RGBA16F;
+			}
+			/*
+			else if( this.type == GL.UNSIGNED_SHORT )
+			{
+				this.internalFormat = GL.RGBA16UI;
+				this.format = gl.RGBA_INTEGER;
+			}
+			else if( this.type == GL.UNSIGNED_INT )
+			{
+				this.internalFormat = GL.RGBA32UI;
+				this.format = gl.RGBA_INTEGER;
+			}
+			*/
+		}
+		else if( gl.webgl_version == 1 )
+		{
+			if( this.type == GL.HALF_FLOAT )
+			{
+				console.warn("webgl 1 does not use HALF_FLOAT, converting to HALF_FLOAT_OES")
+				this.type = GL.HALF_FLOAT_OES;
+			}
+		}
+	}
+}
 
 /**
 * Free the texture memory from the GPU, sets the texture handler to null
@@ -320,7 +417,13 @@ Texture.prototype.uploadData = function(data, options )
 	this.bind();
 	Texture.setUploadOptions(options, gl);
 
-	gl.texImage2D(this.texture_type, 0, this.format, this.width, this.height, 0, this.format, this.type, data);
+	if( this.texture_type == GL.TEXTURE_2D )
+		gl.texImage2D(this.texture_type, 0, this.format, this.width, this.height, 0, this.format, this.type, data);
+	else if( this.texture_type == GL.TEXTURE_3D )
+		gl.texImage3D(this.texture_type, 0, this.format, this.width, this.height, this.depth, 0, this.format, this.type, data);
+	else
+		throw("cannot uploadData for this texture type");
+
 	this.data = data; //should I clone it?
 
 	if (this.minFilter && this.minFilter != gl.NEAREST && this.minFilter != gl.LINEAR) {
@@ -653,6 +756,7 @@ Texture.drawToColorAndDepth = function( color_texture, depth_texture, callback )
 
 /**
 * Copy content of one texture into another
+* TODO: check using copyTexImage2D
 * @method copyTo
 * @param {GL.Texture} target_texture
 * @param {GL.Shader} [shader=null] optional shader to apply while copying

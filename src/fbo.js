@@ -47,10 +47,22 @@ GL.FBO = FBO;
 */
 FBO.prototype.setTextures = function( color_textures, depth_texture, skip_disable )
 {
-	if( depth_texture && depth_texture.constructor === GL.Texture &&
-		( (depth_texture.format !== gl.DEPTH_COMPONENT && depth_texture.format !== gl.DEPTH_STENCIL) || 
-		( depth_texture.type != gl.UNSIGNED_INT && depth_texture.type != GL.UNSIGNED_INT_24_8_WEBGL ) ) )
-		throw("FBO Depth texture must be of format: gl.DEPTH_COMPONENT and type: gl.UNSIGNED_INT");
+	//test depth
+	if( depth_texture && depth_texture.constructor === GL.Texture )
+	{
+		if( depth_texture.format !== GL.DEPTH_COMPONENT && 
+			depth_texture.format !== GL.DEPTH_STENCIL && 
+			depth_texture.format !== GL.DEPTH_COMPONENT16 && 
+			depth_texture.format !== GL.DEPTH_COMPONENT24 &&
+			depth_texture.format !== GL.DEPTH_COMPONENT32F )
+			throw("FBO Depth texture must be of format: gl.DEPTH_COMPONENT, gl.DEPTH_STENCIL or gl.DEPTH_COMPONENT16/24/32F (only in webgl2)");
+
+		if( depth_texture.type != GL.UNSIGNED_SHORT && 
+			depth_texture.type != GL.UNSIGNED_INT && 
+			depth_texture.type != GL.UNSIGNED_INT_24_8_WEBGL &&
+			depth_texture.type != GL.FLOAT)
+			throw("FBO Depth texture must be of type: gl.UNSIGNED_SHORT, gl.UNSIGNED_INT, gl.UNSIGNED_INT_24_8_WEBGL");
+	}
 
 	//test if is already binded
 	var same = this.depth_texture == depth_texture;
@@ -141,28 +153,30 @@ FBO.prototype.update = function( skip_disable )
 
 	gl.bindFramebuffer( gl.FRAMEBUFFER, this.handler );
 
-	if(depth_texture && !gl.extensions["WEBGL_depth_texture"])
-		throw("Rendering to depth texture not supported by your browser");
-
 	//draw_buffers allow to have more than one color texture binded in a FBO
 	var ext = gl.extensions["WEBGL_draw_buffers"];
-	if(!ext && color_textures && color_textures.length > 1)
+	if( gl.webgl_version == 1 && !ext && color_textures && color_textures.length > 1)
 		throw("Rendering to several textures not supported by your browser");
 
-	gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, null );
-	gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, null );
+	var target = gl.webgl_version == 1 ? gl.FRAMEBUFFER : gl.DRAW_FRAMEBUFFER;
+
+	gl.framebufferRenderbuffer( target, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, null );
+	gl.framebufferRenderbuffer( target, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, null );
 	//detach color too?
 
 	//bind a buffer for the depth
 	if( depth_texture && depth_texture.constructor === GL.Texture )
 	{
+		if(gl.webgl_version == 1 && !gl.extensions["WEBGL_depth_texture"] )
+			throw("Rendering to depth texture not supported by your browser");
+
 		if(this.stencil && depth_texture.format !== gl.DEPTH_STENCIL )
 			console.warn("Stencil cannot be enabled if there is a depth texture with a DEPTH_STENCIL format");
 
 		if( depth_texture.format == gl.DEPTH_STENCIL )
-			gl.framebufferTexture2D( gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.TEXTURE_2D, depth_texture.handler, 0);
+			gl.framebufferTexture2D( target, gl.DEPTH_STENCIL_ATTACHMENT, gl.TEXTURE_2D, depth_texture.handler, 0);
 		else
-			gl.framebufferTexture2D( gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depth_texture.handler, 0);
+			gl.framebufferTexture2D( target, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depth_texture.handler, 0);
 	}
 	else //create a renderbuffer to store depth
 	{
@@ -183,12 +197,12 @@ FBO.prototype.update = function( skip_disable )
 		if(this.stencil)
 		{
 			gl.renderbufferStorage( gl.RENDERBUFFER, gl.DEPTH_STENCIL, w, h );
-			gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, depth_renderbuffer );
+			gl.framebufferRenderbuffer( target, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, depth_renderbuffer );
 		}
 		else
 		{
 			gl.renderbufferStorage( gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, w, h );
-			gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, depth_renderbuffer );
+			gl.framebufferRenderbuffer( target, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, depth_renderbuffer );
 		}
 	}
 
@@ -200,7 +214,8 @@ FBO.prototype.update = function( skip_disable )
 		{
 			var t = color_textures[i];
 
-			gl.framebufferTexture2D( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, t.handler, 0 );
+			//not a bug, gl.COLOR_ATTACHMENT0 + i because COLOR_ATTACHMENT is sequential numbers
+			gl.framebufferTexture2D( target, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, t.handler, 0 );
 			this.order.push( gl.COLOR_ATTACHMENT0 + i );
 		}
 	}
@@ -211,13 +226,13 @@ FBO.prototype.update = function( skip_disable )
 		color_renderbuffer.height = h;
 		gl.bindRenderbuffer( gl.RENDERBUFFER, color_renderbuffer );
 		gl.renderbufferStorage( gl.RENDERBUFFER, gl.RGBA4, w, h );
-		gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, color_renderbuffer );
+		gl.framebufferRenderbuffer( target, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, color_renderbuffer );
 	}
 
 	//detach old ones (only if is reusing a FBO with a different set of textures)
 	var num = color_textures ? color_textures.length : 0;
 	for(var i = num; i < this._num_binded_textures; ++i)
-		gl.framebufferTexture2D( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, null, 0);
+		gl.framebufferTexture2D( target, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, null, 0);
 	this._num_binded_textures = num;
 
 	this._stencil_enabled = this.stencil;
@@ -242,10 +257,15 @@ FBO.prototype.update = function( skip_disable )
 
 	//when using more than one texture you need to use the multidraw extension
 	if(color_textures && color_textures.length > 1)
-		ext.drawBuffersWEBGL( this.order );
+	{
+		if( ext )
+			ext.drawBuffersWEBGL( this.order );
+		else
+			gl.drawBuffers( this.order );
+	}
 
 	//check completion
-	var complete = gl.checkFramebufferStatus( gl.FRAMEBUFFER );
+	var complete = gl.checkFramebufferStatus( target );
 	if(complete !== gl.FRAMEBUFFER_COMPLETE)
 		throw("FBO not complete: " + complete);
 
@@ -253,7 +273,7 @@ FBO.prototype.update = function( skip_disable )
 	gl.bindTexture(gl.TEXTURE_2D, null);
 	gl.bindRenderbuffer(gl.RENDERBUFFER, null);
 	if(!skip_disable)
-		gl.bindFramebuffer( gl.FRAMEBUFFER, this._old_fbo_handler );
+		gl.bindFramebuffer( target, this._old_fbo_handler );
 }
 
 /**

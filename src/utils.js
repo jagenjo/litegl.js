@@ -267,7 +267,7 @@ global.extendClass = GL.extendClass = function extendClass( target, origin ) {
 
 
 //simple http request
-global.HttpRequest = GL.request = function HttpRequest(url,params, callback, error, options)
+global.HttpRequest = GL.request = function HttpRequest( url, params, callback, error, options )
 {
 	var async = true;
 	if(options && options.async !== undefined)
@@ -409,9 +409,9 @@ global.typedArrayToArray = function(array)
 }
 
 global.RGBToHex = function(r, g, b) { 
-	r = Math.min(255, r*255);
-	g = Math.min(255, g*255);
-	b = Math.min(255, b*255);
+	r = Math.min(255, r*255)|0;
+	g = Math.min(255, g*255)|0;
+	b = Math.min(255, b*255)|0;
 	return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
 }
 

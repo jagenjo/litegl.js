@@ -17,7 +17,7 @@
 	<script type="text/javascript">
 	
 	//create the rendering context
-	var gl = GL.create({width: window.innerWidth,height: window.innerHeight});
+	var gl = GL.create({ width: window.innerWidth,height: window.innerHeight, version: 2 });
 	var container = document.body;
 	container.appendChild(gl.canvas);
 	gl.animate();
@@ -34,12 +34,13 @@
 	//create G Buffers
 	var w = (gl.canvas.width*0.5)|0;
 	var h = (gl.canvas.height*0.5)|0;
-	var type = gl.UNSIGNED_BYTE;// , gl.FLOAT, (or gl.HALF_FLOAT_OES although it doesnt work in firefox)
+	var type = GL.UNSIGNED_BYTE;// , GL.UNSIGNED_BYTE, GL.HALF_FLOAT, GL.FLOAT
 
 	var texture_albedo = new GL.Texture(w,h, { type: type, filter: gl.NEAREST });
 	var texture_normal = new GL.Texture(w,h, { type: type, filter: gl.NEAREST });
-	var texture_depth = new GL.Texture(w,h, { format: gl.DEPTH_COMPONENT, type: gl.UNSIGNED_INT, filter: gl.NEAREST }); 
+	var texture_depth = new GL.Texture(w,h, { format: gl.DEPTH_COMPONENT, type: gl.UNSIGNED_INT}); 
 	var textures = [ texture_albedo, texture_normal ];
+
 	var fbo = new GL.FBO( textures, texture_depth );
 	var texture_final = new GL.Texture(w,h, { type: type, filter: gl.NEAREST });
 
@@ -69,7 +70,9 @@
 	mat4.lookAt(view, camera_position, [0,0,0], [0,1,0]);
 
 	//basic shader: renders the gbuffers
-	var gbuffers_shader = new Shader('\
+	var gbuffers_shader = null;
+	if(gl.webgl_version == 1)
+		gbuffers_shader = new Shader('\
 			precision highp float;\
 			attribute vec3 a_vertex;\
 			attribute vec3 a_normal;\
@@ -100,6 +103,41 @@
 			  vec4 diffuse_color = u_color * texture2D( u_texture, v_coord );\
 			  gl_FragData[0] = diffuse_color;\
 			  gl_FragData[1] = vec4((N * 0.5 + vec3(0.5) ),1.0);\
+			}\
+		');	
+
+	if(gl.webgl_version == 2)
+		gbuffers_shader = new Shader('#version 300 es\n\
+			precision highp float;\
+			in vec3 a_vertex;\
+			in vec3 a_normal;\
+			in vec2 a_coord;\
+			out vec3 v_wPosition;\
+			out vec3 v_normal;\
+			out vec2 v_coord;\
+			uniform mat4 u_mvp;\
+			uniform mat4 u_model;\
+			void main() {\
+				v_coord = a_coord;\
+				v_wPosition = (u_model * vec4(a_vertex,1.0)).xyz;\
+				v_normal = (u_model * vec4(a_normal,0.0)).xyz;\
+				gl_Position = u_mvp * vec4(a_vertex,1.0);\
+				gl_PointSize = 20.0;\
+			}\
+			', '#version 300 es\n\
+			precision highp float;\
+			in vec3 v_wPosition;\
+			in vec3 v_normal;\
+			in vec2 v_coord;\
+			uniform vec4 u_color;\
+			uniform sampler2D u_texture;\
+			layout(location = 0) out vec4 color0;\
+			layout(location = 1) out vec4 color1;\
+			void main() {\
+			  vec3 N = normalize(v_normal);\
+			  vec4 diffuse_color = u_color * texture( u_texture, v_coord );\
+			  color0 = diffuse_color;\
+			  color1 = vec4((N * 0.5 + vec3(0.5) ),1.0);\
 			}\
 		');	
 
@@ -305,7 +343,7 @@
 			light.position[2] = Math.cos( i * 2 + time + 5 ) * 50;
 		}
 	};
-	
+
 	</script>
 </body>
 

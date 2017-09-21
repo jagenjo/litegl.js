@@ -29,6 +29,7 @@ GL.STENCIL_BUFFER_BIT = 1024;
 
 GL.TEXTURE_2D = 3553;
 GL.TEXTURE_CUBE_MAP = 34067;
+GL.TEXTURE_3D = 32879;
 
 GL.TEXTURE_MAG_FILTER = 10240;
 GL.TEXTURE_MIN_FILTER = 10241;
@@ -42,8 +43,13 @@ GL.UNSIGNED_SHORT = 5123;
 GL.INT = 5124;
 GL.UNSIGNED_INT = 5125;
 GL.FLOAT = 5126;
-GL.HALF_FLOAT_OES = 36193;
+GL.HALF_FLOAT_OES = 36193; //webgl 1.0 only
+
+//webgl2 formats
+GL.HALF_FLOAT = 5131; 
 GL.DEPTH_COMPONENT16 = 33189;
+GL.DEPTH_COMPONENT24 = 33190;
+GL.DEPTH_COMPONENT32F = 36012;
 
 GL.FLOAT_VEC2 = 35664;
 GL.FLOAT_VEC3 = 35665;
@@ -59,6 +65,10 @@ GL.FLOAT_MAT2 = 35674;
 GL.FLOAT_MAT3 = 35675;
 GL.FLOAT_MAT4 = 35676;
 
+GL.SAMPLER_2D = 35678;
+GL.SAMPLER_3D = 35679;
+GL.SAMPLER_CUBE = 35680;
+
 GL.DEPTH_COMPONENT = 6402;
 GL.ALPHA = 6406;
 GL.RGB = 6407;
@@ -67,6 +77,32 @@ GL.LUMINANCE = 6409;
 GL.LUMINANCE_ALPHA = 6410;
 GL.DEPTH_STENCIL = 34041;
 GL.UNSIGNED_INT_24_8_WEBGL = 34042;
+
+//webgl2 formats
+GL.R8 = 33321;
+GL.R16F = 33325;
+GL.R32F = 33326;
+GL.R8UI = 33330;
+GL.RG8 = 33323;
+GL.RG16F = 33327;
+GL.RG32F = 33328;
+GL.RGB8 = 32849;
+GL.SRGB8 = 35905;
+GL.RGB565 = 36194;
+GL.R11F_G11F_B10F = 35898;
+GL.RGB9_E5 = 35901;
+GL.RGB16F = 34843;
+GL.RGB32F = 34837;
+GL.RGB8UI = 36221;
+GL.RGBA8 = 32856;
+GL.RGB5_A1 = 32855;
+GL.RGBA16F = 34842;
+GL.RGBA32F = 34836;
+GL.RGBA8UI = 36220;
+GL.RGBA16I = 36232;
+GL.RGBA16UI = 36214;
+GL.RGBA32I = 36226;
+GL.RGBA32UI = 36208;
 
 GL.NEAREST = 9728;
 GL.LINEAR = 9729;
@@ -417,7 +453,7 @@ global.extendClass = GL.extendClass = function extendClass( target, origin ) {
 
 
 //simple http request
-global.HttpRequest = GL.request = function HttpRequest(url,params, callback, error, options)
+global.HttpRequest = GL.request = function HttpRequest( url, params, callback, error, options )
 {
 	var async = true;
 	if(options && options.async !== undefined)
@@ -559,9 +595,9 @@ global.typedArrayToArray = function(array)
 }
 
 global.RGBToHex = function(r, g, b) { 
-	r = Math.min(255, r*255);
-	g = Math.min(255, g*255);
-	b = Math.min(255, b*255);
+	r = Math.min(255, r*255)|0;
+	g = Math.min(255, g*255)|0;
+	b = Math.min(255, b*255)|0;
 	return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
 }
 
@@ -1913,10 +1949,10 @@ GL.Buffer = function Buffer( target, data, spacing, stream_type, gl ) {
 
 	if(gl !== null)
 		gl = gl || global.gl;
+	this.gl = gl;
 
 	this.buffer = null; //webgl buffer
 	this.target = target; //GL.ARRAY_BUFFER, GL.ELEMENT_ARRAY_BUFFER
-	this.gl = gl;
 	this.attribute = null; //name of the attribute in the shader ("a_vertex","a_normal","a_coord",...)
 
 	//optional
@@ -2269,7 +2305,11 @@ Mesh.prototype.addBuffers = function( vertexbuffers, indexbuffers, stream_type )
 		var attribute = "a_" + i;
 		if(stream_info && stream_info.attribute)
 			attribute = stream_info.attribute;
-		this.createVertexBuffer( i, attribute, spacing, data, stream_type );
+	
+		if( this.vertexBuffers[i] )
+			this.updateVertexBuffer( i, attribute, spacing, data, stream_type );
+		else
+			this.createVertexBuffer( i, attribute, spacing, data, stream_type );
 	}
 
 	if(indexbuffers)
@@ -2314,7 +2354,7 @@ Mesh.prototype.addBuffers = function( vertexbuffers, indexbuffers, stream_type )
 * @param {enum} stream_type [optional, default = gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW ) ]
 */
 
-Mesh.prototype.createVertexBuffer = function(name, attribute, buffer_spacing, buffer_data, stream_type ) {
+Mesh.prototype.createVertexBuffer = function( name, attribute, buffer_spacing, buffer_data, stream_type ) {
 
 	var common = GL.Mesh.common_buffers[name]; //generic info about a buffer with the same name
 
@@ -2350,6 +2390,33 @@ Mesh.prototype.createVertexBuffer = function(name, attribute, buffer_spacing, bu
 
 	return buffer;
 }
+
+/**
+* Updates a vertex buffer 
+* @method updateVertexBuffer
+* @param {String} name the name of the buffer
+* @param {String} attribute the name of the attribute in the shader
+* @param {number} spacing number of numbers per component (3 per vertex, 2 per uvs...), default 3
+* @param {*} data the array with all the data
+* @param {enum} stream_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW 
+*/
+Mesh.prototype.updateVertexBuffer = function( name, attribute, buffer_spacing, buffer_data, stream_type ) {
+	var buffer = this.vertexBuffers[name];
+	if(!buffer)
+	{
+		console.log("buffer not found: ",name);
+		return;
+	}
+
+	if(!buffer_data.length)
+		return;
+
+	buffer.attribute = attribute;
+	buffer.spacing = buffer_spacing;
+	buffer.data = buffer_data;
+	buffer.upload( stream_type );
+}
+
 
 /**
 * Removes a vertex buffer from the mesh
@@ -3356,8 +3423,8 @@ Mesh.prototype.freeData = function()
 
 Mesh.prototype.configure = function( o, options )
 {
-	var v = {};
-	var i = {};
+	var vertex_buffers = {};
+	var index_buffers = {};
 	options = options || {};
 
 	for(var j in o)
@@ -3365,29 +3432,31 @@ Mesh.prototype.configure = function( o, options )
 		if(!o[j])
 			continue;
 
-		if(j == "vertexBuffers")
+		if(j == "vertexBuffers" || j == "vertex_buffers") //HACK: legacy code
 		{
 			for(i in o[j])
-				v[i] = o[j][i];
+				vertex_buffers[i] = o[j][i];
 			continue;
 		}
 		
-		if(j == "indexBuffers")
+		if(j == "indexBuffers" || j == "index_buffers")
 		{
 			for(i in o[j])
-				i[i] = o[j][i];
+				index_buffers[i] = o[j][i];
 			continue;
 		}
 
 		if(j == "indices" || j == "lines" ||  j == "wireframe" || j == "triangles")
-			i[j] = o[j];
-		else if(GL.Mesh.common_buffers[j])
-			v[j] = o[j];
-		else
+			index_buffers[j] = o[j];
+		else if( GL.Mesh.common_buffers[j])
+			vertex_buffers[j] = o[j];
+		else //global data like bounding, info of groups, etc
+		{
 			options[j] = o[j];
+		}
 	}
 
-	this.addBuffers( v, i, options.stream_type );
+	this.addBuffers( vertex_buffers, index_buffers, options.stream_type );
 
 	for(var i in options)
 		this[i] = options[i];		
@@ -3645,6 +3714,9 @@ Mesh.mergeMeshes = function( meshes, options )
 //Here we store all basic mesh parsers (OBJ, STL) and encoders
 Mesh.parsers = {};
 Mesh.encoders = {};
+Mesh.binary_file_formats = {}; //extensions that must be downloaded in binary
+Mesh.compressors = {}; //used to compress binary meshes
+Mesh.decompressors = {}; //used to decompress binary meshes
 
 /**
 * Returns am empty mesh and loads a mesh and parses it using the Mesh.parsers, by default only OBJ is supported
@@ -3655,20 +3727,23 @@ Mesh.fromURL = function(url, on_complete, gl, options)
 {
 	options = options || {};
 	gl = gl || global.gl;
+	
 	var mesh = new GL.Mesh(undefined,undefined,undefined,gl);
 	mesh.ready = false;
 
+	var pos = url.lastIndexOf(".");
+	var extension = url.substr(pos+1).toLowerCase();
+	options.binary = Mesh.binary_file_formats[ extension ];
+
 	HttpRequest( url, null, function(data) {
-		var pos = url.lastIndexOf(".");
-		var ext = url.substr(pos+1);
-		mesh.parse( data, ext );
+		mesh.parse( data, extension );
 		delete mesh["ready"];
 		if(on_complete)
 			on_complete.call(mesh,mesh, url);
 	}, function(err){
 		if(on_complete)
 			on_complete(null);
-	},options);
+	}, options );
 	return mesh;
 }
 
@@ -3744,6 +3819,13 @@ function linearizeArray( array, typed_array_class )
 			buffer[i*components + j] = array[i][j];
 	return buffer;
 }
+
+/* BINARY MESHES */
+//Add some functions to the classes in LiteGL to allow store in binary
+GL.Mesh.EXTENSION = "wbin";
+GL.Mesh.enable_wbin_compression = true;
+
+
 
 /**
 * @class Mesh
@@ -4442,6 +4524,8 @@ Mesh.icosahedron = function( options, gl ) {
 	- no_flip : do not flip in Y, default TRUE <br/>
 	- anisotropic : number of anisotropic fetches, default 0 <br/>
 
+	check for more info about formats: https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texImage2D
+
 * @class Texture
 * @param {number} width texture width (any supported but Power of Two allows to have mipmaps), 0 means no memory reserved till its filled
 * @param {number} height texture height (any supported but Power of Two allows to have mipmaps), 0 means no memory reserved till its filled
@@ -4470,8 +4554,11 @@ global.Texture = GL.Texture = function Texture( width, height, options, gl ) {
 	//set settings
 	this.width = width;
 	this.height = height;
+	if(options.depth) //for texture_3d
+		this.depth = options.depth; 
 	this.texture_type = options.texture_type || gl.TEXTURE_2D; //or gl.TEXTURE_CUBE_MAP
 	this.format = options.format || Texture.DEFAULT_FORMAT; //gl.RGBA (if gl.DEPTH_COMPONENT remember type: gl.UNSIGNED_SHORT)
+	this.internalFormat = options.internalFormat; //LUMINANCE, and weird formats with bits
 	this.type = options.type || Texture.DEFAULT_TYPE; //gl.UNSIGNED_BYTE, gl.UNSIGNED_SHORT, gl.FLOAT or gl.HALF_FLOAT_OES (or gl.HIGH_PRECISION_FORMAT which could be half or float)
 	this.magFilter = options.magFilter || options.filter || Texture.DEFAULT_MAG_FILTER;
 	this.minFilter = options.minFilter || options.filter || Texture.DEFAULT_MIN_FILTER;
@@ -4485,12 +4572,20 @@ global.Texture = GL.Texture = function Texture( width, height, options, gl ) {
 
 	this.has_mipmaps = false;
 
-	if(this.format == gl.DEPTH_COMPONENT && !gl.extensions["WEBGL_depth_texture"])
+	if( this.format == gl.DEPTH_COMPONENT && gl.webgl_version == 1 && !gl.extensions["WEBGL_depth_texture"] )
 		throw("Depth Texture not supported");
-	if(this.type == gl.FLOAT && !gl.extensions["OES_texture_float"])
+	if( this.type == gl.FLOAT && !gl.extensions["OES_texture_float"] && gl.webgl_version == 1 )
 		throw("Float Texture not supported");
-	if(this.type == gl.HALF_FLOAT_OES && !gl.extensions["OES_texture_half_float"])
-		throw("Half Float Texture not supported");
+	if( this.type == gl.HALF_FLOAT_OES)
+	{
+		if( !gl.extensions["OES_texture_half_float"] && gl.webgl_version == 1 )
+			throw("Half Float Texture extension not supported.");
+		else if( gl.webgl_version > 1 )
+		{
+			console.warn("using HALF_FLOAT_OES in WebGL2 is deprecated, suing HALF_FLOAT instead");
+			this.type = this.format == gl.RGB ? gl.RGB16F : gl.RGBA16F;
+		}
+	}
 	if( (!isPowerOfTwo(this.width) || !isPowerOfTwo(this.height)) && //non power of two
 		( (this.minFilter != gl.NEAREST && this.minFilter != gl.LINEAR) || //uses mipmaps
 		(this.wrapS != gl.CLAMP_TO_EDGE || this.wrapT != gl.CLAMP_TO_EDGE) ) ) //uses wrap
@@ -4504,51 +4599,67 @@ global.Texture = GL.Texture = function Texture( width, height, options, gl ) {
 		}
 	}
 
-	if(width && height)
+	//empty textures are allowed to be created
+	if(!width || !height)
+		return;
+
+	//because sometimes the internal format is not so obvious
+	if(!this.internalFormat)
+		this.computeInternalFormat();
+
+	//this is done because in some cases the user binds a texture to slot 0 and then creates a new one, which overrides slot 0
+	gl.activeTexture( gl.TEXTURE0 + Texture.MAX_TEXTURE_IMAGE_UNITS - 1);
+	//I use an invalid gl enum to say this texture is a depth texture, ugly, I know...
+	gl.bindTexture( this.texture_type, this.handler);
+	gl.texParameteri( this.texture_type, gl.TEXTURE_MAG_FILTER, this.magFilter );
+	gl.texParameteri( this.texture_type, gl.TEXTURE_MIN_FILTER, this.minFilter );
+	gl.texParameteri( this.texture_type, gl.TEXTURE_WRAP_S, this.wrapS );
+	gl.texParameteri( this.texture_type, gl.TEXTURE_WRAP_T, this.wrapT );
+
+	if(options.anisotropic && gl.extensions["EXT_texture_filter_anisotropic"])
+		gl.texParameterf( GL.TEXTURE_2D, gl.extensions["EXT_texture_filter_anisotropic"].TEXTURE_MAX_ANISOTROPY_EXT, options.anisotropic);
+
+	var pixel_data = options.pixel_data;
+	if(pixel_data && !pixel_data.buffer)
 	{
-		//this is done because in some cases the user binds a texture to slot 0 and then creates a new one, which overrides slot 0
-		gl.activeTexture(gl.TEXTURE0 + Texture.MAX_TEXTURE_IMAGE_UNITS - 1);
-		//I use an invalid gl enum to say this texture is a depth texture, ugly, I know...
-		gl.bindTexture(this.texture_type, this.handler);
-		gl.texParameteri(this.texture_type, gl.TEXTURE_MAG_FILTER, this.magFilter );
-		gl.texParameteri(this.texture_type, gl.TEXTURE_MIN_FILTER, this.minFilter );
-		gl.texParameteri(this.texture_type, gl.TEXTURE_WRAP_S, this.wrapS );
-		gl.texParameteri(this.texture_type, gl.TEXTURE_WRAP_T, this.wrapT );
-
-		if(options.anisotropic && gl.extensions["EXT_texture_filter_anisotropic"])
-			gl.texParameterf(gl.TEXTURE_2D, gl.extensions["EXT_texture_filter_anisotropic"].TEXTURE_MAX_ANISOTROPY_EXT, options.anisotropic);
-
-		var pixel_data = options.pixel_data;
-		if(pixel_data && !pixel_data.buffer)
-		{
-			pixel_data = new (this.type == gl.FLOAT ? Float32Array : Uint8Array)( pixel_data );
-			this.data = pixel_data;
-		}
-
-		//gl.TEXTURE_1D is not supported by WebGL...
-		if(this.texture_type == gl.TEXTURE_2D)
-		{
-			gl.texImage2D(gl.TEXTURE_2D, 0, this.format, width, height, 0, this.format, this.type, pixel_data || null );
-
-			//only generate mipmaps if pixel_data is provided?
-			if ( GL.isPowerOfTwo(width) && GL.isPowerOfTwo(height) && options.minFilter && options.minFilter != gl.NEAREST && options.minFilter != gl.LINEAR)
-			{
-				gl.generateMipmap( this.texture_type );
-				this.has_mipmaps = true;
-			}
-		}
-		else if(this.texture_type == gl.TEXTURE_CUBE_MAP)
-		{
-			gl.texImage2D( gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, this.format, this.width, this.height, 0, this.format, this.type, pixel_data || null );
-			gl.texImage2D( gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, this.format, this.width, this.height, 0, this.format, this.type, pixel_data || null );
-			gl.texImage2D( gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, this.format, this.width, this.height, 0, this.format, this.type, pixel_data || null );
-			gl.texImage2D( gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, this.format, this.width, this.height, 0, this.format, this.type, pixel_data || null );
-			gl.texImage2D( gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, this.format, this.width, this.height, 0, this.format, this.type, pixel_data || null );
-			gl.texImage2D( gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, this.format, this.width, this.height, 0, this.format, this.type, pixel_data || null );
-		}
-		gl.bindTexture(this.texture_type, null); //disable
-		gl.activeTexture(gl.TEXTURE0);
+		pixel_data = new (this.type == gl.FLOAT ? Float32Array : Uint8Array)( pixel_data );
+		this.data = pixel_data;
 	}
+
+	//gl.TEXTURE_1D is not supported by WebGL...
+
+	//here we create all **********************************
+	if(this.texture_type == GL.TEXTURE_2D)
+	{
+		//create the texture
+		gl.texImage2D( GL.TEXTURE_2D, 0, this.internalFormat, width, height, 0, this.format, this.type, pixel_data || null );
+
+		//generate empty mipmaps (necessary?)
+		if ( GL.isPowerOfTwo(width) && GL.isPowerOfTwo(height) && options.minFilter && options.minFilter != gl.NEAREST && options.minFilter != gl.LINEAR)
+		{
+			gl.generateMipmap( this.texture_type );
+			this.has_mipmaps = true;
+		}
+	}
+	else if(this.texture_type == GL.TEXTURE_CUBE_MAP)
+	{
+		gl.texImage2D( gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, this.internalFormat, this.width, this.height, 0, this.format, this.type, pixel_data || null );
+		gl.texImage2D( gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, this.internalFormat, this.width, this.height, 0, this.format, this.type, pixel_data || null );
+		gl.texImage2D( gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, this.internalFormat, this.width, this.height, 0, this.format, this.type, pixel_data || null );
+		gl.texImage2D( gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, this.internalFormat, this.width, this.height, 0, this.format, this.type, pixel_data || null );
+		gl.texImage2D( gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, this.internalFormat, this.width, this.height, 0, this.format, this.type, pixel_data || null );
+		gl.texImage2D( gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, this.internalFormat, this.width, this.height, 0, this.format, this.type, pixel_data || null );
+	}
+	else if(this.texture_type == GL.TEXTURE_3D)
+	{
+		if(this.gl.webgl_version == 1)
+			throw("TEXTURE_3D not supported in WebGL 1. Enable WebGL 2 in the context by pasing webgl2:true");
+		if(!options.depth)
+			throw("3d texture depth must be set in the options.depth");
+		gl.texImage3D( GL.TEXTURE_3D, 0, this.internalFormat, width, height, options.depth, 0, this.format, this.type, pixel_data || null );
+	}
+	gl.bindTexture(this.texture_type, null); //disable
+	gl.activeTexture(gl.TEXTURE0);
 }
 
 Texture.DEFAULT_TYPE = GL.UNSIGNED_BYTE;
@@ -4557,12 +4668,80 @@ Texture.DEFAULT_MAG_FILTER = GL.LINEAR;
 Texture.DEFAULT_MIN_FILTER = GL.LINEAR;
 Texture.DEFAULT_WRAP_S = GL.CLAMP_TO_EDGE;
 Texture.DEFAULT_WRAP_T = GL.CLAMP_TO_EDGE;
+Texture.EXTENSION = "png"; //used when saving it to file
 
 //used for render to FBOs
 Texture.framebuffer = null;
 Texture.renderbuffer = null;
 Texture.loading_color = new Uint8Array([0,0,0,0]);
 Texture.use_renderbuffer_pool = true; //should improve performance
+
+//because usually you dont want to specify the internalFormat, this tries to guess it from its format
+//check https://webgl2fundamentals.org/webgl/lessons/webgl-data-textures.html for more info
+Texture.prototype.computeInternalFormat = function()
+{
+	this.internalFormat = this.format; //default
+
+	//automatic selection of internal format for depth textures to avoid problems between webgl1 and 2
+	if( this.format == GL.DEPTH_COMPONENT )
+	{
+		this.minFilter = this.magFilter = GL.NEAREST;
+
+		if( gl.webgl_version == 2 ) 
+		{
+			if( this.type == GL.UNSIGNED_SHORT )
+				this.internalFormat = GL.DEPTH_COMPONENT16;
+			else if( this.type == GL.UNSIGNED_INT )
+				this.internalFormat = GL.DEPTH_COMPONENT24;
+			else if( this.type == GL.FLOAT )
+				this.internalFormat = GL.DEPTH_COMPONENT32F;
+			else 
+				throw("unsupported type for a depth texture");
+		}
+		else if( gl.webgl_version == 1 )
+		{
+			if( this.type == GL.FLOAT )
+				throw("WebGL 1.0 does not support float depth textures");
+			this.internalFormat = GL.DEPTH_COMPONENT;
+		}
+	}
+	else if( this.format == gl.RGBA )
+	{
+		if( gl.webgl_version == 2 ) 
+		{
+			if( this.type == GL.FLOAT )
+				this.internalFormat = GL.RGBA32F;
+			else if( this.type == GL.HALF_FLOAT )
+				this.internalFormat = GL.RGBA16F;
+			else if( this.type == GL.HALF_FLOAT_OES )
+			{
+				console.warn("webgl 2 does not use HALF_FLOAT_OES, converting to HALF_FLOAT")
+				this.type = GL.HALF_FLOAT;
+				this.internalFormat = GL.RGBA16F;
+			}
+			/*
+			else if( this.type == GL.UNSIGNED_SHORT )
+			{
+				this.internalFormat = GL.RGBA16UI;
+				this.format = gl.RGBA_INTEGER;
+			}
+			else if( this.type == GL.UNSIGNED_INT )
+			{
+				this.internalFormat = GL.RGBA32UI;
+				this.format = gl.RGBA_INTEGER;
+			}
+			*/
+		}
+		else if( gl.webgl_version == 1 )
+		{
+			if( this.type == GL.HALF_FLOAT )
+			{
+				console.warn("webgl 1 does not use HALF_FLOAT, converting to HALF_FLOAT_OES")
+				this.type = GL.HALF_FLOAT_OES;
+			}
+		}
+	}
+}
 
 /**
 * Free the texture memory from the GPU, sets the texture handler to null
@@ -4744,7 +4923,13 @@ Texture.prototype.uploadData = function(data, options )
 	this.bind();
 	Texture.setUploadOptions(options, gl);
 
-	gl.texImage2D(this.texture_type, 0, this.format, this.width, this.height, 0, this.format, this.type, data);
+	if( this.texture_type == GL.TEXTURE_2D )
+		gl.texImage2D(this.texture_type, 0, this.format, this.width, this.height, 0, this.format, this.type, data);
+	else if( this.texture_type == GL.TEXTURE_3D )
+		gl.texImage3D(this.texture_type, 0, this.format, this.width, this.height, this.depth, 0, this.format, this.type, data);
+	else
+		throw("cannot uploadData for this texture type");
+
 	this.data = data; //should I clone it?
 
 	if (this.minFilter && this.minFilter != gl.NEAREST && this.minFilter != gl.LINEAR) {
@@ -5077,6 +5262,7 @@ Texture.drawToColorAndDepth = function( color_texture, depth_texture, callback )
 
 /**
 * Copy content of one texture into another
+* TODO: check using copyTexImage2D
 * @method copyTo
 * @param {GL.Texture} target_texture
 * @param {GL.Shader} [shader=null] optional shader to apply while copying
@@ -6324,10 +6510,22 @@ GL.FBO = FBO;
 */
 FBO.prototype.setTextures = function( color_textures, depth_texture, skip_disable )
 {
-	if( depth_texture && depth_texture.constructor === GL.Texture &&
-		( (depth_texture.format !== gl.DEPTH_COMPONENT && depth_texture.format !== gl.DEPTH_STENCIL) || 
-		( depth_texture.type != gl.UNSIGNED_INT && depth_texture.type != GL.UNSIGNED_INT_24_8_WEBGL ) ) )
-		throw("FBO Depth texture must be of format: gl.DEPTH_COMPONENT and type: gl.UNSIGNED_INT");
+	//test depth
+	if( depth_texture && depth_texture.constructor === GL.Texture )
+	{
+		if( depth_texture.format !== GL.DEPTH_COMPONENT && 
+			depth_texture.format !== GL.DEPTH_STENCIL && 
+			depth_texture.format !== GL.DEPTH_COMPONENT16 && 
+			depth_texture.format !== GL.DEPTH_COMPONENT24 &&
+			depth_texture.format !== GL.DEPTH_COMPONENT32F )
+			throw("FBO Depth texture must be of format: gl.DEPTH_COMPONENT, gl.DEPTH_STENCIL or gl.DEPTH_COMPONENT16/24/32F (only in webgl2)");
+
+		if( depth_texture.type != GL.UNSIGNED_SHORT && 
+			depth_texture.type != GL.UNSIGNED_INT && 
+			depth_texture.type != GL.UNSIGNED_INT_24_8_WEBGL &&
+			depth_texture.type != GL.FLOAT)
+			throw("FBO Depth texture must be of type: gl.UNSIGNED_SHORT, gl.UNSIGNED_INT, gl.UNSIGNED_INT_24_8_WEBGL");
+	}
 
 	//test if is already binded
 	var same = this.depth_texture == depth_texture;
@@ -6418,28 +6616,30 @@ FBO.prototype.update = function( skip_disable )
 
 	gl.bindFramebuffer( gl.FRAMEBUFFER, this.handler );
 
-	if(depth_texture && !gl.extensions["WEBGL_depth_texture"])
-		throw("Rendering to depth texture not supported by your browser");
-
 	//draw_buffers allow to have more than one color texture binded in a FBO
 	var ext = gl.extensions["WEBGL_draw_buffers"];
-	if(!ext && color_textures && color_textures.length > 1)
+	if( gl.webgl_version == 1 && !ext && color_textures && color_textures.length > 1)
 		throw("Rendering to several textures not supported by your browser");
 
-	gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, null );
-	gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, null );
+	var target = gl.webgl_version == 1 ? gl.FRAMEBUFFER : gl.DRAW_FRAMEBUFFER;
+
+	gl.framebufferRenderbuffer( target, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, null );
+	gl.framebufferRenderbuffer( target, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, null );
 	//detach color too?
 
 	//bind a buffer for the depth
 	if( depth_texture && depth_texture.constructor === GL.Texture )
 	{
+		if(gl.webgl_version == 1 && !gl.extensions["WEBGL_depth_texture"] )
+			throw("Rendering to depth texture not supported by your browser");
+
 		if(this.stencil && depth_texture.format !== gl.DEPTH_STENCIL )
 			console.warn("Stencil cannot be enabled if there is a depth texture with a DEPTH_STENCIL format");
 
 		if( depth_texture.format == gl.DEPTH_STENCIL )
-			gl.framebufferTexture2D( gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.TEXTURE_2D, depth_texture.handler, 0);
+			gl.framebufferTexture2D( target, gl.DEPTH_STENCIL_ATTACHMENT, gl.TEXTURE_2D, depth_texture.handler, 0);
 		else
-			gl.framebufferTexture2D( gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depth_texture.handler, 0);
+			gl.framebufferTexture2D( target, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depth_texture.handler, 0);
 	}
 	else //create a renderbuffer to store depth
 	{
@@ -6460,12 +6660,12 @@ FBO.prototype.update = function( skip_disable )
 		if(this.stencil)
 		{
 			gl.renderbufferStorage( gl.RENDERBUFFER, gl.DEPTH_STENCIL, w, h );
-			gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, depth_renderbuffer );
+			gl.framebufferRenderbuffer( target, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, depth_renderbuffer );
 		}
 		else
 		{
 			gl.renderbufferStorage( gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, w, h );
-			gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, depth_renderbuffer );
+			gl.framebufferRenderbuffer( target, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, depth_renderbuffer );
 		}
 	}
 
@@ -6477,7 +6677,8 @@ FBO.prototype.update = function( skip_disable )
 		{
 			var t = color_textures[i];
 
-			gl.framebufferTexture2D( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, t.handler, 0 );
+			//not a bug, gl.COLOR_ATTACHMENT0 + i because COLOR_ATTACHMENT is sequential numbers
+			gl.framebufferTexture2D( target, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, t.handler, 0 );
 			this.order.push( gl.COLOR_ATTACHMENT0 + i );
 		}
 	}
@@ -6488,13 +6689,13 @@ FBO.prototype.update = function( skip_disable )
 		color_renderbuffer.height = h;
 		gl.bindRenderbuffer( gl.RENDERBUFFER, color_renderbuffer );
 		gl.renderbufferStorage( gl.RENDERBUFFER, gl.RGBA4, w, h );
-		gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, color_renderbuffer );
+		gl.framebufferRenderbuffer( target, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, color_renderbuffer );
 	}
 
 	//detach old ones (only if is reusing a FBO with a different set of textures)
 	var num = color_textures ? color_textures.length : 0;
 	for(var i = num; i < this._num_binded_textures; ++i)
-		gl.framebufferTexture2D( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, null, 0);
+		gl.framebufferTexture2D( target, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, null, 0);
 	this._num_binded_textures = num;
 
 	this._stencil_enabled = this.stencil;
@@ -6519,10 +6720,15 @@ FBO.prototype.update = function( skip_disable )
 
 	//when using more than one texture you need to use the multidraw extension
 	if(color_textures && color_textures.length > 1)
-		ext.drawBuffersWEBGL( this.order );
+	{
+		if( ext )
+			ext.drawBuffersWEBGL( this.order );
+		else
+			gl.drawBuffers( this.order );
+	}
 
 	//check completion
-	var complete = gl.checkFramebufferStatus( gl.FRAMEBUFFER );
+	var complete = gl.checkFramebufferStatus( target );
 	if(complete !== gl.FRAMEBUFFER_COMPLETE)
 		throw("FBO not complete: " + complete);
 
@@ -6530,7 +6736,7 @@ FBO.prototype.update = function( skip_disable )
 	gl.bindTexture(gl.TEXTURE_2D, null);
 	gl.bindRenderbuffer(gl.RENDERBUFFER, null);
 	if(!skip_disable)
-		gl.bindFramebuffer( gl.FRAMEBUFFER, this._old_fbo_handler );
+		gl.bindFramebuffer( target, this._old_fbo_handler );
 }
 
 /**
@@ -6627,6 +6833,9 @@ global.Shader = GL.Shader = function Shader( vertexSource, fragmentSource, macro
 	if(GL.debug)
 		console.log("GL.Shader created");
 
+	if( !vertexSource || !fragmentSource )
+		throw("GL.Shader source code parameter missing");
+
 	//used to avoid problems with resources moving between different webgl context
 	this._context_id = global.gl.context_id; 
 	var gl = this.gl = global.gl;
@@ -6634,10 +6843,13 @@ global.Shader = GL.Shader = function Shader( vertexSource, fragmentSource, macro
 	//expand macros
 	var extra_code = Shader.expandMacros( macros );
 
+	var final_vertexSource = vertexSource.constructor === String ? Shader.injectCode( extra_code, vertexSource, gl ) : vertexSource;
+	var final_fragmentSource = fragmentSource.constructor === String ? Shader.injectCode( extra_code, fragmentSource, gl ) : fragmentSource;
+
 	this.program = gl.createProgram();
 
-	var vs = vertexSource.constructor === String ? GL.Shader.compileSource( gl.VERTEX_SHADER, extra_code + vertexSource ) : vertexSource;
-	var fs = fragmentSource.constructor === String ? GL.Shader.compileSource( gl.FRAGMENT_SHADER, extra_code + fragmentSource ) : fragmentSource;
+	var vs = vertexSource.constructor === String ? GL.Shader.compileSource( gl.VERTEX_SHADER, final_vertexSource ) : vertexSource;
+	var fs = fragmentSource.constructor === String ? GL.Shader.compileSource( gl.FRAGMENT_SHADER, final_fragmentSource ) : fragmentSource;
 
 	gl.attachShader( this.program, vs, gl );
 	gl.attachShader( this.program, fs, gl );
@@ -6666,6 +6878,18 @@ Shader.expandMacros = function(macros)
 			extra_code += "#define " + i + " " + (macros[i] ? macros[i] : "") + "\n";
 	return extra_code;
 }
+
+//this is done to avoid problems with the #version which must be in the first line
+Shader.injectCode = function( inject_code, code, gl )
+{
+	var index = code.indexOf("\n");
+	var version = ( gl ? "#define WEBGL" + gl.webgl_version + "\n" : "");
+	var first_line = code.substr(0,index).trim();
+	if( first_line.indexOf("#version") == -1 )
+		return version + inject_code + code;
+	return first_line + "\n" + version + inject_code + code.substr(index);
+}
+
 
 /**
 * Compiles one single shader source (could be gl.VERTEX_SHADER or gl.FRAGMENT_SHADER) and returns the webgl shader handler 
@@ -6722,8 +6946,13 @@ Shader.prototype.updateShader = function( vertexSource, fragmentSource, macros )
 	if(this.program)
 		this.program = gl.createProgram();
 
-	var vs = vertexSource.constructor === String ? GL.Shader.compileSource( gl.VERTEX_SHADER, extra_code + vertexSource, gl, this.vs_shader ) : vertexSource;
-	var fs = fragmentSource.constructor === String ? GL.Shader.compileSource( gl.FRAGMENT_SHADER, extra_code + fragmentSource, gl, this.fs_shader ) : fragmentSource;
+	var extra_code = Shader.expandMacros( macros );
+
+	var final_vertexSource = vertexSource.constructor === String ? Shader.injectCode( extra_code, vertexSource, gl ) : vertexSource;
+	var final_fragmentSource = fragmentSource.constructor === String ? Shader.injectCode( extra_code, fragmentSource, gl ) : fragmentSource;
+
+	var vs = vertexSource.constructor === String ? GL.Shader.compileSource( gl.VERTEX_SHADER, final_vertexSource ) : vertexSource;
+	var fs = fragmentSource.constructor === String ? GL.Shader.compileSource( gl.FRAGMENT_SHADER, final_fragmentSource ) : fragmentSource;
 
 	gl.attachShader( this.program, vs, gl );
 	gl.attachShader( this.program, fs, gl );
@@ -6839,32 +7068,33 @@ Shader.getUniformFunc = function( data )
 	var func = null;
 	switch (data.type)
 	{
-		case gl.FLOAT: 		
+		case GL.FLOAT: 		
 			if(data.size == 1)
 				func = gl.uniform1f; 
 			else
 				func = gl.uniform1fv; 
 			break;
-		case gl.FLOAT_MAT2: func = gl.uniformMatrix2fv; break;
-		case gl.FLOAT_MAT3:	func = gl.uniformMatrix3fv; break;
-		case gl.FLOAT_MAT4:	func = gl.uniformMatrix4fv; break;
-		case gl.FLOAT_VEC2: func = gl.uniform2fv; break;
-		case gl.FLOAT_VEC3: func = gl.uniform3fv; break;
-		case gl.FLOAT_VEC4: func = gl.uniform4fv; break;
+		case GL.FLOAT_MAT2: func = gl.uniformMatrix2fv; break;
+		case GL.FLOAT_MAT3:	func = gl.uniformMatrix3fv; break;
+		case GL.FLOAT_MAT4:	func = gl.uniformMatrix4fv; break;
+		case GL.FLOAT_VEC2: func = gl.uniform2fv; break;
+		case GL.FLOAT_VEC3: func = gl.uniform3fv; break;
+		case GL.FLOAT_VEC4: func = gl.uniform4fv; break;
 
-		case gl.UNSIGNED_INT: 
-		case gl.INT: 	  
+		case GL.UNSIGNED_INT: 
+		case GL.INT: 	  
 			if(data.size == 1)
 				func = gl.uniform1i; 
 			else
 				func = gl.uniform1iv; 
 			break;
-		case gl.INT_VEC2: func = gl.uniform2iv; break;
-		case gl.INT_VEC3: func = gl.uniform3iv; break;
-		case gl.INT_VEC4: func = gl.uniform4iv; break;
+		case GL.INT_VEC2: func = gl.uniform2iv; break;
+		case GL.INT_VEC3: func = gl.uniform3iv; break;
+		case GL.INT_VEC4: func = gl.uniform4iv; break;
 
-		case gl.SAMPLER_2D:
-		case gl.SAMPLER_CUBE:
+		case GL.SAMPLER_2D:
+		case GL.SAMPLER_3D:
+		case GL.SAMPLER_CUBE:
 			func = gl.uniform1i; break;
 		default: func = gl.uniform1f; break;
 	}	
@@ -7248,6 +7478,37 @@ Shader.dumpErrorToConsole = function(err, vscode, fscode)
 	console.groupEnd();
 }
 
+Shader.convertTo100 = function(code,type)
+{
+	//in VERTEX
+		//change in for attribute
+		//change out for varying
+		//add #extension GL_OES_standard_derivatives
+	//in FRAGMENT
+		//change in for varying 
+		//remove out vec4 _gl_FragColor
+		//rename _gl_FragColor for gl_FragColor
+	//in both
+		//change #version 300 es for #version 100
+		//replace 'texture(' for 'texture2D('
+}
+
+
+Shader.convertTo300 = function(code,type)
+{
+	//in VERTEX
+		//change attribute for in
+		//change varying for out
+		//remove #extension GL_OES_standard_derivatives
+	//in FRAGMENT
+		//change varying for in
+		//rename gl_FragColor for _gl_FragColor
+		//rename gl_FragData[0] for _gl_FragColor
+		//add out vec4 _gl_FragColor
+	//in both
+		//replace texture2D for texture
+}
+
 //helps to check if a variable value is valid to an specific uniform in a shader
 Shader.validateValue = function( value, uniform_info )
 {
@@ -7435,6 +7696,8 @@ Shader.FLAT_FRAGMENT_SHADER = "\n\
 */
 Shader.createFX = function(code, uniforms, shader)
 {
+	//remove comments
+	code = GL.Shader.removeComments( code, true ); //remove comments and breaklines to avoid problems with the macros
 	var macros = {
 		FX_CODE: code,
 		FX_UNIFORMS: uniforms || ""
@@ -7443,6 +7706,28 @@ Shader.createFX = function(code, uniforms, shader)
 		return new GL.Shader( GL.Shader.SCREEN_VERTEX_SHADER, GL.Shader.SCREEN_FRAGMENT_FX, macros );
 	shader.updateShader( GL.Shader.SCREEN_VERTEX_SHADER, GL.Shader.SCREEN_FRAGMENT_FX, macros );
 	return shader;
+}
+
+Shader.removeComments = function(code, one_line)
+{
+	if(!code)
+		return "";
+
+	var rx = /(\/\*([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*\*+\/)|(\/\/.*)/g;
+	var code = code.replace( rx ,"");
+	var lines = code.split("\n");
+	var result = [];
+	for(var i = 0; i < lines.length; ++i)
+	{
+		var line = lines[i]; 
+		var pos = line.indexOf("//");
+		if(pos != -1)
+			line = lines[i].substr(0,pos);
+		line = line.trim();
+		if(line.length)
+			result.push(line);
+	}
+	return result.join( one_line ? "" : "\n" );
 }
 
 /**
@@ -7811,24 +8096,48 @@ GL.create = function(options) {
 	*/
 	var gl = null;
 
-	if(options.webgl2)
+	var seq = null;
+	if(options.version == 2)	
+		seq = ['webgl2','experimental-webgl2'];
+	else if(options.version == 1 || options.version === undefined) //default
+		seq = ['webgl','experimental-webgl'];
+	else if(options.version === 0) //latest
+		seq = ['webgl2','experimental-webgl2','webgl','experimental-webgl'];
+
+	if(!seq)
+		throw 'Incorrect WebGL version, must be 1 or 2';
+
+	var context_options = {
+		alpha: options.alpha === undefined ? true : options.alpha,
+		depth: options.depth === undefined ? true : options.depth,
+		stencil: options.stencil === undefined ? true : options.stencil,
+		antialias: options.antialias === undefined ? true : options.antialias,
+		premultipliedAlpha: options.premultipliedAlpha === undefined ? true : options.premultipliedAlpha,
+		preserveDrawingBuffer: options.preserveDrawingBuffer === undefined ? true : options.preserveDrawingBuffer
+	};
+
+	for(var i = 0; i < seq.length; ++i)
 	{
-		try { gl = canvas.getContext('webgl2', options); gl.webgl_version = 2; } catch (e) {}
-		try { gl = gl || canvas.getContext('experimental-webgl2', options); gl.webgl_version = 2; } catch (e) {}
+		try { gl = canvas.getContext( seq[i], context_options ); } catch (e) {}
+		if(gl)
+			break;
 	}
-	try { gl = gl || canvas.getContext('webgl', options); } catch (e) {}
-	try { gl = gl || canvas.getContext('experimental-webgl', options); } catch (e) {}
-	if (!gl) { throw 'WebGL not supported'; }
 
-	if(gl.webgl_version === undefined)
-		gl.webgl_version = 1;
+	if (!gl)
+	{
+		if( canvas.getContext( "webgl" ) )
+			throw 'WebGL supported but not with those parameters';
+		throw 'WebGL not supported';
+	}
 
+	//context globals
+	gl.webgl_version = gl.constructor.name === "WebGL2RenderingContext" ? 2 : 1;
 	global.gl = gl;
 	canvas.is_webgl = true;
 	canvas.gl = gl;
 	gl.context_id = this.last_context_id++;
 
-	//get some common extensions
+	//get some common extensions for webgl 1
 	gl.extensions = {};
 	gl.extensions["OES_standard_derivatives"] = gl.derivatives_supported = gl.getExtension('OES_standard_derivatives') || false;
 	gl.extensions["WEBGL_depth_texture"] = gl.getExtension("WEBGL_depth_texture") || gl.getExtension("WEBKIT_WEBGL_depth_texture") || gl.getExtension("MOZ_WEBGL_depth_texture");
@@ -7844,15 +8153,17 @@ GL.create = function(options) {
 	gl.extensions["OES_texture_float_linear"] = gl.getExtension("OES_texture_float_linear");
 	if(gl.extensions["OES_texture_float_linear"])
 		gl.extensions["OES_texture_float"] = gl.getExtension("OES_texture_float");
+	gl.extensions["EXT_color_buffer_float"] = gl.getExtension("EXT_color_buffer_float");
 
+	//for half float textures in webgl 1 require extension
 	gl.extensions["OES_texture_half_float_linear"] = gl.getExtension("OES_texture_half_float_linear");
 	if(gl.extensions["OES_texture_half_float_linear"])
 		gl.extensions["OES_texture_half_float"] = gl.getExtension("OES_texture_half_float");
 
-	gl.HALF_FLOAT_OES = 0x8D61; 
-	if(gl.extensions["OES_texture_half_float"])
-		gl.HALF_FLOAT_OES = gl.extensions["OES_texture_half_float"].HALF_FLOAT_OES;
-	gl.HIGH_PRECISION_FORMAT = gl.extensions["OES_texture_half_float"] ? gl.HALF_FLOAT_OES : (gl.extensions["OES_texture_float"] ? gl.FLOAT : gl.UNSIGNED_BYTE); //because Firefox dont support half float
+	if( gl.webgl_version == 1 )
+		gl.HIGH_PRECISION_FORMAT = gl.extensions["OES_texture_half_float"] ? GL.HALF_FLOAT_OES : (gl.extensions["OES_texture_float"] ? GL.FLOAT : GL.UNSIGNED_BYTE); //because Firefox dont support half float
+	else
+		gl.HIGH_PRECISION_FORMAT = GL.HALF_FLOAT_OES;
 
 	gl.max_texture_units = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
 
@@ -8051,9 +8362,9 @@ GL.create = function(options) {
 		mouse.y = e.canvasy;
 		mouse.clientx = e.mousex;
 		mouse.clienty = e.mousey;
-		mouse.left_button = mouse.buttons & (1<<GL.LEFT_MOUSE_BUTTON);
-		mouse.middle_button = mouse.buttons & (1<<GL.MIDDLE_MOUSE_BUTTON);
-		mouse.right_button = mouse.buttons & (1<<GL.RIGHT_MOUSE_BUTTON);
+		mouse.left_button = !!(mouse.buttons & (1<<GL.LEFT_MOUSE_BUTTON));
+		mouse.middle_button = !!(mouse.buttons & (1<<GL.MIDDLE_MOUSE_BUTTON));
+		mouse.right_button = !!(mouse.buttons & (1<<GL.RIGHT_MOUSE_BUTTON));
 
 		if(e.eventType == "mousedown")
 		{
@@ -8467,6 +8778,30 @@ GL.create = function(options) {
 		return final_canvas;
 	}
 
+	//from https://webgl2fundamentals.org/webgl/lessons/webgl1-to-webgl2.html
+	function getAndApplyExtension( gl, name ) {
+		var ext = gl.getExtension(name);
+		if (!ext) {
+			return false;
+		}
+		var suffix = name.split("_")[0];
+		var prefix = suffix = '_';
+		var suffixRE = new RegExp(suffix + '$');
+		var prefixRE = new RegExp('^' + prefix);
+		for (var key in ext) {
+			var val = ext[key];
+			if (typeof(val) === 'function') {
+				// remove suffix (eg: bindVertexArrayOES -> bindVertexArray)
+				var unsuffixedKey = key.replace(suffixRE, '');
+				if (key.substing)
+					gl[unprefixedKey] = ext[key].bind(ext);
+			} else {
+				var unprefixedKey = key.replace(prefixRE, '');
+				gl[unprefixedKey] = ext[key];
+			}
+		}
+	}
+
 
 	//mini textures manager
 	var loading_textures = {};
@@ -8677,9 +9012,9 @@ GL.augmentEvent = function(e, root_element)
 	//insert info in event
 	e.dragging = this.dragging;
 	e.buttons_mask = gl.mouse.buttons;
-	e.leftButton = gl.mouse.buttons & (1<<GL.LEFT_MOUSE_BUTTON);
-	e.middleButton = gl.mouse.buttons & (1<<GL.MIDDLE_MOUSE_BUTTON);
-	e.rightButton = gl.mouse.buttons & (1<<GL.RIGHT_MOUSE_BUTTON);
+	e.leftButton = !!(gl.mouse.buttons & (1<<GL.LEFT_MOUSE_BUTTON));
+	e.middleButton = !!(gl.mouse.buttons & (1<<GL.MIDDLE_MOUSE_BUTTON));
+	e.rightButton = !!(gl.mouse.buttons & (1<<GL.RIGHT_MOUSE_BUTTON));
 	e.isButtonPressed = function(num) { return this.buttons_mask & (1<<num); }
 }
 
@@ -10835,7 +11170,7 @@ Raytracer.hitTestTriangle = function(origin, ray, a, b, c) {
 * @return {Object} mesh information (vertices, coords, normals, indices)
 */
 
-Mesh.parseOBJ = function(text, options)
+Mesh.parseOBJ = function( text, options )
 {
 	options = options || {};
 
@@ -11141,14 +11476,17 @@ Mesh.parseOBJ = function(text, options)
 		info.groups = groups;
 	mesh.info = info;
 
+	if(options.only_data)
+		return mesh;
+
+	//creates and returns a GL.Mesh
 	var final_mesh = null;
-	
-	final_mesh = Mesh.load(mesh, null, options.mesh);
+	final_mesh = Mesh.load( mesh, null, options.mesh );
 	final_mesh.updateBounding();
 	return final_mesh;
 }
 
-Mesh.parsers["obj"] = Mesh.parseOBJ.bind( Mesh );
+Mesh.parsers["obj"] = Mesh.parseOBJ;
 
 Mesh.encoders["obj"] = function( mesh, options )
 {
@@ -11202,6 +11540,322 @@ Mesh.encoders["obj"] = function( mesh, options )
 	return result;
 }
 
+/* BINARYU FORMAT ************************************/
+
+if(global.WBin)
+	global.WBin.classes["Mesh"] = Mesh;
+
+Mesh.binary_file_formats["wbin"] = true;
+
+Mesh.parsers["wbin"] = Mesh.fromBinary = function( data_array, options )
+{
+	if(!global.WBin)
+		throw("To use binary meshes you need to install WBin.js from https://github.com/jagenjo/litescene.js/blob/master/src/utils/wbin.js ");
+
+	options = options || {};
+
+	var o = null;
+	if( data_array.constructor == ArrayBuffer )
+		o = WBin.load( data_array, true );
+	else
+		o = data_array;
+
+	if(!o.info)
+		console.warn("This WBin doesn't seem to contain a mesh. Classname: ", o["@classname"] );
+
+	if( o.format )
+		GL.Mesh.decompress( o );
+
+	var vertex_buffers = {};
+	if(o.vertex_buffers)
+	{
+		for(var i in o.vertex_buffers)
+			vertex_buffers[ o.vertex_buffers[i] ] = o[ o.vertex_buffers[i] ];
+	}
+	else
+	{
+		if(o.vertices) vertex_buffers.vertices = o.vertices;
+		if(o.normals) vertex_buffers.normals = o.normals;
+		if(o.coords) vertex_buffers.coords = o.coords;
+		if(o.weights) vertex_buffers.weights = o.weights;
+		if(o.bone_indices) vertex_buffers.bone_indices = o.bone_indices;
+	}
+
+	var index_buffers = {};
+	if( o.index_buffers )
+	{
+		for(var i in o.index_buffers)
+			index_buffers[ o.index_buffers[i] ] = o[ o.index_buffers[i] ];
+	}
+	else
+	{
+		if(o.triangles) index_buffers.triangles = o.triangles;
+		if(o.wireframe) index_buffers.wireframe = o.wireframe;
+	}
+
+	var mesh = { 
+		vertex_buffers: vertex_buffers,
+		index_buffers: index_buffers,
+		bounding: o.bounding,
+		info: o.info
+	};
+
+	if(o.bones)
+	{
+		mesh.bones = o.bones;
+		//restore Float32array
+		for(var i = 0; i < mesh.bones.length; ++i)
+			mesh.bones[i][1] = mat4.clone(mesh.bones[i][1]);
+		if(o.bind_matrix)
+			mesh.bind_matrix = mat4.clone( o.bind_matrix );		
+	}
+
+	if(options.only_data)
+		return mesh;
+
+	//build mesh object
+	var final_mesh = options.mesh || new GL.Mesh();
+	final_mesh.configure( mesh );
+	return final_mesh;
+}
+
+Mesh.encoders["wbin"] = function( mesh, options )
+{
+	return mesh.toBinary( options );
+}
+
+Mesh.prototype.toBinary = function( options )
+{
+	if(!global.WBin)
+		throw("to use Mesh.toBinary you need to have WBin included. Check the repository for wbin.js");
+
+	if(!this.info)
+		this.info = {};
+
+	//clean data
+	var o = {
+		object_class: "Mesh",
+		info: this.info,
+		groups: this.groups
+	};
+
+	if(this.bones)
+	{
+		var bones = [];
+		//convert to array
+		for(var i = 0; i < this.bones.length; ++i)
+			bones.push([ this.bones[i][0], mat4.toArray( this.bones[i][1] ) ]);
+		o.bones = bones;
+		if(this.bind_matrix)
+			o.bind_matrix = this.bind_matrix;
+	}
+
+	//bounding box
+	if(!this.bounding)	
+		this.updateBounding();
+	o.bounding = this.bounding;
+
+	var vertex_buffers = [];
+	var index_buffers = [];
+
+	for(var i in this.vertexBuffers)
+	{
+		var stream = this.vertexBuffers[i];
+		o[ stream.name ] = stream.data;
+		vertex_buffers.push( stream.name );
+
+		if(stream.name == "vertices")
+			o.info.num_vertices = stream.data.length / 3;
+	}
+
+	for(var i in this.indexBuffers)
+	{
+		var stream = this.indexBuffers[i];
+		o[i] = stream.data;
+		index_buffers.push( i );
+	}
+
+	o.vertex_buffers = vertex_buffers;
+	o.index_buffers = index_buffers;
+
+	//compress wbin using the bounding
+	if( GL.Mesh.enable_wbin_compression ) //apply compression
+		GL.Mesh.compress( o );
+
+	//create pack file
+	var bin = WBin.create( o, "Mesh" ); 
+	return bin;
+}
+
+Mesh.compress = function( o, format )
+{
+	format = format || "bounding_compressed";
+	o.format = {
+		type: format
+	};
+
+	var func = Mesh.compressors[ format ];
+	if(!func)
+		throw("compression format not supported:" + format );
+	return func( o );
+}
+
+Mesh.decompress = function( o )
+{
+	if(!o.format)
+		return;
+	var func = Mesh.decompressors[ o.format.type ];
+	if(!func)
+		throw("decompression format not supported:" + o.format.type );
+	return func( o );
+}
+
+Mesh.compressors["bounding_compressed"] = function(o)
+{
+	if(!o.vertex_buffers)
+		throw("buffers not found");
+
+	var min = BBox.getMin( o.bounding );
+	var max = BBox.getMax( o.bounding );
+	var range = vec3.sub( vec3.create(), max, min );
+
+	var vertices = o.vertices;
+	var new_vertices = new Uint16Array( vertices.length );
+	for(var i = 0; i < vertices.length; i+=3)
+	{
+		new_vertices[i] = ((vertices[i] - min[0]) / range[0]) * 65535;
+		new_vertices[i+1] = ((vertices[i+1] - min[1]) / range[1]) * 65535;
+		new_vertices[i+2] = ((vertices[i+2] - min[2]) / range[2]) * 65535;
+	}
+	o.vertices = new_vertices;		
+
+	if( o.normals )
+	{
+		var normals = o.normals;
+		var new_normals = new Uint8Array( normals.length );
+		var normals_range = new_normals.constructor == Uint8Array ? 255 : 65535;
+		for(var i = 0; i < normals.length; i+=3)
+		{
+			new_normals[i] = (normals[i] * 0.5 + 0.5) * normals_range;
+			new_normals[i+1] = (normals[i+1] * 0.5 + 0.5) * normals_range;
+			new_normals[i+2] = (normals[i+2] * 0.5 + 0.5) * normals_range;
+		}
+		o.normals = new_normals;
+	}
+
+	if( o.coords )
+	{
+		//compute uv bounding: [minu,minv,maxu,maxv]
+		var coords = o.coords;
+		var uvs_bounding = [10000,10000,-10000,-10000];
+		for(var i = 0; i < coords.length; i+=2)
+		{
+			var u = coords[i];
+			if( uvs_bounding[0] > u ) uvs_bounding[0] = u;
+			else if( uvs_bounding[2] < u ) uvs_bounding[2] = u;
+			var v = coords[i+1];
+			if( uvs_bounding[1] > v ) uvs_bounding[1] = v;
+			else if( uvs_bounding[3] < v ) uvs_bounding[3] = v;
+		}
+		o.format.uvs_bounding = uvs_bounding;
+
+		var new_coords = new Uint16Array( coords.length );
+		var range = [ uvs_bounding[2] - uvs_bounding[0], uvs_bounding[3] - uvs_bounding[1] ];
+		for(var i = 0; i < coords.length; i+=2)
+		{
+			new_coords[i] = ((coords[i] - uvs_bounding[0]) / range[0]) * 65535;
+			new_coords[i+1] = ((coords[i+1] - uvs_bounding[1]) / range[1]) * 65535;
+		}
+		o.coords = new_coords;
+	}
+
+	if( o.weights )
+	{
+		var weights = o.weights;
+		var new_weights = new Uint16Array( weights.length ); //using only one byte distorts the meshes a lot
+		var weights_range = new_weights.constructor == Uint8Array ? 255 : 65535;
+		for(var i = 0; i < weights.length; i+=4)
+		{
+			new_weights[i] = weights[i] * weights_range;
+			new_weights[i+1] = weights[i+1] * weights_range;
+			new_weights[i+2] = weights[i+2] * weights_range;
+			new_weights[i+3] = weights[i+3] * weights_range;
+		}
+		o.weights = new_weights;
+	}
+}
+
+
+Mesh.decompressors["bounding_compressed"] = function(o)
+{
+	var bounding = o.bounding;
+	if(!bounding)
+		throw("error in mesh decompressing data: bounding not found, cannot use the bounding decompression.");
+
+	var min = BBox.getMin( bounding );
+	var max = BBox.getMax( bounding );
+	var range = vec3.sub( vec3.create(), max, min );
+
+	var format = o.format;
+
+	var inv8 = 1 / 255;
+	var inv16 = 1 / 65535;
+	var vertices = o.vertices;
+	var new_vertices = new Float32Array( vertices.length );
+	for( var i = 0, l = vertices.length; i < l; i += 3 )
+	{
+		new_vertices[i] = ((vertices[i] * inv16) * range[0]) + min[0];
+		new_vertices[i+1] = ((vertices[i+1] * inv16) * range[1]) + min[1];
+		new_vertices[i+2] = ((vertices[i+2] * inv16) * range[2]) + min[2];
+	}
+	o.vertices = new_vertices;		
+
+	if( o.normals && o.normals.constructor != Float32Array )
+	{
+		var normals = o.normals;
+		var new_normals = new Float32Array( normals.length );
+		var inormals_range = normals.constructor == Uint8Array ? inv8 : inv16;
+		for( var i = 0, l = normals.length; i < l; i += 3 )
+		{
+			new_normals[i] = (normals[i] * inormals_range) * 2.0 - 1.0;
+			new_normals[i+1] = (normals[i+1] * inormals_range) * 2.0 - 1.0;
+			new_normals[i+2] = (normals[i+2] * inormals_range) * 2.0 - 1.0;
+			var N = new_normals.subarray(i,i+3);
+			vec3.normalize(N,N);
+		}
+		o.normals = new_normals;
+	}
+
+	if( o.coords && format.uvs_bounding && o.coords.constructor != Float32Array )
+	{
+		var coords = o.coords;
+		var uvs_bounding = format.uvs_bounding;
+		var range = [ uvs_bounding[2] - uvs_bounding[0], uvs_bounding[3] - uvs_bounding[1] ];
+		var new_coords = new Float32Array( coords.length );
+		for( var i = 0, l = coords.length; i < l; i += 2 )
+		{
+			new_coords[i] = (coords[i] * inv16) * range[0] + uvs_bounding[0];
+			new_coords[i+1] = (coords[i+1] * inv16) * range[1] + uvs_bounding[1];
+		}
+		o.coords = new_coords;
+	}
+
+	//bones are already in Uint8 format so dont need to compress them further, but weights yes
+	if( o.weights && o.weights.constructor != Float32Array ) //do we really need to unpack them? what if we use them like this?
+	{
+		var weights = o.weights;
+		var new_weights = new Float32Array( weights.length );
+		var iweights_range = weights.constructor == Uint8Array ? inv8 : inv16;
+		for(var i = 0, l = weights.length; i < l; i += 4 )
+		{
+			new_weights[i] = weights[i] * iweights_range;
+			new_weights[i+1] = weights[i+1] * iweights_range;
+			new_weights[i+2] = weights[i+2] * iweights_range;
+			new_weights[i+3] = weights[i+3] * iweights_range;
+		}
+		o.weights = new_weights;
+	}
+}
 
 //footer.js
 })( typeof(window) != "undefined" ? window : (typeof(self) != "undefined" ? self : global ) );
