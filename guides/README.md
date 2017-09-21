@@ -5,7 +5,7 @@ The nature of this syntax is to make it more powerful and flexible but could lea
 
 This problem gets even worse in WebGL due to the nature of the Javascript language (soft-typing, garbage collection) and the browser restrictions (safety limitations, async calls).
 
-The aim of LiteGL is to reduce this gap by wrapping most of the common WebGL 1.0 calls inside object oriented classes that represent clearer concepts (like Texture, Shader or Mesh).
+The aim of LiteGL is to reduce this gap by wrapping most of the common WebGL 1.0 calls inside object oriented classes that represent clearer concepts (like ```GL.Texture```, ```GL.Shader``` or ```GL.Mesh```).
 And adding some very useful extra functions that most 3D application will eventually need (mesh parsing, texture copying, a pool of useful shaders,...).
 
 Also it adds the necessary functions for any browser realtime application (canvas creation, input handling, events system).
@@ -19,24 +19,35 @@ It is in a very mature state and almost 100% bug free.
 
 Although I keep polishing it, the library is finished and no bigger changes are expected in the future (while we wait to WebGL 2.0 to be deployed globally).
 
-LiteGL is based in LightGL.js by Evan Wallace, but some major changes were made to achieve better performance and clarity.
+LiteGL is based in [LightGL.js by Evan Wallace](https://github.com/evanw/lightgl.js/), but some major changes were made to achieve better performance and clarity.
 
 
 ## Dependencies ##
 
-LiteGL only has one dependency, gl-matrix, which helps with all the mathematical operations common in all 3D applications. gl-matrix provides classes for vector3, matrix33, matrix44 and quaternions. And because it forces to use typed-arrays the performance is very good.
+LiteGL only has one dependency, [gl-matrix](http://glmatrix.net/), which helps with all the mathematical operations common in all 3D applications. gl-matrix provides classes for vector3, matrix33, matrix44 and quaternions. And because it forces to use typed-arrays the performance is very good.
 
 To better understand the syntax check the [guide for gl-matrix](gl-matrix.md).
 
+## Usage ##
+
+If you want to see an example of application done in LiteGL I recommend to check the examples folder in the repository where you will find examples for every feature.
+
+Or you can check the [guide for a basic litegl application](basic_application.md).
+
+## The Context ##
+
+To use WebGL we need to have a WebGL context, check [the context guide](context.md) to know how to do it.
+
+
 ## Classes ##
 
-There are four classes that any WebGL developer need to make any basic 3D application: Buffer, Mesh, Shader, Texture.
+There are four classes that any WebGL developer need to create to do a basic 3D application: ```GL.Buffer```, ```GL.Mesh```, ```GL.Shader```, ```GL.Texture```.
 
 ### GL.Mesh and GL.Buffer ##
 
-The GL.Mesh contains the geometry that must be rendered for an object.
+The ```GL.Mesh``` contains the geometry that must be rendered for an object.
 
-It is just a container for several GL.Buffer which is the class that sends the data to the GPU, but GL.Mesh makes it easier to work with (loading, uploading to VRAM, generating new ones, etc).
+It is just a container for several ```GL.Buffer``` which is the class that sends the data to the GPU, but ```GL.Mesh``` makes it easier to work with (loading, uploading to VRAM, generating new ones, etc).
 
 There are also some methods to generate geometrical shapes like Spheres, Hemispheres, Boxes, etc. Check the examples to see all the shapes.
 
@@ -44,7 +55,7 @@ For more info read the [guide about GL.Mesh and GL.Buffer](meshes.md)
 
 ### GL.Texture ##
 
-The GL.Texture wraps a WebGLTexture. Helps to upload an image to the VRAM, apply FX or showing it to the viewport.
+The ```GL.Texture``` wraps a ```WebGLTexture```. Helps to upload an image to the VRAM, apply FX or showing it to the viewport.
 
 Because texture could come from several sources (images, video, canvas, data from memory) or in different forms (TEXTURE_2D, TEXTURE_CUBE_MAP) this class makes working with texture much easier.
 
@@ -52,7 +63,7 @@ For more info read the [guide about GL.Texture](textures.md)
 
 ### GL.Shader ##
 
-GL.Shader wraps a WebGLProgram to it is easier to compile, check errors, bind or pass uniforms to the shader.
+```GL.Shader``` wraps a ```WebGLProgram``` so it is easier to compile, check errors, bind or pass uniforms to the shader.
 
 It also provides some basic shaders for copying data between textures.
 
@@ -60,7 +71,7 @@ For more info read the [guide about GL.Shader](shaders.md)
 
 ### GL.FBO ###
 
-Another useful trick in graphics imply rendering the scene inside a texture so it can be used in later stages, to do so you need a WebGLFramebuffer. The GL.FBO class wraps it so it is much easier to attach textures and enable it.
+Another useful trick in graphics imply rendering the scene inside a texture so it can be used in later stages, to do so you need a ```WebGLFramebuffer```. The ```GL.FBO``` class wraps it so it is much easier to attach textures and enable it.
 
 For more info read the [guide about GL.FBO](fbos.md)
 
@@ -81,13 +92,11 @@ Besides the basic classes LiteGL comes with others that could help with more com
 
 This class helps testing ray collision against mesh in an efficient way. An octree is constructed containing all the mesh data so it can be crawled faster when testing collisions.
 
-For more info read the [Octree guide](octree.md)
+To see an example of the Octree and the Raytracer check the [octree example](https://github.com/jagenjo/litegl.js/blob/master/examples/octree.html)
 
 ### geo ###
 
 Following the gl-matrix coding style we provide a class to do basic collision detection between basic shapes (ray-sphere, ray-box, ray-plane, box-box)
-
-For more info read the [geo guide](geo.md)
 
 ### LEvent ###
 
