@@ -228,7 +228,7 @@ Octree.prototype.testRay = (function(){
 	var min_temp = vec3.create();
 	var max_temp = vec3.create();
 
-	return function(origin, direction, dist_min, dist_max)
+	return function(origin, direction, dist_min, dist_max, test_backfaces )
 	{
 		octree_tested_boxes = 0;
 		octree_tested_triangles = 0;
@@ -247,7 +247,7 @@ Octree.prototype.testRay = (function(){
 		if(!test) //no collision with mesh bounding box
 			return null;
 
-		var test = Octree.testRayInNode( this.root, origin_temp, direction_temp );
+		var test = Octree.testRayInNode( this.root, origin_temp, direction_temp, test_backfaces );
 		if(test != null)
 		{
 			var pos = vec3.scale( vec3.create(), direction, test.t );
@@ -286,7 +286,7 @@ Octree.prototype.testSphere = function( origin, radius )
 }
 
 //WARNING: cannot use static here, it uses recursion
-Octree.testRayInNode = function( node, origin, direction )
+Octree.testRayInNode = function( node, origin, direction, test_backfaces )
 {
 	var test = null;
 	var prev_test = null;
@@ -298,7 +298,7 @@ Octree.testRayInNode = function( node, origin, direction )
 		{
 			var face = node.faces[i];
 			octree_tested_triangles += 1;
-			test = Octree.hitTestTriangle( origin, direction, face.subarray(0,3) , face.subarray(3,6), face.subarray(6,9) );
+			test = Octree.hitTestTriangle( origin, direction, face.subarray(0,3) , face.subarray(3,6), face.subarray(6,9), test_backfaces );
 			if (test==null)
 				continue;
 			test.face = face;
@@ -331,7 +331,7 @@ Octree.testRayInNode = function( node, origin, direction )
 				continue;
 
 			//test collision with node
-			test = Octree.testRayInNode( child, origin, direction );
+			test = Octree.testRayInNode( child, origin, direction, test_backfaces );
 			if(test == null)
 				continue;
 
@@ -442,12 +442,12 @@ Octree.hitTestTriangle = (function(){
 	var toHit = vec3.create();
 	var tmp = vec3.create();
 	
-	return function(origin, ray, A, B, C) {
+	return function( origin, ray, A, B, C, test_backfaces ) {
 		vec3.subtract( AB, B, A );
 		vec3.subtract( AC, C, A );
 		var normal = vec3.cross( vec3.create(), AB, AC ); //returned
 		vec3.normalize( normal, normal );
-		if( vec3.dot(normal,ray) > 0)
+		if( !test_backfaces && vec3.dot(normal,ray) > 0)
 			return null; //ignore backface
 
 		var t = vec3.dot(normal, vec3.subtract( tmp, A, origin )) / vec3.dot(normal,ray);
