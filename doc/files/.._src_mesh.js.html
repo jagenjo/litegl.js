@@ -131,10 +131,11 @@ GL.Buffer = function Buffer( target, data, spacing, stream_type, gl ) {
 
 	if(gl !== null)
 		gl = gl || global.gl;
+	this.gl = gl;
 
 	this.buffer = null; //webgl buffer
-	this.target = target;
-	this.gl = gl;
+	this.target = target; //GL.ARRAY_BUFFER, GL.ELEMENT_ARRAY_BUFFER
+	this.attribute = null; //name of the attribute in the shader (&quot;a_vertex&quot;,&quot;a_normal&quot;,&quot;a_coord&quot;,...)
 
 	//optional
 	this.data = data;
@@ -316,6 +317,34 @@ GL.Buffer.prototype.clone = function(share)
 	return buffer;
 }
 
+
+GL.Buffer.prototype.toJSON = function()
+{
+	if(!this.data)
+	{
+		console.error(&quot;cannot serialize a mesh without data&quot;);
+		return null;
+	}
+
+	return {
+		data_type: getClassName(this.data),
+		data: this.data.toJSON(),
+		target: this.target,
+		attribute: this.attribute,
+		spacing: this.spacing
+	};
+}
+
+GL.Buffer.prototype.fromJSON = function(o)
+{
+	var data_type = global[ o.data_type ] || Float32Array;
+	this.data = new data_type( o.data ); //cloned
+	this.target = o.target;
+	this.spacing = o.spacing || 3;
+	this.attribute = o.attribute;
+	this.upload( GL.STATIC_DRAW );
+}
+
 /**
 * Deletes the content from the GPU and destroys the handler
 * @method delete
@@ -353,8 +382,11 @@ global.Mesh = GL.Mesh = function Mesh( vertexbuffers, indexbuffers, options, gl 
 	this.vertexBuffers = {};
 	this.indexBuffers = {};
 
-	this.info = null; //here you can store extra info, like groups, which is an array of { name, start, length, material }
-	this.bounding = null; //here you can store a AABB in BBox format
+	//here you can store extra info, like groups, which is an array of { name, start, length, material }
+	this.info = {
+		groups: []
+	}; 
+	this._bounding = BBox.create(); //here you can store a AABB in BBox format
 
 	if(vertexbuffers || indexbuffers)
 		this.addBuffers( vertexbuffers, indexbuffers, options ? options.stream_type : null );
@@ -383,6 +415,20 @@ Mesh.common_buffers = {
 
 Mesh.default_datatype = Float32Array;
 
+Object.defineProperty( Mesh.prototype, &quot;bounding&quot;, {
+	set: function(v)
+	{
+		if(!v)
+			return;
+		if(v.length &lt; 13)
+			throw(&quot;Bounding must use the BBox bounding format of 13 floats: center, halfsize, min, max, radius&quot;);
+		this._bounding.set(v);
+	},
+	get: function()
+	{
+		return this._bounding;
+	}
+});
 
 /**
 * Adds buffer to mesh
@@ -458,7 +504,11 @@ Mesh.prototype.addBuffers = function( vertexbuffers, indexbuffers, stream_type )
 		var attribute = &quot;a_&quot; + i;
 		if(stream_info &amp;&amp; stream_info.attribute)
 			attribute = stream_info.attribute;
-		this.createVertexBuffer( i, attribute, spacing, data, stream_type );
+	
+		if( this.vertexBuffers[i] )
+			this.updateVertexBuffer( i, attribute, spacing, data, stream_type );
+		else
+			this.createVertexBuffer( i, attribute, spacing, data, stream_type );
 	}
 
 	if(indexbuffers)
@@ -503,7 +553,7 @@ Mesh.prototype.addBuffers = function( vertexbuffers, indexbuffers, stream_type )
 * @param {enum} stream_type [optional, default = gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW ) ]
 */
 
-Mesh.prototype.createVertexBuffer = function(name, attribute, buffer_spacing, buffer_data, stream_type ) {
+Mesh.prototype.createVertexBuffer = function( name, attribute, buffer_spacing, buffer_data, stream_type ) {
 
 	var common = GL.Mesh.common_buffers[name]; //generic info about a buffer with the same name
 
@@ -539,6 +589,33 @@ Mesh.prototype.createVertexBuffer = function(name, attribute, buffer_spacing, bu
 
 	return buffer;
 }
+
+/**
+* Updates a vertex buffer 
+* @method updateVertexBuffer
+* @param {String} name the name of the buffer
+* @param {String} attribute the name of the attribute in the shader
+* @param {number} spacing number of numbers per component (3 per vertex, 2 per uvs...), default 3
+* @param {*} data the array with all the data
+* @param {enum} stream_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW 
+*/
+Mesh.prototype.updateVertexBuffer = function( name, attribute, buffer_spacing, buffer_data, stream_type ) {
+	var buffer = this.vertexBuffers[name];
+	if(!buffer)
+	{
+		console.log(&quot;buffer not found: &quot;,name);
+		return;
+	}
+
+	if(!buffer_data.length)
+		return;
+
+	buffer.attribute = attribute;
+	buffer.spacing = buffer_spacing;
+	buffer.data = buffer_data;
+	buffer.upload( stream_type );
+}
+
 
 /**
 * Removes a vertex buffer from the mesh
@@ -765,8 +842,64 @@ Mesh.prototype.toObject = function()
 		}
 	}
 
-	return { vertexBuffers: vbs, indexBuffers: ibs };
+	return { 
+		vertexBuffers: vbs, 
+		indexBuffers: ibs,
+		info: this.info ? cloneObject( this.info ) : null,
+		bounding: this._bounding.toJSON()
+	};
 }
+
+
+Mesh.prototype.toJSON = function()
+{
+	var r = {
+		vertexBuffers: {},
+		indexBuffers: {},
+		info: this.info ? cloneObject( this.info ) : null,
+		bounding: this._bounding.toJSON() 
+	};
+
+	for(var i in this.vertexBuffers)
+		r.vertexBuffers[i] = this.vertexBuffers[i].toJSON();
+
+	for(var i in this.indexBuffers)
+		r.indexBuffers[i] = this.indexBuffers[i].toJSON();
+
+	return r;
+}
+
+Mesh.prototype.fromJSON = function(o)
+{
+	this.vertexBuffers = {};
+	this.indexBuffers = {};
+
+	for(var i in o.vertexBuffers)
+	{
+		if(!o.vertexBuffers[i])
+			continue;
+		var buffer = new GL.Buffer();
+		buffer.fromJSON( o.vertexBuffers[i] );
+		if(!buffer.attribute &amp;&amp; GL.Mesh.common_buffers[i])
+			buffer.attribute = GL.Mesh.common_buffers[i].attribute;
+		this.vertexBuffers[i] = buffer;
+	}
+
+	for(var i in o.indexBuffers)
+	{
+		if(!o.indexBuffers[i])
+			continue;
+		var buffer = new GL.Buffer();
+		buffer.fromJSON( o.indexBuffers[i] );
+		this.indexBuffers[i] = buffer;
+	}
+
+	if(o.info)
+		this.info = cloneObject( o.info );
+	if(o.bounding)
+		this.bounding = o.bounding; //setter does the job
+}
+
 
 /**
 * Computes some data about the mesh
@@ -788,13 +921,6 @@ Mesh.prototype.generateMetadata = function()
 	metadata.indexed = !!this.metadata.faces;
 	this.metadata = metadata;
 }
-
-//Meshes cannot be stored in JSON
-Mesh.prototype.toJSON = function()
-{
-	return &quot;&quot;;
-}
-
 
 //never tested
 /*
@@ -1096,6 +1222,10 @@ Mesh.prototype.explodeIndices = function( buffer_name ) {
 * @param {enum} stream_type default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW)
 */
 Mesh.prototype.computeNormals = function( stream_type  ) {
+	var vertices_buffer = this.vertexBuffers[&quot;vertices&quot;];
+	if(!vertices_buffer)
+		return console.error(&quot;Cannot compute normals of a mesh without vertices&quot;);
+
 	var vertices = this.vertexBuffers[&quot;vertices&quot;].data;
 	var num_vertices = vertices.length / 3;
 
@@ -1178,10 +1308,26 @@ Mesh.prototype.computeNormals = function( stream_type  ) {
 */
 Mesh.prototype.computeTangents = function()
 {
-	var vertices = this.vertexBuffers[&quot;vertices&quot;].data;
-	var normals = this.vertexBuffers[&quot;normals&quot;].data;
-	var uvs = this.vertexBuffers[&quot;coords&quot;].data;
-	var triangles = this.indexBuffers[&quot;triangles&quot;].data;
+	var vertices_buffer = this.vertexBuffers[&quot;vertices&quot;];
+	if(!vertices_buffer)
+		return console.error(&quot;Cannot compute tangents of a mesh without vertices&quot;);
+
+	var normals_buffer = this.vertexBuffers[&quot;normals&quot;];
+	if(!normals_buffer)
+		return console.error(&quot;Cannot compute tangents of a mesh without normals&quot;);
+
+	var uvs_buffer = this.vertexBuffers[&quot;coords&quot;];
+	if(!uvs_buffer)
+		return console.error(&quot;Cannot compute tangents of a mesh without uvs&quot;);
+
+	var triangles_buffer = this.indexBuffers[&quot;triangles&quot;];
+	if(!triangles_buffer)
+		return console.error(&quot;Cannot compute tangents of a mesh without indices&quot;);
+
+	var vertices = vertices_buffer.data;
+	var normals = normals_buffer.data;
+	var uvs = uvs_buffer.data;
+	var triangles = triangles_buffer.data;
 
 	if(!vertices || !normals || !uvs) return;
 
@@ -1269,7 +1415,7 @@ Mesh.prototype.computeTextureCoordinates = function( stream_type )
 {
 	var vertices_buffer = this.vertexBuffers[&quot;vertices&quot;];
 	if(!vertices_buffer)
-		return;
+		return console.error(&quot;Cannot compute uvs of a mesh without vertices&quot;);
 
 	this.explodeIndices( &quot;triangles&quot; );
 
@@ -1375,7 +1521,7 @@ Mesh.prototype.computeTextureCoordinates = function( stream_type )
 
 
 /**
-* Computes bounding information
+* Computes the number of vertices
 * @method getVertexNumber
 * @param {typed Array} vertices array containing all the vertices
 */
@@ -1388,10 +1534,10 @@ Mesh.prototype.getNumVertices = function() {
 
 /**
 * Computes bounding information
-* @method Mesh.computeBounding
+* @method Mesh.computeBoundingBox
 * @param {typed Array} vertices array containing all the vertices
 */
-Mesh.computeBounding = function( vertices, bb ) {
+Mesh.computeBoundingBox = function( vertices, bb ) {
 
 	if(!vertices)
 		return;
@@ -1428,31 +1574,30 @@ Mesh.computeBounding = function( vertices, bb ) {
 */
 Mesh.prototype.getBoundingBox = function()
 {
-	if(!this.bounding)
-		this.updateBounding();
-	return this.bounding;
+	this.updateBoundingBox();
+	return this._bounding;
 }
 
 /**
 * Update bounding information of this mesh
-* @method updateBounding
+* @method updateBoundingBox
 */
-Mesh.prototype.updateBounding = function() {
-	var vertices = this.vertexBuffers[&quot;vertices&quot;].data;
+Mesh.prototype.updateBoundingBox = function() {
+	var vertices = this.vertexBuffers[&quot;vertices&quot;];
 	if(!vertices)
 		return;
-	this.bounding = GL.Mesh.computeBounding(vertices, this.bounding);
+	GL.Mesh.computeBoundingBox( vertices.data, this._bounding );
 }
 
 
 /**
 * forces a bounding box to be set
-* @method setBounding
+* @method setBoundingBox
 * @param {vec3} center center of the bounding box
 * @param {vec3} half_size vector from the center to positive corner
 */
-Mesh.prototype.setBounding = function(center, half_size) {
-	this.bounding = BBox.setCenterHalfsize( this.bounding || BBox.create(), center, half_size );	
+Mesh.prototype.setBoundingBox = function( center, half_size ) {
+	BBox.setCenterHalfsize( this._bounding, center, half_size );	
 }
 
 
@@ -1476,8 +1621,8 @@ Mesh.prototype.freeData = function()
 
 Mesh.prototype.configure = function( o, options )
 {
-	var v = {};
-	var i = {};
+	var vertex_buffers = {};
+	var index_buffers = {};
 	options = options || {};
 
 	for(var j in o)
@@ -1485,35 +1630,37 @@ Mesh.prototype.configure = function( o, options )
 		if(!o[j])
 			continue;
 
-		if(j == &quot;vertexBuffers&quot;)
+		if(j == &quot;vertexBuffers&quot; || j == &quot;vertex_buffers&quot;) //HACK: legacy code
 		{
 			for(i in o[j])
-				v[i] = o[j][i];
+				vertex_buffers[i] = o[j][i];
 			continue;
 		}
 		
-		if(j == &quot;indexBuffers&quot;)
+		if(j == &quot;indexBuffers&quot; || j == &quot;index_buffers&quot;)
 		{
 			for(i in o[j])
-				i[i] = o[j][i];
+				index_buffers[i] = o[j][i];
 			continue;
 		}
 
 		if(j == &quot;indices&quot; || j == &quot;lines&quot; ||  j == &quot;wireframe&quot; || j == &quot;triangles&quot;)
-			i[j] = o[j];
-		else if(GL.Mesh.common_buffers[j])
-			v[j] = o[j];
-		else
+			index_buffers[j] = o[j];
+		else if( GL.Mesh.common_buffers[j])
+			vertex_buffers[j] = o[j];
+		else //global data like bounding, info of groups, etc
+		{
 			options[j] = o[j];
+		}
 	}
 
-	this.addBuffers( v, i, options.stream_type );
+	this.addBuffers( vertex_buffers, index_buffers, options.stream_type );
 
 	for(var i in options)
 		this[i] = options[i];		
 
-	if(!this.bounding)
-		this.updateBounding();
+	if(!options.bounding)
+		this.updateBoundingBox();
 }
 
 /**
@@ -1753,7 +1900,11 @@ Mesh.mergeMeshes = function( meshes, options )
 	//return
 	if( typeof(gl) != &quot;undefined&quot; || options.only_data )
 		return new GL.Mesh( vertex_buffers,index_buffers, extra );
-	return { vertexBuffers: vertex_buffers, indexBuffers: index_buffers, info: { groups: groups } };
+	return { 
+		vertexBuffers: vertex_buffers, 
+		indexBuffers: index_buffers, 
+		info: { groups: groups } 
+	};
 }
 
 
@@ -1761,6 +1912,9 @@ Mesh.mergeMeshes = function( meshes, options )
 //Here we store all basic mesh parsers (OBJ, STL) and encoders
 Mesh.parsers = {};
 Mesh.encoders = {};
+Mesh.binary_file_formats = {}; //extensions that must be downloaded in binary
+Mesh.compressors = {}; //used to compress binary meshes
+Mesh.decompressors = {}; //used to decompress binary meshes
 
 /**
 * Returns am empty mesh and loads a mesh and parses it using the Mesh.parsers, by default only OBJ is supported
@@ -1771,20 +1925,23 @@ Mesh.fromURL = function(url, on_complete, gl, options)
 {
 	options = options || {};
 	gl = gl || global.gl;
+	
 	var mesh = new GL.Mesh(undefined,undefined,undefined,gl);
 	mesh.ready = false;
 
+	var pos = url.lastIndexOf(&quot;.&quot;);
+	var extension = url.substr(pos+1).toLowerCase();
+	options.binary = Mesh.binary_file_formats[ extension ];
+
 	HttpRequest( url, null, function(data) {
-		var pos = url.lastIndexOf(&quot;.&quot;);
-		var ext = url.substr(pos+1);
-		mesh.parse( data, ext );
+		mesh.parse( data, extension );
 		delete mesh[&quot;ready&quot;];
 		if(on_complete)
 			on_complete.call(mesh,mesh, url);
 	}, function(err){
 		if(on_complete)
 			on_complete(null);
-	},options);
+	}, options );
 	return mesh;
 }
 
@@ -1860,6 +2017,13 @@ function linearizeArray( array, typed_array_class )
 			buffer[i*components + j] = array[i][j];
 	return buffer;
 }
+
+/* BINARY MESHES */
+//Add some functions to the classes in LiteGL to allow store in binary
+GL.Mesh.EXTENSION = &quot;wbin&quot;;
+GL.Mesh.enable_wbin_compression = true;
+
+
     </pre>
 </div>
                     </div>

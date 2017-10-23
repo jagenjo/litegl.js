@@ -316,10 +316,12 @@ Mesh.cylinder = function( options, gl ) {
 
 	var pos = i*6*3;
 	var pos_uv = i*6*2;
+	var caps_start = pos;
 
 	//caps
 	if( options.caps === false )
 	{
+		//finalize arrays
 		vertices = vertices.subarray(0,pos);
 		normals = normals.subarray(0,pos);
 		coords = coords.subarray(0,pos_uv);
@@ -370,6 +372,13 @@ Mesh.cylinder = function( options, gl ) {
 		coords: coords
 	}
 	options.bounding = BBox.fromCenterHalfsize( [0,0,0], [radius,height*0.5,radius] );
+	options.info = { groups: [] };
+
+	if(options.caps !== false)
+	{
+		options.info.groups.push({ name:"side", start: 0, length: caps_start / 3});
+		options.info.groups.push({ name:"caps", start: caps_start / 3, length: (vertices.length - caps_start) / 3});
+	}
 
 	return Mesh.load( buffers, options, gl );
 }

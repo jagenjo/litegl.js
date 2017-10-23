@@ -213,6 +213,11 @@ if(!String.prototype.hasOwnProperty("hashCode"))
 if(!Array.prototype.hasOwnProperty("subarray"))
 	Object.defineProperty(Array.prototype, "subarray", { value: Array.prototype.slice, enumerable: false });
 
+if(!Array.prototype.hasOwnProperty("clone"))
+	Object.defineProperty(Array.prototype, "clone", { value: Array.prototype.concat, enumerable: false });
+if(!Float32Array.prototype.hasOwnProperty("clone"))
+	Object.defineProperty(Float32Array.prototype, "clone", { value: function() { return new Float32Array(this); }, enumerable: false });
+
 
 // remove all properties on obj, effectively reverting it to a new object (to reduce garbage)
 global.wipeObject = function wipeObject(obj)

@@ -321,7 +321,7 @@ It works by creating a property called &quot;__levents&quot; inside the object t
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_levent.js.html#l330"><code>..&#x2F;src&#x2F;levent.js:330</code></a>
+        <a href="../files/.._src_levent.js.html#l381"><code>..&#x2F;src&#x2F;levent.js:381</code></a>
         </p>
 
 
@@ -626,6 +626,9 @@ It works by creating a property called &quot;__levents&quot; inside the object t
                 <li class="arg">
                         <code>reverse_order</code>
                 </li>
+                <li class="arg">
+                        <code>expand_parameters</code>
+                </li>
             </ul><span class="paren">)</span>
         </div>
 
@@ -647,7 +650,8 @@ It works by creating a property called &quot;__levents&quot; inside the object t
     </div>
 
     <div class="description">
-        <p>Triggers and event in an instance</p>
+        <p>Triggers and event in an instance
+If the callback returns true then it will stop the propagation and return true</p>
 
     </div>
 
@@ -699,6 +703,18 @@ It works by creating a property called &quot;__levents&quot; inside the object t
                     </div>
 
                 </li>
+                <li class="param">
+                        <code class="param-name">expand_parameters</code>
+                        <span class="type">Bool</span>
+
+
+                    <div class="param-description">
+                        <p>parameters are passed not as one single parameter, but as many
+return {bool} true if the event passed was blocked by any binded callback</p>
+
+                    </div>
+
+                </li>
             </ul>
         </div>
 
@@ -722,6 +738,9 @@ It works by creating a property called &quot;__levents&quot; inside the object t
                 <li class="arg">
                         <code>reverse_order</code>
                 </li>
+                <li class="arg">
+                        <code>expand_parameters</code>
+                </li>
             </ul><span class="paren">)</span>
         </div>
 
@@ -735,7 +754,7 @@ It works by creating a property called &quot;__levents&quot; inside the object t
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_levent.js.html#l264"><code>..&#x2F;src&#x2F;levent.js:264</code></a>
+        <a href="../files/.._src_levent.js.html#l283"><code>..&#x2F;src&#x2F;levent.js:283</code></a>
         </p>
 
 
@@ -743,7 +762,8 @@ It works by creating a property called &quot;__levents&quot; inside the object t
     </div>
 
     <div class="description">
-        <p>Triggers and event to every element in an array</p>
+        <p>Triggers and event to every element in an array.
+If the event returns true, it must be intercepted</p>
 
     </div>
 
@@ -791,6 +811,18 @@ It works by creating a property called &quot;__levents&quot; inside the object t
 
                     <div class="param-description">
                         <p>trigger in reverse order (binded last get called first)</p>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">expand_parameters</code>
+                        <span class="type">Bool</span>
+
+
+                    <div class="param-description">
+                        <p>parameters are passed not as one single parameter, but as many
+return {bool} false</p>
 
                     </div>
 

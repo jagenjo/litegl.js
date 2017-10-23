@@ -399,6 +399,11 @@ if(!String.prototype.hasOwnProperty("hashCode"))
 if(!Array.prototype.hasOwnProperty("subarray"))
 	Object.defineProperty(Array.prototype, "subarray", { value: Array.prototype.slice, enumerable: false });
 
+if(!Array.prototype.hasOwnProperty("clone"))
+	Object.defineProperty(Array.prototype, "clone", { value: Array.prototype.concat, enumerable: false });
+if(!Float32Array.prototype.hasOwnProperty("clone"))
+	Object.defineProperty(Float32Array.prototype, "clone", { value: function() { return new Float32Array(this); }, enumerable: false });
+
 
 // remove all properties on obj, effectively reverting it to a new object (to reduce garbage)
 global.wipeObject = function wipeObject(obj)
@@ -2200,8 +2205,11 @@ global.Mesh = GL.Mesh = function Mesh( vertexbuffers, indexbuffers, options, gl 
 	this.vertexBuffers = {};
 	this.indexBuffers = {};
 
-	this.info = null; //here you can store extra info, like groups, which is an array of { name, start, length, material }
-	this.bounding = null; //here you can store a AABB in BBox format
+	//here you can store extra info, like groups, which is an array of { name, start, length, material }
+	this.info = {
+		groups: []
+	}; 
+	this._bounding = BBox.create(); //here you can store a AABB in BBox format
 
 	if(vertexbuffers || indexbuffers)
 		this.addBuffers( vertexbuffers, indexbuffers, options ? options.stream_type : null );
@@ -2230,6 +2238,20 @@ Mesh.common_buffers = {
 
 Mesh.default_datatype = Float32Array;
 
+Object.defineProperty( Mesh.prototype, "bounding", {
+	set: function(v)
+	{
+		if(!v)
+			return;
+		if(v.length < 13)
+			throw("Bounding must use the BBox bounding format of 13 floats: center, halfsize, min, max, radius");
+		this._bounding.set(v);
+	},
+	get: function()
+	{
+		return this._bounding;
+	}
+});
 
 /**
 * Adds buffer to mesh
@@ -2647,7 +2669,7 @@ Mesh.prototype.toObject = function()
 		vertexBuffers: vbs, 
 		indexBuffers: ibs,
 		info: this.info ? cloneObject( this.info ) : null,
-		bounding: this.bounding ? this.bounding.toJSON() : null
+		bounding: this._bounding.toJSON()
 	};
 }
 
@@ -2658,7 +2680,7 @@ Mesh.prototype.toJSON = function()
 		vertexBuffers: {},
 		indexBuffers: {},
 		info: this.info ? cloneObject( this.info ) : null,
-		bounding: this.bounding ? this.bounding.toJSON() : null
+		bounding: this._bounding.toJSON() 
 	};
 
 	for(var i in this.vertexBuffers)
@@ -2698,7 +2720,7 @@ Mesh.prototype.fromJSON = function(o)
 	if(o.info)
 		this.info = cloneObject( o.info );
 	if(o.bounding)
-		this.bounding = new Float32Array(o.bounding);
+		this.bounding = o.bounding; //setter does the job
 }
 
 
@@ -3322,7 +3344,7 @@ Mesh.prototype.computeTextureCoordinates = function( stream_type )
 
 
 /**
-* Computes bounding information
+* Computes the number of vertices
 * @method getVertexNumber
 * @param {typed Array} vertices array containing all the vertices
 */
@@ -3335,10 +3357,10 @@ Mesh.prototype.getNumVertices = function() {
 
 /**
 * Computes bounding information
-* @method Mesh.computeBounding
+* @method Mesh.computeBoundingBox
 * @param {typed Array} vertices array containing all the vertices
 */
-Mesh.computeBounding = function( vertices, bb ) {
+Mesh.computeBoundingBox = function( vertices, bb ) {
 
 	if(!vertices)
 		return;
@@ -3375,31 +3397,30 @@ Mesh.computeBounding = function( vertices, bb ) {
 */
 Mesh.prototype.getBoundingBox = function()
 {
-	if(!this.bounding)
-		this.updateBounding();
-	return this.bounding;
+	this.updateBoundingBox();
+	return this._bounding;
 }
 
 /**
 * Update bounding information of this mesh
-* @method updateBounding
+* @method updateBoundingBox
 */
-Mesh.prototype.updateBounding = function() {
+Mesh.prototype.updateBoundingBox = function() {
 	var vertices = this.vertexBuffers["vertices"];
 	if(!vertices)
 		return;
-	this.bounding = GL.Mesh.computeBounding( vertices.data, this.bounding );
+	GL.Mesh.computeBoundingBox( vertices.data, this._bounding );
 }
 
 
 /**
 * forces a bounding box to be set
-* @method setBounding
+* @method setBoundingBox
 * @param {vec3} center center of the bounding box
 * @param {vec3} half_size vector from the center to positive corner
 */
-Mesh.prototype.setBounding = function(center, half_size) {
-	this.bounding = BBox.setCenterHalfsize( this.bounding || BBox.create(), center, half_size );	
+Mesh.prototype.setBoundingBox = function( center, half_size ) {
+	BBox.setCenterHalfsize( this._bounding, center, half_size );	
 }
 
 
@@ -3461,8 +3482,8 @@ Mesh.prototype.configure = function( o, options )
 	for(var i in options)
 		this[i] = options[i];		
 
-	if(!this.bounding)
-		this.updateBounding();
+	if(!options.bounding)
+		this.updateBoundingBox();
 }
 
 /**
@@ -4144,10 +4165,12 @@ Mesh.cylinder = function( options, gl ) {
 
 	var pos = i*6*3;
 	var pos_uv = i*6*2;
+	var caps_start = pos;
 
 	//caps
 	if( options.caps === false )
 	{
+		//finalize arrays
 		vertices = vertices.subarray(0,pos);
 		normals = normals.subarray(0,pos);
 		coords = coords.subarray(0,pos_uv);
@@ -4198,6 +4221,13 @@ Mesh.cylinder = function( options, gl ) {
 		coords: coords
 	}
 	options.bounding = BBox.fromCenterHalfsize( [0,0,0], [radius,height*0.5,radius] );
+	options.info = { groups: [] };
+
+	if(options.caps !== false)
+	{
+		options.info.groups.push({ name:"side", start: 0, length: caps_start / 3});
+		options.info.groups.push({ name:"caps", start: caps_start / 3, length: (vertices.length - caps_start) / 3});
+	}
 
 	return Mesh.load( buffers, options, gl );
 }

@@ -107,6 +107,22 @@ global.isPowerOfTwo = GL.isPowerOfTwo = function isPowerOfTwo(v)
 	return ((Math.log(v) / Math.log(2)) % 1) == 0;
 }
 
+//Global Scope
+//better array conversion to string for serializing
+var typed_arrays = [ Uint8Array, Int8Array, Uint16Array, Int16Array, Uint32Array, Int32Array, Float32Array, Float64Array ];
+function typedToArray(){ 
+	return Array.prototype.slice.call(this);
+}
+typed_arrays.forEach( function(v) { 
+	if(!v.prototype.toJSON)
+		Object.defineProperty( v.prototype, &quot;toJSON&quot;, {
+			value: typedToArray,
+			enumerable: false
+		});
+});
+
+
+
 /**
 * Get current time in milliseconds
 * @method getTime
@@ -131,6 +147,25 @@ global.isArray = function isArray(obj) {
 
 global.isNumber = function isNumber(obj) {
   return (obj != null &amp;&amp; obj.constructor === Number );
+}
+
+global.getClassName = function getClassName(obj)
+{
+	if (!obj)
+		return;
+
+	//from function info, but not standard
+	if(obj.name)
+		return obj.name;
+
+	//from sourcecode
+	if(obj.toString) {
+		var arr = obj.toString().match(
+			/function\s*(\w+)/);
+		if (arr &amp;&amp; arr.length == 2) {
+			return arr[1];
+		}
+	}
 }
 
 /**
@@ -271,6 +306,11 @@ if(!String.prototype.hasOwnProperty(&quot;hashCode&quot;))
 if(!Array.prototype.hasOwnProperty(&quot;subarray&quot;))
 	Object.defineProperty(Array.prototype, &quot;subarray&quot;, { value: Array.prototype.slice, enumerable: false });
 
+if(!Array.prototype.hasOwnProperty(&quot;clone&quot;))
+	Object.defineProperty(Array.prototype, &quot;clone&quot;, { value: Array.prototype.concat, enumerable: false });
+if(!Float32Array.prototype.hasOwnProperty(&quot;clone&quot;))
+	Object.defineProperty(Float32Array.prototype, &quot;clone&quot;, { value: function() { return new Float32Array(this); }, enumerable: false });
+
 
 // remove all properties on obj, effectively reverting it to a new object (to reduce garbage)
 global.wipeObject = function wipeObject(obj)
@@ -325,7 +365,7 @@ global.extendClass = GL.extendClass = function extendClass( target, origin ) {
 
 
 //simple http request
-global.HttpRequest = GL.request = function HttpRequest(url,params, callback, error, options)
+global.HttpRequest = GL.request = function HttpRequest( url, params, callback, error, options )
 {
 	var async = true;
 	if(options &amp;&amp; options.async !== undefined)
@@ -457,6 +497,21 @@ global.processFileAtlas = GL.processFileAtlas = function(data, skip_trim)
 	return files;
 }
 
+global.typedArrayToArray = function(array)
+{
+	var r = [];
+	r.length = array.length;
+	for(var i = 0; i &lt; array.length; i++)
+		r[i] = array[i];
+	return r;
+}
+
+global.RGBToHex = function(r, g, b) { 
+	r = Math.min(255, r*255)|0;
+	g = Math.min(255, g*255)|0;
+	b = Math.min(255, b*255)|0;
+	return &quot;#&quot; + ((1 &lt;&lt; 24) + (r &lt;&lt; 16) + (g &lt;&lt; 8) + b).toString(16).slice(1);
+}
 
 global.hexColorToRGBA = (function() {
 	//to change the color: from http://www.w3schools.com/cssref/css_colorsfull.asp

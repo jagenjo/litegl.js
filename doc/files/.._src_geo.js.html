@@ -501,29 +501,31 @@ global.geo = {
 	/**
 	* test a ray bounding-box collision, it uses the  BBox class and allows to use non-axis aligned bbox
 	* @method testRayBBox
-	* @param {vec3} start ray start
+	* @param {vec3} origin ray origin
 	* @param {vec3} direction ray direction
 	* @param {BBox} box in BBox format
-	* @param {mat4} model transformation of the BBox
+	* @param {mat4} model transformation of the BBox [optional]
 	* @param {vec3} result collision position in world space unless in_local is true
 	* @return {boolean} returns if the ray collides the box
 	*/
 	testRayBBox: (function(){ 
 	var inv = mat4.create();	
 	var end = vec3.create();
-	var start2 = vec3.create();
-	return function(start, direction, box, model, result, max_dist, in_local )
+	var origin2 = vec3.create();
+	return function( origin, direction, box, model, result, max_dist, in_local )
 	{
+		if(!origin || !direction || !box)
+			throw(&quot;parameters missing&quot;);
 		if(model)
 		{
 			mat4.invert( inv, model );
-			vec3.add( end, start, direction );
-			start = vec3.transformMat4( start2, start, inv);
+			vec3.add( end, origin, direction );
+			origin = vec3.transformMat4( origin2, origin, inv);
 			vec3.transformMat4( end, end, inv );
-			vec3.sub( end, end, start );
-			direction = vec3.normalize(end, end);
+			vec3.sub( end, end, origin );
+			direction = vec3.normalize( end, end );
 		}
-		var r = this.testRayBox(start, direction, box.subarray(6,9), box.subarray(9,12), result, max_dist );
+		var r = this.testRayBox( origin, direction, box.subarray(6,9), box.subarray(9,12), result, max_dist );
 		if(!in_local &amp;&amp; model &amp;&amp; result)
 			vec3.transformMat4(result, result, model);
 		return r;
@@ -982,15 +984,15 @@ global.BBox = GL.BBox = {
 
 	/**
 	* Apply a matrix transformation to the BBox (applies to every corner and recomputes the BB)
-	* @method setCenterHalfsize
+	* @method transformMat4
 	* @param {BBox} out where to store the result
 	* @param {BBox} bb bbox you want to transform
 	* @param {mat4} mat transformation
 	* @return {BBox} returns out
 	*/
-	transformMat4: function(out, bb, mat)
+	transformMat4: function( out, bb, mat )
 	{
-		var center = bb; //.subarray(0,3); AVOID GC
+		var center = bb; //.subarray(0,3); hack to avoid garbage
 		var halfsize = bb.subarray(3,6);
 		var corners = this.tmp_corners;
 		corners.set( this.corners );
@@ -1003,7 +1005,7 @@ global.BBox = GL.BBox = {
 			mat4.multiplyVec3(corner, mat, corner);
 		}
 
-		return this.setFromPoints(out, corners);
+		return this.setFromPoints( out, corners );
 	},
 
 
