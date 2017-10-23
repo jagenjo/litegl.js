@@ -11586,7 +11586,7 @@ Mesh.parseOBJ = function( text, options )
 	//creates and returns a GL.Mesh
 	var final_mesh = null;
 	final_mesh = Mesh.load( mesh, null, options.mesh );
-	final_mesh.updateBounding();
+	final_mesh.updateBoundingBox();
 	return final_mesh;
 }
 
@@ -11759,7 +11759,7 @@ Mesh.prototype.toBinary = function( options )
 
 	//bounding box
 	if(!this.bounding)	
-		this.updateBounding();
+		this.updateBoundingBox();
 	o.bounding = this.bounding;
 
 	var vertex_buffers = [];
