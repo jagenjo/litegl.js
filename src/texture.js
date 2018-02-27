@@ -409,10 +409,11 @@ Texture.prototype.uploadImage = function( image, options )
 * Uploads data to the GPU (data must have the appropiate size)
 * @method uploadData
 * @param {ArrayBuffer} data
-* @param {Object} options [optional] upload options (premultiply_alpha, no_flip)
+* @param {Object} options [optional] upload options (premultiply_alpha, no_flip, cubemap_face)
 */
-Texture.prototype.uploadData = function(data, options )
+Texture.prototype.uploadData = function( data, options, skip_mipmaps )
 {
+	options = options || {};
 	var gl = this.gl;
 	this.bind();
 	Texture.setUploadOptions(options, gl);
@@ -421,12 +422,14 @@ Texture.prototype.uploadData = function(data, options )
 		gl.texImage2D(this.texture_type, 0, this.format, this.width, this.height, 0, this.format, this.type, data);
 	else if( this.texture_type == GL.TEXTURE_3D )
 		gl.texImage3D(this.texture_type, 0, this.format, this.width, this.height, this.depth, 0, this.format, this.type, data);
+	else if( this.texture_type == GL.TEXTURE_CUBE_MAP )
+		gl.texImage2D( gl.TEXTURE_CUBE_MAP_POSITIVE_X + (options.cubemap_face || 0), 0, this.format, this.width, this.height, 0, this.format, this.type, data);
 	else
 		throw("cannot uploadData for this texture type");
 
 	this.data = data; //should I clone it?
 
-	if (this.minFilter && this.minFilter != gl.NEAREST && this.minFilter != gl.LINEAR) {
+	if (!skip_mipmaps && this.minFilter && this.minFilter != gl.NEAREST && this.minFilter != gl.LINEAR) {
 		gl.generateMipmap(texture.texture_type);
 		this.has_mipmaps = true;
 	}
@@ -1099,6 +1102,8 @@ Texture.fromURL = function( url, options, on_complete, gl ) {
 			if(!img_data)
 				return;
 			options.texture = texture;
+			if(img_data.format == "RGB")
+				texture.format = gl.RGB;
 			texture = GL.Texture.fromMemory( img_data.width, img_data.height, img_data.pixels, options );
 			delete texture["ready"]; //texture.ready = true;
 			if(on_complete)
@@ -1581,6 +1586,21 @@ Texture.prototype.getPixels = function( type, force_rgba, cubemap_face )
 	return buffer;
 }
 
+/**
+* uploads some pixels to the texture (see uploadData method for more options)
+* @method setPixels
+* @param {ArrayBuffer} data gl.UNSIGNED_BYTE or gl.FLOAT data
+* @param {Boolean} no_flip do not flip in Y 
+* @param {Boolean} skip_mipmaps do not update mipmaps when possible
+* @param {Number} cubemap_face if the texture is a cubemap, which face
+*/
+Texture.prototype.setPixels = function( data, no_flip, skip_mipmaps, cubemap_face )
+{
+	var options = { no_flip: no_flip };
+	if(cubemap_face)
+		options.cubemap_face = cubemap_face;
+	this.uploadData( data, options, skip_mipmaps );
+}
 
 /**
 * Copy texture content to a canvas
@@ -1664,6 +1684,7 @@ Texture.prototype.toCanvas = function( canvas, flip_y, max_size )
 /**
 * returns the texture file in binary format 
 * @method toBinary
+* @param {Boolean} flip_y
 * @return {ArrayBuffer} the arraybuffer of the file containing the image
 */
 Texture.binary_extension = "png";

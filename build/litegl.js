@@ -3359,17 +3359,39 @@ Mesh.prototype.getNumVertices = function() {
 * Computes bounding information
 * @method Mesh.computeBoundingBox
 * @param {typed Array} vertices array containing all the vertices
+* @param {BBox} bb where to store the bounding box
+* @param {Array} mask [optional] to specify which vertices must be considered when creating the bbox, used to create BBox of a submesh
 */
-Mesh.computeBoundingBox = function( vertices, bb ) {
+Mesh.computeBoundingBox = function( vertices, bb, mask ) {
 
 	if(!vertices)
 		return;
 
-	var min = vec3.clone( vertices.subarray(0,3) );
-	var max = vec3.clone( vertices.subarray(0,3) );
-	var v;
-	for(var i = 3; i < vertices.length; i+=3)
+	var start = 0;
+
+	if(mask)
 	{
+		for(var i = 0; i < mask.length; ++i)
+			if( mask[i] )
+			{
+				start = i;
+				break;
+			}
+		if(start == mask.length)
+		{
+			console.warn("mask contains only zeros, no vertices marked");
+			return;
+		}
+	}
+
+	var min = vec3.clone( vertices.subarray( start*3, start*3 + 3) );
+	var max = vec3.clone( vertices.subarray( start*3, start*3 + 3) );
+	var v;
+
+	for(var i = start*3; i < vertices.length; i+=3)
+	{
+		if( mask && !mask[i/3] )
+			continue;
 		v = vertices.subarray(i,i+3);
 		vec3.min( min,v, min);
 		vec3.max( max,v, max);
@@ -3397,6 +3419,9 @@ Mesh.computeBoundingBox = function( vertices, bb ) {
 */
 Mesh.prototype.getBoundingBox = function()
 {
+	if(this._bounding)
+		return this._bounding;
+
 	this.updateBoundingBox();
 	return this._bounding;
 }
@@ -3410,7 +3435,55 @@ Mesh.prototype.updateBoundingBox = function() {
 	if(!vertices)
 		return;
 	GL.Mesh.computeBoundingBox( vertices.data, this._bounding );
+	if(this.info && this.info.groups && this.info.groups.length)
+		this.computeGroupsBoundingBoxes();
 }
+
+/**
+* Update bounding information for every group submesh
+* @method computeGroupsBoundingBoxes
+*/
+Mesh.prototype.computeGroupsBoundingBoxes = function()
+{
+	var indices = null;
+	var indices_buffer = this.getIndexBuffer("triangles");
+	if( indices_buffer )
+		indices = indices_buffer.data;
+
+	var vertices_buffer = this.getVertexBuffer("vertices");
+	if(!vertices_buffer)
+		return false;
+	var vertices = vertices_buffer.data;
+	if(!vertices.length)
+		return false;
+
+	var groups = this.info.groups;
+	for(var i = 0; i < groups.length; ++i)
+	{
+		var group = groups[i];
+		group.bounding = group.bounding || BBox.create();
+		var submesh_vertices = null;
+		if( indices )
+		{
+			var mask = new Uint8Array( vertices.length / 3 );
+			var s = group.start;
+			for( var j = 0, l = group.length; j < l; j += 3 )
+			{
+				mask[ indices[s+j] ] = 1;
+				mask[ indices[s+j+1] ] = 1;
+				mask[ indices[s+j+2] ] = 1;
+			}
+			GL.Mesh.computeBoundingBox( vertices, group.bounding, mask );
+		}
+		else
+		{
+			submesh_vertices = vertices.subarray( group.start * 3, ( group.start + group.length) * 3 );
+			GL.Mesh.computeBoundingBox( submesh_vertices, group.bounding );
+		}
+	}
+	return true;
+}
+
 
 
 /**
@@ -4945,10 +5018,11 @@ Texture.prototype.uploadImage = function( image, options )
 * Uploads data to the GPU (data must have the appropiate size)
 * @method uploadData
 * @param {ArrayBuffer} data
-* @param {Object} options [optional] upload options (premultiply_alpha, no_flip)
+* @param {Object} options [optional] upload options (premultiply_alpha, no_flip, cubemap_face)
 */
-Texture.prototype.uploadData = function(data, options )
+Texture.prototype.uploadData = function( data, options, skip_mipmaps )
 {
+	options = options || {};
 	var gl = this.gl;
 	this.bind();
 	Texture.setUploadOptions(options, gl);
@@ -4957,12 +5031,14 @@ Texture.prototype.uploadData = function(data, options )
 		gl.texImage2D(this.texture_type, 0, this.format, this.width, this.height, 0, this.format, this.type, data);
 	else if( this.texture_type == GL.TEXTURE_3D )
 		gl.texImage3D(this.texture_type, 0, this.format, this.width, this.height, this.depth, 0, this.format, this.type, data);
+	else if( this.texture_type == GL.TEXTURE_CUBE_MAP )
+		gl.texImage2D( gl.TEXTURE_CUBE_MAP_POSITIVE_X + (options.cubemap_face || 0), 0, this.format, this.width, this.height, 0, this.format, this.type, data);
 	else
 		throw("cannot uploadData for this texture type");
 
 	this.data = data; //should I clone it?
 
-	if (this.minFilter && this.minFilter != gl.NEAREST && this.minFilter != gl.LINEAR) {
+	if (!skip_mipmaps && this.minFilter && this.minFilter != gl.NEAREST && this.minFilter != gl.LINEAR) {
 		gl.generateMipmap(texture.texture_type);
 		this.has_mipmaps = true;
 	}
@@ -5635,6 +5711,8 @@ Texture.fromURL = function( url, options, on_complete, gl ) {
 			if(!img_data)
 				return;
 			options.texture = texture;
+			if(img_data.format == "RGB")
+				texture.format = gl.RGB;
 			texture = GL.Texture.fromMemory( img_data.width, img_data.height, img_data.pixels, options );
 			delete texture["ready"]; //texture.ready = true;
 			if(on_complete)
@@ -6117,6 +6195,21 @@ Texture.prototype.getPixels = function( type, force_rgba, cubemap_face )
 	return buffer;
 }
 
+/**
+* uploads some pixels to the texture (see uploadData method for more options)
+* @method setPixels
+* @param {ArrayBuffer} data gl.UNSIGNED_BYTE or gl.FLOAT data
+* @param {Boolean} no_flip do not flip in Y 
+* @param {Boolean} skip_mipmaps do not update mipmaps when possible
+* @param {Number} cubemap_face if the texture is a cubemap, which face
+*/
+Texture.prototype.setPixels = function( data, no_flip, skip_mipmaps, cubemap_face )
+{
+	var options = { no_flip: no_flip };
+	if(cubemap_face)
+		options.cubemap_face = cubemap_face;
+	this.uploadData( data, options, skip_mipmaps );
+}
 
 /**
 * Copy texture content to a canvas
@@ -6200,6 +6293,7 @@ Texture.prototype.toCanvas = function( canvas, flip_y, max_size )
 /**
 * returns the texture file in binary format 
 * @method toBinary
+* @param {Boolean} flip_y
 * @return {ArrayBuffer} the arraybuffer of the file containing the image
 */
 Texture.binary_extension = "png";
@@ -7370,7 +7464,7 @@ Shader.prototype.drawRange = function(mesh, mode, start, length, index_buffer_na
 }
 
 /**
-* Renders a range of a mesh using this shader
+* render several buffers with a given index buffer
 * @method drawBuffers
 * @param {Object} vertexBuffers an object containing all the buffers
 * @param {IndexBuffer} indexBuffer
@@ -7453,6 +7547,128 @@ Shader.prototype.drawBuffers = function( vertexBuffers, indexBuffer, mode, range
 
 	return this;
 }
+
+Shader._instancing_arrays = [];
+
+Shader.prototype.drawInstanced = function( mesh, primitive, indices, instanced_uniforms, gl )
+{
+	//bind buffers
+	var gl = this.gl;
+
+	if( gl.webgl_version == 1 && !gl.extensions.ANGLE_instanced_arrays )
+		throw("instancing not supported");
+
+	gl.useProgram(this.program); //this could be removed assuming every shader is called with some uniforms 
+
+	// enable attributes as necessary.
+	var length = 0;
+	var attribs_in_use = temp_attribs_array; //hack to avoid garbage
+	attribs_in_use.set( temp_attribs_array_zero ); //reset
+
+	var vertexBuffers = mesh.vertexBuffers;
+
+	for (var name in vertexBuffers)
+	{
+		var buffer = vertexBuffers[name];
+		var attribute = buffer.attribute || name;
+		//precompute attribute locations in shader
+		var location = this.attributes[attribute];// || gl.getAttribLocation(this.program, attribute);
+
+		if (location == null || !buffer.buffer) //-1 changed for null
+			continue; //ignore this buffer
+
+		attribs_in_use[location] = 1; //mark it as used
+
+		//this.attributes[attribute] = location;
+		gl.bindBuffer(gl.ARRAY_BUFFER, buffer.buffer);
+		gl.enableVertexAttribArray(location);
+
+		gl.vertexAttribPointer(location, buffer.buffer.spacing, buffer.buffer.gl_type, false, 0, 0);
+		length = buffer.buffer.length / buffer.buffer.spacing;
+	}
+
+	var indexBuffer = indices ? mesh.getIndexBuffer( indices ) : null;
+
+	//range rendering
+	var offset = 0; //in bytes
+	if (indexBuffer)
+		length = indexBuffer.buffer.length - offset;
+
+	var BYTES_PER_ELEMENT = (indexBuffer && indexBuffer.data) ? indexBuffer.data.constructor.BYTES_PER_ELEMENT : 1;
+	offset *= BYTES_PER_ELEMENT;
+
+	// Force to disable buffers in this shader that are not in this mesh
+	for (var attribute in this.attributes)
+	{
+		var location = this.attributes[attribute];
+		if (!(attribs_in_use[location])) {
+			gl.disableVertexAttribArray(this.attributes[attribute]);
+		}
+	}
+
+	var ext = gl.extensions.ANGLE_instanced_arrays;
+	var batch_length = 0;
+
+	//pack the instanced uniforms
+	var index = 0;
+	for(var uniform in instanced_uniforms)
+	{
+		var values = instanced_uniforms[ uniform ];
+		batch_length = values.length;
+		var uniformLocation = shader.attributes[ uniform ];
+		if( uniformLocation == null )
+			return; //not found
+		var size = values[0].constructor === Number ? 1 : values[0].length;
+		var data_array = Shader._instancing_arrays[ index ];
+		if( !data_array || data_array.data.length < (values.length * size) )
+			data_array = Shader._instancing_arrays[ index ] = { data: new Float32Array( values.length * size ), buffer: gl.createBuffer() };
+		for(var j = 0; j < values.length; ++j)
+			data_array.data.set( values[j], j*size ); //copy
+		gl.bindBuffer( gl.ARRAY_BUFFER, data_array.buffer );
+		gl.bufferData( gl.ARRAY_BUFFER, data_array.data, gl.STREAM_DRAW );
+
+		if(size == 16) //mat4
+		{
+			for(var k = 0; k < 4; ++k)
+			{
+				gl.enableVertexAttribArray( uniformLocation+k );
+				gl.vertexAttribPointer( uniformLocation+k, 4, gl.FLOAT , false, 16*4, k*4*4 );
+				if( ext ) //webgl 1
+					ext.vertexAttribDivisorANGLE( uniformLocation+k, 1 ); // This makes it instanced!
+				else
+					gl.vertexAttribDivisor( uniformLocation+k, 1 ); // This makes it instanced!
+			}
+		}
+		else //others
+		{
+			gl.enableVertexAttribArray( uniformLocation );
+			gl.vertexAttribPointer( uniformLocation, size, gl.FLOAT , false, size*4, size*4 );
+			if( ext ) //webgl 1
+				ext.vertexAttribDivisorANGLE( uniformLocation, 1 ); // This makes it instanced!
+			else
+				gl.vertexAttribDivisor( uniformLocation, 1 ); // This makes it instanced!
+		}
+		index+=1;
+	}
+
+	if( ext ) //webgl 1.0
+	{
+		if(indexBuffer)
+			ext.drawElementsInstancedANGLE( primitive, length, indexBuffer.buffer.gl_type, 0, batch_length);
+		else
+			ext.drawArraysInstancedANGLE( primitive, 0, length, batch_length);
+	}
+	else
+	{
+		if(indexBuffer)
+			gl.drawElementsInstanced( primitive, length, indexBuffer.buffer.gl_type, 0, batch_length);
+		else
+			gl.drawArraysInstanced( primitive, 0, length, batch_length);
+	}
+
+	return this;
+}
+
 
 
 /**
@@ -7572,6 +7788,24 @@ Shader.validateValue = function( value, uniform_info )
 }
 
 //**************** SHADERS ***********************************
+
+Shader.DEFAULT_VERTEX_SHADER = "\n\
+			precision highp float;\n\
+			attribute vec3 a_vertex;\n\
+			attribute vec3 a_normal;\n\
+			attribute vec2 a_coord;\n\
+			varying vec3 v_position;\n\
+			varying vec3 v_normal;\n\
+			varying vec2 v_coord;\n\
+			uniform mat4 u_model;\n\
+			uniform mat4 u_mvp;\n\
+			void main() {\n\
+				v_position = (u_model * vec4(a_vertex,1.0)).xyz;\n\
+				v_normal = (u_model * vec4(a_normal,0.0)).xyz;\n\
+				v_coord = a_coord;\n\
+				gl_Position = u_mvp * vec4(a_vertex,1.0);\n\
+			}\n\
+			";
 
 Shader.SCREEN_VERTEX_SHADER = "\n\
 			precision highp float;\n\
@@ -7903,6 +8137,25 @@ Shader.getCopyDepthShader = function(gl)
 	return gl.shaders[":copy_depth"] = shader;
 }
 
+Shader.getCubemapShowShader = function(gl)
+{
+	gl = gl || global.gl;
+	var shader = gl.shaders[":show_cubemap"];
+	if(shader)
+		return shader;
+
+	var shader = new GL.Shader( Shader.DEFAULT_VERTEX_SHADER,"\n\
+			precision highp float;\n\
+			varying vec3 v_normal;\n\
+			uniform samplerCube u_texture;\n\
+			void main() {\n\
+			   gl_FragColor = textureCube( u_texture, v_normal );\n\
+			}\n\
+			");
+	shader.uniforms({u_texture:0});
+	return gl.shaders[":show_cubemap"] = shader;
+}
+
 //shader to copy a cubemap into another 
 Shader.getCubemapCopyShader = function(gl)
 {
@@ -8178,6 +8431,7 @@ GL.create = function(options) {
 	gl.extensions["EXT_texture_filter_anisotropic"] = gl.getExtension("EXT_texture_filter_anisotropic") || gl.getExtension("WEBKIT_EXT_texture_filter_anisotropic") || gl.getExtension("MOZ_EXT_texture_filter_anisotropic");
 	gl.extensions["EXT_frag_depth"] = gl.getExtension("EXT_frag_depth") || gl.getExtension("WEBKIT_EXT_frag_depth") || gl.getExtension("MOZ_EXT_frag_depth");
 	gl.extensions["WEBGL_lose_context"] = gl.getExtension("WEBGL_lose_context") || gl.getExtension("WEBKIT_WEBGL_lose_context") || gl.getExtension("MOZ_WEBGL_lose_context");
+	gl.extensions["ANGLE_instanced_arrays"] = gl.getExtension("ANGLE_instanced_arrays");
 
 	//for float textures
 	gl.extensions["OES_texture_float_linear"] = gl.getExtension("OES_texture_float_linear");
@@ -8483,10 +8737,10 @@ GL.create = function(options) {
 			first = touches[0],
 			type = "";
 
-		if( gl.ontouch && gl.ontouch(e) === false )
+		if( gl.ontouch && gl.ontouch(e) === true )
 			return;
 
-		if( LEvent.trigger( gl, e.type, e ) === false )
+		if( LEvent.trigger( gl, e.type, e ) === true )
 			return;
 
 		if(!translate_touches)

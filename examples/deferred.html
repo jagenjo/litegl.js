@@ -325,6 +325,7 @@
 			gl.frontFace( gl.CCW );
 		});
 
+		gl.disable( gl.BLEND );
 
 		gl.drawTexture(texture_albedo, 0,0, gl.canvas.width * 0.5, gl.canvas.height * 0.5);
 		gl.drawTexture(texture_normal, gl.canvas.width * 0.5,0, gl.canvas.width * 0.5, gl.canvas.height * 0.5);
