@@ -198,6 +198,7 @@ GL.create = function(options) {
 	gl.extensions[&quot;EXT_texture_filter_anisotropic&quot;] = gl.getExtension(&quot;EXT_texture_filter_anisotropic&quot;) || gl.getExtension(&quot;WEBKIT_EXT_texture_filter_anisotropic&quot;) || gl.getExtension(&quot;MOZ_EXT_texture_filter_anisotropic&quot;);
 	gl.extensions[&quot;EXT_frag_depth&quot;] = gl.getExtension(&quot;EXT_frag_depth&quot;) || gl.getExtension(&quot;WEBKIT_EXT_frag_depth&quot;) || gl.getExtension(&quot;MOZ_EXT_frag_depth&quot;);
 	gl.extensions[&quot;WEBGL_lose_context&quot;] = gl.getExtension(&quot;WEBGL_lose_context&quot;) || gl.getExtension(&quot;WEBKIT_WEBGL_lose_context&quot;) || gl.getExtension(&quot;MOZ_WEBGL_lose_context&quot;);
+	gl.extensions[&quot;ANGLE_instanced_arrays&quot;] = gl.getExtension(&quot;ANGLE_instanced_arrays&quot;);
 
 	//for float textures
 	gl.extensions[&quot;OES_texture_float_linear&quot;] = gl.getExtension(&quot;OES_texture_float_linear&quot;);
@@ -503,10 +504,10 @@ GL.create = function(options) {
 			first = touches[0],
 			type = &quot;&quot;;
 
-		if( gl.ontouch &amp;&amp; gl.ontouch(e) === false )
+		if( gl.ontouch &amp;&amp; gl.ontouch(e) === true )
 			return;
 
-		if( LEvent.trigger( gl, e.type, e ) === false )
+		if( LEvent.trigger( gl, e.type, e ) === true )
 			return;
 
 		if(!translate_touches)
