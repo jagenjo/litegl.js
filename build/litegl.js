@@ -1408,10 +1408,11 @@ vec2.computeSignedAngle = function( a, b )
 	return Math.atan2( vec2.perpdot(a,b), vec2.dot(a,b) );
 }
 
-vec2.random = function(vec)
+vec2.random = function( vec, scale )
 {
-	vec[0] = Math.random();
-	vec[1] = Math.random();
+	scale = scale || 1.0;
+	vec[0] = Math.random() * scale;
+	vec[1] = Math.random() * scale;
 	return vec;
 }
 
@@ -1502,11 +1503,12 @@ vec3.angle = function( a, b )
 	return Math.acos( vec3.dot(a,b) );
 }
 
-vec3.random = function(vec)
+vec3.random = function(vec, scale)
 {
-	vec[0] = Math.random();
-	vec[1] = Math.random();
-	vec[2] = Math.random();
+	scale = scale || 1.0;
+	vec[0] = Math.random() * scale;
+	vec[1] = Math.random() * scale;
+	vec[2] = Math.random() * scale;
 	return vec;
 }
 
@@ -1533,12 +1535,13 @@ vec3.reflect = function(out, v, n)
 }
 
 /* VEC4 */
-vec4.random = function(vec)
+vec4.random = function(vec, scale)
 {
-	vec[0] = Math.random();
-	vec[1] = Math.random();
-	vec[2] = Math.random();
-	vec[3] = Math.random();	
+	scale = scale || 1.0;
+	vec[0] = Math.random() * scale;
+	vec[1] = Math.random() * scale;
+	vec[2] = Math.random() * scale;
+	vec[3] = Math.random() * scale;	
 	return vec;
 }
 
@@ -7615,13 +7618,15 @@ Shader.prototype.drawInstanced = function( mesh, primitive, indices, instanced_u
 	{
 		var values = instanced_uniforms[ uniform ];
 		batch_length = values.length;
-		var uniformLocation = shader.attributes[ uniform ];
+		var uniformLocation = this.attributes[ uniform ];
 		if( uniformLocation == null )
 			return; //not found
 		var size = values[0].constructor === Number ? 1 : values[0].length;
 		var data_array = Shader._instancing_arrays[ index ];
 		if( !data_array || data_array.data.length < (values.length * size) )
 			data_array = Shader._instancing_arrays[ index ] = { data: new Float32Array( values.length * size ), buffer: gl.createBuffer() };
+		data_array.uniform = uniform;
+		data_array.size = size;
 		for(var j = 0; j < values.length; ++j)
 			data_array.data.set( values[j], j*size ); //copy
 		gl.bindBuffer( gl.ARRAY_BUFFER, data_array.buffer );
@@ -7664,6 +7669,37 @@ Shader.prototype.drawInstanced = function( mesh, primitive, indices, instanced_u
 			gl.drawElementsInstanced( primitive, length, indexBuffer.buffer.gl_type, 0, batch_length);
 		else
 			gl.drawArraysInstanced( primitive, 0, length, batch_length);
+	}
+
+	//disable instancing buffers
+	for(var i = 0; i < index; ++i)
+	{
+		var info = Shader._instancing_arrays[ i ];
+		var uniformLocation = this.attributes[ info.uniform ];
+		var size = info.size;
+		if( ext ) //webgl 1
+			ext.vertexAttribDivisorANGLE( uniformLocation, 1 ); // This makes it instanced!
+		else
+			gl.vertexAttribDivisor( uniformLocation, 1 ); // This makes it instanced!
+		if( size == 16) //mat4
+		{
+			for(var k = 0; k < 4; ++k)
+			{
+				gl.disableVertexAttribArray( uniformLocation+k );
+				if( ext ) //webgl 1
+					ext.vertexAttribDivisorANGLE( uniformLocation+k, 0 );
+				else
+					gl.vertexAttribDivisor( uniformLocation+k, 0 ); 
+			}
+		}
+		else //others
+		{
+			gl.enableVertexAttribArray( uniformLocation );
+			if( ext ) //webgl 1
+				ext.vertexAttribDivisorANGLE( uniformLocation, 0 );
+			else
+				gl.vertexAttribDivisor( uniformLocation, 0 );
+		}
 	}
 
 	return this;

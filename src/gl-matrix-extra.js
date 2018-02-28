@@ -40,10 +40,11 @@ vec2.computeSignedAngle = function( a, b )
 	return Math.atan2( vec2.perpdot(a,b), vec2.dot(a,b) );
 }
 
-vec2.random = function(vec)
+vec2.random = function( vec, scale )
 {
-	vec[0] = Math.random();
-	vec[1] = Math.random();
+	scale = scale || 1.0;
+	vec[0] = Math.random() * scale;
+	vec[1] = Math.random() * scale;
 	return vec;
 }
 
@@ -134,11 +135,12 @@ vec3.angle = function( a, b )
 	return Math.acos( vec3.dot(a,b) );
 }
 
-vec3.random = function(vec)
+vec3.random = function(vec, scale)
 {
-	vec[0] = Math.random();
-	vec[1] = Math.random();
-	vec[2] = Math.random();
+	scale = scale || 1.0;
+	vec[0] = Math.random() * scale;
+	vec[1] = Math.random() * scale;
+	vec[2] = Math.random() * scale;
 	return vec;
 }
 
@@ -165,12 +167,13 @@ vec3.reflect = function(out, v, n)
 }
 
 /* VEC4 */
-vec4.random = function(vec)
+vec4.random = function(vec, scale)
 {
-	vec[0] = Math.random();
-	vec[1] = Math.random();
-	vec[2] = Math.random();
-	vec[3] = Math.random();	
+	scale = scale || 1.0;
+	vec[0] = Math.random() * scale;
+	vec[1] = Math.random() * scale;
+	vec[2] = Math.random() * scale;
+	vec[3] = Math.random() * scale;	
 	return vec;
 }
 
