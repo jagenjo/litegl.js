@@ -162,6 +162,8 @@ Shader.prototype.updateShader = function( vertexSource, fragmentSource, macros )
 * This info is stored so it works faster during rendering.
 * @method extractShaderInfo
 */
+
+
 Shader.prototype.extractShaderInfo = function()
 {
 	var gl = this.gl;
@@ -194,21 +196,32 @@ Shader.prototype.extractShaderInfo = function()
 		var is_matrix = false;
 		if(data.type == gl.FLOAT_MAT2 || data.type == gl.FLOAT_MAT3 || data.type == gl.FLOAT_MAT4)
 			is_matrix = true;
-
+		var type_length = GL.TYPE_LENGTH[ data.type ] || 1;
 
 		//save the info so the user doesnt have to specify types when uploading data to the shader
-		this.uniformInfo[ uniformName ] = { type: data.type, func: func, size: data.size, is_matrix: is_matrix, loc: gl.getUniformLocation(this.program, uniformName) };
+		this.uniformInfo[ uniformName ] = { 
+			type: data.type,
+			func: func,
+			size: data.size,
+			type_length: type_length,
+			is_matrix: is_matrix,
+			loc: gl.getUniformLocation(this.program, uniformName),
+			data: new Float32Array( type_length * data.size ) //prealloc space to assign uniforms that are not typed
+		};
 	}
 
 	//extract attributes info
 	for(var i = 0, l = gl.getProgramParameter(this.program, gl.ACTIVE_ATTRIBUTES); i < l; ++i)
 	{
 		var data = gl.getActiveAttrib( this.program, i);
-		if(!data) break;
+		if(!data)
+			break;
 		var func = Shader.getUniformFunc(data);
+		var type_length = GL.TYPE_LENGTH[ data.type ] || 1;
 		this.uniformInfo[ data.name ] = { 
 			type: data.type,
 			func: func,
+			type_length: type_length,
 			size: data.size,
 			loc: null 
 		}; //gl.getAttribLocation( this.program, data.name )
@@ -412,9 +425,6 @@ Shader.prototype.uniformsArray = function(array) {
 * @param {*} value
 */
 Shader.prototype.setUniform = (function(){
-	var temps = [];
-	for(var i = 2; i <= 16; ++i)
-		temps[i] = new Float32Array(i);
 
 	return (function(name, value)
 	{
@@ -433,14 +443,8 @@ Shader.prototype.setUniform = (function(){
 
 		if(value.constructor === Array)
 		{
-			var v = temps[ value.length ]; //reuse same container
-			if(v)
-			{
-				v.set(value);
-				value = v;
-			}
-			else
-				value = new Float32Array( value );  //garbage generated...
+			info.data.set( value );
+			value = info.data;
 		}
 
 		if(info.is_matrix)
@@ -452,9 +456,6 @@ Shader.prototype.setUniform = (function(){
 
 //skips enabling shader
 Shader.prototype._setUniform = (function(){
-	var temps = [];
-	for(var i = 2; i <= 16; ++i)
-		temps[i] = new Float32Array(i);
 
 	return (function(name, value)
 	{
@@ -473,14 +474,8 @@ Shader.prototype._setUniform = (function(){
 
 		if(value.constructor === Array)
 		{
-			var v = temps[ value.length ]; //reuse same container
-			if(v)
-			{
-				v.set(value);
-				value = v;
-			}
-			else
-				value = new Float32Array( value );  //garbage generated...
+			info.data.set( value );
+			value = info.data;
 		}
 
 		if(info.is_matrix)
@@ -677,23 +672,39 @@ Shader.prototype.drawInstanced = function( mesh, primitive, indices, instanced_u
 		var uniformLocation = this.attributes[ uniform ];
 		if( uniformLocation == null )
 			return; //not found
-		var size = values[0].constructor === Number ? 1 : values[0].length;
+		var element_size = 0;
+		var total_size = 0;
+		if( values.constructor === Array )
+		{
+			element_size = values[0].constructor === Number ? 1 : values[0].length;
+			total_size = element_size * values.length;
+		}
+		else //typed array
+		{
+			element_size = this.uniformInfo[ uniform ].type_length;
+			total_size = values.length;
+			batch_length = total_size / element_size;
+		}
+
 		var data_array = Shader._instancing_arrays[ index ];
-		if( !data_array || data_array.data.length < (values.length * size) )
-			data_array = Shader._instancing_arrays[ index ] = { data: new Float32Array( values.length * size ), buffer: gl.createBuffer() };
+		if( !data_array || data_array.data.length < total_size )
+			data_array = Shader._instancing_arrays[ index ] = { data: new Float32Array( total_size ), buffer: gl.createBuffer() };
 		data_array.uniform = uniform;
-		data_array.size = size;
-		for(var j = 0; j < values.length; ++j)
-			data_array.data.set( values[j], j*size ); //copy
+		data_array.element_size = element_size;
+		if( values.constructor === Array )
+			for(var j = 0; j < values.length; ++j)
+				data_array.data.set( values[j], j*element_size ); //flatten array
+		else
+			data_array.data.set( values ); //copy
 		gl.bindBuffer( gl.ARRAY_BUFFER, data_array.buffer );
 		gl.bufferData( gl.ARRAY_BUFFER, data_array.data, gl.STREAM_DRAW );
 
-		if(size == 16) //mat4
+		if(element_size == 16) //mat4
 		{
 			for(var k = 0; k < 4; ++k)
 			{
 				gl.enableVertexAttribArray( uniformLocation+k );
-				gl.vertexAttribPointer( uniformLocation+k, 4, gl.FLOAT , false, 16*4, k*4*4 );
+				gl.vertexAttribPointer( uniformLocation+k, 4, gl.FLOAT , false, 16*4, k*4*4 ); //4 bytes per float
 				if( ext ) //webgl 1
 					ext.vertexAttribDivisorANGLE( uniformLocation+k, 1 ); // This makes it instanced!
 				else
@@ -703,7 +714,7 @@ Shader.prototype.drawInstanced = function( mesh, primitive, indices, instanced_u
 		else //others
 		{
 			gl.enableVertexAttribArray( uniformLocation );
-			gl.vertexAttribPointer( uniformLocation, size, gl.FLOAT , false, size*4, size*4 );
+			gl.vertexAttribPointer( uniformLocation, element_size, gl.FLOAT, false, element_size*4, element_size*4 ); //4 bytes per float
 			if( ext ) //webgl 1
 				ext.vertexAttribDivisorANGLE( uniformLocation, 1 ); // This makes it instanced!
 			else
@@ -715,14 +726,22 @@ Shader.prototype.drawInstanced = function( mesh, primitive, indices, instanced_u
 	if( ext ) //webgl 1.0
 	{
 		if(indexBuffer)
-			ext.drawElementsInstancedANGLE( primitive, length, indexBuffer.buffer.gl_type, 0, batch_length);
+		{
+			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer.buffer);
+			ext.drawElementsInstancedANGLE( primitive, length, indexBuffer.buffer.gl_type, 0, batch_length );
+			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null );
+		}
 		else
 			ext.drawArraysInstancedANGLE( primitive, 0, length, batch_length);
 	}
 	else
 	{
 		if(indexBuffer)
-			gl.drawElementsInstanced( primitive, length, indexBuffer.buffer.gl_type, 0, batch_length);
+		{
+			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer.buffer);
+			gl.drawElementsInstanced( primitive, length, indexBuffer.buffer.gl_type, 0, batch_length );
+			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null );
+		}
 		else
 			gl.drawArraysInstanced( primitive, 0, length, batch_length);
 	}
@@ -732,12 +751,8 @@ Shader.prototype.drawInstanced = function( mesh, primitive, indices, instanced_u
 	{
 		var info = Shader._instancing_arrays[ i ];
 		var uniformLocation = this.attributes[ info.uniform ];
-		var size = info.size;
-		if( ext ) //webgl 1
-			ext.vertexAttribDivisorANGLE( uniformLocation, 1 ); // This makes it instanced!
-		else
-			gl.vertexAttribDivisor( uniformLocation, 1 ); // This makes it instanced!
-		if( size == 16) //mat4
+		var element_size = info.element_size;
+		if( element_size == 16) //mat4
 		{
 			for(var k = 0; k < 4; ++k)
 			{
