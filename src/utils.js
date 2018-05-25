@@ -404,6 +404,55 @@ global.processFileAtlas = GL.processFileAtlas = function(data, skip_trim)
 	return files;
 }
 
+
+/*
+global.halfFloatToFloat = function( h )
+{
+	function convertMantissa(i) {
+	    if (i == 0) 
+			return 0
+		else if (i < 1024)
+		{
+	        var m = i << 13;
+			var e = 0;
+			while (!(m & 0x00800000))
+			{
+				e -= 0x00800000
+				m = m << 1
+			}
+	        m &= ~0x00800000
+		    e += 0x38800000
+	        return m | e;
+		}
+		return 0x38000000 + ((i - 1024) << 13);
+	}
+
+	function convertExponent(i)	{
+		if (i == 0)
+			return 0;
+		else if (i >= 1 && i <= 31)
+			return i << 23;
+		else if (i == 31)
+			return 0x47800000;
+		else if (i == 32)
+			return 0x80000000;
+		else if (i >= 33 && i <= 63)
+			return 0x80000000 + ((i - 32) << 23);
+		return 0xC7800000;
+	}
+
+	function convertOffset(i) {
+	    if (i == 0 || i == 32)
+		    return 0
+		return 1024;
+	}
+
+	var v = convertMantissa( convertOffset( h >> 10) + (h & 0x3ff) ) + convertExponent(h >> 10);
+	var a = new Uint32Array([v]);
+	return (new Float32Array(a.buffer))[0]; 
+}
+*/
+
 global.typedArrayToArray = function(array)
 {
 	var r = [];
@@ -418,6 +467,33 @@ global.RGBToHex = function(r, g, b) {
 	g = Math.min(255, g*255)|0;
 	b = Math.min(255, b*255)|0;
 	return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+
+global.HUEToRGB = function ( p, q, t ){
+	if(t < 0) t += 1;
+	if(t > 1) t -= 1;
+	if(t < 1/6) return p + (q - p) * 6 * t;
+	if(t < 1/2) return q;
+	if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+	return p;
+}
+
+global.HSLToRGB = function( h, s, l, out ){
+	var r, g, b;
+	out = out || vec3.create();
+	if(s == 0){
+		r = g = b = l; // achromatic
+	}else{
+		var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+		var p = 2 * l - q;
+		r = HUEToRGB(p, q, h + 1/3);
+		g = HUEToRGB(p, q, h);
+		b = HUEToRGB(p, q, h - 1/3);
+	}
+	out[0] = r;
+	out[1] = g;
+	out[2] = b;
+	return out;
 }
 
 global.hexColorToRGBA = (function() {
@@ -441,33 +517,6 @@ global.hexColorToRGBA = (function() {
 		gold: [1, 0.843137264251709, 0],
 		transparent: [0,0,0,0]
 	};
-
-	function hue2rgb( p, q, t ){
-		if(t < 0) t += 1;
-		if(t > 1) t -= 1;
-		if(t < 1/6) return p + (q - p) * 6 * t;
-		if(t < 1/2) return q;
-		if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-		return p;
-	}
-
-	function hslToRgb( h, s, l, out ){
-		var r, g, b;
-		out = out || vec3.create();
-		if(s == 0){
-			r = g = b = l; // achromatic
-		}else{
-			var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-			var p = 2 * l - q;
-			r = hue2rgb(p, q, h + 1/3);
-			g = hue2rgb(p, q, h);
-			b = hue2rgb(p, q, h - 1/3);
-		}
-		out[0] = r;
-		out[1] = g;
-		out[2] = b;
-		return out;
-	}
 
 	return function( hex, color, alpha )
 	{
@@ -509,7 +558,7 @@ global.hexColorToRGBA = (function() {
 	{
 		var str = hex.substr(5);
 		str = str.split(",");
-		hslToRgb( parseInt( str[0] ) / 360, parseInt( str[1] ) / 100, parseInt( str[2] ) / 100, color );
+		HSLToRGB( parseInt( str[0] ) / 360, parseInt( str[1] ) / 100, parseInt( str[2] ) / 100, color );
 		color[3] = parseFloat( str[3] ) * alpha;
 		return color;
 	}
@@ -533,7 +582,7 @@ global.hexColorToRGBA = (function() {
 	{
 		var str = hex.substr(5);
 		str = str.split(",");
-		hslToRgb( parseInt( str[0] ) / 360, parseInt( str[1] ) / 100, parseInt( str[2] ) / 100, color );
+		HSLToRGB( parseInt( str[0] ) / 360, parseInt( str[1] ) / 100, parseInt( str[2] ) / 100, color );
 		return color;
 	}
 
@@ -541,7 +590,7 @@ global.hexColorToRGBA = (function() {
 	//the rest
 	// Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
 	var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-	hex = hex.replace(shorthandRegex, function(m, r, g, b) {
+	hex = hex.replace( shorthandRegex, function(m, r, g, b) {
 		return r + r + g + g + b + b;
 	});
 

@@ -604,8 +604,11 @@ Shader.prototype.drawBuffers = function( vertexBuffers, indexBuffer, mode, range
 
 Shader._instancing_arrays = [];
 
-Shader.prototype.drawInstanced = function( mesh, primitive, indices, instanced_uniforms, gl )
+Shader.prototype.drawInstanced = function( mesh, primitive, indices, instanced_uniforms, range_start, range_length )
 {
+	if(range_length == 0)
+		return;
+
 	//bind buffers
 	var gl = this.gl;
 
@@ -645,8 +648,14 @@ Shader.prototype.drawInstanced = function( mesh, primitive, indices, instanced_u
 
 	//range rendering
 	var offset = 0; //in bytes
+	if(range_start > 0) //render a polygon range
+		offset = range_start; //in bytes (Uint16 == 2 bytes)
+
 	if (indexBuffer)
 		length = indexBuffer.buffer.length - offset;
+
+	if(range_length > 0 && range_length < length) //to avoid problems
+		length = range_length;
 
 	var BYTES_PER_ELEMENT = (indexBuffer && indexBuffer.data) ? indexBuffer.data.constructor.BYTES_PER_ELEMENT : 1;
 	offset *= BYTES_PER_ELEMENT;
@@ -728,22 +737,22 @@ Shader.prototype.drawInstanced = function( mesh, primitive, indices, instanced_u
 		if(indexBuffer)
 		{
 			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer.buffer);
-			ext.drawElementsInstancedANGLE( primitive, length, indexBuffer.buffer.gl_type, 0, batch_length );
+			ext.drawElementsInstancedANGLE( primitive, length, indexBuffer.buffer.gl_type, offset, batch_length );
 			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null );
 		}
 		else
-			ext.drawArraysInstancedANGLE( primitive, 0, length, batch_length);
+			ext.drawArraysInstancedANGLE( primitive, offset, length, batch_length);
 	}
 	else
 	{
 		if(indexBuffer)
 		{
 			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer.buffer);
-			gl.drawElementsInstanced( primitive, length, indexBuffer.buffer.gl_type, 0, batch_length );
+			gl.drawElementsInstanced( primitive, length, indexBuffer.buffer.gl_type, offset, batch_length );
 			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null );
 		}
 		else
-			gl.drawArraysInstanced( primitive, 0, length, batch_length);
+			gl.drawArraysInstanced( primitive, offset, length, batch_length);
 	}
 
 	//disable instancing buffers

@@ -30,7 +30,7 @@ Octree.OCTREE_MIN_MARGIN = 0.1;
 var octree_tested_boxes = 0;
 var octree_tested_triangles = 0;
 
-Octree.prototype.buildFromMesh = function(mesh)
+Octree.prototype.buildFromMesh = function( mesh )
 {
 	this.total_depth = 0;
 	this.total_nodes = 0;

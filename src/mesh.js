@@ -124,6 +124,13 @@ GL.Buffer.prototype.upload = function( stream_type ) { //default gl.STATIC_DRAW 
 		default: throw("unsupported buffer type");
 	}
 
+	if(this.target == gl.ARRAY_BUFFER && ( this.buffer.gl_type == gl.INT || this.buffer.gl_type == gl.UNSIGNED_INT ))
+	{
+		console.warn("WebGL does not support UINT32 or INT32 as vertex buffer types, converting to FLOAT");
+		this.buffer.gl_type = gl.FLOAT;
+		data = new Float32Array(data);
+	}
+
 	gl.bindBuffer(this.target, this.buffer);
 	gl.bufferData(this.target, data , stream_type || this.stream_type || gl.STATIC_DRAW);
 };

@@ -414,12 +414,19 @@ Texture.prototype.uploadImage = function( image, options )
 Texture.prototype.uploadData = function( data, options, skip_mipmaps )
 {
 	options = options || {};
+	if(!data)
+		throw("no data passed");
 	var gl = this.gl;
 	this.bind();
 	Texture.setUploadOptions(options, gl);
 
 	if( this.texture_type == GL.TEXTURE_2D )
-		gl.texImage2D(this.texture_type, 0, this.format, this.width, this.height, 0, this.format, this.type, data);
+	{
+		if(data.buffer && data.buffer.constructor == ArrayBuffer)
+			gl.texImage2D(this.texture_type, 0, this.format, this.width, this.height, 0, this.format, this.type, data);
+		else
+			gl.texImage2D(this.texture_type, 0, this.format, this.format, this.type, data);
+	}
 	else if( this.texture_type == GL.TEXTURE_3D )
 		gl.texImage3D(this.texture_type, 0, this.format, this.width, this.height, this.depth, 0, this.format, this.type, data);
 	else if( this.texture_type == GL.TEXTURE_CUBE_MAP )
@@ -430,7 +437,7 @@ Texture.prototype.uploadData = function( data, options, skip_mipmaps )
 	this.data = data; //should I clone it?
 
 	if (!skip_mipmaps && this.minFilter && this.minFilter != gl.NEAREST && this.minFilter != gl.LINEAR) {
-		gl.generateMipmap(texture.texture_type);
+		gl.generateMipmap(this.texture_type);
 		this.has_mipmaps = true;
 	}
 	gl.bindTexture(this.texture_type, null); //disable
@@ -1535,17 +1542,15 @@ Texture.cubemapFromURL = function(url, options, on_complete) {
 /**
 * returns an ArrayBuffer with the pixels in the texture, they are fliped in Y
 * @method getPixels
-* @param {enum} type gl.UNSIGNED_BYTE or gl.FLOAT, if omited then the one in the texture is read
-* @param {bool} force_rgba if yo want to force the output to have 4 components per pixel (useful to transfer to canvas)
-* @return {ArrayBuffer} the data ( Uint8Array or Float32Array )
+* @return {ArrayBuffer} the data ( Uint8Array, Uint16Array or Float32Array )
 */
-Texture.prototype.getPixels = function( type, force_rgba, cubemap_face )
+Texture.prototype.getPixels = function( cubemap_face, legacy_parameter )
 {
+	if(legacy_parameter !== undefined)
+		throw("legacy parameter, not longer supported");
 	var gl = this.gl;
 	var v = gl.getViewport();
 	var old_fbo = gl.getParameter( gl.FRAMEBUFFER_BINDING );
-
-	type = type || this.type;
 
 	if(this.format == gl.DEPTH_COMPONENT)
 		throw("cannot use getPixels in depth textures");
@@ -1568,14 +1573,15 @@ Texture.prototype.getPixels = function( type, force_rgba, cubemap_face )
 		gl.framebufferTexture2D( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X + (cubemap_face || 0), this.handler, 0);
 
 	var channels = this.format == gl.RGB ? 3 : 4;
-	if(force_rgba)
-		channels = 4;
 	channels = 4; //WEBGL DOES NOT SUPPORT READING 3 CHANNELS ONLY, YET...
-	//type = gl.UNSIGNED_BYTE; //WEBGL DOES NOT SUPPORT READING FLOAT seems, YET...
+	var type = this.type;
+	//type = gl.UNSIGNED_BYTE; //WEBGL DOES NOT SUPPORT READING FLOAT seems, YET... 23/5/18 now it seems it does now
 
 	if(type == gl.UNSIGNED_BYTE)
 		buffer = new Uint8Array( this.width * this.height * channels );
-	else //half float and float forced to float
+	else if(type == GL.HALF_FLOAT || type == GL.HALF_FLOAT_OES) //previously half float couldnot be read
+		buffer = new Uint16Array( this.width * this.height * channels ); //gl.UNSIGNED_SHORT_4_4_4_4 is only for texture that are SHORT per pixel, not per channel!
+	else 
 		buffer = new Float32Array( this.width * this.height * channels );
 
 	gl.readPixels( 0,0, this.width, this.height, channels == 3 ? gl.RGB : gl.RGBA, type, buffer ); //NOT SUPPORTED FLOAT or RGB BY WEBGL YET
@@ -1638,10 +1644,10 @@ Texture.prototype.toCanvas = function( canvas, flip_y, max_size )
 			//create a temporary texture
 			var temp = new GL.Texture(w,h,{ format: gl.RGBA, filter: gl.NEAREST });
 			this.copyTo( temp );	
-			buffer = temp.getPixels( gl.UNSIGNED_BYTE, true );
+			buffer = temp.getPixels();
 		}
 		else
-			buffer = this.getPixels( gl.UNSIGNED_BYTE, true );
+			buffer = this.getPixels();
 
 		var ctx = canvas.getContext("2d");
 		var pixels = ctx.getImageData(0,0,w,h);
@@ -1669,7 +1675,7 @@ Texture.prototype.toCanvas = function( canvas, flip_y, max_size )
 
 		for(var i = 0; i < 6; i++)
 		{
-			buffer = this.getPixels( gl.UNSIGNED_BYTE, true, i );
+			buffer = this.getPixels(i);
 			var pixels = temp_ctx.getImageData(0,0, temp_canvas.width, temp_canvas.height );
 			pixels.data.set( buffer );
 			temp_ctx.putImageData(pixels,0,0);

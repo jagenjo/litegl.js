@@ -600,6 +600,55 @@ global.processFileAtlas = GL.processFileAtlas = function(data, skip_trim)
 	return files;
 }
 
+
+/*
+global.halfFloatToFloat = function( h )
+{
+	function convertMantissa(i) {
+	    if (i == 0) 
+			return 0
+		else if (i < 1024)
+		{
+	        var m = i << 13;
+			var e = 0;
+			while (!(m & 0x00800000))
+			{
+				e -= 0x00800000
+				m = m << 1
+			}
+	        m &= ~0x00800000
+		    e += 0x38800000
+	        return m | e;
+		}
+		return 0x38000000 + ((i - 1024) << 13);
+	}
+
+	function convertExponent(i)	{
+		if (i == 0)
+			return 0;
+		else if (i >= 1 && i <= 31)
+			return i << 23;
+		else if (i == 31)
+			return 0x47800000;
+		else if (i == 32)
+			return 0x80000000;
+		else if (i >= 33 && i <= 63)
+			return 0x80000000 + ((i - 32) << 23);
+		return 0xC7800000;
+	}
+
+	function convertOffset(i) {
+	    if (i == 0 || i == 32)
+		    return 0
+		return 1024;
+	}
+
+	var v = convertMantissa( convertOffset( h >> 10) + (h & 0x3ff) ) + convertExponent(h >> 10);
+	var a = new Uint32Array([v]);
+	return (new Float32Array(a.buffer))[0]; 
+}
+*/
+
 global.typedArrayToArray = function(array)
 {
 	var r = [];
@@ -614,6 +663,33 @@ global.RGBToHex = function(r, g, b) {
 	g = Math.min(255, g*255)|0;
 	b = Math.min(255, b*255)|0;
 	return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+
+global.HUEToRGB = function ( p, q, t ){
+	if(t < 0) t += 1;
+	if(t > 1) t -= 1;
+	if(t < 1/6) return p + (q - p) * 6 * t;
+	if(t < 1/2) return q;
+	if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+	return p;
+}
+
+global.HSLToRGB = function( h, s, l, out ){
+	var r, g, b;
+	out = out || vec3.create();
+	if(s == 0){
+		r = g = b = l; // achromatic
+	}else{
+		var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+		var p = 2 * l - q;
+		r = HUEToRGB(p, q, h + 1/3);
+		g = HUEToRGB(p, q, h);
+		b = HUEToRGB(p, q, h - 1/3);
+	}
+	out[0] = r;
+	out[1] = g;
+	out[2] = b;
+	return out;
 }
 
 global.hexColorToRGBA = (function() {
@@ -637,33 +713,6 @@ global.hexColorToRGBA = (function() {
 		gold: [1, 0.843137264251709, 0],
 		transparent: [0,0,0,0]
 	};
-
-	function hue2rgb( p, q, t ){
-		if(t < 0) t += 1;
-		if(t > 1) t -= 1;
-		if(t < 1/6) return p + (q - p) * 6 * t;
-		if(t < 1/2) return q;
-		if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-		return p;
-	}
-
-	function hslToRgb( h, s, l, out ){
-		var r, g, b;
-		out = out || vec3.create();
-		if(s == 0){
-			r = g = b = l; // achromatic
-		}else{
-			var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-			var p = 2 * l - q;
-			r = hue2rgb(p, q, h + 1/3);
-			g = hue2rgb(p, q, h);
-			b = hue2rgb(p, q, h - 1/3);
-		}
-		out[0] = r;
-		out[1] = g;
-		out[2] = b;
-		return out;
-	}
 
 	return function( hex, color, alpha )
 	{
@@ -705,7 +754,7 @@ global.hexColorToRGBA = (function() {
 	{
 		var str = hex.substr(5);
 		str = str.split(",");
-		hslToRgb( parseInt( str[0] ) / 360, parseInt( str[1] ) / 100, parseInt( str[2] ) / 100, color );
+		HSLToRGB( parseInt( str[0] ) / 360, parseInt( str[1] ) / 100, parseInt( str[2] ) / 100, color );
 		color[3] = parseFloat( str[3] ) * alpha;
 		return color;
 	}
@@ -729,7 +778,7 @@ global.hexColorToRGBA = (function() {
 	{
 		var str = hex.substr(5);
 		str = str.split(",");
-		hslToRgb( parseInt( str[0] ) / 360, parseInt( str[1] ) / 100, parseInt( str[2] ) / 100, color );
+		HSLToRGB( parseInt( str[0] ) / 360, parseInt( str[1] ) / 100, parseInt( str[2] ) / 100, color );
 		return color;
 	}
 
@@ -737,7 +786,7 @@ global.hexColorToRGBA = (function() {
 	//the rest
 	// Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
 	var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-	hex = hex.replace(shorthandRegex, function(m, r, g, b) {
+	hex = hex.replace( shorthandRegex, function(m, r, g, b) {
 		return r + r + g + g + b + b;
 	});
 
@@ -2051,6 +2100,13 @@ GL.Buffer.prototype.upload = function( stream_type ) { //default gl.STATIC_DRAW 
 		case Uint32Array: this.buffer.gl_type = gl.UNSIGNED_INT; break;
 		case Float32Array: this.buffer.gl_type = gl.FLOAT; break;
 		default: throw("unsupported buffer type");
+	}
+
+	if(this.target == gl.ARRAY_BUFFER && ( this.buffer.gl_type == gl.INT || this.buffer.gl_type == gl.UNSIGNED_INT ))
+	{
+		console.warn("WebGL does not support UINT32 or INT32 as vertex buffer types, converting to FLOAT");
+		this.buffer.gl_type = gl.FLOAT;
+		data = new Float32Array(data);
 	}
 
 	gl.bindBuffer(this.target, this.buffer);
@@ -5036,12 +5092,19 @@ Texture.prototype.uploadImage = function( image, options )
 Texture.prototype.uploadData = function( data, options, skip_mipmaps )
 {
 	options = options || {};
+	if(!data)
+		throw("no data passed");
 	var gl = this.gl;
 	this.bind();
 	Texture.setUploadOptions(options, gl);
 
 	if( this.texture_type == GL.TEXTURE_2D )
-		gl.texImage2D(this.texture_type, 0, this.format, this.width, this.height, 0, this.format, this.type, data);
+	{
+		if(data.buffer && data.buffer.constructor == ArrayBuffer)
+			gl.texImage2D(this.texture_type, 0, this.format, this.width, this.height, 0, this.format, this.type, data);
+		else
+			gl.texImage2D(this.texture_type, 0, this.format, this.format, this.type, data);
+	}
 	else if( this.texture_type == GL.TEXTURE_3D )
 		gl.texImage3D(this.texture_type, 0, this.format, this.width, this.height, this.depth, 0, this.format, this.type, data);
 	else if( this.texture_type == GL.TEXTURE_CUBE_MAP )
@@ -5052,7 +5115,7 @@ Texture.prototype.uploadData = function( data, options, skip_mipmaps )
 	this.data = data; //should I clone it?
 
 	if (!skip_mipmaps && this.minFilter && this.minFilter != gl.NEAREST && this.minFilter != gl.LINEAR) {
-		gl.generateMipmap(texture.texture_type);
+		gl.generateMipmap(this.texture_type);
 		this.has_mipmaps = true;
 	}
 	gl.bindTexture(this.texture_type, null); //disable
@@ -6157,17 +6220,15 @@ Texture.cubemapFromURL = function(url, options, on_complete) {
 /**
 * returns an ArrayBuffer with the pixels in the texture, they are fliped in Y
 * @method getPixels
-* @param {enum} type gl.UNSIGNED_BYTE or gl.FLOAT, if omited then the one in the texture is read
-* @param {bool} force_rgba if yo want to force the output to have 4 components per pixel (useful to transfer to canvas)
-* @return {ArrayBuffer} the data ( Uint8Array or Float32Array )
+* @return {ArrayBuffer} the data ( Uint8Array, Uint16Array or Float32Array )
 */
-Texture.prototype.getPixels = function( type, force_rgba, cubemap_face )
+Texture.prototype.getPixels = function( cubemap_face, legacy_parameter )
 {
+	if(legacy_parameter !== undefined)
+		throw("legacy parameter, not longer supported");
 	var gl = this.gl;
 	var v = gl.getViewport();
 	var old_fbo = gl.getParameter( gl.FRAMEBUFFER_BINDING );
-
-	type = type || this.type;
 
 	if(this.format == gl.DEPTH_COMPONENT)
 		throw("cannot use getPixels in depth textures");
@@ -6190,14 +6251,15 @@ Texture.prototype.getPixels = function( type, force_rgba, cubemap_face )
 		gl.framebufferTexture2D( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X + (cubemap_face || 0), this.handler, 0);
 
 	var channels = this.format == gl.RGB ? 3 : 4;
-	if(force_rgba)
-		channels = 4;
 	channels = 4; //WEBGL DOES NOT SUPPORT READING 3 CHANNELS ONLY, YET...
-	//type = gl.UNSIGNED_BYTE; //WEBGL DOES NOT SUPPORT READING FLOAT seems, YET...
+	var type = this.type;
+	//type = gl.UNSIGNED_BYTE; //WEBGL DOES NOT SUPPORT READING FLOAT seems, YET... 23/5/18 now it seems it does now
 
 	if(type == gl.UNSIGNED_BYTE)
 		buffer = new Uint8Array( this.width * this.height * channels );
-	else //half float and float forced to float
+	else if(type == GL.HALF_FLOAT || type == GL.HALF_FLOAT_OES) //previously half float couldnot be read
+		buffer = new Uint16Array( this.width * this.height * channels ); //gl.UNSIGNED_SHORT_4_4_4_4 is only for texture that are SHORT per pixel, not per channel!
+	else 
 		buffer = new Float32Array( this.width * this.height * channels );
 
 	gl.readPixels( 0,0, this.width, this.height, channels == 3 ? gl.RGB : gl.RGBA, type, buffer ); //NOT SUPPORTED FLOAT or RGB BY WEBGL YET
@@ -6260,10 +6322,10 @@ Texture.prototype.toCanvas = function( canvas, flip_y, max_size )
 			//create a temporary texture
 			var temp = new GL.Texture(w,h,{ format: gl.RGBA, filter: gl.NEAREST });
 			this.copyTo( temp );	
-			buffer = temp.getPixels( gl.UNSIGNED_BYTE, true );
+			buffer = temp.getPixels();
 		}
 		else
-			buffer = this.getPixels( gl.UNSIGNED_BYTE, true );
+			buffer = this.getPixels();
 
 		var ctx = canvas.getContext("2d");
 		var pixels = ctx.getImageData(0,0,w,h);
@@ -6291,7 +6353,7 @@ Texture.prototype.toCanvas = function( canvas, flip_y, max_size )
 
 		for(var i = 0; i < 6; i++)
 		{
-			buffer = this.getPixels( gl.UNSIGNED_BYTE, true, i );
+			buffer = this.getPixels(i);
 			var pixels = temp_ctx.getImageData(0,0, temp_canvas.width, temp_canvas.height );
 			pixels.data.set( buffer );
 			temp_ctx.putImageData(pixels,0,0);
@@ -7558,8 +7620,11 @@ Shader.prototype.drawBuffers = function( vertexBuffers, indexBuffer, mode, range
 
 Shader._instancing_arrays = [];
 
-Shader.prototype.drawInstanced = function( mesh, primitive, indices, instanced_uniforms, gl )
+Shader.prototype.drawInstanced = function( mesh, primitive, indices, instanced_uniforms, range_start, range_length )
 {
+	if(range_length == 0)
+		return;
+
 	//bind buffers
 	var gl = this.gl;
 
@@ -7599,8 +7664,14 @@ Shader.prototype.drawInstanced = function( mesh, primitive, indices, instanced_u
 
 	//range rendering
 	var offset = 0; //in bytes
+	if(range_start > 0) //render a polygon range
+		offset = range_start; //in bytes (Uint16 == 2 bytes)
+
 	if (indexBuffer)
 		length = indexBuffer.buffer.length - offset;
+
+	if(range_length > 0 && range_length < length) //to avoid problems
+		length = range_length;
 
 	var BYTES_PER_ELEMENT = (indexBuffer && indexBuffer.data) ? indexBuffer.data.constructor.BYTES_PER_ELEMENT : 1;
 	offset *= BYTES_PER_ELEMENT;
@@ -7682,22 +7753,22 @@ Shader.prototype.drawInstanced = function( mesh, primitive, indices, instanced_u
 		if(indexBuffer)
 		{
 			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer.buffer);
-			ext.drawElementsInstancedANGLE( primitive, length, indexBuffer.buffer.gl_type, 0, batch_length );
+			ext.drawElementsInstancedANGLE( primitive, length, indexBuffer.buffer.gl_type, offset, batch_length );
 			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null );
 		}
 		else
-			ext.drawArraysInstancedANGLE( primitive, 0, length, batch_length);
+			ext.drawArraysInstancedANGLE( primitive, offset, length, batch_length);
 	}
 	else
 	{
 		if(indexBuffer)
 		{
 			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer.buffer);
-			gl.drawElementsInstanced( primitive, length, indexBuffer.buffer.gl_type, 0, batch_length );
+			gl.drawElementsInstanced( primitive, length, indexBuffer.buffer.gl_type, offset, batch_length );
 			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null );
 		}
 		else
-			gl.drawArraysInstanced( primitive, 0, length, batch_length);
+			gl.drawArraysInstanced( primitive, offset, length, batch_length);
 	}
 
 	//disable instancing buffers
@@ -8592,10 +8663,11 @@ GL.create = function(options) {
 
 			var now = getTime();
 			var dt = (now - time) * 0.001;
-
+			if(context.mouse)
+				context.mouse.last_buttons = context.mouse.buttons;
 			if (context.onupdate) 
 				context.onupdate(dt);
-			LEvent.trigger(gl,"update",dt);
+			LEvent.trigger( context, "update", dt);
 			if (context.ondraw)
 			{
 				//make sure the ondraw is called using this gl context (in case there is more than one)
@@ -8603,7 +8675,7 @@ GL.create = function(options) {
 				global.gl = context;
 				//call ondraw
 				context.ondraw();
-				LEvent.trigger(gl,"draw");
+				LEvent.trigger(context,"draw");
 				//restore old context
 				global.gl = old_gl;
 			}
@@ -8642,6 +8714,7 @@ GL.create = function(options) {
 
 	var mouse = gl.mouse = {
 		buttons: 0, //this should always be up-to-date with mouse state
+		last_buttons: 0, //button state in the previous frame
 		left_button: false,
 		middle_button: false,
 		right_button: false,
@@ -8662,10 +8735,21 @@ GL.create = function(options) {
 				return true;
 			return false;
 		},
+
+		/**
+		* returns true if button num is pressed (where num could be GL.LEFT_MOUSE_BUTTON, GL.RIGHT_MOUSE_BUTTON, GL.MIDDLE_MOUSE_BUTTON
+		* @method captureMouse
+		* @param {boolean} capture_wheel capture also the mouse wheel
+		*/
 		isButtonPressed: function(num)
 		{
-			return this.buttons & (1<<GL.RIGHT_MOUSE_BUTTON);
-		}
+			return this.buttons & (1<<num);
+		},
+
+		wasButtonPressed: function(num)
+		{
+			return (this.buttons & (1<<num)) && !(this.last_buttons & (1<<num));
+		},
 	};
 
 	/**
@@ -8680,6 +8764,7 @@ GL.create = function(options) {
 
 		canvas.addEventListener("mousedown", onmouse);
 		canvas.addEventListener("mousemove", onmouse);
+		canvas.addEventListener("dragstart", onmouse);
 		if(capture_wheel)
 		{
 			canvas.addEventListener("mousewheel", onmouse, false);
@@ -8694,6 +8779,10 @@ GL.create = function(options) {
 	}
 
 	function onmouse(e) {
+
+		if(gl.ignore_events)
+			return;
+		//console.log(e.type); //debug
 		var old_mouse_mask = gl.mouse.buttons;
 		GL.augmentEvent(e, canvas);
 		e.eventType = e.eventType || e.type; //type cannot be overwritten, so I make a clone to allow me to overwrite
@@ -8765,14 +8854,23 @@ GL.create = function(options) {
 
 			LEvent.trigger(gl, "mousewheel", e);
 		}
+		else if(e.eventType == "dragstart")
+		{
+			if(gl.ondragstart)
+				gl.ondragstart(e);
+			LEvent.trigger(gl, "dragstart", e);
+		}
 
 		if(gl.onmouse)
 			gl.onmouse(e);
 
-		if(e.eventType != "mousemove")
-			e.stopPropagation();
-		e.preventDefault();
-		return false;
+		if(!e.skip_preventDefault)
+		{
+			if(e.eventType != "mousemove")
+				e.stopPropagation();
+			e.preventDefault();
+			return false;
+		}
 	}
 
 	var translate_touches = false;
@@ -10485,8 +10583,8 @@ global.BBox = GL.BBox = {
 	radius:12,
 	data_length: 13,
 	
-	corners: new Float32Array([1,1,1,  1,1,-1,  1,-1,1,  1,-1,-1,  -1,1,1,  -1,1,-1,  -1,-1,1,  -1,-1,-1 ]),
-	tmp_corners: new Float32Array(24), //to avoid GC
+	//corners: new Float32Array([1,1,1,  1,1,-1,  1,-1,1,  1,-1,-1,  -1,1,1,  -1,1,-1,  -1,-1,1,  -1,-1,-1 ]),
+	corners: [ vec3.fromValues(1,1,1), vec3.fromValues(1,1,-1), vec3.fromValues(1,-1,1), vec3.fromValues(1,-1,-1), vec3.fromValues(-1,1,1), vec3.fromValues(-1,1,-1), vec3.fromValues(-1,-1,1), vec3.fromValues(-1,-1,-1) ] ,
 
 	/**
 	* create an empty bbox
@@ -10589,21 +10687,46 @@ global.BBox = GL.BBox = {
 		var min = bb.subarray(6,9);
 		var max = bb.subarray(9,12);
 
-		min.set( points.subarray(0,3) );
+		min[0] = points[0]; //min.set( points.subarray(0,3) );
+		min[1] = points[1];
+		min[2] = points[2];
 		max.set( min );
 
 		var v = 0;
 		for(var i = 3, l = points.length; i < l; i+=3)
 		{
+			var x = points[i];
+			var y = points[i+1];
+			var z = points[i+2];
+			if( x < min[0] ) min[0] = x;
+			else if( x > max[0] ) max[0] = x;
+			if( y < min[1] ) min[1] = y;
+			else if( y > max[1] ) max[1] = y;
+			if( z < min[2] ) min[2] = z;
+			else if( z > max[2] ) max[2] = z;
+			/*
 			v = points.subarray(i,i+3);
 			vec3.min( min, v, min);
 			vec3.max( max, v, max);
+			*/
 		}
 
+		//center
+		bb[0] = (min[0] + max[0]) * 0.5;
+		bb[1] = (min[1] + max[1]) * 0.5;
+		bb[2] = (min[2] + max[2]) * 0.5;
+		//halfsize
+		bb[3] = max[0] - bb[0];
+		bb[4] = max[1] - bb[1];
+		bb[5] = max[2] - bb[2];
+		bb[12] = Math.sqrt( bb[3]*bb[3] + bb[4]*bb[4] + bb[5]*bb[5] );
+
+		/*
 		var center = vec3.add( bb.subarray(0,3), min, max );
 		vec3.scale( center, center, 0.5);
 		vec3.subtract( bb.subarray(3,6), max, center );
 		bb[12] = vec3.length(bb.subarray(3,6)); //radius		
+		*/
 		return bb;
 	},
 
@@ -10673,23 +10796,39 @@ global.BBox = GL.BBox = {
 	* @param {mat4} mat transformation
 	* @return {BBox} returns out
 	*/
-	transformMat4: function( out, bb, mat )
-	{
-		var center = bb; //.subarray(0,3); hack to avoid garbage
-		var halfsize = bb.subarray(3,6);
-		var corners = this.tmp_corners;
-		corners.set( this.corners );
-
-		for(var i = 0; i < 8; ++i)		
+	transformMat4: (function(){
+		var hsx = 0;
+		var hsy = 0;
+		var hsz = 0;
+		var points_buffer = new Float32Array(8*3);
+		var points = [];
+		for(var i = 0; i < 24; i += 3 )
+			points.push( points_buffer.subarray( i, i+3 ) );
+		
+		return function( out, bb, mat )
 		{
-			var corner = corners.subarray(i*3, i*3+3);
-			vec3.multiply( corner, halfsize, corner );
-			vec3.add( corner, corner, center );
-			mat4.multiplyVec3(corner, mat, corner);
-		}
+			var centerx = bb[0];
+			var centery = bb[1];
+			var centerz = bb[2];
+			hsx = bb[3];
+			hsy = bb[4];
+			hsz = bb[5];
 
-		return this.setFromPoints( out, corners );
-	},
+			var corners = this.corners;
+
+			for(var i = 0; i < 8; ++i)		
+			{
+				var corner = corners[i];
+				var result = points[i];
+				result[0] = hsx * corner[0] + centerx;
+				result[1] = hsy * corner[1] + centery;
+				result[2] = hsz * corner[2] + centerz;
+				mat4.multiplyVec3( result, mat, result );
+			}
+
+			return this.setFromPoints( out, points_buffer );
+		}
+	})(),
 
 
 	/**
@@ -10699,7 +10838,7 @@ global.BBox = GL.BBox = {
 	* @param {Float32Array} result optional, should be 8 * 3
 	* @return {Float32Array} returns the 8 corners
 	*/
-	getCorners: function(bb, result)
+	getCorners: function( bb, result )
 	{
 		var center = bb; //.subarray(0,3); AVOID GC
 		var halfsize = bb.subarray(3,6);
@@ -10774,18 +10913,14 @@ global.planeBoxOverlap = GL.planeBoxOverlap = function planeBoxOverlap(plane, bo
 	var center = box; //.subarray(0,3);
 	var halfsize = box; //.subarray(3,6);
 
-	var tmp = vec3.fromValues(
-		Math.abs( halfsize[3] * n[0] ),
-		Math.abs( halfsize[4] * n[1] ),
-		Math.abs( halfsize[5] * n[2] )
-	);
-
-	var radius = tmp[0]+tmp[1]+tmp[2];
+	var radius = Math.abs( halfsize[3] * n[0] ) + Math.abs( halfsize[4] * n[1] ) + Math.abs( halfsize[5] * n[2] );
 	var distance = vec3.dot(n,center) + d;
 
-	if (distance <= - radius) return CLIP_OUTSIDE;
-	else if (distance <= radius) return CLIP_OVERLAP;
-	else return CLIP_INSIDE;
+	if (distance <= -radius)
+		return CLIP_OUTSIDE;
+	else if (distance <= radius)
+		return CLIP_OVERLAP;
+	return CLIP_INSIDE;
 }
 
 /**
@@ -10820,7 +10955,7 @@ Octree.OCTREE_MIN_MARGIN = 0.1;
 var octree_tested_boxes = 0;
 var octree_tested_triangles = 0;
 
-Octree.prototype.buildFromMesh = function(mesh)
+Octree.prototype.buildFromMesh = function( mesh )
 {
 	this.total_depth = 0;
 	this.total_nodes = 0;
