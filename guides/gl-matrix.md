@@ -1,4 +1,4 @@
-# gl-matrix #
+# gl-matrix 
 
 When creating any 3D application the developer always need to have a vector3 class and a matrix4x4, mostly for screen projection and vertex transformations.
 
@@ -41,5 +41,26 @@ vec3.transformMat4( result, vertex, matrix );
 ```
 
 Keep in mind that LiteGL adds some extra useful functions to vec3, mat4 and quat.
+
+# Transforming vectors
+
+To operate with vectors:
+
+- ```vec3.add(out, a,b )``` out = a + b
+- ```vec3.sub(out, a,b )``` out = a - b
+- ```vec3.sub(out, a,f )``` scales a vector by a factor: out = (a[0] * f, a[1] * f, a[2] * f)
+- ```vec3.scaleAndAdd( out, a, b, f )``` scales a vector by a factor and adds it to another vector: out = a + b * f
+- ```vec3.multiply( out, a, b)``` multiply components of two vectors: out = a * b
+- ```vec3.dot( a, b )``` returns the dot product
+- ```vec3.cross( out, a, b )``` returns the cross product
+
+To operate between matrices
+- ```mat4.identity( out )```: sets the identity
+- ```mat4.invert( out, a )```: computes the inverse matrix and stores it in out
+- ```mat4.multiply( out, a, b )```: multiplies two matrices
+
+To multiply vectors and matrices
+- ```vec3.transformMat4( out, v, m )``` multiplies the vector3 by the matrix4
+
 
 For more info about gl-matrix [check the documentation](http://glmatrix.net/docs/glMatrix.html)
