@@ -982,14 +982,6 @@ Shader.BLEND_FRAGMENT_SHADER = "\n\
 			}\n\
 			";
 
-Shader.SCREEN_FLAT_FRAGMENT_SHADER = "\n\
-			precision highp float;\n\
-			uniform vec4 u_color;\n\
-			void main() {\n\
-				gl_FragColor = u_color;\n\
-			}\n\
-			";
-
 //used to paint quads
 Shader.QUAD_VERTEX_SHADER = "\n\
 			precision highp float;\n\
@@ -1067,6 +1059,8 @@ Shader.FLAT_FRAGMENT_SHADER = "\n\
 				gl_FragColor = u_color;\n\
 			}\n\
 			";
+Shader.SCREEN_FLAT_FRAGMENT_SHADER = Shader.FLAT_FRAGMENT_SHADER; //legacy
+
 
 /**
 * Allows to create a simple shader meant to be used to process a texture, instead of having to define the generic Vertex & Fragment Shader code
@@ -1127,7 +1121,7 @@ Shader.prototype.toViewport = function(uniforms)
 
 /**
 * Returns a shader ready to render a textured quad in fullscreen, use with Mesh.getScreenQuad() mesh
-* shader params sampler2D u_texture
+* shader params: sampler2D u_texture
 * @method Shader.getScreenShader
 */
 Shader.getScreenShader = function(gl)
@@ -1138,6 +1132,21 @@ Shader.getScreenShader = function(gl)
 		return shader;
 	shader = gl.shaders[":screen"] = new GL.Shader( Shader.SCREEN_VERTEX_SHADER, Shader.SCREEN_FRAGMENT_SHADER );
 	return shader.uniforms({u_texture:0}); //do it the first time so I dont have to do it every time
+}
+
+/**
+* Returns a shader ready to render a flat color quad in fullscreen, use with Mesh.getScreenQuad() mesh
+* shader params: vec4 u_color
+* @method Shader.getFlatScreenShader
+*/
+Shader.getFlatScreenShader = function(gl)
+{
+	gl = gl || global.gl;
+	var shader = gl.shaders[":flat_screen"];
+	if(shader)
+		return shader;
+	shader = gl.shaders[":flat_screen"] = new GL.Shader( Shader.SCREEN_VERTEX_SHADER, Shader.FLAT_FRAGMENT_SHADER );
+	return shader.uniforms({u_color:[1,1,1,1]}); //do it the first time so I dont have to do it every time
 }
 
 /**
