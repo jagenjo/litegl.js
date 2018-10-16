@@ -284,7 +284,7 @@ global.geo = {
 	* @param {vec3} direction ray direction (normalized)
 	* @param {vec3} center center of the sphere
 	* @param {number} radius radius of the sphere
-	* @param {vec3} result collision position
+	* @param {vec3} result [optional] collision position
 	* @param {number} max_dist not fully tested
 	* @return {boolean} returns if the ray collides the sphere
 	*/
@@ -316,7 +316,7 @@ global.geo = {
 				var r1 = ( -b + sq ) * d;
 				var r2 = ( -b - sq ) * d;
 				var t = r1 &lt; r2 ? r1 : r2;
-				if(t &gt; max_dist)
+				if(max_dist !== undefined &amp;&amp; t &gt; max_dist)
 					return false;
 				vec3.add(result, start, vec3.scale( result, direction, t ) );
 			}
@@ -325,8 +325,8 @@ global.geo = {
 	})(),
 
 	/**
-	* test a ray cylinder collision and retrieves the collision point
-	* @method testRaySphere
+	* test a ray cylinder collision (only vertical cylinders) and retrieves the collision point [not fully tested]
+	* @method testRayCylinder
 	* @param {vec3} start ray start
 	* @param {vec3} direction ray direction
 	* @param {vec3} p center of the cylinder
@@ -372,7 +372,8 @@ global.geo = {
 			// Intersect segment against �q� endcap
 			else t = 0.0;
 			// �a� lies inside cylinder
-			if(result) vec3.add(result, sa, vec3.scale(vec3.create(), n,t) );
+			if(result) 
+				vec3.add(result, sa, vec3.scale(result, n,t) );
 			return true;
 		}
 		var b = dd * mn - nd * md;
@@ -392,8 +393,8 @@ global.geo = {
 			// Segment pointing away from endcap
 			t = -md / nd;
 			// Keep intersection if Dot(S(t) - p, S(t) - p) &lt;= r^2
-			if(result) vec3.add(result, sa, vec3.scale(vec3.create(), n,t) );
-
+			if(result) 
+				vec3.add(result, sa, vec3.scale(result, n,t) );
 			return k+2*t*(mn+t*nn) &lt;= 0.0;
 		} else if (md+t*nd&gt;dd)
 		{
@@ -401,11 +402,13 @@ global.geo = {
 			if (nd &gt;= 0.0) return false; //Segment pointing away from endcap
 			t = (dd - md) / nd;
 			// Keep intersection if Dot(S(t) - q, S(t) - q) &lt;= r^2
-			if(result) vec3.add(result, sa, vec3.scale(vec3.create(), n,t) );
+			if(result) 
+				vec3.add(result, sa, vec3.scale(result, n,t) );
 			return k+dd - 2*md+t*(2*(mn - nd)+t*nn) &lt;= 0.0;
 		}
 		// Segment intersects cylinder between the endcaps; t is correct
-		if(result) vec3.add(result, sa, vec3.scale(vec3.create(), n,t) );
+		if(result)
+			vec3.add(result, sa, vec3.scale(result, n,t) );
 		return true;
 	},
 
@@ -802,8 +805,8 @@ global.BBox = GL.BBox = {
 	radius:12,
 	data_length: 13,
 	
-	corners: new Float32Array([1,1,1,  1,1,-1,  1,-1,1,  1,-1,-1,  -1,1,1,  -1,1,-1,  -1,-1,1,  -1,-1,-1 ]),
-	tmp_corners: new Float32Array(24), //to avoid GC
+	//corners: new Float32Array([1,1,1,  1,1,-1,  1,-1,1,  1,-1,-1,  -1,1,1,  -1,1,-1,  -1,-1,1,  -1,-1,-1 ]),
+	corners: [ vec3.fromValues(1,1,1), vec3.fromValues(1,1,-1), vec3.fromValues(1,-1,1), vec3.fromValues(1,-1,-1), vec3.fromValues(-1,1,1), vec3.fromValues(-1,1,-1), vec3.fromValues(-1,-1,1), vec3.fromValues(-1,-1,-1) ] ,
 
 	/**
 	* create an empty bbox
@@ -906,21 +909,46 @@ global.BBox = GL.BBox = {
 		var min = bb.subarray(6,9);
 		var max = bb.subarray(9,12);
 
-		min.set( points.subarray(0,3) );
+		min[0] = points[0]; //min.set( points.subarray(0,3) );
+		min[1] = points[1];
+		min[2] = points[2];
 		max.set( min );
 
 		var v = 0;
 		for(var i = 3, l = points.length; i &lt; l; i+=3)
 		{
+			var x = points[i];
+			var y = points[i+1];
+			var z = points[i+2];
+			if( x &lt; min[0] ) min[0] = x;
+			else if( x &gt; max[0] ) max[0] = x;
+			if( y &lt; min[1] ) min[1] = y;
+			else if( y &gt; max[1] ) max[1] = y;
+			if( z &lt; min[2] ) min[2] = z;
+			else if( z &gt; max[2] ) max[2] = z;
+			/*
 			v = points.subarray(i,i+3);
 			vec3.min( min, v, min);
 			vec3.max( max, v, max);
+			*/
 		}
 
+		//center
+		bb[0] = (min[0] + max[0]) * 0.5;
+		bb[1] = (min[1] + max[1]) * 0.5;
+		bb[2] = (min[2] + max[2]) * 0.5;
+		//halfsize
+		bb[3] = max[0] - bb[0];
+		bb[4] = max[1] - bb[1];
+		bb[5] = max[2] - bb[2];
+		bb[12] = Math.sqrt( bb[3]*bb[3] + bb[4]*bb[4] + bb[5]*bb[5] );
+
+		/*
 		var center = vec3.add( bb.subarray(0,3), min, max );
 		vec3.scale( center, center, 0.5);
 		vec3.subtract( bb.subarray(3,6), max, center );
 		bb[12] = vec3.length(bb.subarray(3,6)); //radius		
+		*/
 		return bb;
 	},
 
@@ -990,23 +1018,39 @@ global.BBox = GL.BBox = {
 	* @param {mat4} mat transformation
 	* @return {BBox} returns out
 	*/
-	transformMat4: function( out, bb, mat )
-	{
-		var center = bb; //.subarray(0,3); hack to avoid garbage
-		var halfsize = bb.subarray(3,6);
-		var corners = this.tmp_corners;
-		corners.set( this.corners );
-
-		for(var i = 0; i &lt; 8; ++i)		
+	transformMat4: (function(){
+		var hsx = 0;
+		var hsy = 0;
+		var hsz = 0;
+		var points_buffer = new Float32Array(8*3);
+		var points = [];
+		for(var i = 0; i &lt; 24; i += 3 )
+			points.push( points_buffer.subarray( i, i+3 ) );
+		
+		return function( out, bb, mat )
 		{
-			var corner = corners.subarray(i*3, i*3+3);
-			vec3.multiply( corner, halfsize, corner );
-			vec3.add( corner, corner, center );
-			mat4.multiplyVec3(corner, mat, corner);
-		}
+			var centerx = bb[0];
+			var centery = bb[1];
+			var centerz = bb[2];
+			hsx = bb[3];
+			hsy = bb[4];
+			hsz = bb[5];
 
-		return this.setFromPoints( out, corners );
-	},
+			var corners = this.corners;
+
+			for(var i = 0; i &lt; 8; ++i)		
+			{
+				var corner = corners[i];
+				var result = points[i];
+				result[0] = hsx * corner[0] + centerx;
+				result[1] = hsy * corner[1] + centery;
+				result[2] = hsz * corner[2] + centerz;
+				mat4.multiplyVec3( result, mat, result );
+			}
+
+			return this.setFromPoints( out, points_buffer );
+		}
+	})(),
 
 
 	/**
@@ -1016,7 +1060,7 @@ global.BBox = GL.BBox = {
 	* @param {Float32Array} result optional, should be 8 * 3
 	* @return {Float32Array} returns the 8 corners
 	*/
-	getCorners: function(bb, result)
+	getCorners: function( bb, result )
 	{
 		var center = bb; //.subarray(0,3); AVOID GC
 		var halfsize = bb.subarray(3,6);
@@ -1091,18 +1135,14 @@ global.planeBoxOverlap = GL.planeBoxOverlap = function planeBoxOverlap(plane, bo
 	var center = box; //.subarray(0,3);
 	var halfsize = box; //.subarray(3,6);
 
-	var tmp = vec3.fromValues(
-		Math.abs( halfsize[3] * n[0] ),
-		Math.abs( halfsize[4] * n[1] ),
-		Math.abs( halfsize[5] * n[2] )
-	);
-
-	var radius = tmp[0]+tmp[1]+tmp[2];
+	var radius = Math.abs( halfsize[3] * n[0] ) + Math.abs( halfsize[4] * n[1] ) + Math.abs( halfsize[5] * n[2] );
 	var distance = vec3.dot(n,center) + d;
 
-	if (distance &lt;= - radius) return CLIP_OUTSIDE;
-	else if (distance &lt;= radius) return CLIP_OVERLAP;
-	else return CLIP_INSIDE;
+	if (distance &lt;= -radius)
+		return CLIP_OUTSIDE;
+	else if (distance &lt;= radius)
+		return CLIP_OVERLAP;
+	return CLIP_INSIDE;
 }
 
     </pre>

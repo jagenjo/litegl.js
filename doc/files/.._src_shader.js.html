@@ -255,6 +255,8 @@ Shader.prototype.updateShader = function( vertexSource, fragmentSource, macros )
 * This info is stored so it works faster during rendering.
 * @method extractShaderInfo
 */
+
+
 Shader.prototype.extractShaderInfo = function()
 {
 	var gl = this.gl;
@@ -287,21 +289,32 @@ Shader.prototype.extractShaderInfo = function()
 		var is_matrix = false;
 		if(data.type == gl.FLOAT_MAT2 || data.type == gl.FLOAT_MAT3 || data.type == gl.FLOAT_MAT4)
 			is_matrix = true;
-
+		var type_length = GL.TYPE_LENGTH[ data.type ] || 1;
 
 		//save the info so the user doesnt have to specify types when uploading data to the shader
-		this.uniformInfo[ uniformName ] = { type: data.type, func: func, size: data.size, is_matrix: is_matrix, loc: gl.getUniformLocation(this.program, uniformName) };
+		this.uniformInfo[ uniformName ] = { 
+			type: data.type,
+			func: func,
+			size: data.size,
+			type_length: type_length,
+			is_matrix: is_matrix,
+			loc: gl.getUniformLocation(this.program, uniformName),
+			data: new Float32Array( type_length * data.size ) //prealloc space to assign uniforms that are not typed
+		};
 	}
 
 	//extract attributes info
 	for(var i = 0, l = gl.getProgramParameter(this.program, gl.ACTIVE_ATTRIBUTES); i &lt; l; ++i)
 	{
 		var data = gl.getActiveAttrib( this.program, i);
-		if(!data) break;
+		if(!data)
+			break;
 		var func = Shader.getUniformFunc(data);
+		var type_length = GL.TYPE_LENGTH[ data.type ] || 1;
 		this.uniformInfo[ data.name ] = { 
 			type: data.type,
 			func: func,
+			type_length: type_length,
 			size: data.size,
 			loc: null 
 		}; //gl.getAttribLocation( this.program, data.name )
@@ -505,9 +518,6 @@ Shader.prototype.uniformsArray = function(array) {
 * @param {*} value
 */
 Shader.prototype.setUniform = (function(){
-	var temps = [];
-	for(var i = 2; i &lt;= 16; ++i)
-		temps[i] = new Float32Array(i);
 
 	return (function(name, value)
 	{
@@ -526,14 +536,8 @@ Shader.prototype.setUniform = (function(){
 
 		if(value.constructor === Array)
 		{
-			var v = temps[ value.length ]; //reuse same container
-			if(v)
-			{
-				v.set(value);
-				value = v;
-			}
-			else
-				value = new Float32Array( value );  //garbage generated...
+			info.data.set( value );
+			value = info.data;
 		}
 
 		if(info.is_matrix)
@@ -545,9 +549,6 @@ Shader.prototype.setUniform = (function(){
 
 //skips enabling shader
 Shader.prototype._setUniform = (function(){
-	var temps = [];
-	for(var i = 2; i &lt;= 16; ++i)
-		temps[i] = new Float32Array(i);
 
 	return (function(name, value)
 	{
@@ -566,14 +567,8 @@ Shader.prototype._setUniform = (function(){
 
 		if(value.constructor === Array)
 		{
-			var v = temps[ value.length ]; //reuse same container
-			if(v)
-			{
-				v.set(value);
-				value = v;
-			}
-			else
-				value = new Float32Array( value );  //garbage generated...
+			info.data.set( value );
+			value = info.data;
 		}
 
 		if(info.is_matrix)
@@ -590,9 +585,9 @@ Shader.prototype._setUniform = (function(){
 * @param {number} mode could be gl.LINES, gl.POINTS, gl.TRIANGLES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN
 * @param {String} index_buffer_name the name of the index buffer, if not provided triangles will be assumed
 */
-Shader.prototype.draw = function(mesh, mode, index_buffer_name ) {
+Shader.prototype.draw = function( mesh, mode, index_buffer_name ) {
 	index_buffer_name = index_buffer_name === undefined ? (mode == gl.LINES ? &#x27;lines&#x27; : &#x27;triangles&#x27;) : index_buffer_name;
-	this.drawBuffers(mesh.vertexBuffers,
+	this.drawBuffers( mesh.vertexBuffers,
 	  index_buffer_name ? mesh.indexBuffers[ index_buffer_name ] : null,
 	  arguments.length &lt; 2 ? gl.TRIANGLES : mode);
 }
@@ -610,7 +605,7 @@ Shader.prototype.drawRange = function(mesh, mode, start, length, index_buffer_na
 {
 	index_buffer_name = index_buffer_name === undefined ? (mode == gl.LINES ? &#x27;lines&#x27; : &#x27;triangles&#x27;) : index_buffer_name;
 
-	this.drawBuffers(mesh.vertexBuffers,
+	this.drawBuffers( mesh.vertexBuffers,
 	  index_buffer_name ? mesh.indexBuffers[ index_buffer_name ] : null,
 	  mode, start, length);
 }
@@ -702,8 +697,11 @@ Shader.prototype.drawBuffers = function( vertexBuffers, indexBuffer, mode, range
 
 Shader._instancing_arrays = [];
 
-Shader.prototype.drawInstanced = function( mesh, primitive, indices, instanced_uniforms, gl )
+Shader.prototype.drawInstanced = function( mesh, primitive, indices, instanced_uniforms, range_start, range_length )
 {
+	if(range_length == 0)
+		return;
+
 	//bind buffers
 	var gl = this.gl;
 
@@ -743,8 +741,14 @@ Shader.prototype.drawInstanced = function( mesh, primitive, indices, instanced_u
 
 	//range rendering
 	var offset = 0; //in bytes
+	if(range_start &gt; 0) //render a polygon range
+		offset = range_start; //in bytes (Uint16 == 2 bytes)
+
 	if (indexBuffer)
 		length = indexBuffer.buffer.length - offset;
+
+	if(range_length &gt; 0 &amp;&amp; range_length &lt; length) //to avoid problems
+		length = range_length;
 
 	var BYTES_PER_ELEMENT = (indexBuffer &amp;&amp; indexBuffer.data) ? indexBuffer.data.constructor.BYTES_PER_ELEMENT : 1;
 	offset *= BYTES_PER_ELEMENT;
@@ -770,23 +774,39 @@ Shader.prototype.drawInstanced = function( mesh, primitive, indices, instanced_u
 		var uniformLocation = this.attributes[ uniform ];
 		if( uniformLocation == null )
 			return; //not found
-		var size = values[0].constructor === Number ? 1 : values[0].length;
+		var element_size = 0;
+		var total_size = 0;
+		if( values.constructor === Array )
+		{
+			element_size = values[0].constructor === Number ? 1 : values[0].length;
+			total_size = element_size * values.length;
+		}
+		else //typed array
+		{
+			element_size = this.uniformInfo[ uniform ].type_length;
+			total_size = values.length;
+			batch_length = total_size / element_size;
+		}
+
 		var data_array = Shader._instancing_arrays[ index ];
-		if( !data_array || data_array.data.length &lt; (values.length * size) )
-			data_array = Shader._instancing_arrays[ index ] = { data: new Float32Array( values.length * size ), buffer: gl.createBuffer() };
+		if( !data_array || data_array.data.length &lt; total_size )
+			data_array = Shader._instancing_arrays[ index ] = { data: new Float32Array( total_size ), buffer: gl.createBuffer() };
 		data_array.uniform = uniform;
-		data_array.size = size;
-		for(var j = 0; j &lt; values.length; ++j)
-			data_array.data.set( values[j], j*size ); //copy
+		data_array.element_size = element_size;
+		if( values.constructor === Array )
+			for(var j = 0; j &lt; values.length; ++j)
+				data_array.data.set( values[j], j*element_size ); //flatten array
+		else
+			data_array.data.set( values ); //copy
 		gl.bindBuffer( gl.ARRAY_BUFFER, data_array.buffer );
 		gl.bufferData( gl.ARRAY_BUFFER, data_array.data, gl.STREAM_DRAW );
 
-		if(size == 16) //mat4
+		if(element_size == 16) //mat4
 		{
 			for(var k = 0; k &lt; 4; ++k)
 			{
 				gl.enableVertexAttribArray( uniformLocation+k );
-				gl.vertexAttribPointer( uniformLocation+k, 4, gl.FLOAT , false, 16*4, k*4*4 );
+				gl.vertexAttribPointer( uniformLocation+k, 4, gl.FLOAT , false, 16*4, k*4*4 ); //4 bytes per float
 				if( ext ) //webgl 1
 					ext.vertexAttribDivisorANGLE( uniformLocation+k, 1 ); // This makes it instanced!
 				else
@@ -796,7 +816,7 @@ Shader.prototype.drawInstanced = function( mesh, primitive, indices, instanced_u
 		else //others
 		{
 			gl.enableVertexAttribArray( uniformLocation );
-			gl.vertexAttribPointer( uniformLocation, size, gl.FLOAT , false, size*4, size*4 );
+			gl.vertexAttribPointer( uniformLocation, element_size, gl.FLOAT, false, element_size*4, 0 ); //4 bytes per float, 0 offset
 			if( ext ) //webgl 1
 				ext.vertexAttribDivisorANGLE( uniformLocation, 1 ); // This makes it instanced!
 			else
@@ -808,16 +828,24 @@ Shader.prototype.drawInstanced = function( mesh, primitive, indices, instanced_u
 	if( ext ) //webgl 1.0
 	{
 		if(indexBuffer)
-			ext.drawElementsInstancedANGLE( primitive, length, indexBuffer.buffer.gl_type, 0, batch_length);
+		{
+			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer.buffer);
+			ext.drawElementsInstancedANGLE( primitive, length, indexBuffer.buffer.gl_type, offset, batch_length );
+			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null );
+		}
 		else
-			ext.drawArraysInstancedANGLE( primitive, 0, length, batch_length);
+			ext.drawArraysInstancedANGLE( primitive, offset, length, batch_length);
 	}
 	else
 	{
 		if(indexBuffer)
-			gl.drawElementsInstanced( primitive, length, indexBuffer.buffer.gl_type, 0, batch_length);
+		{
+			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer.buffer);
+			gl.drawElementsInstanced( primitive, length, indexBuffer.buffer.gl_type, offset, batch_length );
+			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null );
+		}
 		else
-			gl.drawArraysInstanced( primitive, 0, length, batch_length);
+			gl.drawArraysInstanced( primitive, offset, length, batch_length);
 	}
 
 	//disable instancing buffers
@@ -825,12 +853,8 @@ Shader.prototype.drawInstanced = function( mesh, primitive, indices, instanced_u
 	{
 		var info = Shader._instancing_arrays[ i ];
 		var uniformLocation = this.attributes[ info.uniform ];
-		var size = info.size;
-		if( ext ) //webgl 1
-			ext.vertexAttribDivisorANGLE( uniformLocation, 1 ); // This makes it instanced!
-		else
-			gl.vertexAttribDivisor( uniformLocation, 1 ); // This makes it instanced!
-		if( size == 16) //mat4
+		var element_size = info.element_size;
+		if( element_size == 16) //mat4
 		{
 			for(var k = 0; k &lt; 4; ++k)
 			{
@@ -1051,14 +1075,6 @@ Shader.BLEND_FRAGMENT_SHADER = &quot;\n\
 			}\n\
 			&quot;;
 
-Shader.SCREEN_FLAT_FRAGMENT_SHADER = &quot;\n\
-			precision highp float;\n\
-			uniform vec4 u_color;\n\
-			void main() {\n\
-				gl_FragColor = u_color;\n\
-			}\n\
-			&quot;;
-
 //used to paint quads
 Shader.QUAD_VERTEX_SHADER = &quot;\n\
 			precision highp float;\n\
@@ -1136,6 +1152,8 @@ Shader.FLAT_FRAGMENT_SHADER = &quot;\n\
 				gl_FragColor = u_color;\n\
 			}\n\
 			&quot;;
+Shader.SCREEN_FLAT_FRAGMENT_SHADER = Shader.FLAT_FRAGMENT_SHADER; //legacy
+
 
 /**
 * Allows to create a simple shader meant to be used to process a texture, instead of having to define the generic Vertex &amp; Fragment Shader code
@@ -1196,7 +1214,7 @@ Shader.prototype.toViewport = function(uniforms)
 
 /**
 * Returns a shader ready to render a textured quad in fullscreen, use with Mesh.getScreenQuad() mesh
-* shader params sampler2D u_texture
+* shader params: sampler2D u_texture
 * @method Shader.getScreenShader
 */
 Shader.getScreenShader = function(gl)
@@ -1207,6 +1225,21 @@ Shader.getScreenShader = function(gl)
 		return shader;
 	shader = gl.shaders[&quot;:screen&quot;] = new GL.Shader( Shader.SCREEN_VERTEX_SHADER, Shader.SCREEN_FRAGMENT_SHADER );
 	return shader.uniforms({u_texture:0}); //do it the first time so I dont have to do it every time
+}
+
+/**
+* Returns a shader ready to render a flat color quad in fullscreen, use with Mesh.getScreenQuad() mesh
+* shader params: vec4 u_color
+* @method Shader.getFlatScreenShader
+*/
+Shader.getFlatScreenShader = function(gl)
+{
+	gl = gl || global.gl;
+	var shader = gl.shaders[&quot;:flat_screen&quot;];
+	if(shader)
+		return shader;
+	shader = gl.shaders[&quot;:flat_screen&quot;] = new GL.Shader( Shader.SCREEN_VERTEX_SHADER, Shader.FLAT_FRAGMENT_SHADER );
+	return shader.uniforms({u_color:[1,1,1,1]}); //do it the first time so I dont have to do it every time
 }
 
 /**

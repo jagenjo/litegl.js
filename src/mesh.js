@@ -193,6 +193,7 @@ GL.Buffer.prototype.uploadRange = function(start, size)
 	if(!data.buffer)
 		throw("Buffers must be typed arrays");
 
+	//cut fragment to upload (no way to avoid GC here, no function to specify the size in WebGL 1.0, but there is one in WebGL 2.0)
 	var view = new Uint8Array( this.data.buffer, start, size );
 
 	var gl = this.gl;
@@ -2005,8 +2006,108 @@ function linearizeArray( array, typed_array_class )
 	return buffer;
 }
 
+GL.linearizeArray = linearizeArray;
+
 /* BINARY MESHES */
 //Add some functions to the classes in LiteGL to allow store in binary
 GL.Mesh.EXTENSION = "wbin";
 GL.Mesh.enable_wbin_compression = true;
 
+//this is used when a mesh is dynamic and constantly changes
+function DynamicMesh( size, normals, coords, colors, gl )
+{
+	size = size || 1024;
+
+	if(GL.debug)
+		console.log("GL.Mesh created");
+
+	if( gl !== null )
+	{
+		gl = gl || global.gl;
+		this.gl = gl;
+	}
+
+	//used to avoid problems with resources moving between different webgl context
+	this._context_id = gl.context_id; 
+
+	this.vertexBuffers = {};
+	this.indexBuffers = {};
+
+	//here you can store extra info, like groups, which is an array of { name, start, length, material }
+	this.info = {
+		groups: []
+	}; 
+	this._bounding = BBox.create(); //here you can store a AABB in BBox format
+
+	this.resize( size );
+}
+
+DynamicMesh.DEFAULT_NORMAL = vec3.fromValues(0,1,0);
+DynamicMesh.DEFAULT_COORD = vec2.fromValues(0.5,0.5);
+DynamicMesh.DEFAULT_COLOR = vec4.fromValues(1,1,1,1);
+
+DynamicMesh.prototype.resize = function( size )
+{
+	var buffers = {};
+
+	this._vertex_data = new Float32Array( size * 3 );
+	buffers.vertices = this._vertex_data;
+
+	if( normals )
+		buffers.normals = this._normal_data = new Float32Array( size * 3 );
+	if( coords )
+		buffers.coords = this._coord_data = new Float32Array( size * 2 );
+	if( colors )
+		buffers.colors = this._color_data = new Float32Array( size * 4 );
+
+	this.addBuffers( buffers );
+
+	this.current_pos = 0;
+	this.max_size = size;
+	this._must_update = true;
+}
+
+DynamicMesh.prototype.clear = function()
+{
+	this.current_pos = 0;
+}
+
+DynamicMesh.prototype.addPoint = function( vertex, normal, coord, color )
+{
+	if (pos >= this.max_size)
+	{
+		console.warn("DynamicMesh: not enough space, reserve more");
+		return false;
+	}
+	var pos = this.current_pos++;
+
+	this._vertex_data.set( vertex, pos*3 );
+
+	if(this._normal_data)
+		this._normal_data.set( normal || DynamicMesh.DEFAULT_NORMAL, pos*3 );
+	if(this._coord_data)
+		this._coord_data.set( coord || DynamicMesh.DEFAULT_COORD, pos*2 );
+	if(this._color_data)
+		this._color_data.set( color || DynamicMesh.DEFAULT_COLOR, pos*4 );
+
+	this._must_update = true;
+	return true;
+}
+
+DynamicMesh.prototype.update = function( force )
+{
+	if(!this._must_update && !force)
+		return this.current_pos;
+	this._must_update = false;
+
+	this.getBuffer("vertices").upload( gl.STREAM_DRAW );
+	if(this._normal_data)
+		this.getBuffer("normal").upload( gl.STREAM_DRAW );
+	if(this._coord_data)
+		this.getBuffer("coord").upload( gl.STREAM_DRAW );
+	if(this._color_data)
+		this.getBuffer("color").upload( gl.STREAM_DRAW );
+	return this.current_pos;
+}
+
+extendClass( DynamicMesh, Mesh );

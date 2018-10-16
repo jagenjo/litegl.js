@@ -298,10 +298,11 @@ GL.create = function(options) {
 
 			var now = getTime();
 			var dt = (now - time) * 0.001;
-
+			if(context.mouse)
+				context.mouse.last_buttons = context.mouse.buttons;
 			if (context.onupdate) 
 				context.onupdate(dt);
-			LEvent.trigger(gl,&quot;update&quot;,dt);
+			LEvent.trigger( context, &quot;update&quot;, dt);
 			if (context.ondraw)
 			{
 				//make sure the ondraw is called using this gl context (in case there is more than one)
@@ -309,7 +310,7 @@ GL.create = function(options) {
 				global.gl = context;
 				//call ondraw
 				context.ondraw();
-				LEvent.trigger(gl,&quot;draw&quot;);
+				LEvent.trigger(context,&quot;draw&quot;);
 				//restore old context
 				global.gl = old_gl;
 			}
@@ -348,6 +349,7 @@ GL.create = function(options) {
 
 	var mouse = gl.mouse = {
 		buttons: 0, //this should always be up-to-date with mouse state
+		last_buttons: 0, //button state in the previous frame
 		left_button: false,
 		middle_button: false,
 		right_button: false,
@@ -368,10 +370,21 @@ GL.create = function(options) {
 				return true;
 			return false;
 		},
+
+		/**
+		* returns true if button num is pressed (where num could be GL.LEFT_MOUSE_BUTTON, GL.RIGHT_MOUSE_BUTTON, GL.MIDDLE_MOUSE_BUTTON
+		* @method captureMouse
+		* @param {boolean} capture_wheel capture also the mouse wheel
+		*/
 		isButtonPressed: function(num)
 		{
-			return this.buttons &amp; (1&lt;&lt;GL.RIGHT_MOUSE_BUTTON);
-		}
+			return this.buttons &amp; (1&lt;&lt;num);
+		},
+
+		wasButtonPressed: function(num)
+		{
+			return (this.buttons &amp; (1&lt;&lt;num)) &amp;&amp; !(this.last_buttons &amp; (1&lt;&lt;num));
+		},
 	};
 
 	/**
@@ -386,6 +399,7 @@ GL.create = function(options) {
 
 		canvas.addEventListener(&quot;mousedown&quot;, onmouse);
 		canvas.addEventListener(&quot;mousemove&quot;, onmouse);
+		canvas.addEventListener(&quot;dragstart&quot;, onmouse);
 		if(capture_wheel)
 		{
 			canvas.addEventListener(&quot;mousewheel&quot;, onmouse, false);
@@ -400,6 +414,10 @@ GL.create = function(options) {
 	}
 
 	function onmouse(e) {
+
+		if(gl.ignore_events)
+			return;
+		//console.log(e.type); //debug
 		var old_mouse_mask = gl.mouse.buttons;
 		GL.augmentEvent(e, canvas);
 		e.eventType = e.eventType || e.type; //type cannot be overwritten, so I make a clone to allow me to overwrite
@@ -471,14 +489,23 @@ GL.create = function(options) {
 
 			LEvent.trigger(gl, &quot;mousewheel&quot;, e);
 		}
+		else if(e.eventType == &quot;dragstart&quot;)
+		{
+			if(gl.ondragstart)
+				gl.ondragstart(e);
+			LEvent.trigger(gl, &quot;dragstart&quot;, e);
+		}
 
 		if(gl.onmouse)
 			gl.onmouse(e);
 
-		if(e.eventType != &quot;mousemove&quot;)
-			e.stopPropagation();
-		e.preventDefault();
-		return false;
+		if(!e.skip_preventDefault)
+		{
+			if(e.eventType != &quot;mousemove&quot;)
+				e.stopPropagation();
+			e.preventDefault();
+			return false;
+		}
 	}
 
 	var translate_touches = false;

@@ -151,9 +151,10 @@
 				blur_texture = texture.clone();
 			for(var i = 0; i < num; i++)
 			{
-				var old = texture; //swap
-				texture = texture.applyBlur(i,i, 1, null, blur_texture);
-				blur_texture = old;
+				texture.applyBlur( i,i, 1, blur_texture );
+				var tmp = texture;
+				texture = blur_texture;
+				blur_texture = tmp;
 			}
 		}
 

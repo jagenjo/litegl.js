@@ -2171,6 +2171,7 @@ GL.Buffer.prototype.uploadRange = function(start, size)
 	if(!data.buffer)
 		throw("Buffers must be typed arrays");
 
+	//cut fragment to upload (no way to avoid GC here, no function to specify the size in WebGL 1.0, but there is one in WebGL 2.0)
 	var view = new Uint8Array( this.data.buffer, start, size );
 
 	var gl = this.gl;
@@ -3983,12 +3984,111 @@ function linearizeArray( array, typed_array_class )
 	return buffer;
 }
 
+GL.linearizeArray = linearizeArray;
+
 /* BINARY MESHES */
 //Add some functions to the classes in LiteGL to allow store in binary
 GL.Mesh.EXTENSION = "wbin";
 GL.Mesh.enable_wbin_compression = true;
 
+//this is used when a mesh is dynamic and constantly changes
+function DynamicMesh( size, normals, coords, colors, gl )
+{
+	size = size || 1024;
 
+	if(GL.debug)
+		console.log("GL.Mesh created");
+
+	if( gl !== null )
+	{
+		gl = gl || global.gl;
+		this.gl = gl;
+	}
+
+	//used to avoid problems with resources moving between different webgl context
+	this._context_id = gl.context_id; 
+
+	this.vertexBuffers = {};
+	this.indexBuffers = {};
+
+	//here you can store extra info, like groups, which is an array of { name, start, length, material }
+	this.info = {
+		groups: []
+	}; 
+	this._bounding = BBox.create(); //here you can store a AABB in BBox format
+
+	this.resize( size );
+}
+
+DynamicMesh.DEFAULT_NORMAL = vec3.fromValues(0,1,0);
+DynamicMesh.DEFAULT_COORD = vec2.fromValues(0.5,0.5);
+DynamicMesh.DEFAULT_COLOR = vec4.fromValues(1,1,1,1);
+
+DynamicMesh.prototype.resize = function( size )
+{
+	var buffers = {};
+
+	this._vertex_data = new Float32Array( size * 3 );
+	buffers.vertices = this._vertex_data;
+
+	if( normals )
+		buffers.normals = this._normal_data = new Float32Array( size * 3 );
+	if( coords )
+		buffers.coords = this._coord_data = new Float32Array( size * 2 );
+	if( colors )
+		buffers.colors = this._color_data = new Float32Array( size * 4 );
+
+	this.addBuffers( buffers );
+
+	this.current_pos = 0;
+	this.max_size = size;
+	this._must_update = true;
+}
+
+DynamicMesh.prototype.clear = function()
+{
+	this.current_pos = 0;
+}
+
+DynamicMesh.prototype.addPoint = function( vertex, normal, coord, color )
+{
+	if (pos >= this.max_size)
+	{
+		console.warn("DynamicMesh: not enough space, reserve more");
+		return false;
+	}
+	var pos = this.current_pos++;
+
+	this._vertex_data.set( vertex, pos*3 );
+
+	if(this._normal_data)
+		this._normal_data.set( normal || DynamicMesh.DEFAULT_NORMAL, pos*3 );
+	if(this._coord_data)
+		this._coord_data.set( coord || DynamicMesh.DEFAULT_COORD, pos*2 );
+	if(this._color_data)
+		this._color_data.set( color || DynamicMesh.DEFAULT_COLOR, pos*4 );
+
+	this._must_update = true;
+	return true;
+}
+
+DynamicMesh.prototype.update = function( force )
+{
+	if(!this._must_update && !force)
+		return this.current_pos;
+	this._must_update = false;
+
+	this.getBuffer("vertices").upload( gl.STREAM_DRAW );
+	if(this._normal_data)
+		this.getBuffer("normal").upload( gl.STREAM_DRAW );
+	if(this._coord_data)
+		this.getBuffer("coord").upload( gl.STREAM_DRAW );
+	if(this._color_data)
+		this.getBuffer("color").upload( gl.STREAM_DRAW );
+	return this.current_pos;
+}
+
+extendClass( DynamicMesh, Mesh );
 
 /**
 * @class Mesh
@@ -5666,7 +5766,7 @@ Texture.prototype.renderQuad = (function() {
 
 
 /**
-* Applies a blur filter of four pixels to the texture (be careful using it, it is slow)
+* Applies a blur filter of 5x5 pixels to the texture (be careful using it, it is slow)
 * @method applyBlur
 * @param {Number} offsetx scalar that multiplies the offset when fetching pixels horizontally (default 1)
 * @param {Number} offsety scalar that multiplies the offset when fetching pixels vertically (default 1)
@@ -5696,8 +5796,8 @@ Texture.prototype.applyBlur = function( offsetx, offsety, intensity, output_text
 	if(output_texture && this.texture_type !== output_texture.texture_type )
 		throw("cannot use applyBlur with textures of different texture_type");
 
-	if(this.width != output_texture.width || this.height != output_texture.height)
-		throw("cannot use applyBlur with an output texture of different size, it doesnt work");
+	//if(this.width != output_texture.width || this.height != output_texture.height)
+	//	throw("cannot use applyBlur with an output texture of different size, it doesnt work");
 
 	//save state
 	var current_fbo = gl.getParameter( gl.FRAMEBUFFER_BINDING );
@@ -5740,13 +5840,17 @@ Texture.prototype.applyBlur = function( offsetx, offsety, intensity, output_text
 		mesh.bindBuffers( shader );
 		shader.bind();
 
-		if(!temp_texture)
-			temp_texture = GL.Texture.getTemporary( output_texture.width, output_texture.height, output_texture );
+		var destination = null;
+		
+		if(!temp_texture && output_texture == this) //we need a temporary texture
+			destination = temp_texture = GL.Texture.getTemporary( output_texture.width, output_texture.height, output_texture );
+		else
+			destination = output_texture; //blur directly to output texture
 
 		var rot_matrix = GL.temp_mat3;
 		for(var i = 0; i < 6; ++i)
 		{
-			gl.framebufferTexture2D( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, temp_texture.handler, 0);
+			gl.framebufferTexture2D( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, destination.handler, 0);
 			var face_info = GL.Texture.cubemap_camera_parameters[ i ];
 			mat3.identity(rot_matrix);
 			rot_matrix.set( face_info.right, 0 );
@@ -5758,9 +5862,11 @@ Texture.prototype.applyBlur = function( offsetx, offsety, intensity, output_text
 		}
 
 		mesh.unbindBuffers( shader );
-		temp_texture.copyTo( output_texture );
 
-		if(is_temp)
+		if(temp_texture) //copy back 
+			temp_texture.copyTo( output_texture );
+
+		if(temp_texture && is_temp) //release temp
 			GL.Texture.releaseTemporary( temp_texture );
 	}
 
@@ -7564,9 +7670,9 @@ Shader.prototype._setUniform = (function(){
 * @param {number} mode could be gl.LINES, gl.POINTS, gl.TRIANGLES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN
 * @param {String} index_buffer_name the name of the index buffer, if not provided triangles will be assumed
 */
-Shader.prototype.draw = function(mesh, mode, index_buffer_name ) {
+Shader.prototype.draw = function( mesh, mode, index_buffer_name ) {
 	index_buffer_name = index_buffer_name === undefined ? (mode == gl.LINES ? 'lines' : 'triangles') : index_buffer_name;
-	this.drawBuffers(mesh.vertexBuffers,
+	this.drawBuffers( mesh.vertexBuffers,
 	  index_buffer_name ? mesh.indexBuffers[ index_buffer_name ] : null,
 	  arguments.length < 2 ? gl.TRIANGLES : mode);
 }
@@ -7584,7 +7690,7 @@ Shader.prototype.drawRange = function(mesh, mode, start, length, index_buffer_na
 {
 	index_buffer_name = index_buffer_name === undefined ? (mode == gl.LINES ? 'lines' : 'triangles') : index_buffer_name;
 
-	this.drawBuffers(mesh.vertexBuffers,
+	this.drawBuffers( mesh.vertexBuffers,
 	  index_buffer_name ? mesh.indexBuffers[ index_buffer_name ] : null,
 	  mode, start, length);
 }
@@ -7795,7 +7901,7 @@ Shader.prototype.drawInstanced = function( mesh, primitive, indices, instanced_u
 		else //others
 		{
 			gl.enableVertexAttribArray( uniformLocation );
-			gl.vertexAttribPointer( uniformLocation, element_size, gl.FLOAT, false, element_size*4, element_size*4 ); //4 bytes per float
+			gl.vertexAttribPointer( uniformLocation, element_size, gl.FLOAT, false, element_size*4, 0 ); //4 bytes per float, 0 offset
 			if( ext ) //webgl 1
 				ext.vertexAttribDivisorANGLE( uniformLocation, 1 ); // This makes it instanced!
 			else
@@ -10130,7 +10236,7 @@ global.geo = {
 	* @param {vec3} direction ray direction (normalized)
 	* @param {vec3} center center of the sphere
 	* @param {number} radius radius of the sphere
-	* @param {vec3} result collision position
+	* @param {vec3} result [optional] collision position
 	* @param {number} max_dist not fully tested
 	* @return {boolean} returns if the ray collides the sphere
 	*/
@@ -10162,7 +10268,7 @@ global.geo = {
 				var r1 = ( -b + sq ) * d;
 				var r2 = ( -b - sq ) * d;
 				var t = r1 < r2 ? r1 : r2;
-				if(t > max_dist)
+				if(max_dist !== undefined && t > max_dist)
 					return false;
 				vec3.add(result, start, vec3.scale( result, direction, t ) );
 			}
@@ -10171,8 +10277,8 @@ global.geo = {
 	})(),
 
 	/**
-	* test a ray cylinder collision and retrieves the collision point
-	* @method testRaySphere
+	* test a ray cylinder collision (only vertical cylinders) and retrieves the collision point [not fully tested]
+	* @method testRayCylinder
 	* @param {vec3} start ray start
 	* @param {vec3} direction ray direction
 	* @param {vec3} p center of the cylinder
@@ -10218,7 +10324,8 @@ global.geo = {
 			// Intersect segment against ’q’ endcap
 			else t = 0.0;
 			// ’a’ lies inside cylinder
-			if(result) vec3.add(result, sa, vec3.scale(vec3.create(), n,t) );
+			if(result) 
+				vec3.add(result, sa, vec3.scale(result, n,t) );
 			return true;
 		}
 		var b = dd * mn - nd * md;
@@ -10238,8 +10345,8 @@ global.geo = {
 			// Segment pointing away from endcap
 			t = -md / nd;
 			// Keep intersection if Dot(S(t) - p, S(t) - p) <= r^2
-			if(result) vec3.add(result, sa, vec3.scale(vec3.create(), n,t) );
-
+			if(result) 
+				vec3.add(result, sa, vec3.scale(result, n,t) );
 			return k+2*t*(mn+t*nn) <= 0.0;
 		} else if (md+t*nd>dd)
 		{
@@ -10247,11 +10354,13 @@ global.geo = {
 			if (nd >= 0.0) return false; //Segment pointing away from endcap
 			t = (dd - md) / nd;
 			// Keep intersection if Dot(S(t) - q, S(t) - q) <= r^2
-			if(result) vec3.add(result, sa, vec3.scale(vec3.create(), n,t) );
+			if(result) 
+				vec3.add(result, sa, vec3.scale(result, n,t) );
 			return k+dd - 2*md+t*(2*(mn - nd)+t*nn) <= 0.0;
 		}
 		// Segment intersects cylinder between the endcaps; t is correct
-		if(result) vec3.add(result, sa, vec3.scale(vec3.create(), n,t) );
+		if(result)
+			vec3.add(result, sa, vec3.scale(result, n,t) );
 		return true;
 	},
 

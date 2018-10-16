@@ -492,9 +492,9 @@ Shader.prototype._setUniform = (function(){
 * @param {number} mode could be gl.LINES, gl.POINTS, gl.TRIANGLES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN
 * @param {String} index_buffer_name the name of the index buffer, if not provided triangles will be assumed
 */
-Shader.prototype.draw = function(mesh, mode, index_buffer_name ) {
+Shader.prototype.draw = function( mesh, mode, index_buffer_name ) {
 	index_buffer_name = index_buffer_name === undefined ? (mode == gl.LINES ? 'lines' : 'triangles') : index_buffer_name;
-	this.drawBuffers(mesh.vertexBuffers,
+	this.drawBuffers( mesh.vertexBuffers,
 	  index_buffer_name ? mesh.indexBuffers[ index_buffer_name ] : null,
 	  arguments.length < 2 ? gl.TRIANGLES : mode);
 }
@@ -512,7 +512,7 @@ Shader.prototype.drawRange = function(mesh, mode, start, length, index_buffer_na
 {
 	index_buffer_name = index_buffer_name === undefined ? (mode == gl.LINES ? 'lines' : 'triangles') : index_buffer_name;
 
-	this.drawBuffers(mesh.vertexBuffers,
+	this.drawBuffers( mesh.vertexBuffers,
 	  index_buffer_name ? mesh.indexBuffers[ index_buffer_name ] : null,
 	  mode, start, length);
 }
@@ -723,7 +723,7 @@ Shader.prototype.drawInstanced = function( mesh, primitive, indices, instanced_u
 		else //others
 		{
 			gl.enableVertexAttribArray( uniformLocation );
-			gl.vertexAttribPointer( uniformLocation, element_size, gl.FLOAT, false, element_size*4, element_size*4 ); //4 bytes per float
+			gl.vertexAttribPointer( uniformLocation, element_size, gl.FLOAT, false, element_size*4, 0 ); //4 bytes per float, 0 offset
 			if( ext ) //webgl 1
 				ext.vertexAttribDivisorANGLE( uniformLocation, 1 ); // This makes it instanced!
 			else
