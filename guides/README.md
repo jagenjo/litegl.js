@@ -13,7 +13,7 @@ Also it adds the necessary functions for any browser realtime application (canva
 Keep in mind that LiteGL wont free you from knowing WebGL, you still will need to do regular WebGL calls to handle the GPU attributes, or to do more specific actions on Textures, Meshes, etc.
 But LiteGL should make it much easier to cope with the regular actions.
 
-LiteGL has been using in several projects over the last 4 years with very good results. From weekend GameJam projects to professional applications or open source projects.
+LiteGL has been used in several projects over the last 4 years with very good results. From weekend GameJam projects to professional applications or open source projects.
 
 It is in a very mature state and almost 100% bug free.
 
