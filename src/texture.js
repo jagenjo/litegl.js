@@ -116,7 +116,13 @@ global.Texture = GL.Texture = function Texture( width, height, options, gl ) {
 	var pixel_data = options.pixel_data;
 	if(pixel_data && !pixel_data.buffer)
 	{
-		pixel_data = new (this.type == gl.FLOAT ? Float32Array : Uint8Array)( pixel_data );
+		if( this.texture_type == GL.TEXTURE_CUBE_MAP )
+		{
+			for(var i = 0; i < pixel_data.length; ++i)
+				pixel_data[i] = new (this.type == gl.FLOAT ? Float32Array : Uint8Array)( pixel_data[i] );
+		}
+		else
+			pixel_data = new (this.type == gl.FLOAT ? Float32Array : Uint8Array)( pixel_data );
 		this.data = pixel_data;
 	}
 
