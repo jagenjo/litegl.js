@@ -69,7 +69,7 @@ Here is a list of useful methods that you can use with textures:
 It is easy to render your scene to a texture instead of to the screen.
 This is useful to create postprocessing effects or to bake information.
 
-To render to one texture (or several) check the guide for the [GL.FBO](fbo.md) class.
+To render to one texture (or several) check the guide for the [GL.FBO](fbos.md) class.
 
 ## Texture pool 
 
