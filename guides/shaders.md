@@ -116,3 +116,9 @@ If you just want a shader to process every pixel of a texture you can use this s
 ```js
 	var shader = GL.Shader.createFX("color = color * u_factor;","uniform float u_factor;");
 ```
+
+The variables are:
+- **vec4 color**: to read and store the final color
+- **vec2 uv**: the uv coordinates
+
+
