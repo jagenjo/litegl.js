@@ -109,3 +109,10 @@ The system allows to create some basic shaders easily:
 var flat_shader = GL.Shader.getFlatShader(); //useful for rendering flat lines
 ```
 
+## Simple Texture Process Shader
+
+If you just want a shader to process every pixel of a texture you can use this syntax:
+
+```js
+	var shader = GL.Shader.createFX("color = color * u_factor;","uniform float u_factor;");
+```
