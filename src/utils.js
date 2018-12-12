@@ -172,6 +172,7 @@ if(typeof(Image) != "undefined") //not existing inside workers
 	}
 }
 
+//you must pass an object with characters to replace and replace with what {"a":"A","c":"C"}
 if(!String.prototype.hasOwnProperty("replaceAll")) 
 	Object.defineProperty(String.prototype, "replaceAll", {
 		value: function(words){

@@ -6,6 +6,8 @@
 
 var GL = global.GL = {};
 
+if(typeof(glMatrix) == "undefined")
+	throw("litegl.js requires gl-matrix to work. It must be included before litegl.");
 
 //polyfill
 global.requestAnimationFrame = global.requestAnimationFrame || global.mozRequestAnimationFrame || global.webkitRequestAnimationFrame || function(callback) { setTimeout(callback, 1000 / 60); };

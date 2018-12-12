@@ -110,7 +110,7 @@ There is a list of options <br/>
 - magFilter: magnifying filter: gl.NEAREST, gl.LINEAR, default gl.NEAREST <br/>
 - minFilter: minifying filter: gl.NEAREST, gl.LINEAR, gl.LINEAR_MIPMAP_LINEAR, default gl.NEAREST <br/>
 - wrap: texture wrapping: gl.CLAMP_TO_EDGE, gl.REPEAT, gl.MIRROR, default gl.CLAMP_TO_EDGE (also accepts wrapT and wrapS for separate settings) <br/>
-- pixel_data: ArrayBufferView with the pixel data to upload to the texture, otherwise the texture will be black <br/>
+- pixel_data: ArrayBufferView with the pixel data to upload to the texture, otherwise the texture will be black (if cubemaps then pass an array[6] with the data for every face)<br/>
 - premultiply_alpha : multiply the color by the alpha value when uploading, default FALSE <br/>
 - no_flip : do not flip in Y, default TRUE <br/>
 - anisotropic : number of anisotropic fetches, default 0 <br/></p>
@@ -420,7 +420,7 @@ There is a list of options <br/>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l990"><code>..&#x2F;src&#x2F;texture.js:990</code></a>
+        <a href="../files/.._src_texture.js.html#l1004"><code>..&#x2F;src&#x2F;texture.js:1004</code></a>
         </p>
 
 
@@ -530,7 +530,7 @@ There is a list of options <br/>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l299"><code>..&#x2F;src&#x2F;texture.js:299</code></a>
+        <a href="../files/.._src_texture.js.html#l305"><code>..&#x2F;src&#x2F;texture.js:305</code></a>
         </p>
 
 
@@ -602,7 +602,7 @@ There is a list of options <br/>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l1872"><code>..&#x2F;src&#x2F;texture.js:1872</code></a>
+        <a href="../files/.._src_texture.js.html#l1889"><code>..&#x2F;src&#x2F;texture.js:1889</code></a>
         </p>
 
 
@@ -689,7 +689,7 @@ There is a list of options <br/>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l873"><code>..&#x2F;src&#x2F;texture.js:873</code></a>
+        <a href="../files/.._src_texture.js.html#l887"><code>..&#x2F;src&#x2F;texture.js:887</code></a>
         </p>
 
 
@@ -772,7 +772,7 @@ There is a list of options <br/>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l767"><code>..&#x2F;src&#x2F;texture.js:767</code></a>
+        <a href="../files/.._src_texture.js.html#l781"><code>..&#x2F;src&#x2F;texture.js:781</code></a>
         </p>
 
 
@@ -844,7 +844,7 @@ TODO: check using copyTexImage2D</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l240"><code>..&#x2F;src&#x2F;texture.js:240</code></a>
+        <a href="../files/.._src_texture.js.html#l246"><code>..&#x2F;src&#x2F;texture.js:246</code></a>
         </p>
 
 
@@ -881,7 +881,7 @@ TODO: check using copyTexImage2D</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l471"><code>..&#x2F;src&#x2F;texture.js:471</code></a>
+        <a href="../files/.._src_texture.js.html#l485"><code>..&#x2F;src&#x2F;texture.js:485</code></a>
         </p>
 
 
@@ -944,7 +944,7 @@ for further info about how to set up the propper cubemap camera, check the GL.Te
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l731"><code>..&#x2F;src&#x2F;texture.js:731</code></a>
+        <a href="../files/.._src_texture.js.html#l745"><code>..&#x2F;src&#x2F;texture.js:745</code></a>
         </p>
 
 
@@ -1023,7 +1023,7 @@ for further info about how to set up the propper cubemap camera, check the GL.Te
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l619"><code>..&#x2F;src&#x2F;texture.js:619</code></a>
+        <a href="../files/.._src_texture.js.html#l633"><code>..&#x2F;src&#x2F;texture.js:633</code></a>
         </p>
 
 
@@ -1099,7 +1099,7 @@ for further info about how to set up the propper cubemap camera, check the GL.Te
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l937"><code>..&#x2F;src&#x2F;texture.js:937</code></a>
+        <a href="../files/.._src_texture.js.html#l951"><code>..&#x2F;src&#x2F;texture.js:951</code></a>
         </p>
 
 
@@ -1161,7 +1161,7 @@ for further info about how to set up the propper cubemap camera, check the GL.Te
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l1843"><code>..&#x2F;src&#x2F;texture.js:1843</code></a>
+        <a href="../files/.._src_texture.js.html#l1860"><code>..&#x2F;src&#x2F;texture.js:1860</code></a>
         </p>
 
 
@@ -1187,7 +1187,16 @@ for further info about how to set up the propper cubemap camera, check the GL.Te
 <div id="method_getPixels" class="method item">
     <h3 class="name"><code>getPixels</code></h3>
 
-        <span class="paren">()</span>
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>cubemap_face</code>
+                </li>
+                <li class="arg">
+                        <code>mipmap</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
 
         <span class="returns-inline">
             <span class="type">ArrayBuffer</span>
@@ -1202,7 +1211,7 @@ for further info about how to set up the propper cubemap camera, check the GL.Te
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l1603"><code>..&#x2F;src&#x2F;texture.js:1603</code></a>
+        <a href="../files/.._src_texture.js.html#l1617"><code>..&#x2F;src&#x2F;texture.js:1617</code></a>
         </p>
 
 
@@ -1214,6 +1223,34 @@ for further info about how to set up the propper cubemap camera, check the GL.Te
 
     </div>
 
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">cubemap_face</code>
+                        <span class="type">Number</span>
+
+
+                    <div class="param-description">
+                        <p>[optional] the index of the cubemap face to read (ignore if texture_2D)</p>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">mipmap</code>
+                        <span class="type">Number</span>
+
+
+                    <div class="param-description">
+                        <p>level [optional, default is 0]</p>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
 
         <div class="returns">
             <h4>Returns:</h4>
@@ -1245,7 +1282,7 @@ for further info about how to set up the propper cubemap camera, check the GL.Te
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l289"><code>..&#x2F;src&#x2F;texture.js:289</code></a>
+        <a href="../files/.._src_texture.js.html#l295"><code>..&#x2F;src&#x2F;texture.js:295</code></a>
         </p>
 
 
@@ -1300,7 +1337,7 @@ for further info about how to set up the propper cubemap camera, check the GL.Te
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l959"><code>..&#x2F;src&#x2F;texture.js:959</code></a>
+        <a href="../files/.._src_texture.js.html#l973"><code>..&#x2F;src&#x2F;texture.js:973</code></a>
         </p>
 
 
@@ -1392,7 +1429,7 @@ for further info about how to set up the propper cubemap camera, check the GL.Te
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l1656"><code>..&#x2F;src&#x2F;texture.js:1656</code></a>
+        <a href="../files/.._src_texture.js.html#l1673"><code>..&#x2F;src&#x2F;texture.js:1673</code></a>
         </p>
 
 
@@ -1485,7 +1522,7 @@ for further info about how to set up the propper cubemap camera, check the GL.Te
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l1476"><code>..&#x2F;src&#x2F;texture.js:1476</code></a>
+        <a href="../files/.._src_texture.js.html#l1490"><code>..&#x2F;src&#x2F;texture.js:1490</code></a>
         </p>
 
 
@@ -1565,7 +1602,7 @@ otherwise it assumes the 6 images are arranged vertically, in the order of OpenG
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l1424"><code>..&#x2F;src&#x2F;texture.js:1424</code></a>
+        <a href="../files/.._src_texture.js.html#l1438"><code>..&#x2F;src&#x2F;texture.js:1438</code></a>
         </p>
 
 
@@ -1646,7 +1683,7 @@ otherwise it assumes the 6 images are arranged vertically, in the order of OpenG
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l1561"><code>..&#x2F;src&#x2F;texture.js:1561</code></a>
+        <a href="../files/.._src_texture.js.html#l1575"><code>..&#x2F;src&#x2F;texture.js:1575</code></a>
         </p>
 
 
@@ -1737,7 +1774,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l1377"><code>..&#x2F;src&#x2F;texture.js:1377</code></a>
+        <a href="../files/.._src_texture.js.html#l1391"><code>..&#x2F;src&#x2F;texture.js:1391</code></a>
         </p>
 
 
@@ -1816,7 +1853,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l1250"><code>..&#x2F;src&#x2F;texture.js:1250</code></a>
+        <a href="../files/.._src_texture.js.html#l1264"><code>..&#x2F;src&#x2F;texture.js:1264</code></a>
         </p>
 
 
@@ -1900,7 +1937,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l1399"><code>..&#x2F;src&#x2F;texture.js:1399</code></a>
+        <a href="../files/.._src_texture.js.html#l1413"><code>..&#x2F;src&#x2F;texture.js:1413</code></a>
         </p>
 
 
@@ -1998,7 +2035,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l1316"><code>..&#x2F;src&#x2F;texture.js:1316</code></a>
+        <a href="../files/.._src_texture.js.html#l1330"><code>..&#x2F;src&#x2F;texture.js:1330</code></a>
         </p>
 
 
@@ -2082,7 +2119,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l1339"><code>..&#x2F;src&#x2F;texture.js:1339</code></a>
+        <a href="../files/.._src_texture.js.html#l1353"><code>..&#x2F;src&#x2F;texture.js:1353</code></a>
         </p>
 
 
@@ -2183,7 +2220,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l1112"><code>..&#x2F;src&#x2F;texture.js:1112</code></a>
+        <a href="../files/.._src_texture.js.html#l1126"><code>..&#x2F;src&#x2F;texture.js:1126</code></a>
         </p>
 
 
@@ -2271,7 +2308,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l1293"><code>..&#x2F;src&#x2F;texture.js:1293</code></a>
+        <a href="../files/.._src_texture.js.html#l1307"><code>..&#x2F;src&#x2F;texture.js:1307</code></a>
         </p>
 
 
@@ -2349,7 +2386,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l1538"><code>..&#x2F;src&#x2F;texture.js:1538</code></a>
+        <a href="../files/.._src_texture.js.html#l1552"><code>..&#x2F;src&#x2F;texture.js:1552</code></a>
         </p>
 
 
@@ -2420,7 +2457,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l1935"><code>..&#x2F;src&#x2F;texture.js:1935</code></a>
+        <a href="../files/.._src_texture.js.html#l1952"><code>..&#x2F;src&#x2F;texture.js:1952</code></a>
         </p>
 
 
@@ -2478,7 +2515,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l1951"><code>..&#x2F;src&#x2F;texture.js:1951</code></a>
+        <a href="../files/.._src_texture.js.html#l1968"><code>..&#x2F;src&#x2F;texture.js:1968</code></a>
         </p>
 
 
@@ -2571,7 +2608,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l1919"><code>..&#x2F;src&#x2F;texture.js:1919</code></a>
+        <a href="../files/.._src_texture.js.html#l1936"><code>..&#x2F;src&#x2F;texture.js:1936</code></a>
         </p>
 
 
@@ -2620,7 +2657,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l2006"><code>..&#x2F;src&#x2F;texture.js:2006</code></a>
+        <a href="../files/.._src_texture.js.html#l2023"><code>..&#x2F;src&#x2F;texture.js:2023</code></a>
         </p>
 
 
@@ -2684,7 +2721,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l345"><code>..&#x2F;src&#x2F;texture.js:345</code></a>
+        <a href="../files/.._src_texture.js.html#l351"><code>..&#x2F;src&#x2F;texture.js:351</code></a>
         </p>
 
 
@@ -2745,7 +2782,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l1807"><code>..&#x2F;src&#x2F;texture.js:1807</code></a>
+        <a href="../files/.._src_texture.js.html#l1824"><code>..&#x2F;src&#x2F;texture.js:1824</code></a>
         </p>
 
 
@@ -2811,7 +2848,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l1751"><code>..&#x2F;src&#x2F;texture.js:1751</code></a>
+        <a href="../files/.._src_texture.js.html#l1768"><code>..&#x2F;src&#x2F;texture.js:1768</code></a>
         </p>
 
 
@@ -2870,7 +2907,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l1775"><code>..&#x2F;src&#x2F;texture.js:1775</code></a>
+        <a href="../files/.._src_texture.js.html#l1792"><code>..&#x2F;src&#x2F;texture.js:1792</code></a>
         </p>
 
 
@@ -2922,7 +2959,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l1672"><code>..&#x2F;src&#x2F;texture.js:1672</code></a>
+        <a href="../files/.._src_texture.js.html#l1689"><code>..&#x2F;src&#x2F;texture.js:1689</code></a>
         </p>
 
 
@@ -3001,7 +3038,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l920"><code>..&#x2F;src&#x2F;texture.js:920</code></a>
+        <a href="../files/.._src_texture.js.html#l934"><code>..&#x2F;src&#x2F;texture.js:934</code></a>
         </p>
 
 
@@ -3069,7 +3106,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l318"><code>..&#x2F;src&#x2F;texture.js:318</code></a>
+        <a href="../files/.._src_texture.js.html#l324"><code>..&#x2F;src&#x2F;texture.js:324</code></a>
         </p>
 
 
@@ -3135,7 +3172,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l408"><code>..&#x2F;src&#x2F;texture.js:408</code></a>
+        <a href="../files/.._src_texture.js.html#l414"><code>..&#x2F;src&#x2F;texture.js:414</code></a>
         </p>
 
 
@@ -3167,7 +3204,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
 
 
                     <div class="param-description">
-                        <p>[optional] upload options (premultiply_alpha, no_flip, cubemap_face)</p>
+                        <p>[optional] upload options (premultiply_alpha, no_flip, cubemap_face, mipmap_level)</p>
 
                     </div>
 
@@ -3202,7 +3239,7 @@ otherwise it assumes the 6 images are arranged vertically.</p>
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/.._src_texture.js.html#l369"><code>..&#x2F;src&#x2F;texture.js:369</code></a>
+        <a href="../files/.._src_texture.js.html#l375"><code>..&#x2F;src&#x2F;texture.js:375</code></a>
         </p>
 
 
