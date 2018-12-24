@@ -53,6 +53,31 @@ GL.Buffer = function Buffer( target, data, spacing, stream_type, gl ) {
 }
 
 /**
+* binds the buffer to a attrib location
+* @method bind
+* @param {number} location the location of the shader  (from shader.attributes[ name ])
+*/
+GL.Buffer.prototype.bind = function( location, gl )
+{
+	gl = gl || this.gl;
+
+	gl.bindBuffer( gl.ARRAY_BUFFER, this.buffer );
+	gl.enableVertexAttribArray( location );
+	gl.vertexAttribPointer( location, this.spacing, this.buffer.gl_type, false, 0, 0);
+}
+
+/**
+* unbinds the buffer from an attrib location
+* @method unbind
+* @param {number} location the location of the shader
+*/
+GL.Buffer.prototype.unbind = function( location, gl )
+{
+	gl = gl || this.gl;
+	gl.disableVertexAttribArray( location );
+}
+
+/**
 * Applies an action to every vertex in this buffer
 * @method forEach
 * @param {function} callback to be called for every vertex (or whatever is contained in the buffer)
