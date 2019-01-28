@@ -3,7 +3,7 @@ litegl.js
 
 Litegl.js is a library that wraps WebGL to make it more user-friendly by creating classes for managing different items like Buffer, Mesh, Texture, Shader and other common aspects of any WebGL applications.
 
-It helps simplifying working with WebGL without having to handle all the low-level calls but without loosing any freedom.
+It helps simplifying working with WebGL without having to handle all the low-level calls but without losing any freedom.
 
 Some features are:
 
@@ -22,6 +22,7 @@ Some features are:
 * Events system 
 * Cross-browser input handling for mouse, keyboard and gamepad
 * Supports multiple WebGL contexts
+* Supports WebGL1 and WebGL2
 * Octree class
 
 It is a fork from [LightGL.js](https://github.com/evanw/lightgl.js/) by [Evan Wallace](http://madebyevan.com), but some major changes have been made.
