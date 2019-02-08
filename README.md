@@ -39,6 +39,8 @@ Some of the main differences:
 
 This library has been used in several projects like [Rendeer.js](https://github.com/jagenjo/rendeer.js) or [Canvas2DtoWebGL](https://github.com/jagenjo/Canvas2DtoWebGL).</p>
 
+For a list of similar libraries check [this list](https://qiita.com/cx20/items/0fa19c96aa6470d98807)
+
 
 Demos
 -----
