@@ -113,17 +113,29 @@ global.Texture = GL.Texture = function Texture( width, height, options, gl ) {
 	if(options.anisotropic && gl.extensions["EXT_texture_filter_anisotropic"])
 		gl.texParameterf( GL.TEXTURE_2D, gl.extensions["EXT_texture_filter_anisotropic"].TEXTURE_MAX_ANISOTROPY_EXT, options.anisotropic);
 
+	var type = this.type;
 	var pixel_data = options.pixel_data;
 	if(pixel_data && !pixel_data.buffer)
 	{
 		if( this.texture_type == GL.TEXTURE_CUBE_MAP )
 		{
 			for(var i = 0; i < pixel_data.length; ++i)
-				pixel_data[i] = new (this.type == gl.FLOAT ? Float32Array : Uint8Array)( pixel_data[i] );
+				pixel_data[i] = toTypedArray( pixel_data[i] );
 		}
 		else
-			pixel_data = new (this.type == gl.FLOAT ? Float32Array : Uint8Array)( pixel_data );
+			pixel_data = toTypedArray( pixel_data );
 		this.data = pixel_data;
+	}
+
+	function toTypedArray( data )
+	{
+		if(data.constructor !== Array)
+			return data;
+		if( type == gl.FLOAT)
+			return new Float32Array( data );
+		if( type == gl.HALF_FLOAT_OES)
+			return new Uint16Array( data );
+		return new Uint8Array( data );
 	}
 
 	//gl.TEXTURE_1D is not supported by WebGL...
@@ -1582,11 +1594,11 @@ Texture.generateCubemapCrossFacesInfo = function(width, column)
 * @param {Function} on_complete callback
 * @return {Texture} the texture
 */
-Texture.cubemapFromURL = function(url, options, on_complete) {
+Texture.cubemapFromURL = function( url, options, on_complete ) {
 	options = options || {};
+	options = Object.create(options); //creates a new options using the old one as prototype
 	options.texture_type = gl.TEXTURE_CUBE_MAP;
 	var texture = options.texture || new GL.Texture(1, 1, options);
-	options = Object.create(options); //creates a new options using the old one as prototype
 
 	texture.bind();
 	Texture.setUploadOptions(options);

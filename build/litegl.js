@@ -409,8 +409,8 @@ if(!String.prototype.hasOwnProperty("hashCode"))
 
 //avoid errors when Typed array is expected and regular array is found
 //Array.prototype.subarray = Array.prototype.slice;
-if(!Array.prototype.hasOwnProperty("subarray"))
-	Object.defineProperty(Array.prototype, "subarray", { value: Array.prototype.slice, enumerable: false });
+//if(!Array.prototype.hasOwnProperty("subarray"))
+//	Object.defineProperty(Array.prototype, "subarray", { value: Array.prototype.slice, enumerable: false });
 
 if(!Array.prototype.hasOwnProperty("clone"))
 	Object.defineProperty(Array.prototype, "clone", { value: Array.prototype.concat, enumerable: false });
@@ -1950,7 +1950,113 @@ quat.fromMat4 = function(out,m)
 	quat.normalize(out,out);
 }
 
-quat.fromMat4.lookAt = (function(){ 
+//col according to common matrix notation, here are stored as rows
+vec3.getMat3Column = function(out, m, index )
+{
+	out[0] = m[index*3];
+	out[1] = m[index*3 + 1];
+	out[2] = m[index*3 + 2];
+	return out;
+}
+
+mat3.setColumn = function(out, v, index )
+{
+	out[index*3] = v[0];
+	out[index*3+1] = v[1];
+	out[index*3+2] = v[2];
+	return out;
+}
+
+
+//http://matthias-mueller-fischer.ch/publications/stablePolarDecomp.pdf
+//reusing the previous quaternion as an indicator to keep perpendicularity
+quat.fromMat3 = (function(){
+	var temp_mat3 = mat3.create();
+	var temp_quat = quat.create();
+	var Rcol0 = vec3.create();
+	var Rcol1 = vec3.create();
+	var Rcol2 = vec3.create();
+	var Acol0 = vec3.create();
+	var Acol1 = vec3.create();
+	var Acol2 = vec3.create();
+	var RAcross0 = vec3.create();
+	var RAcross1 = vec3.create();
+	var RAcross2 = vec3.create();
+	var omega = vec3.create();
+	var axis = mat3.create();
+
+	return function( q, A, max_iter )
+	{
+		max_iter = max_iter || 25;
+		for (var iter = 0; iter < max_iter; ++iter)
+		{
+			var R = mat3.fromQuat( temp_mat3, q );
+			vec3.getMat3Column(Rcol0,R,0);
+			vec3.getMat3Column(Rcol1,R,1);
+			vec3.getMat3Column(Rcol2,R,2);
+			vec3.getMat3Column(Acol0,A,0);
+			vec3.getMat3Column(Acol1,A,1);
+			vec3.getMat3Column(Acol2,A,2);
+			vec3.cross( RAcross0, Rcol0, Acol0 );
+			vec3.cross( RAcross1, Rcol1, Acol1 );
+			vec3.cross( RAcross2, Rcol2, Acol2 );
+			vec3.add( omega, RAcross0, RAcross1 );
+			vec3.add( omega, omega, RAcross2 );
+			var d = 1.0 / Math.abs( vec3.dot(Rcol0,Acol0) + vec3.dot(Rcol1,Acol1) + vec3.dot(Rcol2,Acol2) ) + 1.0e-9;
+			vec3.scale( omega, omega, d );
+			var w = vec3.length(omega);
+			if (w < 1.0e-9)
+				break;
+			vec3.scale(omega,omega,1/w); //normalize
+			quat.setAxisAngle( temp_quat, omega, w );
+			quat.mul( q, temp_quat, q );
+			quat.normalize(q,q);
+		}
+		return q;
+	};
+})();
+
+/*
+quat.fromMat3 = function( q, m, max_iter )
+{
+	for (var iter = 0; iter < max_iter; ++iter)
+	{
+		Matrix3d R = q.matrix();
+		Vector3d omega = (R.col(0).cross(A.col(0)) + R.col(1).cross(A.col(1)) + R.col(2).cross(A.col(2))) * (1.0 / fabs(R.col(0).dot(A.col(0)) + R.col(1).dot(A.col(1)) + R.col(2).dot(A.col(2))) +	1.0e-9);
+		double w = omega.norm();
+		if (w < 1.0e-9)
+			break;
+		q = Quaterniond(AngleAxisd(w, (1.0 / w) * omega)) * q;
+		q.normalize();
+	}
+}
+*/
+
+//http://number-none.com/product/IK%20with%20Quaternion%20Joint%20Limits/
+quat.rotateToFrom = (function(){ 
+	var tmp = vec3.create();
+	return function(out, v1, v2)
+	{
+		out = out || quat.create();
+		var axis = vec3.cross(tmp, v1, v2);
+		var dot = vec3.dot(v1, v2);
+		if( dot < -1 + 0.01){
+			out[0] = 0;
+			out[1] = 1; 
+			out[2] = 0; 
+			out[3] = 0; 
+			return out;
+		}
+		out[0] = axis[0] * 0.5;
+		out[1] = axis[1] * 0.5; 
+		out[2] = axis[2] * 0.5; 
+		out[3] = (1 + dot) * 0.5; 
+		quat.normalize(out, out); 
+		return out;    
+	}
+})();
+
+quat.lookAt = (function(){ 
 	var axis = vec3.create();
 	
 	return function( out, forwardVector, up )
@@ -4919,17 +5025,29 @@ global.Texture = GL.Texture = function Texture( width, height, options, gl ) {
 	if(options.anisotropic && gl.extensions["EXT_texture_filter_anisotropic"])
 		gl.texParameterf( GL.TEXTURE_2D, gl.extensions["EXT_texture_filter_anisotropic"].TEXTURE_MAX_ANISOTROPY_EXT, options.anisotropic);
 
+	var type = this.type;
 	var pixel_data = options.pixel_data;
 	if(pixel_data && !pixel_data.buffer)
 	{
 		if( this.texture_type == GL.TEXTURE_CUBE_MAP )
 		{
 			for(var i = 0; i < pixel_data.length; ++i)
-				pixel_data[i] = new (this.type == gl.FLOAT ? Float32Array : Uint8Array)( pixel_data[i] );
+				pixel_data[i] = toTypedArray( pixel_data[i] );
 		}
 		else
-			pixel_data = new (this.type == gl.FLOAT ? Float32Array : Uint8Array)( pixel_data );
+			pixel_data = toTypedArray( pixel_data );
 		this.data = pixel_data;
+	}
+
+	function toTypedArray( data )
+	{
+		if(data.constructor !== Array)
+			return data;
+		if( type == gl.FLOAT)
+			return new Float32Array( data );
+		if( type == gl.HALF_FLOAT_OES)
+			return new Uint16Array( data );
+		return new Uint8Array( data );
 	}
 
 	//gl.TEXTURE_1D is not supported by WebGL...
@@ -6388,11 +6506,11 @@ Texture.generateCubemapCrossFacesInfo = function(width, column)
 * @param {Function} on_complete callback
 * @return {Texture} the texture
 */
-Texture.cubemapFromURL = function(url, options, on_complete) {
+Texture.cubemapFromURL = function( url, options, on_complete ) {
 	options = options || {};
+	options = Object.create(options); //creates a new options using the old one as prototype
 	options.texture_type = gl.TEXTURE_CUBE_MAP;
 	var texture = options.texture || new GL.Texture(1, 1, options);
-	options = Object.create(options); //creates a new options using the old one as prototype
 
 	texture.bind();
 	Texture.setUploadOptions(options);
@@ -8780,6 +8898,7 @@ GL.create = function(options) {
 	gl.extensions["EXT_frag_depth"] = gl.getExtension("EXT_frag_depth") || gl.getExtension("WEBKIT_EXT_frag_depth") || gl.getExtension("MOZ_EXT_frag_depth");
 	gl.extensions["WEBGL_lose_context"] = gl.getExtension("WEBGL_lose_context") || gl.getExtension("WEBKIT_WEBGL_lose_context") || gl.getExtension("MOZ_WEBGL_lose_context");
 	gl.extensions["ANGLE_instanced_arrays"] = gl.getExtension("ANGLE_instanced_arrays");
+	gl.extensions["disjoint_timer_query"] = gl.getExtension("EXT_disjoint_timer_query");
 
 	//for float textures
 	gl.extensions["OES_texture_float_linear"] = gl.getExtension("OES_texture_float_linear");
@@ -9190,7 +9309,6 @@ GL.create = function(options) {
 
 	function onkey(e, prevent_default)
 	{
-		//trace(e);
 		e.eventType = e.type; //type cannot be overwritten, so I make a clone to allow me to overwrite
 
 		var target_element = e.target.nodeName.toLowerCase();
