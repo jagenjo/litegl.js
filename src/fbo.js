@@ -266,7 +266,7 @@ FBO.prototype.update = function( skip_disable )
 
 	//check completion
 	var complete = gl.checkFramebufferStatus( target );
-	if(complete !== gl.FRAMEBUFFER_COMPLETE)
+	if(complete !== gl.FRAMEBUFFER_COMPLETE) //36054: GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT
 		throw("FBO not complete: " + complete);
 
 	//restore state

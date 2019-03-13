@@ -119,8 +119,14 @@ global.Texture = GL.Texture = function Texture( width, height, options, gl ) {
 	{
 		if( this.texture_type == GL.TEXTURE_CUBE_MAP )
 		{
-			for(var i = 0; i < pixel_data.length; ++i)
-				pixel_data[i] = toTypedArray( pixel_data[i] );
+			if(pixel_data[0].constructor === Number) //special case, specify just one face and copy it
+			{
+				pixel_data = toTypedArray( pixel_data );
+				pixel_data = [pixel_data,pixel_data,pixel_data,pixel_data,pixel_data,pixel_data]; 
+			}
+			else
+				for(var i = 0; i < pixel_data.length; ++i)
+					pixel_data[i] = toTypedArray( pixel_data[i] );
 		}
 		else
 			pixel_data = toTypedArray( pixel_data );
@@ -131,9 +137,9 @@ global.Texture = GL.Texture = function Texture( width, height, options, gl ) {
 	{
 		if(data.constructor !== Array)
 			return data;
-		if( type == gl.FLOAT)
+		if( type == GL.FLOAT)
 			return new Float32Array( data );
-		if( type == gl.HALF_FLOAT_OES)
+		if( type == GL.HALF_FLOAT_OES)
 			return new Uint16Array( data );
 		return new Uint8Array( data );
 	}
