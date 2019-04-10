@@ -29,17 +29,15 @@
 	}
 
 	//build the mesh
-	var mesh = GL.Mesh.cube({size:10});
-	var sphere = GL.Mesh.sphere({size:100});
-	var texture = new GL.Texture(512,512, { type: GL.HALF_FLOAT_OES, magFilter: gl.LINEAR });
+	var cube = GL.Mesh.sphere({size:10});
+	var texture = new GL.Texture(gl.canvas.width,gl.canvas.height, { format: gl.RGB, type: GL.HALF_FLOAT_OES, magFilter: gl.LINEAR });
 	var fbo = new GL.FBO([texture]);
 
 	//create basic matrices for cameras and transformation
 	var persp = mat4.create();
 	var view = mat4.create();
 	var model = mat4.create();
-	var model2 = mat4.create();
-	var mvp = mat4.create();
+	var vp = mat4.create();
 	var temp = mat4.create();
 	var identity = mat4.create();
 
@@ -52,55 +50,61 @@
 	}
 
 	//set the camera position
+	var eye = [0,20,20];
 	mat4.perspective(persp, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 0.1, 1000);
-	mat4.lookAt(view, [0,20,20],[0,0,0], [0,1,0]);
+	mat4.lookAt(view, eye,[0,0,0], [0,1,0]);
 
 	//basic shader
 	var shader = new Shader('\
 			precision highp float;\
 			attribute vec3 a_vertex;\
-			attribute vec3 a_normal;\
 			attribute vec2 a_coord;\
-			varying vec3 v_normal;\
 			varying vec2 v_coord;\
 			uniform mat4 u_mvp;\
-			uniform mat4 u_model;\
 			void main() {\
 				v_coord = a_coord;\
-				v_normal = (u_model * vec4(a_normal,0.0)).xyz;\
-				gl_Position = u_mvp * vec4(a_vertex,1.0);\
+				gl_Position = vec4(a_vertex.xy*2.0-vec2(1.0),0.0,1.0);\
 			}\
 			', '\
 			precision highp float;\
-			varying vec3 v_normal;\
 			varying vec2 v_coord;\
-			uniform vec4 u_color;\
 			uniform sampler2D u_texture;\
+			uniform float u_exp;\
 			void main() {\
-			  vec3 N = normalize(v_normal);\
-			  gl_FragColor = u_color * texture2D( u_texture, v_coord);\
+			  gl_FragColor = texture2D(u_texture,v_coord) * u_exp;\
 			}\
 		');
 
-	var flat_shader = new Shader('\
+	var phong_shader = new Shader('\
 			precision highp float;\
 			attribute vec3 a_vertex;\
-			uniform mat4 u_mvp;\
+			attribute vec3 a_normal;\
+			varying vec3 v_pos;\
+			varying vec3 v_normal;\
+			uniform mat4 u_vp;\
+			uniform mat4 u_model;\
 			void main() {\
-				gl_Position = u_mvp * vec4(a_vertex,1.0);\
-				gl_PointSize = 4.0;\
+				v_normal = (u_model * vec4(a_normal,0.0)).xyz;\
+				v_pos = (u_model * vec4(a_vertex,1.0)).xyz;\
+				gl_Position = u_vp * vec4(v_pos,1.0);\
 			}\
 			', '\
 			precision highp float;\
+			varying vec3 v_pos;\
+			varying vec3 v_normal;\
 			uniform vec4 u_color;\
+			uniform vec3 u_eye;\
 			void main() {\
-			  gl_FragColor = u_color;\
+				vec3 N = normalize(v_normal);\
+				vec3 L = normalize(vec3(0.4,0.8,-0.8));\
+				vec3 E = normalize(v_pos - u_eye);\
+				vec3 R = reflect(E,N);\
+				float spec = pow( max(0.0,dot(L,R)), 30.0 );\
+			  gl_FragColor = u_color * max(0.0,dot(N,L)) + spec * vec4(2.0);\
 			}\
 		');
 
 	//generic gl flags and settings
-	gl.clearColor(0.1,0.1,0.1,1);
-	gl.enable( gl.DEPTH_TEST );
 
 	//rendering loop
 	gl.ondraw = function()
@@ -108,33 +112,24 @@
 
 		//render something in the texture
 		fbo.bind();
-			gl.clearColor(0.1,0.3,0.4,1);
-			//gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
+			gl.clearColor(0.0,0.0,0.0,1);
+			gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
+			mat4.multiply(vp,persp,view);
+			gl.enable( gl.DEPTH_TEST );
 
-			//create modelview and projection matrices
-			mat4.multiply(temp,view,model2);
-			mat4.multiply(mvp,persp,temp);
-
-			flat_shader.uniforms({
-				u_color: [Math.sin( GL.getTime() * 0.001 ),0.3,0.1,1],
-				u_model: model2,
-				u_mvp: mvp
-			}).draw(sphere, gl.POINTS);
+			phong_shader.uniforms({
+				u_color: [0.5,0.5,0.5,1],
+				u_eye: eye,
+				u_model: model,
+				u_vp: vp
+			}).draw(cube);
 		fbo.unbind();
 
 		gl.clearColor(0.1,0.1,0.1,1);
 		gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
-		//create modelview and projection matrices
-		mat4.multiply(temp,view,model);
-		mat4.multiply(mvp,persp,temp);
-
-		//render mesh using the shader
-		shader.uniforms({
-			u_color: [1,1,1,1],
-			u_model: model,
-			u_texture: texture.bind(0),
-			u_mvp: mvp
-		}).draw(mesh);
+		gl.disable( gl.DEPTH_TEST );
+		shader.uniforms({u_exp: Math.sin(getTime() * 0.001)*0.5+0.5 });
+		texture.toViewport( shader );
 	};
 
 	//update loop
@@ -142,7 +137,6 @@
 	{
 		//rotate cube
 		mat4.rotateY(model,model,dt*0.2);
-		mat4.rotate(model2,model2,dt*0.1,[0,1, Math.sin( GL.getTime() * 0.001 ) ]);
 	};
 	
 	</script>
