@@ -1026,7 +1026,8 @@ global.BBox = GL.BBox = {
 	getHalfsize: function(bb) { return bb.subarray(3,6); },
 	getMin: function(bb) { return bb.subarray(6,9); },
 	getMax: function(bb) { return bb.subarray(9,12); },
-	getRadius: function(bb) { return bb[12]; }	
+	getRadius: function(bb) { return bb[12]; }
+	//setCenter,setHalfsize not coded, too much work to update all
 }
 
 global.distanceToPlane = GL.distanceToPlane = function distanceToPlane(plane, point)
