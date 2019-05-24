@@ -1107,6 +1107,27 @@ Mesh.prototype.explodeIndices = function( buffer_name ) {
 
 	var indices = indices_buffer.data;
 
+	var new_buffers = {};
+	for(var i in this.vertexBuffers)
+	{
+		var info = GL.Mesh.common_buffers[i];
+		new_buffers[i] = new (info.type || Float32Array)( info.spacing * indices.length );
+	}
+
+	for(var i = 0, l = indices.length; i < l; ++i)
+	{
+		var index = indices[i];
+		for(var j in this.vertexBuffers)
+		{
+			var buffer = this.vertexBuffers[j];
+			var info = GL.Mesh.common_buffers[j];
+			var spacing = buffer.spacing || info.spacing;
+			var new_buffer = new_buffers[j];
+			new_buffer.set( buffer.data.subarray( index*spacing, index*spacing + spacing ), i*spacing );
+		}
+	}
+
+	/*
 	//cluster by distance
 	var new_vertices = new Float32Array(indices.length * 3);
 	var new_normals = null;
@@ -1150,6 +1171,13 @@ Mesh.prototype.explodeIndices = function( buffer_name ) {
 		this.createVertexBuffer( 'normals', GL.Mesh.common_buffers["normals"].attribute, 3, new_normals );	
 	if(new_coords)
 		this.createVertexBuffer( 'coords', GL.Mesh.common_buffers["coords"].attribute, 2, new_coords );	
+	*/
+
+	for(var i in new_buffers)
+	{
+		var old = this.vertexBuffers[i];
+		this.createVertexBuffer( i, old.attribute, old.spacing, new_buffers[i] );	
+	}
 
 	delete this.indexBuffers[ buffer_name ];
 }

@@ -225,7 +225,7 @@ Mesh.parseOBJ = function( text, options )
 				}
 			}
 		}
-		else if (code == G_CODE || tokens[0] == "usemtl") {
+		else if (code == G_CODE) { //tokens[0] == "usemtl"
 			negative_offset = positions.length / 3 - 1;
 
 			if(tokens.length > 1)
@@ -323,49 +323,71 @@ Mesh.encoders["obj"] = function( mesh, options )
 	if(!verticesBuffer)
 		return null;
 
-	var result = "# Generated with liteGL.js by Javi Agenjo\n\n";
+	var lines = [];
+	lines.push("# Generated with liteGL.js by Javi Agenjo\n");
 
 	var vertices = verticesBuffer.data;
 	for (var i = 0; i < vertices.length; i+=3)
-		result += "v " + vertices[i].toFixed(4) + " " + vertices[i+1].toFixed(4) + " " + vertices[i+2].toFixed(4) + "\n";
+		lines.push("v " + vertices[i].toFixed(4) + " " + vertices[i+1].toFixed(4) + " " + vertices[i+2].toFixed(4));
 
 	//store normals
 	var normalsBuffer = mesh.getBuffer("normals");
 	if(normalsBuffer)
 	{
-		result += "\n";
+		lines.push("");
 		var normals = normalsBuffer.data;
 		for (var i = 0; i < normals.length; i+=3)
-			result += "vn " + normals[i].toFixed(4) + " " + normals[i+1].toFixed(4) + " " + normals[i+2].toFixed(4) + "\n";
+			lines.push("vn " + normals[i].toFixed(4) + " " + normals[i+1].toFixed(4) + " " + normals[i+2].toFixed(4) );
 	}
 	
 	//store uvs
 	var coordsBuffer = mesh.getBuffer("coords");
 	if(coordsBuffer)
 	{
-		result += "\n";
+		lines.push("");
 		var coords = coordsBuffer.data;
 		for (var i = 0; i < coords.length; i+=2)
-			result += "vt " + coords[i].toFixed(4) + " " + coords[i+1].toFixed(4) + " " + " 0.0000\n";
+			lines.push("vt " + coords[i].toFixed(4) + " " + coords[i+1].toFixed(4) + " " + " 0.0000");
 	}
 
-	result += "\ng mesh\n";
+	var groups = mesh.info.groups;
+
 
 	//store faces
 	var indicesBuffer = mesh.getIndexBuffer("triangles");
 	if(indicesBuffer)
 	{
 		var indices = indicesBuffer.data;
-		for (var i = 0; i < indices.length; i+=3)
-			result += "f " + (indices[i]+1) + "/" + (indices[i]+1) + "/" + (indices[i]+1) + " " + (indices[i+1]+1) + "/" + (indices[i+1]+1) + "/" + (indices[i+1]+1) + " " + (indices[i+2]+1) + "/" + (indices[i+2]+1) + "/" + (indices[i+2]+1) + "\n";
+		if(!groups || !groups.length)
+			groups = [{start:0, length: indices.length, name:"mesh"}];
+		for(var j = 0; j < groups.length; ++j)
+		{
+			var group = groups[j];
+			lines.push("g " + group.name );
+			lines.push("usemtl " + (group.material || ("mat_"+j)));
+			var start = group.start;
+			var end = start + group.length;
+			for (var i = start; i < end; i+=3)
+				lines.push("f " + (indices[i]+1) + "/" + (indices[i]+1) + "/" + (indices[i]+1) + " " + (indices[i+1]+1) + "/" + (indices[i+1]+1) + "/" + (indices[i+1]+1) + " " + (indices[i+2]+1) + "/" + (indices[i+2]+1) + "/" + (indices[i+2]+1) );
+		}
 	}
 	else //no indices
 	{
-		for (var i = 0; i < (vertices.length / 3); i+=3)
-			result += "f " + (i+1) + "/" + (i+1) + "/" + (i+1) + " " + (i+2) + "/" + (i+2) + "/" + (i+2) + " " + (i+3) + "/" + (i+3) + "/" + (i+3) + "\n";
+		if(!groups || !groups.length)
+			groups = [{start:0, length: (vertices.length / 3), name:"mesh"}];
+		for(var j = 0; j < groups.length; ++j)
+		{
+			var group = groups[j];
+			lines.push("g " + group.name);
+			lines.push("usemtl " + (group.material || ("mat_"+j)));
+			var start = group.start;
+			var end = start + group.length;
+			for (var i = start; i < end; i+=3)
+				lines.push( "f " + (i+1) + "/" + (i+1) + "/" + (i+1) + " " + (i+2) + "/" + (i+2) + "/" + (i+2) + " " + (i+3) + "/" + (i+3) + "/" + (i+3) );
+		}
 	}
 	
-	return result;
+	return lines.join("\n");
 }
 
 //simple format to output meshes in ASCII
@@ -377,20 +399,20 @@ Mesh.parsers["mesh"] = function( text, options )
 	for(var i = 0; i < lines.length; ++i)
 	{
 		var line = lines[i];
-		var t = line.split(",");
-		var type = t[0][0];
-		var name = t[0].substr(1);
+		var type = line[0];
+		var t = line.substr(1).split(",");
+		var name = t[0];
 
 		if(type == "-") //buffer
 		{
-			var data = Float32Array( Number(t[1]) );
+			var data = new Float32Array( Number(t[1]) );
 			for(var j = 0; j < data.length; ++j)
 				data[j] = Number(t[j+2]);
 			mesh[name] = data;
 		}
 		else if(type == "*") //index
 		{
-			var data = Uint16Array( Number(t[1]) );
+			var data = new Uint16Array( Number(t[1]) );
 			for(var j = 0; j < data.length; ++j)
 				data[j] = Number(t[j+2]);
 			mesh[name] = data;
@@ -403,9 +425,10 @@ Mesh.parsers["mesh"] = function( text, options )
 				var num_bones = Number(t[1]);
 				for(var j = 0; j < num_bones; ++j)
 				{
-					var m = (t.slice(2 + j*17, 2 + j*18)).map(Number);
+					var m = (t.slice(3 + j*17, 3 + (j+1)*17 - 1)).map(Number);
 					bones.push( [ t[2 + j*17], m ] );
 				}
+				mesh.bones = bones;
 			}
 			else if(name == "bind_matrix")
 				mesh.bind_matrix = t.slice(1,17).map(Number);
@@ -423,7 +446,15 @@ Mesh.parsers["mesh"] = function( text, options )
 		else
 			console.warn("type unknown: " + t[0] );
 	}
-	return mesh;
+
+	if(options.only_data)
+		return mesh;
+
+	//creates and returns a GL.Mesh
+	var final_mesh = null;
+	final_mesh = Mesh.load( mesh, null, options.mesh );
+	final_mesh.updateBoundingBox();
+	return final_mesh;
 }
 
 Mesh.encoders["mesh"] = function( mesh, options )
