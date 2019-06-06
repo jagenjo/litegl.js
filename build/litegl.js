@@ -5396,7 +5396,11 @@ Texture.prototype.uploadData = function( data, options, skip_mipmaps )
 		}
 	}
 	else if( this.texture_type == GL.TEXTURE_3D )
+	{
+		gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false ); //standard does not allow this flags for 3D textures
+		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false );
 		gl.texImage3D( this.texture_type, mipmap_level, this.format, width, height, this.depth >> mipmap_level, 0, this.format, this.type, data);
+	}
 	else if( this.texture_type == GL.TEXTURE_CUBE_MAP )
 		gl.texImage2D( gl.TEXTURE_CUBE_MAP_POSITIVE_X + (options.cubemap_face || 0), mipmap_level, this.format, width, height, 0, this.format, this.type, data);
 	else
