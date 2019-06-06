@@ -174,6 +174,8 @@ global.Texture = GL.Texture = function Texture( width, height, options, gl ) {
 			throw("TEXTURE_3D not supported in WebGL 1. Enable WebGL 2 in the context by passing webgl2:true to the context");
 		if(!options.depth)
 			throw("3d texture depth must be set in the options.depth");
+		gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false ); //standard does not allow this flags for 3D textures
+		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false );
 		gl.texImage3D( GL.TEXTURE_3D, 0, this.internalFormat, width, height, options.depth, 0, this.format, this.type, pixel_data || null );
 	}
 	gl.bindTexture(this.texture_type, null); //disable
