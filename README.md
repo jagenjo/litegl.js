@@ -105,7 +105,7 @@ For better understanding of all the features and how to use them check the [guid
 
 Documentation
 -------------
-The doc folder contains the documentation. For info about [http://glmatrix.com](glMatrix) check the documentation in its website.
+The doc folder contains the documentation. For info about [glmatrix.net](http://glmatrix.net/) check the documentation in its website.
 
 Check the [guides](guides) folder to see how to use all the features.
 
