@@ -1531,7 +1531,7 @@ Texture.cubemapFromImages = function(images, options) {
 Texture.cubemapFromImage = function( image, options ) {
 	options = options || {};
 
-	if(image.width != (image.height / 6) && image.height % 6 != 0 && !options.faces)
+	if(image.width != (image.height / 6) && image.height % 6 != 0 && !options.faces && !options.is_polar )
 	{
 		console.error( "Cubemap image not valid, only 1x6 (vertical) or 6x3 (cross) formats. Check size:", image.width, image.height );
 		return null;
@@ -1539,8 +1539,37 @@ Texture.cubemapFromImage = function( image, options ) {
 
 	var width = image.width;
 	var height = image.height;
-	
-	if(options.is_cross !== undefined)
+
+	if(options.is_polar)
+	{
+		var size = options.size || GL.nearestPowerOfTwo( image.height );
+		var temp_tex = GL.Texture.fromImage( image, { ignore_pot:true, wrap: gl.REPEAT, filter: gl.LINEAR } );
+		var cubemap = new GL.Texture( size, size, { texture_type: gl.TEXTURE_CUBE_MAP, format: gl.RGBA });
+		if(options.texture)
+		{
+			var old_tex = options.texture;
+			for(var i in cubemap)
+				old_tex[i] = cubemap[i];
+			cubemap = old_tex;
+		}
+		var rot_matrix = mat3.create();
+		var uniforms = { u_texture:0, u_rotation: rot_matrix };
+		gl.disable( gl.DEPTH_TEST );
+		gl.disable( gl.BLEND );
+		var shader = GL.Shader.getPolarToCubemapShader();
+		cubemap.drawTo(function(t,i){
+			var face_info = GL.Texture.cubemap_camera_parameters[ i ];
+			mat3.identity( rot_matrix );
+			rot_matrix.set( face_info.right, 0 );
+			rot_matrix.set( face_info.up, 3 );
+			rot_matrix.set( face_info.dir, 6 );
+			temp_tex.toViewport( shader, uniforms );
+		});
+		if(options.keep_image)
+			cubemap.img = image;
+		return cubemap;
+	}
+	else if(options.is_cross !== undefined)
 	{
 		options.faces = Texture.generateCubemapCrossFacesInfo(image.width, options.is_cross);
 		width = height = image.width / 4;

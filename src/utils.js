@@ -14,6 +14,18 @@ global.isPowerOfTwo = GL.isPowerOfTwo = function isPowerOfTwo(v)
 	return ((Math.log(v) / Math.log(2)) % 1) == 0;
 }
 
+/**
+* Tells if one number is power of two (used for textures)
+* @method isPowerOfTwo
+* @param {v} number
+* @return {boolean}
+*/
+global.nearestPowerOfTwo = GL.nearestPowerOfTwo = function nearestPowerOfTwo(v)
+{
+	return Math.pow(2, Math.round( Math.log( v ) / Math.log(2) ) )
+}
+
+
 //Global Scope
 //better array conversion to string for serializing
 var typed_arrays = [ Uint8Array, Int8Array, Uint16Array, Int16Array, Uint32Array, Int32Array, Float32Array, Float64Array ];

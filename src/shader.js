@@ -126,8 +126,13 @@ Shader.prototype.updateShader = function( vertexSource, fragmentSource, macros )
 	//expand macros
 	var extra_code = Shader.expandMacros( macros );
 
-	if(this.program)
+	if(!this.program)
 		this.program = gl.createProgram();
+	else
+	{
+		gl.detachShader( this.program, this.vs_shader );
+		gl.detachShader( this.program, this.fs_shader );
+	}
 
 	var extra_code = Shader.expandMacros( macros );
 
@@ -1283,6 +1288,34 @@ Shader.getCubemapShowShader = function(gl)
 	shader.uniforms({u_texture:0});
 	return gl.shaders[":show_cubemap"] = shader;
 }
+
+//shader to copy a cubemap into another 
+Shader.getPolarToCubemapShader = function(gl)
+{
+	gl = gl || global.gl;
+	var shader = gl.shaders[":polar_to_cubemap"];
+	if(shader)
+		return shader;
+
+	var shader = new GL.Shader( Shader.SCREEN_VERTEX_SHADER,"\n\
+			precision highp float;\n\
+			varying vec2 v_coord;\n\
+			uniform sampler2D u_texture;\n\
+			uniform mat3 u_rotation;\n\
+			void main() {\n\
+				vec2 uv = vec2( v_coord.x, 1.0 - v_coord.y );\n\
+				vec3 dir = normalize( vec3( uv - vec2(0.5), 0.5 ));\n\
+				dir = u_rotation * dir;\n\
+				float u = atan(dir.x,dir.z) / 6.28318531;\n\
+				float v = (asin(dir.y) / 1.57079633) * 0.5 + 0.5;\n\
+				u = mod(u,1.0);\n\
+				v = mod(v,1.0);\n\
+			   gl_FragColor = texture2D( u_texture, vec2(u,v) );\n\
+			}\n\
+			");
+	return gl.shaders[":polar_to_cubemap"] = shader;
+}
+
 
 //shader to copy a cubemap into another 
 Shader.getCubemapCopyShader = function(gl)
