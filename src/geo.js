@@ -907,9 +907,12 @@ global.BBox = GL.BBox = {
 		bb[3] = halfsize[0];
 		bb[4] = halfsize[1];
 		bb[5] = halfsize[2];
-
-		vec3.sub(bb.subarray(6,9), bb.subarray(0,3), bb.subarray(3,6) );
-		vec3.add(bb.subarray(9,12), bb.subarray(0,3), bb.subarray(3,6) );
+		bb[6] = bb[0] - bb[3];
+		bb[7] = bb[1] - bb[4];
+		bb[8] = bb[2] - bb[5];
+		bb[9] = bb[0] + bb[3];
+		bb[10] = bb[1] + bb[4];
+		bb[11] = bb[2] + bb[5];
 		if(radius)
 			bb[12] = radius;
 		else
@@ -1020,6 +1023,25 @@ global.BBox = GL.BBox = {
 		vec3.subtract( out.subarray(3,6), max, center );
 		out[12] = vec3.length( out.subarray(3,6) ); //radius		
 		return out;
+	},
+
+	clampPoint: function(out, box, point)
+	{
+		out[0] = Math.clamp( point[0], box[0] - box[3], box[0] + box[3]);
+		out[1] = Math.clamp( point[1], box[1] - box[4], box[1] + box[4]);
+		out[2] = Math.clamp( point[2], box[2] - box[5], box[2] + box[5]);
+	},
+
+	isPointInside: function( bbox, point )
+	{
+		if( (bbox[0] - bbox[3]) > point[0] ||
+			(bbox[1] - bbox[4]) > point[1] ||
+			(bbox[2] - bbox[5]) > point[2] ||
+			(bbox[0] + bbox[3]) < point[0] ||
+			(bbox[1] + bbox[4]) < point[1] ||
+			(bbox[2] + bbox[5]) < point[2] )
+			return false;
+		return true;
 	},
 
 	getCenter: function(bb) { return bb.subarray(0,3); },

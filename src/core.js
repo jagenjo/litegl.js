@@ -295,13 +295,25 @@ GL.create = function(options) {
 		*/
 		isButtonPressed: function(num)
 		{
-			return this.buttons & (1<<num);
+			if(num == GL.LEFT_MOUSE_BUTTON)
+				return this.buttons & GL.LEFT_MOUSE_BUTTON_MASK;
+			if(num == GL.MIDDLE_MOUSE_BUTTON)
+				return this.buttons & GL.MIDDLE_MOUSE_BUTTON_MASK;
+			if(num == GL.RIGHT_MOUSE_BUTTON)
+				return this.buttons & GL.RIGHT_MOUSE_BUTTON_MASK;
 		},
 
 		wasButtonPressed: function(num)
 		{
-			return (this.buttons & (1<<num)) && !(this.last_buttons & (1<<num));
-		},
+			var mask = 0;
+			if(num == GL.LEFT_MOUSE_BUTTON)
+				mask = GL.LEFT_MOUSE_BUTTON_MASK;
+			else if(num == GL.MIDDLE_MOUSE_BUTTON)
+				mask = GL.MIDDLE_MOUSE_BUTTON_MASK;
+			else if(num == GL.RIGHT_MOUSE_BUTTON)
+				mask = GL.RIGHT_MOUSE_BUTTON_MASK;
+			return (this.buttons & mask) && !(this.last_buttons & mask);
+		}
 	};
 
 	/**
@@ -352,9 +364,10 @@ GL.create = function(options) {
 		mouse.canvasy = e.canvasy;
 		mouse.clientx = e.mousex;
 		mouse.clienty = e.mousey;
-		mouse.left_button = !!(mouse.buttons & (1<<GL.LEFT_MOUSE_BUTTON));
-		mouse.middle_button = !!(mouse.buttons & (1<<GL.MIDDLE_MOUSE_BUTTON));
-		mouse.right_button = !!(mouse.buttons & (1<<GL.RIGHT_MOUSE_BUTTON));
+		mouse.buttons = e.buttons;
+		mouse.left_button = !!(mouse.buttons & GL.LEFT_MOUSE_BUTTON_MASK);
+		mouse.middle_button = !!(mouse.buttons & GL.MIDDLE_MOUSE_BUTTON_MASK);
+		mouse.right_button = !!(mouse.buttons & GL.RIGHT_MOUSE_BUTTON_MASK);
 
 		if(e.eventType == "mousedown")
 		{
@@ -988,15 +1001,15 @@ GL.augmentEvent = function(e, root_element)
 	if(e.type == "mousedown")
 	{
 		this.dragging = true;
-		gl.mouse.buttons |= (1 << e.which); //enable
+		//gl.mouse.buttons |= (1 << e.which); //enable
 	}
 	else if (e.type == "mousemove")
 	{
 	}
 	else if (e.type == "mouseup")
 	{
-		gl.mouse.buttons = gl.mouse.buttons & ~(1 << e.which);
-		if(gl.mouse.buttons == 0)
+		//gl.mouse.buttons = gl.mouse.buttons & ~(1 << e.which);
+		if(e.buttons == 0)
 			this.dragging = false;
 	}
 
@@ -1016,10 +1029,14 @@ GL.augmentEvent = function(e, root_element)
 
 	//insert info in event
 	e.dragging = this.dragging;
-	e.buttons_mask = gl.mouse.buttons;
-	e.leftButton = !!(gl.mouse.buttons & (1<<GL.LEFT_MOUSE_BUTTON));
-	e.middleButton = !!(gl.mouse.buttons & (1<<GL.MIDDLE_MOUSE_BUTTON));
-	e.rightButton = !!(gl.mouse.buttons & (1<<GL.RIGHT_MOUSE_BUTTON));
+	e.leftButton = !!(gl.mouse.buttons & GL.LEFT_MOUSE_BUTTON_MASK);
+	e.middleButton = !!(gl.mouse.buttons & GL.MIDDLE_MOUSE_BUTTON_MASK);
+	e.rightButton = !!(gl.mouse.buttons & GL.RIGHT_MOUSE_BUTTON_MASK);
+	//shitty non-coherent API, e.buttons use 1:left,2:right,4:middle) but e.button uses (0:left,1:middle,2:right)
+	e.buttons_mask = 0;
+	if( e.leftButton ) e.buttons_mask = 1;
+	if( e.middleButton ) e.buttons_mask |= 2;
+	if( e.rightButton ) e.buttons_mask |= 4;
 	e.isButtonPressed = function(num) { return this.buttons_mask & (1<<num); }
 }
 

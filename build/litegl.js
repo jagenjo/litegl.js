@@ -18,9 +18,15 @@ GL.blockable_keys = {"Up":true,"Down":true,"Left":true,"Right":true};
 GL.reverse = null;
 
 //some consts
-GL.LEFT_MOUSE_BUTTON = 1;
-GL.MIDDLE_MOUSE_BUTTON = 2;
-GL.RIGHT_MOUSE_BUTTON = 3;
+//https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
+GL.LEFT_MOUSE_BUTTON = 0;
+GL.MIDDLE_MOUSE_BUTTON = 1;
+GL.RIGHT_MOUSE_BUTTON = 2;
+
+GL.LEFT_MOUSE_BUTTON_MASK = 1;
+GL.RIGHT_MOUSE_BUTTON_MASK = 2;
+GL.MIDDLE_MOUSE_BUTTON_MASK = 4;
+
 GL.last_context_id = 0;
 
 
@@ -225,6 +231,42 @@ global.nearestPowerOfTwo = GL.nearestPowerOfTwo = function nearestPowerOfTwo(v)
 	return Math.pow(2, Math.round( Math.log( v ) / Math.log(2) ) )
 }
 
+
+/**
+* converts from polar to cartesian
+* @method polarToCartesian
+* @param {vec3} out
+* @param {number} azimuth orientation from 0 to 2PI
+* @param {number} inclianation from -PI to PI
+* @param {number} radius
+* @return {vec3} returns out
+*/
+global.polarToCartesian = function( out, azimuth, inclination, radius )
+{
+	out = out || vec3.create();
+	out[0] = radius * Math.sin(inclination) * Math.cos(azimuth);
+	out[1] = radius * Math.cos(inclination);
+	out[2] = radius * Math.sin(inclination) * Math.sin(azimuth);
+	return out;
+}
+
+/**
+* converts from cartesian to polar
+* @method cartesianToPolar
+* @param {vec3} out
+* @param {number} x
+* @param {number} y
+* @param {number} z
+* @return {vec3} returns [azimuth,inclination,radius]
+*/
+global.cartesianToPolar = function( out, x,y,z )
+{
+	out = out || vec3.create();
+	out[2] = Math.sqrt(x*x+y*y+z*z);
+	out[0] = Math.atan2(x,z);
+	out[1] = Math.acos(z/out[2]);
+	return out;
+}
 
 //Global Scope
 //better array conversion to string for serializing
@@ -1688,16 +1730,18 @@ vec3.project = function(out, vec,  mvp, viewport) {
 	var iy = vec[1];
 	var iz = vec[2];
 
-	var ox = m[0] * ix + m[4] * iy + m[8] * iz + m[12]
-	var oy = m[1] * ix + m[5] * iy + m[9] * iz + m[13]
-	var ow = m[3] * ix + m[7] * iy + m[11] * iz + m[15]
+	var ox = m[0] * ix + m[4] * iy + m[8] * iz + m[12];
+	var oy = m[1] * ix + m[5] * iy + m[9] * iz + m[13];
+	var oz = m[2] * ix + m[6] * iy + m[10] * iz + m[14];
+	var ow = m[3] * ix + m[7] * iy + m[11] * iz + m[15];
 
 	var projx =     (ox / ow + 1) / 2;
 	var projy = 1 - (oy / ow + 1) / 2;
+	var projz =     (oz / ow + 1) / 2;
 
 	out[0] = projx * viewport[2] + viewport[0];
 	out[1] = projy * viewport[3] + viewport[1];
-	out[2] = ow;
+	out[2] = projz; //ow
 	return out;
 };
 
@@ -2470,7 +2514,11 @@ Mesh.prototype.addBuffer = function(name, buffer)
 		this.indexBuffers[name] = buffer;
 
 	if(!buffer.attribute)
-		buffer.attribute = GL.Mesh.common_buffers[name].attribute;
+	{
+		var info = GL.Mesh.common_buffers[name];
+		if(info)
+			buffer.attribute = info.attribute;
+	}
 }
 
 
@@ -9360,13 +9408,25 @@ GL.create = function(options) {
 		*/
 		isButtonPressed: function(num)
 		{
-			return this.buttons & (1<<num);
+			if(num == GL.LEFT_MOUSE_BUTTON)
+				return this.buttons & GL.LEFT_MOUSE_BUTTON_MASK;
+			if(num == GL.MIDDLE_MOUSE_BUTTON)
+				return this.buttons & GL.MIDDLE_MOUSE_BUTTON_MASK;
+			if(num == GL.RIGHT_MOUSE_BUTTON)
+				return this.buttons & GL.RIGHT_MOUSE_BUTTON_MASK;
 		},
 
 		wasButtonPressed: function(num)
 		{
-			return (this.buttons & (1<<num)) && !(this.last_buttons & (1<<num));
-		},
+			var mask = 0;
+			if(num == GL.LEFT_MOUSE_BUTTON)
+				mask = GL.LEFT_MOUSE_BUTTON_MASK;
+			else if(num == GL.MIDDLE_MOUSE_BUTTON)
+				mask = GL.MIDDLE_MOUSE_BUTTON_MASK;
+			else if(num == GL.RIGHT_MOUSE_BUTTON)
+				mask = GL.RIGHT_MOUSE_BUTTON_MASK;
+			return (this.buttons & mask) && !(this.last_buttons & mask);
+		}
 	};
 
 	/**
@@ -9417,9 +9477,10 @@ GL.create = function(options) {
 		mouse.canvasy = e.canvasy;
 		mouse.clientx = e.mousex;
 		mouse.clienty = e.mousey;
-		mouse.left_button = !!(mouse.buttons & (1<<GL.LEFT_MOUSE_BUTTON));
-		mouse.middle_button = !!(mouse.buttons & (1<<GL.MIDDLE_MOUSE_BUTTON));
-		mouse.right_button = !!(mouse.buttons & (1<<GL.RIGHT_MOUSE_BUTTON));
+		mouse.buttons = e.buttons;
+		mouse.left_button = !!(mouse.buttons & GL.LEFT_MOUSE_BUTTON_MASK);
+		mouse.middle_button = !!(mouse.buttons & GL.MIDDLE_MOUSE_BUTTON_MASK);
+		mouse.right_button = !!(mouse.buttons & GL.RIGHT_MOUSE_BUTTON_MASK);
 
 		if(e.eventType == "mousedown")
 		{
@@ -10053,15 +10114,15 @@ GL.augmentEvent = function(e, root_element)
 	if(e.type == "mousedown")
 	{
 		this.dragging = true;
-		gl.mouse.buttons |= (1 << e.which); //enable
+		//gl.mouse.buttons |= (1 << e.which); //enable
 	}
 	else if (e.type == "mousemove")
 	{
 	}
 	else if (e.type == "mouseup")
 	{
-		gl.mouse.buttons = gl.mouse.buttons & ~(1 << e.which);
-		if(gl.mouse.buttons == 0)
+		//gl.mouse.buttons = gl.mouse.buttons & ~(1 << e.which);
+		if(e.buttons == 0)
 			this.dragging = false;
 	}
 
@@ -10081,10 +10142,14 @@ GL.augmentEvent = function(e, root_element)
 
 	//insert info in event
 	e.dragging = this.dragging;
-	e.buttons_mask = gl.mouse.buttons;
-	e.leftButton = !!(gl.mouse.buttons & (1<<GL.LEFT_MOUSE_BUTTON));
-	e.middleButton = !!(gl.mouse.buttons & (1<<GL.MIDDLE_MOUSE_BUTTON));
-	e.rightButton = !!(gl.mouse.buttons & (1<<GL.RIGHT_MOUSE_BUTTON));
+	e.leftButton = !!(gl.mouse.buttons & GL.LEFT_MOUSE_BUTTON_MASK);
+	e.middleButton = !!(gl.mouse.buttons & GL.MIDDLE_MOUSE_BUTTON_MASK);
+	e.rightButton = !!(gl.mouse.buttons & GL.RIGHT_MOUSE_BUTTON_MASK);
+	//shitty non-coherent API, e.buttons use 1:left,2:right,4:middle) but e.button uses (0:left,1:middle,2:right)
+	e.buttons_mask = 0;
+	if( e.leftButton ) e.buttons_mask = 1;
+	if( e.middleButton ) e.buttons_mask |= 2;
+	if( e.rightButton ) e.buttons_mask |= 4;
 	e.isButtonPressed = function(num) { return this.buttons_mask & (1<<num); }
 }
 
@@ -11408,9 +11473,12 @@ global.BBox = GL.BBox = {
 		bb[3] = halfsize[0];
 		bb[4] = halfsize[1];
 		bb[5] = halfsize[2];
-
-		vec3.sub(bb.subarray(6,9), bb.subarray(0,3), bb.subarray(3,6) );
-		vec3.add(bb.subarray(9,12), bb.subarray(0,3), bb.subarray(3,6) );
+		bb[6] = bb[0] - bb[3];
+		bb[7] = bb[1] - bb[4];
+		bb[8] = bb[2] - bb[5];
+		bb[9] = bb[0] + bb[3];
+		bb[10] = bb[1] + bb[4];
+		bb[11] = bb[2] + bb[5];
 		if(radius)
 			bb[12] = radius;
 		else
@@ -11521,6 +11589,25 @@ global.BBox = GL.BBox = {
 		vec3.subtract( out.subarray(3,6), max, center );
 		out[12] = vec3.length( out.subarray(3,6) ); //radius		
 		return out;
+	},
+
+	clampPoint: function(out, box, point)
+	{
+		out[0] = Math.clamp( point[0], box[0] - box[3], box[0] + box[3]);
+		out[1] = Math.clamp( point[1], box[1] - box[4], box[1] + box[4]);
+		out[2] = Math.clamp( point[2], box[2] - box[5], box[2] + box[5]);
+	},
+
+	isPointInside: function( bbox, point )
+	{
+		if( (bbox[0] - bbox[3]) > point[0] ||
+			(bbox[1] - bbox[4]) > point[1] ||
+			(bbox[2] - bbox[5]) > point[2] ||
+			(bbox[0] + bbox[3]) < point[0] ||
+			(bbox[1] + bbox[4]) < point[1] ||
+			(bbox[2] + bbox[5]) < point[2] )
+			return false;
+		return true;
 	},
 
 	getCenter: function(bb) { return bb.subarray(0,3); },
