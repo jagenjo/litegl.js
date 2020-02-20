@@ -1,14 +1,19 @@
 /* geometric utilities */
-var CLIP_INSIDE = 0;
-var CLIP_OUTSIDE = 1;
-var CLIP_OVERLAP = 2;
+global.CLIP_INSIDE = GL.CLIP_INSIDE = 0;
+global.CLIP_OUTSIDE = GL.CLIP_OUTSIDE = 1;
+global.CLIP_OVERLAP = GL.CLIP_OVERLAP = 2;
 
 /**
-* Computational geometry algorithms, is a static calss
+* @namespace
+*/
+
+
+/**
+* Computational geometry algorithms, is a static class
 * @class geo
 */
 
-var geo = {
+global.geo = {
 
 	/**
 	* Returns a float4 containing the info about a plane with normal N and that passes through point P
@@ -44,6 +49,49 @@ var geo = {
 	distance2PointToPlane: function(point, plane)
 	{
 		return (vec3.dot(point,plane) + plane[3])/(plane[0]*plane[0] + plane[1]*plane[1] + plane[2]*plane[2]);
+	},
+
+	/**
+	* Projects a 3D point on a 3D line
+	* @method projectPointOnLine
+	* @param {vec3} P
+	* @param {vec3} A line start
+	* @param {vec3} B line end
+	* @param {vec3} result to store result (optional)
+	* @return {vec3} projectec point
+	*/
+	projectPointOnLine: function( P, A, B, result )
+	{
+		result = result || vec3.create();
+		//A + dot(AP,AB) / dot(AB,AB) * AB
+		var AP = vec3.fromValues( P[0] - A[0], P[1] - A[1], P[2] - A[2]);
+		var AB = vec3.fromValues( B[0] - A[0], B[1] - A[1], B[2] - A[2]);
+		var div = vec3.dot(AP,AB) / vec3.dot(AB,AB);
+		result[0] = A[0] + div[0] * AB[0];
+		result[1] = A[1] + div[1] * AB[1];
+		result[2] = A[2] + div[2] * AB[2];
+		return result;
+	},
+
+	/**
+	* Projects a 2D point on a 2D line
+	* @method project2DPointOnLine
+	* @param {vec2} P
+	* @param {vec2} A line start
+	* @param {vec2} B line end
+	* @param {vec2} result to store result (optional)
+	* @return {vec2} projectec point
+	*/
+	project2DPointOnLine: function( P, A, B, result )
+	{
+		result = result || vec2.create();
+		//A + dot(AP,AB) / dot(AB,AB) * AB
+		var AP = vec2.fromValues(P[0] - A[0], P[1] - A[1]);
+		var AB = vec2.fromValues(B[0] - A[0], B[1] - A[1]);
+		var div = vec2.dot(AP,AB) / vec2.dot(AB,AB);
+		result[0] = A[0] + div[0] * AB[0];
+		result[1] = A[1] + div[1] * AB[1];
+		return result;
 	},
 
 	/**
@@ -100,55 +148,92 @@ var geo = {
 		var t = (numer / denom);
 		if(t < 0.0) return false; //behind the ray
 		if(result)
-			vec3.add( result,  start, vec3.scale( vec3.create(), direction, t) );
+			vec3.add( result,  start, vec3.scale( result, direction, t) );
 
 		return true;
 	},
 
 	/**
+	* test collision between segment and plane and retrieves the collision point
+	* @method testSegmentPlane
+	* @param {vec3} start segment start
+	* @param {vec3} end segment end
+	* @param {vec3} P point where the plane passes	
+	* @param {vec3} N normal of the plane
+	* @param {vec3} result collision position
+	* @return {boolean} returns if the segment collides the plane or it is parallel to the plane
+	*/
+	testSegmentPlane: (function() { 
+		var temp = vec3.create();
+		return function(start, end, P, N, result)
+		{
+			var D = vec3.dot( P, N );
+			var numer = D - vec3.dot(N, start);
+			var direction = vec3.sub( temp, end, start );
+			var denom = vec3.dot(N, direction);
+			if( Math.abs(denom) < EPSILON)
+				return false; //parallel 
+			var t = (numer / denom);
+			if(t < 0.0)
+				return false; //behind the start
+			if(t > 1.0)
+				return false; //after the end
+			if(result)
+				vec3.add( result,  start, vec3.scale( result, direction, t) );
+			return true;
+		};
+	})(),
+
+	/**
 	* test a ray sphere collision and retrieves the collision point
 	* @method testRaySphere
 	* @param {vec3} start ray start
-	* @param {vec3} direction ray direction
+	* @param {vec3} direction ray direction (normalized)
 	* @param {vec3} center center of the sphere
 	* @param {number} radius radius of the sphere
-	* @param {vec3} result collision position
+	* @param {vec3} result [optional] collision position
+	* @param {number} max_dist not fully tested
 	* @return {boolean} returns if the ray collides the sphere
 	*/
-	testRaySphere: function(start, direction, center, radius, result)
-	{
-		// sphere equation (centered at origin) x2+y2+z2=r2
-		// ray equation x(t) = p0 + t*dir
-		// substitute x(t) into sphere equation
-		// solution below:
-
-		// transform ray origin into sphere local coordinates
-		var orig = vec3.subtract(vec3.create(), start, center);
-
-		var a = direction[0]*direction[0] + direction[1]*direction[1] + direction[2]*direction[2];
-		var b = 2*orig[0]*direction[0] + 2*orig[1]*direction[1] + 2*orig[2]*direction[2];
-		var c = orig[0]*orig[0] + orig[1]*orig[1] + orig[2]*orig[2] - radius*radius;
-		//return quadraticFormula(a,b,c,t0,t1) ? 2 : 0;
-
-		var q = b*b - 4*a*c; 
-		if( q < 0.0 )
-			return false;
-
-		if(result)
+	testRaySphere: (function() { 
+		var temp = vec3.create();
+		return function(start, direction, center, radius, result, max_dist)
 		{
-			var sq = Math.sqrt(q);
-			var d = 1 / (2*a);
-			var r1 = ( -b + sq ) * d;
-			var r2 = ( -b - sq ) * d;
-			var t = r1 < r2 ? r1 : r2;
-			vec3.add(result, start, vec3.scale( vec3.create(), direction, t ) );
-		}
-		return true;//real roots
-	},
+			// sphere equation (centered at origin) x2+y2+z2=r2
+			// ray equation x(t) = p0 + t*dir
+			// substitute x(t) into sphere equation
+			// solution below:
+
+			// transform ray origin into sphere local coordinates
+			var orig = vec3.subtract( temp , start, center);
+
+			var a = direction[0]*direction[0] + direction[1]*direction[1] + direction[2]*direction[2];
+			var b = 2*orig[0]*direction[0] + 2*orig[1]*direction[1] + 2*orig[2]*direction[2];
+			var c = orig[0]*orig[0] + orig[1]*orig[1] + orig[2]*orig[2] - radius*radius;
+			//return quadraticFormula(a,b,c,t0,t1) ? 2 : 0;
+
+			var q = b*b - 4*a*c; 
+			if( q < 0.0 )
+				return false;
+
+			if(result)
+			{
+				var sq = Math.sqrt(q);
+				var d = 1 / (2*a);
+				var r1 = ( -b + sq ) * d;
+				var r2 = ( -b - sq ) * d;
+				var t = r1 < r2 ? r1 : r2;
+				if(max_dist !== undefined && t > max_dist)
+					return false;
+				vec3.add(result, start, vec3.scale( result, direction, t ) );
+			}
+			return true;//real roots
+		};
+	})(),
 
 	/**
-	* test a ray cylinder collision and retrieves the collision point
-	* @method testRaySphere
+	* test a ray cylinder collision (only vertical cylinders) and retrieves the collision point [not fully tested]
+	* @method testRayCylinder
 	* @param {vec3} start ray start
 	* @param {vec3} direction ray direction
 	* @param {vec3} p center of the cylinder
@@ -194,7 +279,8 @@ var geo = {
 			// Intersect segment against ’q’ endcap
 			else t = 0.0;
 			// ’a’ lies inside cylinder
-			if(result) vec3.add(result, sa, vec3.scale(vec3.create(), n,t) );
+			if(result) 
+				vec3.add(result, sa, vec3.scale(result, n,t) );
 			return true;
 		}
 		var b = dd * mn - nd * md;
@@ -214,8 +300,8 @@ var geo = {
 			// Segment pointing away from endcap
 			t = -md / nd;
 			// Keep intersection if Dot(S(t) - p, S(t) - p) <= r^2
-			if(result) vec3.add(result, sa, vec3.scale(vec3.create(), n,t) );
-
+			if(result) 
+				vec3.add(result, sa, vec3.scale(result, n,t) );
 			return k+2*t*(mn+t*nn) <= 0.0;
 		} else if (md+t*nd>dd)
 		{
@@ -223,11 +309,13 @@ var geo = {
 			if (nd >= 0.0) return false; //Segment pointing away from endcap
 			t = (dd - md) / nd;
 			// Keep intersection if Dot(S(t) - q, S(t) - q) <= r^2
-			if(result) vec3.add(result, sa, vec3.scale(vec3.create(), n,t) );
+			if(result) 
+				vec3.add(result, sa, vec3.scale(result, n,t) );
 			return k+dd - 2*md+t*(2*(mn - nd)+t*nn) <= 0.0;
 		}
 		// Segment intersects cylinder between the endcaps; t is correct
-		if(result) vec3.add(result, sa, vec3.scale(vec3.create(), n,t) );
+		if(result)
+			vec3.add(result, sa, vec3.scale(result, n,t) );
 		return true;
 	},
 
@@ -242,22 +330,28 @@ var geo = {
 	* @param {vec3} result collision position
 	* @return {boolean} returns if the ray collides the box
 	*/
-	testRayBox: function(start, direction, minB, maxB, result, max_dist)
+	testRayBox: (function() { 
+	
+		var quadrant = new Float32Array(3);
+		var candidatePlane = new Float32Array(3);
+		var maxT = new Float32Array(3);
+	
+	return function(start, direction, minB, maxB, result, max_dist)
 	{
 		//#define NUMDIM	3
 		//#define RIGHT		0
 		//#define LEFT		1
 		//#define MIDDLE	2
 
-		result = result || vec3.create();
 		max_dist = max_dist || Number.MAX_VALUE;
 
 		var inside = true;
-		var quadrant = new Float32Array(3);
 		var i = 0|0;
 		var whichPlane;
-		var maxT = new Float32Array(3);
-		var candidatePlane = new Float32Array(3);
+		
+		quadrant.fill(0);
+		maxT.fill(0);
+		candidatePlane.fill(0);
 
 		/* Find candidate planes; this loop can be avoided if
 		rays cast all from the eye(assume perpsective view) */
@@ -276,7 +370,8 @@ var geo = {
 
 		/* Ray origin inside bounding box */
 		if(inside)	{
-			vec3.copy(result, start);
+			if(result)
+				vec3.copy(result, start);
 			return true;
 		}
 
@@ -300,42 +395,52 @@ var geo = {
 
 		for (i = 0; i < 3; ++i)
 			if (whichPlane != i) {
-				result[i] = start[i] + maxT[whichPlane] * direction[i];
-				if (result[i] < minB[i] || result[i] > maxB[i])
+				var res = start[i] + maxT[whichPlane] * direction[i];
+				if (res < minB[i] || res > maxB[i])
 					return false;
+				if(result)
+					result[i] = res;
 			} else {
-				result[i] = candidatePlane[i];
+				if(result)
+					result[i] = candidatePlane[i];
 			}
 		return true;				/* ray hits box */
-	},	
+	}
+	})(),	
 
 	/**
 	* test a ray bounding-box collision, it uses the  BBox class and allows to use non-axis aligned bbox
 	* @method testRayBBox
-	* @param {vec3} start ray start
+	* @param {vec3} origin ray origin
 	* @param {vec3} direction ray direction
 	* @param {BBox} box in BBox format
-	* @param {mat4} model transformation of the BBox
-	* @param {vec3} result collision position
+	* @param {mat4} model transformation of the BBox [optional]
+	* @param {vec3} result collision position in world space unless in_local is true
 	* @return {boolean} returns if the ray collides the box
 	*/
-	testRayBBox: function(start, direction, box, model, result, max_dist)
+	testRayBBox: (function(){ 
+	var inv = mat4.create();	
+	var end = vec3.create();
+	var origin2 = vec3.create();
+	return function( origin, direction, box, model, result, max_dist, in_local )
 	{
+		if(!origin || !direction || !box)
+			throw("parameters missing");
 		if(model)
 		{
-			var inv = mat4.invert( mat4.create(), model );
-			var end = vec3.add( vec3.create(), start, direction );
-			start = vec3.transformMat4(vec3.create(), start, inv);
-			vec3.transformMat4(end, end, inv);
-			vec3.sub(end, end, start);
-			direction = vec3.normalize(end, end);
+			mat4.invert( inv, model );
+			vec3.add( end, origin, direction );
+			origin = vec3.transformMat4( origin2, origin, inv);
+			vec3.transformMat4( end, end, inv );
+			vec3.sub( end, end, origin );
+			direction = vec3.normalize( end, end );
 		}
-		var r = this.testRayBox(start, direction, box.subarray(6,9), box.subarray(9,12), result, max_dist );
-		if(model)
+		var r = this.testRayBox( origin, direction, box.subarray(6,9), box.subarray(9,12), result, max_dist );
+		if(!in_local && model && result)
 			vec3.transformMat4(result, result, model);
 		return r;
-	},
-
+	}
+	})(),
 
 	/**
 	* test if a 3d point is inside a BBox
@@ -350,6 +455,89 @@ var geo = {
 			point[2] < bbox[8] || point[0] > bbox[11])
 			return false;
 		return true;
+	},
+
+	/**
+	* test if a BBox overlaps another BBox
+	* @method testBBoxBBox
+	* @param {BBox} a
+	* @param {BBox} b
+	* @return {boolean} true if it overlaps
+	*/
+	testBBoxBBox: function(a, b) 
+	{
+		var tx =  Math.abs( b[0] - a[0]);
+		if (tx > (a[3] + b[3]))
+			return false; //outside
+		var ty =  Math.abs(b[1] - a[1]);
+		if (ty > (a[4] + b[4]))
+			return false; //outside
+		var tz =  Math.abs( b[2] - a[2]);
+		if (tz > (a[5] + b[5]) )
+			return false; //outside
+
+		var vmin = BBox.getMin(b);
+		if ( geo.testPointBBox(vmin, a) )
+		{
+			var vmax = BBox.getMax(b);
+			if (geo.testPointBBox(vmax, a))
+			{
+				return true;// INSIDE;// this instance contains b
+			}
+		}
+
+		return true; //OVERLAP; // this instance  overlaps with b
+	},
+
+	/**
+	* test if a sphere overlaps a BBox
+	* @method testSphereBBox
+	* @param {vec3} point
+	* @param {float} radius
+	* @param {BBox} bounding_box
+	* @return {boolean} true if it overlaps
+	*/
+	testSphereBBox: function(center, radius, bbox) 
+	{
+		// arvo's algorithm from gamasutra
+		// http://www.gamasutra.com/features/19991018/Gomez_4.htm
+
+		var s, d = 0.0;
+		//find the square of the distance
+		//from the sphere to the box
+		var vmin = BBox.getMin( bbox );
+		var vmax = BBox.getMax( bbox );
+		for(var i = 0; i < 3; ++i) 
+		{ 
+			if( center[i] < vmin[i] )
+			{
+				s = center[i] - vmin[i];
+				d += s*s; 
+			}
+			else if( center[i] > vmax[i] )
+			{ 
+				s = center[i] - vmax[i];
+				d += s*s; 
+			}
+		}
+		//return d <= r*r
+
+		var radiusSquared = radius * radius;
+		if (d <= radiusSquared)
+		{
+			return true;
+			/*
+			// this is used just to know if it overlaps or is just inside, but I dont care
+			// make an aabb aabb test with the sphere aabb to test inside state
+			var halfsize = vec3.fromValues( radius, radius, radius );
+			var sphere_bbox = BBox.fromCenterHalfsize( center, halfsize );
+			if ( geo.testBBoxBBox(bbox, sphere_bbox) )
+				return INSIDE;
+			return OVERLAP;	
+			*/
+		}
+
+		return false; //OUTSIDE;
 	},
 
 	closestPointBetweenLines: function(a0,a1, b0,b1, p_a, p_b)
@@ -424,7 +612,7 @@ var geo = {
 		{
 			var N = planes.subarray(pos,pos+3);
 			var l = vec3.length(N);
-			if(l) return;
+			if(l === 0) return;
 			l = 1.0 / l;
 			planes[pos] *= l;
 			planes[pos+1] *= l;
@@ -516,7 +704,7 @@ var geo = {
 * The bounding box is stored as center,halfsize,min,max,radius (total of 13 floats)
 * @class BBox
 */
-var BBox = {
+global.BBox = GL.BBox = {
 	center:0,
 	halfsize:3,
 	min:6,
@@ -524,7 +712,8 @@ var BBox = {
 	radius:12,
 	data_length: 13,
 	
-	corners: new Float32Array([1,1,1,  1,1,-1,  1,-1,1,  1,-1,-1,  -1,1,1,  -1,1,-1,  -1,-1,1,  -1,-1,-1 ]),
+	//corners: new Float32Array([1,1,1,  1,1,-1,  1,-1,1,  1,-1,-1,  -1,1,1,  -1,1,-1,  -1,-1,1,  -1,-1,-1 ]),
+	corners: [ vec3.fromValues(1,1,1), vec3.fromValues(1,1,-1), vec3.fromValues(1,-1,1), vec3.fromValues(1,-1,-1), vec3.fromValues(-1,1,1), vec3.fromValues(-1,1,-1), vec3.fromValues(-1,-1,1), vec3.fromValues(-1,-1,-1) ] ,
 
 	/**
 	* create an empty bbox
@@ -627,21 +816,46 @@ var BBox = {
 		var min = bb.subarray(6,9);
 		var max = bb.subarray(9,12);
 
-		min.set( points.subarray(0,3) );
-		max.set( points.subarray(0,3) );
+		min[0] = points[0]; //min.set( points.subarray(0,3) );
+		min[1] = points[1];
+		min[2] = points[2];
+		max.set( min );
 
 		var v = 0;
-		for(var i = 3; i < points.length; i+=3)
+		for(var i = 3, l = points.length; i < l; i+=3)
 		{
+			var x = points[i];
+			var y = points[i+1];
+			var z = points[i+2];
+			if( x < min[0] ) min[0] = x;
+			else if( x > max[0] ) max[0] = x;
+			if( y < min[1] ) min[1] = y;
+			else if( y > max[1] ) max[1] = y;
+			if( z < min[2] ) min[2] = z;
+			else if( z > max[2] ) max[2] = z;
+			/*
 			v = points.subarray(i,i+3);
 			vec3.min( min, v, min);
 			vec3.max( max, v, max);
+			*/
 		}
 
+		//center
+		bb[0] = (min[0] + max[0]) * 0.5;
+		bb[1] = (min[1] + max[1]) * 0.5;
+		bb[2] = (min[2] + max[2]) * 0.5;
+		//halfsize
+		bb[3] = max[0] - bb[0];
+		bb[4] = max[1] - bb[1];
+		bb[5] = max[2] - bb[2];
+		bb[12] = Math.sqrt( bb[3]*bb[3] + bb[4]*bb[4] + bb[5]*bb[5] );
+
+		/*
 		var center = vec3.add( bb.subarray(0,3), min, max );
 		vec3.scale( center, center, 0.5);
 		vec3.subtract( bb.subarray(3,6), max, center );
 		bb[12] = vec3.length(bb.subarray(3,6)); //radius		
+		*/
 		return bb;
 	},
 
@@ -662,11 +876,16 @@ var BBox = {
 		bb[10] = max[1];
 		bb[11] = max[2];
 
-		var center = bb.subarray(0,3);
-		vec3.sub( center, max, min );
-		vec3.scale( center, center, 0.5 );
-		bb.set( [max[0]-center[0],max[1]-center[1],max[2]-center[2]], 3);
-		vec3.sub( bb.subarray(3,6), max, center );
+		//halfsize
+		var halfsize = bb.subarray(3,6); 
+		vec3.sub( halfsize, max, min ); //range
+		vec3.scale( halfsize, halfsize, 0.5 );
+
+		//center
+		bb[0] = max[0] - halfsize[0];
+		bb[1] = max[1] - halfsize[1];
+		bb[2] = max[2] - halfsize[2];
+
 		bb[12] = vec3.length(bb.subarray(3,6)); //radius
 		return bb;
 	},
@@ -688,9 +907,12 @@ var BBox = {
 		bb[3] = halfsize[0];
 		bb[4] = halfsize[1];
 		bb[5] = halfsize[2];
-
-		vec3.sub(bb.subarray(6,9), bb.subarray(0,3), bb.subarray(3,6) );
-		vec3.add(bb.subarray(9,12), bb.subarray(0,3), bb.subarray(3,6) );
+		bb[6] = bb[0] - bb[3];
+		bb[7] = bb[1] - bb[4];
+		bb[8] = bb[2] - bb[5];
+		bb[9] = bb[0] + bb[3];
+		bb[10] = bb[1] + bb[4];
+		bb[11] = bb[2] + bb[5];
 		if(radius)
 			bb[12] = radius;
 		else
@@ -700,28 +922,45 @@ var BBox = {
 
 	/**
 	* Apply a matrix transformation to the BBox (applies to every corner and recomputes the BB)
-	* @method setCenterHalfsize
+	* @method transformMat4
 	* @param {BBox} out where to store the result
 	* @param {BBox} bb bbox you want to transform
 	* @param {mat4} mat transformation
 	* @return {BBox} returns out
 	*/
-	transformMat4: function(out, bb, mat)
-	{
-		var center = bb.subarray(0,3);
-		var halfsize = bb.subarray(3,6);
-		var corners = new Float32Array( this.corners );
-
-		for(var i = 0; i < 8; ++i)		
+	transformMat4: (function(){
+		var hsx = 0;
+		var hsy = 0;
+		var hsz = 0;
+		var points_buffer = new Float32Array(8*3);
+		var points = [];
+		for(var i = 0; i < 24; i += 3 )
+			points.push( points_buffer.subarray( i, i+3 ) );
+		
+		return function( out, bb, mat )
 		{
-			var corner = corners.subarray(i*3, i*3+3);
-			vec3.multiply( corner, halfsize, corner );
-			vec3.add( corner, corner, center );
-			mat4.multiplyVec3(corner, mat, corner);
-		}
+			var centerx = bb[0];
+			var centery = bb[1];
+			var centerz = bb[2];
+			hsx = bb[3];
+			hsy = bb[4];
+			hsz = bb[5];
 
-		return this.setFromPoints(out, corners);
-	},
+			var corners = this.corners;
+
+			for(var i = 0; i < 8; ++i)		
+			{
+				var corner = corners[i];
+				var result = points[i];
+				result[0] = hsx * corner[0] + centerx;
+				result[1] = hsy * corner[1] + centery;
+				result[2] = hsz * corner[2] + centerz;
+				mat4.multiplyVec3( result, mat, result );
+			}
+
+			return this.setFromPoints( out, points_buffer );
+		}
+	})(),
 
 
 	/**
@@ -731,9 +970,9 @@ var BBox = {
 	* @param {Float32Array} result optional, should be 8 * 3
 	* @return {Float32Array} returns the 8 corners
 	*/
-	getCorners: function(bb, result)
+	getCorners: function( bb, result )
 	{
-		var center = bb.subarray(0,3);
+		var center = bb; //.subarray(0,3); AVOID GC
 		var halfsize = bb.subarray(3,6);
 
 		var corners = null;
@@ -755,35 +994,83 @@ var BBox = {
 		return corners;
 	},	
 
+	merge: function( out, a, b )
+	{
+		var min = out.subarray(6,9);
+		var max = out.subarray(9,12);
+		vec3.min( min, a.subarray(6,9), b.subarray(6,9) );
+		vec3.max( max, a.subarray(9,12), b.subarray(9,12) );
+		return BBox.setMinMax( out, min, max );
+	},
+
+	extendToPoint: function( out, p )
+	{
+		if( p[0] < out[6] )	out[6] = p[0];
+		else if( p[0] > out[9] ) out[9] = p[0];
+
+		if( p[1] < out[7] )	out[7] = p[1];
+		else if( p[1] > out[10] ) out[10] = p[1];
+
+
+		if( p[2] < out[8] )	out[8] = p[2];
+		else if( p[2] > out[11] ) out[11] = p[2];
+
+		//recompute 
+		var min = out.subarray(6,9);
+		var max = out.subarray(9,12);
+		var center = vec3.add( out.subarray(0,3), min, max );
+		vec3.scale( center, center, 0.5);
+		vec3.subtract( out.subarray(3,6), max, center );
+		out[12] = vec3.length( out.subarray(3,6) ); //radius		
+		return out;
+	},
+
+	clampPoint: function(out, box, point)
+	{
+		out[0] = Math.clamp( point[0], box[0] - box[3], box[0] + box[3]);
+		out[1] = Math.clamp( point[1], box[1] - box[4], box[1] + box[4]);
+		out[2] = Math.clamp( point[2], box[2] - box[5], box[2] + box[5]);
+	},
+
+	isPointInside: function( bbox, point )
+	{
+		if( (bbox[0] - bbox[3]) > point[0] ||
+			(bbox[1] - bbox[4]) > point[1] ||
+			(bbox[2] - bbox[5]) > point[2] ||
+			(bbox[0] + bbox[3]) < point[0] ||
+			(bbox[1] + bbox[4]) < point[1] ||
+			(bbox[2] + bbox[5]) < point[2] )
+			return false;
+		return true;
+	},
+
 	getCenter: function(bb) { return bb.subarray(0,3); },
 	getHalfsize: function(bb) { return bb.subarray(3,6); },
 	getMin: function(bb) { return bb.subarray(6,9); },
 	getMax: function(bb) { return bb.subarray(9,12); },
-	getRadius: function(bb) { return bb[12]; }	
+	getRadius: function(bb) { return bb[12]; }
+	//setCenter,setHalfsize not coded, too much work to update all
 }
 
-function distanceToPlane(plane, point)
+global.distanceToPlane = GL.distanceToPlane = function distanceToPlane(plane, point)
 {
 	return vec3.dot(plane,point) + plane[3];
 }
 
-function planeBoxOverlap(plane, box)
+global.planeBoxOverlap = GL.planeBoxOverlap = function planeBoxOverlap(plane, box)
 {
-	var n = plane.subarray(0,3);
+	var n = plane; //.subarray(0,3); 
 	var d = plane[3];
-	var center = box.subarray(0,3);
-	var halfsize = box.subarray(3,6);
+	//hack, to avoif GC I use indices directly
+	var center = box; //.subarray(0,3);
+	var halfsize = box; //.subarray(3,6);
 
-	var tmp = vec3.fromValues(
-		Math.abs( halfsize[0] * n[0]),
-		Math.abs( halfsize[1] * n[1]),
-		Math.abs( halfsize[2] * n[2])
-	);
-
-	var radius = tmp[0]+tmp[1]+tmp[2];
+	var radius = Math.abs( halfsize[3] * n[0] ) + Math.abs( halfsize[4] * n[1] ) + Math.abs( halfsize[5] * n[2] );
 	var distance = vec3.dot(n,center) + d;
 
-	if (distance <= - radius) return CLIP_OUTSIDE;
-	else if (distance <= radius) return CLIP_OVERLAP;
-	else return CLIP_INSIDE;
+	if (distance <= -radius)
+		return CLIP_OUTSIDE;
+	else if (distance <= radius)
+		return CLIP_OVERLAP;
+	return CLIP_INSIDE;
 }

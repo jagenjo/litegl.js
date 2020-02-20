@@ -1,12 +1,15 @@
 /**
-* LEvent is a lightweight events library focused in low memory footprint
+* @namespace 
+*/
+
+/**
+* LEvent is a lightweight events library focused in low memory footprint and fast delivery.
+* It works by creating a property called "__levents" inside the object that has the bindings, and storing arrays with all the bindings.
 * @class LEvent
 * @constructor
 */
 
-var LEvent = {
-	jQuery: false, //dispatch as jQuery events (enable this if you want to hook regular jQuery events to instances, they are dispatches as ":eventname" to avoid collisions)
-	//map: new Weakmap(),
+var LEvent = global.LEvent = GL.LEvent = {
 
 	/**
 	* Binds an event to an instance
@@ -16,15 +19,28 @@ var LEvent = {
 	* @param {function} callback function to call when the event is triggered
 	* @param {Object} target_instance [Optional] instance to call the function (use this instead of .bind method to help removing events)
 	**/
-	bind: function( instance, event_name, callback, target_instance )
+	bind: function( instance, event_type, callback, target_instance )
 	{
-		if(!instance) throw("cannot bind event to null");
-		if(!callback) throw("cannot bind to null callback");
-		if(instance.constructor === String ) throw("cannot bind event to a string");
-		if(instance.hasOwnProperty("__on_" + event_name))
-			instance["__on_" + event_name].push([callback,target_instance]);
+		if(!instance) 
+			throw("cannot bind event to null");
+		if(!callback) 
+			throw("cannot bind to null callback");
+		if(instance.constructor === String ) 
+			throw("cannot bind event to a string");
+
+		var events = instance.__levents;
+		if(!events)
+		{
+			Object.defineProperty( instance, "__levents", {value: {}, enumerable: false });
+			events = instance.__levents;
+		}
+
+		if( events.hasOwnProperty( event_type ) )
+			events[event_type].push([callback,target_instance]);
 		else
-			instance["__on_" + event_name] = [[callback,target_instance]];
+			events[event_type] = [[callback,target_instance]];
+		if( instance.onLEventBinded )
+			instance.onLEventBinded( event_type, callback, target_instance );
 	},
 
 	/**
@@ -35,25 +51,37 @@ var LEvent = {
 	* @param {function} callback function that was binded
 	* @param {Object} target_instance [Optional] target_instance that was binded
 	**/
-	unbind: function( instance, event_name, callback, target_instance )
+	unbind: function( instance, event_type, callback, target_instance )
 	{
-		if(!instance) throw("cannot unbind event to null");
-		if(!callback) throw("cannot unbind from null callback");
-		if(instance.constructor === String ) throw("cannot bind event to a string");
-		if(!instance.hasOwnProperty("__on_" + event_name)) return;
+		if(!instance) 
+			throw("cannot unbind event to null");
+		if(!callback) 
+			throw("cannot unbind from null callback");
+		if(instance.constructor === String ) 
+			throw("cannot bind event to a string");
 
-		for(var i in instance["__on_" + event_name])
+		var events = instance.__levents;
+		if(!events)
+			return;
+
+		if(!events.hasOwnProperty( event_type ))
+			return;
+
+		for(var i = 0, l = events[event_type].length; i < l; ++i)
 		{
-			var v = instance["__on_" + event_name][i];
+			var v = events[event_type][i];
 			if(v[0] === callback && v[1] === target_instance)
 			{
-				instance["__on_" + event_name].splice( i, 1);
+				events[event_type].splice( i, 1 );
 				break;
 			}
 		}
 
-		if (instance["__on_" + event_name].length == 0)
-			delete instance["__on_" + event_name];
+		if (events[event_type].length == 0)
+			delete events[event_type];
+
+		if( instance.onLEventUnbinded )
+			instance.onLEventUnbinded( event_type, callback, target_instance );
 	},
 
 	/**
@@ -62,42 +90,57 @@ var LEvent = {
 	* @param {Object} instance where the events are binded
 	* @param {Object} target_instance [Optional] target_instance of the events to remove
 	**/
-	unbindAll: function(instance, target_instance)
+	unbindAll: function( instance, target_instance, callback )
 	{
-		if(!instance) throw("cannot unbind events in null");
+		if(!instance) 
+			throw("cannot unbind events in null");
+
+		var events = instance.__levents;
+		if(!events)
+			return;
+
+		if( instance.onLEventUnbindAll )
+			instance.onLEventUnbindAll( target_instance, callback );
+
 		if(!target_instance) //remove all
 		{
-			//two passes, to avoid deleting and reading at the same time
-			var to_remove = [];
-			for(var i in instance)
-			{
-				if(i.substring(0,5) != "__on_") 
-					continue;//skip non-LEvent properties
-				to_remove.push(i);
-			}
-			for(var i in to_remove)
-				delete instance[remove[i]];
+			delete instance.__levents;
 			return;
 		}
 
 		//remove only the target_instance
 		//for every property in the instance
-		for(var i in instance)
+		for(var i in events)
 		{
-			if(i.substring(0,5) != "__on_") 
-				continue; //skip non-LEvent properties
-			var array = instance[i];
-			for(var j=0; j < array.length; ++j)
+			var array = events[i];
+			for(var j = array.length - 1; j >= 0; --j) //iterate backwards to avoid problems after removing
 			{
-				if( array[j][1] != target_instance ) 
+				if( array[j][1] != target_instance || (callback && callback !== array[j][0]) ) 
 					continue;
-				array.splice(j,1);//remove
-				--j;//iterate from the gap
-			}
 
-			if(array.length == 0)
-				delete instance[i];
+				array.splice(j,1);//remove
+			}
 		}
+	},
+
+	/**
+	* Unbinds all callbacks associated to one specific event from this instance
+	* @method LEvent.unbindAll
+	* @param {Object} instance where the events are binded
+	* @param {String} event name of the event you want to remove all binds
+	**/
+	unbindAllEvent: function( instance, event_type )
+	{
+		if(!instance) 
+			throw("cannot unbind events in null");
+
+		var events = instance.__levents;
+		if(!events)
+			return;
+		delete events[ event_type ];
+		if( instance.onLEventUnbindAll )
+			instance.onLEventUnbindAll( event_type, target_instance, callback );
+		return;
 	},
 
 	/**
@@ -108,12 +151,21 @@ var LEvent = {
 	* @param {function} callback the callback
 	* @param {Object} target_instance [Optional] instance binded to callback
 	**/
-	isBind: function( instance, event_name, callback, target_instance )
+	isBind: function( instance, event_type, callback, target_instance )
 	{
-		if(!instance || !instance.hasOwnProperty("__on_" + event_name)) return false;
-		for(var i in instance["__on_" + event_name])
+		if(!instance)
+			throw("LEvent cannot have null as instance");
+
+		var events = instance.__levents;
+		if( !events )
+			return;
+
+		if( !events.hasOwnProperty(event_type) ) 
+			return false;
+
+		for(var i = 0, l = events[event_type].length; i < l; ++i)
 		{
-			var v = instance["__on_" + event_name][i];
+			var v = events[event_type][i];
 			if(v[0] === callback && v[1] === target_instance)
 				return true;
 		}
@@ -121,65 +173,218 @@ var LEvent = {
 	},
 
 	/**
+	* Tells if there is any callback binded to this event
+	* @method LEvent.hasBind
+	* @param {Object} instance where the are the events binded
+	* @param {String} event_name string defining the event name
+	* @return {boolean} true is there is at least one
+	**/
+	hasBind: function( instance, event_type )
+	{
+		if(!instance)
+			throw("LEvent cannot have null as instance");
+		var events = instance.__levents;
+		if(!events || !events.hasOwnProperty( event_type ) || !events[event_type].length) 
+			return false;
+		return true;
+	},
+
+	/**
+	* Tells if there is any callback binded to this object pointing to a method in the target object
+	* @method LEvent.hasBindTo
+	* @param {Object} instance where there are the events binded
+	* @param {Object} target instance to check to
+	* @return {boolean} true is there is at least one
+	**/
+	hasBindTo: function( instance, target )
+	{
+		if(!instance)
+			throw("LEvent cannot have null as instance");
+		var events = instance.__levents;
+
+		//no events binded
+		if(!events) 
+			return false;
+
+		for(var j in events)
+		{
+			var binds = events[j];
+			for(var i = 0; i < binds.length; ++i)
+			{
+				if(binds[i][1] === target) //one found
+					return true;
+			}
+		}
+
+		return false;
+	},
+
+	/**
 	* Triggers and event in an instance
+	* If the callback returns true then it will stop the propagation and return true
 	* @method LEvent.trigger
 	* @param {Object} instance that triggers the event
 	* @param {String} event_name string defining the event name
 	* @param {*} parameters that will be received by the binded function
-	* @param {boolean} skip_jquery [optional] force to skip jquery triggering
+	* @param {bool} reverse_order trigger in reverse order (binded last get called first)
+	* @param {bool} expand_parameters parameters are passed not as one single parameter, but as many
+	* return {bool} true if the event passed was blocked by any binded callback
 	**/
-	trigger: function( instance, event_type, params, skip_jquery )
+	trigger: function( instance, event_type, params, reverse_order, expand_parameters )
 	{
-		if(!instance) throw("cannot trigger event from null");
-		if(instance.constructor === String ) throw("cannot bind event to a string");
+		if(!instance) 
+			throw("cannot trigger event from null");
+		if(instance.constructor === String ) 
+			throw("cannot bind event to a string");
 
-		//if(typeof(event) == "string")
-		//	event = { type: event, target: instance, stopPropagation: LEvent._stopPropagation };
-		//var event_type = event.type;
+		var events = instance.__levents;
+		if( !events || !events.hasOwnProperty(event_type) )
+			return false;
 
-		//you can resend the events as jQuery events, but to avoid collisions with system events, we use ":" at the begining
-		if(LEvent.jQuery && !skip_jquery) $(instance).trigger( ":" + event_type, params );
-
-		if(!instance.hasOwnProperty("__on_" + event_type)) return;
-		for(var i in instance["__on_" + event_type])
+		var inst = events[event_type];
+		if( reverse_order )
 		{
-			var v = instance["__on_" + event_type][i];
-			if( v[0].call(v[1], event_type, params) == false)// || event.stop)
-				break; //stopPropagation
+			for(var i = inst.length - 1; i >= 0; --i)
+			{
+				var v = inst[i];
+				if(expand_parameters)
+				{
+					if( v && v[0].apply( v[1], params ) === true)// || event.stop)
+						return true; //stopPropagation
+				}
+				else
+				{
+					if( v && v[0].call( v[1], event_type, params) === true)// || event.stop)
+						return true; //stopPropagation
+				}
+			}
 		}
+		else
+		{
+			for(var i = 0, l = inst.length; i < l; ++i)
+			{
+				var v = inst[i];
+				if( expand_parameters )
+				{
+					if( v && v[0].apply( v[1], params ) === true)// || event.stop)
+						return true; //stopPropagation
+				}
+				else
+				{
+					if( v && v[0].call(v[1], event_type, params) === true)// || event.stop)
+						return true; //stopPropagation
+				}
+			}
+		}
+
+		return false;
 	},
 
 	/**
-	* Triggers and event to every element in an array
+	* Triggers and event to every element in an array.
+	* If the event returns true, it must be intercepted
 	* @method LEvent.triggerArray
 	* @param {Array} array contains all instances to triggers the event
 	* @param {String} event_name string defining the event name
 	* @param {*} parameters that will be received by the binded function
-	* @param {boolean} skip_jquery [optional] force to skip jquery triggering
+	* @param {bool} reverse_order trigger in reverse order (binded last get called first)
+	* @param {bool} expand_parameters parameters are passed not as one single parameter, but as many
+	* return {bool} false 
 	**/
-	triggerArray: function( instances, event_type, params, skip_jquery )
+	triggerArray: function( instances, event_type, params, reverse_order, expand_parameters )
 	{
-		for(var i in instances)
+		var blocked = false;
+		for(var i = 0, l = instances.length; i < l; ++i)
 		{
 			var instance = instances[i];
-			if(!instance) throw("cannot trigger event from null");
-			if(instance.constructor === String ) throw("cannot bind event to a string");
+			if(!instance) 
+				throw("cannot trigger event from null");
+			if(instance.constructor === String ) 
+				throw("cannot bind event to a string");
 
-			//if(typeof(event) == "string")
-			//	event = { type: event, target: instance, stopPropagation: LEvent._stopPropagation };
-			//var event_type = event.type;
-
-			//you can resend the events as jQuery events, but to avoid collisions with system events, we use ":" at the begining
-			if(LEvent.jQuery && !skip_jquery) $(instance).trigger( ":" + event_type, params );
-
-			if(!instance.hasOwnProperty("__on_" + event_type)) 
+			var events = instance.__levents;
+			if( !events || !events.hasOwnProperty( event_type ) )
 				continue;
-			for(var i in instance["__on_" + event_type])
+
+			if( reverse_order )
 			{
-				var v = instance["__on_" + event_type][i];
-				if( v[0].call(v[1], event_type, params) == false)// || event.stop)
-					break; //stopPropagation
+				for(var j = events[event_type].length - 1; j >= 0; --j)
+				{
+					var v = events[event_type][j];
+					if(expand_parameters)
+					{
+						if( v[0].apply(v[1], params ) === true)// || event.stop)
+						{
+							blocked = true;
+							break; //stopPropagation
+						}
+					}
+					else
+					{
+						if( v[0].call(v[1], event_type, params) === true)// || event.stop)
+						{
+							blocked = true;
+							break; //stopPropagation
+						}
+					}
+				}
+			}
+			else
+			{
+				for(var j = 0, ll = events[event_type].length; j < ll; ++j)
+				{
+					var v = events[event_type][j];
+					if(expand_parameters)
+					{
+						if( v[0].apply(v[1], params ) === true)// || event.stop)
+						{
+							blocked = true;
+							break; //stopPropagation
+						}
+					}
+					else
+					{
+						if( v[0].call(v[1], event_type, params) === true)// || event.stop)
+						{
+							blocked = true;
+							break; //stopPropagation
+						}
+					}
+				}
 			}
 		}
+
+		return blocked;
+	},
+
+	extendObject: function( object )
+	{
+		object.bind = function( event_type, callback, instance ){
+			return LEvent.bind( this, event_type, callback, instance );
+		};
+
+		object.trigger = function( event_type, params ){
+			return LEvent.trigger( this, event_type, params );
+		};
+
+		object.unbind = function( event_type, callback, target_instance )
+		{
+			return LEvent.unbind( this, event_type, callback, instance );
+		};
+
+		object.unbindAll = function( target_instance, callback )
+		{
+			return LEvent.unbindAll( this, target_instance, callback );
+		};
+	},
+
+	/**
+	* Adds the methods to bind, trigger and unbind to this class prototype
+	* @method LEvent.extendClass
+	* @param {Object} constructor
+	**/
+	extendClass: function( constructor )
+	{
+		this.extendObject( constructor.prototype );
 	}
 };

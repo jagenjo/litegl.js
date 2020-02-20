@@ -1,0 +1,147 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+
+<title>litegl.js: Render to Texture Half Float example</title>
+	<link rel="stylesheet" type="text/css" href="style.css" />
+	<style type='text/css'>
+		html, body { margin: 0; padding: 0; }
+		body { background-color: #DDD;}
+		h1 { color: #777; background-color: #CCC; }
+	</style>
+	<script type="text/javascript" src="../external/gl-matrix.js"></script>
+	<script type="text/javascript" src="../build/litegl.js"></script>
+</head>
+<body>
+	<script type="text/javascript">
+
+	//create the rendering context
+	var gl = GL.create({width: window.innerWidth,height: window.innerHeight});
+	var container = document.body;
+	container.appendChild(gl.canvas);
+	gl.animate();
+
+	var ext = gl.getExtension("OES_texture_half_float");
+	if(!ext)
+	{
+		document.body.innerHTML = "OES_texture_half_float NOT SUPPORTED";
+	}
+
+	//build the mesh
+	var cube = GL.Mesh.sphere({size:10});
+	var texture = new GL.Texture(gl.canvas.width,gl.canvas.height, { format: gl.RGB, type: GL.HALF_FLOAT_OES, magFilter: gl.LINEAR });
+	var fbo = new GL.FBO([texture]);
+
+	//create basic matrices for cameras and transformation
+	var persp = mat4.create();
+	var view = mat4.create();
+	var model = mat4.create();
+	var vp = mat4.create();
+	var temp = mat4.create();
+	var identity = mat4.create();
+
+	//get mouse actions
+	gl.captureMouse();
+	gl.onmousemove = function(e)
+	{
+		if(e.dragging)
+			mat4.rotateY(model,model,e.deltax * 0.01);
+	}
+
+	//set the camera position
+	var eye = [0,20,20];
+	mat4.perspective(persp, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 0.1, 1000);
+	mat4.lookAt(view, eye,[0,0,0], [0,1,0]);
+
+	//basic shader
+	var shader = new Shader('\
+			precision highp float;\
+			attribute vec3 a_vertex;\
+			attribute vec2 a_coord;\
+			varying vec2 v_coord;\
+			uniform mat4 u_mvp;\
+			void main() {\
+				v_coord = a_coord;\
+				gl_Position = vec4(a_vertex.xy*2.0-vec2(1.0),0.0,1.0);\
+			}\
+			', '\
+			precision highp float;\
+			varying vec2 v_coord;\
+			uniform sampler2D u_texture;\
+			uniform float u_exp;\
+			void main() {\
+			  gl_FragColor = texture2D(u_texture,v_coord) * u_exp;\
+			}\
+		');
+
+	var phong_shader = new Shader('\
+			precision highp float;\
+			attribute vec3 a_vertex;\
+			attribute vec3 a_normal;\
+			varying vec3 v_pos;\
+			varying vec3 v_normal;\
+			uniform mat4 u_vp;\
+			uniform mat4 u_model;\
+			void main() {\
+				v_normal = (u_model * vec4(a_normal,0.0)).xyz;\
+				v_pos = (u_model * vec4(a_vertex,1.0)).xyz;\
+				gl_Position = u_vp * vec4(v_pos,1.0);\
+			}\
+			', '\
+			precision highp float;\
+			varying vec3 v_pos;\
+			varying vec3 v_normal;\
+			uniform vec4 u_color;\
+			uniform vec3 u_eye;\
+			void main() {\
+				vec3 N = normalize(v_normal);\
+				vec3 L = normalize(vec3(0.4,0.8,-0.8));\
+				vec3 E = normalize(v_pos - u_eye);\
+				vec3 R = reflect(E,N);\
+				float spec = pow( max(0.0,dot(L,R)), 30.0 );\
+			  gl_FragColor = u_color * max(0.0,dot(N,L)) + spec * vec4(2.0);\
+			}\
+		');
+
+	//generic gl flags and settings
+
+	//rendering loop
+	gl.ondraw = function()
+	{
+
+		//render something in the texture
+		fbo.bind();
+			gl.clearColor(0.0,0.0,0.0,1);
+			gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
+			mat4.multiply(vp,persp,view);
+			gl.enable( gl.DEPTH_TEST );
+
+			phong_shader.uniforms({
+				u_color: [0.5,0.5,0.5,1],
+				u_eye: eye,
+				u_model: model,
+				u_vp: vp
+			}).draw(cube);
+		fbo.unbind();
+
+		gl.clearColor(0.1,0.1,0.1,1);
+		gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
+		gl.disable( gl.DEPTH_TEST );
+		shader.uniforms({u_exp: Math.sin(getTime() * 0.001)*0.5+0.5 });
+		texture.toViewport( shader );
+	};
+
+	//update loop
+	gl.onupdate = function(dt)
+	{
+		//rotate cube
+		mat4.rotateY(model,model,dt*0.2);
+	};
+	
+	</script>
+</body>
+
+</html>
+
+
