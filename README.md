@@ -1,7 +1,7 @@
 litegl.js
 =========
 
-Litegl.js is a library that wraps WebGL to make it more user-friendly by creating classes for managing different items like Buffer, Mesh, Texture, Shader and other common aspects of any WebGL applications.
+Litegl.js is a javascript library that wraps WebGL to make it more user-friendly by creating classes for managing different items like Buffer, Mesh, Texture, Shader and other common aspects of any WebGL applications.
 
 It helps simplifying working with WebGL without having to handle all the low-level calls but without losing any freedom.
 
