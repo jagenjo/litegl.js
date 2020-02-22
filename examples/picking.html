@@ -11,8 +11,8 @@
 <title>litegl.js: picking example</title>
 	<link rel="stylesheet" type="text/css" href="style.css" />
 	<style type='text/css'>
+		html, body { width: 100%; height: 100%; margin: 0; padding: 0 }
 		body { background-color: #DDD;}
-		h1 { color: #777; background-color: #CCC; }
 	</style>
 	<script type="text/javascript" src="../external/gl-matrix.js"></script>
 	<script type="text/javascript" src="../build/litegl.js"></script>
@@ -21,8 +21,9 @@
 	function init()
 	{
 		//create the rendering context
-		var gl = GL.create({width:1000,height:500});
-		var container = document.querySelector("#content");
+		var container = document.body;
+
+		var gl = GL.create({width: container.offsetWidth, height: container.offsetHeight});
 		container.appendChild(gl.canvas);
 		gl.animate();
 
@@ -31,7 +32,7 @@
 		var cam_pos = vec3.fromValues(100,0,100);
 
 		//create basic matrices for cameras and transformation
-		var persp = window.persp = mat4.create();
+		var projection = window.persp = mat4.create();
 		var view = window.view = mat4.create();
 		var mvp = window.mvp = mat4.create();
 		var temp = mat4.create();
@@ -43,12 +44,13 @@
 				objects.push({ color: [0.3,0.3,0.3,1.0], model: mat4.translationMatrix( [x*12,y*12,0] ), mesh: cube_mesh });
 
 		//set the camera perspective
-		mat4.perspective(persp, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 0.1, 1000);
+		mat4.perspective( projection, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 0.1, 1000 );
 		//mat4.ortho(persp, -50,50,-50,50,0,500); //ray doesnt work in perspective
 
 		function getClosestObject(x,y)
 		{
-			var RT = new GL.Raytracer(view, persp);
+			mat4.multiply( mvp, projection, view );
+			var RT = new GL.Raytracer( mvp );
 			var ray = RT.getRayForPixel(x,y);
 
 			var closest_object = null;
@@ -83,9 +85,9 @@
 				attribute vec3 a_normal;\
 				varying vec3 v_normal;\
 				uniform mat4 u_mvp;\
-				uniform mat4 u_modelt;\
+				uniform mat4 u_model;\
 				void main() {\
-					v_normal = (u_modelt * vec4(a_normal,1.0)).xyz;\
+					v_normal = (u_model * vec4(a_normal,0.0)).xyz;\
 					gl_Position = u_mvp * vec4(a_vertex,1.0);\
 				}\
 				', '\
@@ -122,14 +124,11 @@
 				mat4.multiply(temp,view,model); //modelview
 				mat4.multiply(mvp,persp,temp); //modelviewprojection
 
-				//compute rotation matrix for normals
-				mat4.toRotationMat4(modelt, model);
-
 				//render mesh using the shader
 				shader.uniforms({
 					u_color: objects[i].color,
 					u_lightvector: L,
-					u_modelt: modelt,
+					u_model: model,
 					u_mvp: mvp
 				}).draw(objects[i].mesh);
 			}
@@ -139,26 +138,12 @@
 		gl.onupdate = function(dt)
 		{
 			cam_pos[0] = Math.sin( getTime() * 0.001 ) * 100;
-			/*
-			var mat = mat4.create();
-			mat4.rotateY(mat,mat,dt*0.2);
-			mat4.multiplyVec3( cam_pos, mat, cam_pos);
-			*/
-			//rotate world
-			//mat4.rotateY(model,model,dt*0.2);
 		};
 	}
 	
 	</script>
 </head>
 <body>
-
-<div id="wrap">
-	<div id="main">
-		<h1>Picking DEMO</h1>
-		<div id="content"></div>
-	</div>
-</div>
 
 <script>init();</script>
 </body>

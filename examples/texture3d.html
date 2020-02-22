@@ -1,0 +1,143 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+
+<title>litegl.js: webgl2</title>
+	<link rel="stylesheet" type="text/css" href="style.css" />
+	<style type='text/css'>
+		html, body { margin: 0; padding: 0; }
+		body { background-color: #DDD;}
+		h1 { color: #777; background-color: #CCC; }
+	</style>
+	<script type="text/javascript" src="../external/gl-matrix.js"></script>
+	<script type="text/javascript" src="../build/litegl.js"></script>
+</head>
+<body>
+	<script type="text/javascript">
+	
+	//create the rendering context
+	var gl = GL.create({width: window.innerWidth,height: window.innerHeight, version: 2});
+	if( gl.webgl_version != 2 || !gl )
+	{
+		alert("WebGL 2.0 not supported by your browser");
+	}
+	var container = document.body;
+	container.appendChild(gl.canvas);
+	gl.animate();
+
+	//build the mesh
+	var mesh = GL.Mesh.cube({size:10,wireframe:true});
+	var sphere = GL.Mesh.sphere({size:100});
+	var size = 64;
+	var data = new Uint8Array( size*size*size*4 );
+	for(var x = 0; x < size; ++x)  
+	for(var y = 0; y < size; ++y) 
+	for(var z = 0; z < size; ++z) { 
+		var pos = z*4 + y * size * 4 + x * size * size * 4;
+		data[pos] = Math.max(0,Math.cos(x*0.25) * 255);
+		data[pos+1] = Math.max(0,Math.cos(y*0.25) * 255);
+		data[pos+2] = Math.max(0,Math.cos(z*0.25) * 255);
+	}
+
+	var texture = new GL.Texture( size,size, { depth: size, texture_type: GL.TEXTURE_3D, format: gl.RGBA, magFilter: gl.NEAREST, pixel_data: data } );
+
+	//create basic matrices for cameras and transformation
+	var persp = mat4.create();
+	var view = mat4.create();
+	var model = mat4.create();
+	var mvp = mat4.create();
+	var temp = mat4.create();
+	var identity = mat4.create();
+
+	//get mouse actions
+	gl.captureMouse();
+	gl.onmousemove = function(e)
+	{
+		if(e.dragging)
+			mat4.rotateY(model,model,e.deltax * 0.01);
+	}
+
+	//set the camera position
+	mat4.perspective(persp, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 0.1, 1000);
+	mat4.lookAt(view, [0,20,20],[0,0,0], [0,1,0]);
+
+	//basic shader
+	var shader = new Shader('\
+			#version 300 es\n\
+			precision highp float;\n\
+			in vec3 a_vertex;\
+			in vec3 a_normal;\
+			in vec2 a_coord;\
+			out vec3 v_pos;\
+			out vec3 v_normal;\
+			out vec2 v_coord;\
+			uniform mat4 u_mvp;\
+			uniform mat4 u_model;\
+			void main() {\
+				v_pos = (u_model * vec4(a_vertex,1.0)).xyz;\
+				v_coord = a_coord;\
+				v_normal = (u_model * vec4(a_normal,0.0)).xyz;\
+				gl_Position = u_mvp * vec4(a_vertex,1.0);\
+			}\
+			', '\
+			#version 300 es\n\
+			precision highp float;\n\
+			precision highp sampler3D;\
+			in vec3 v_pos;\n\
+			in vec3 v_normal;\n\
+			in vec2 v_coord;\
+			out vec4 color;\
+			uniform vec4 u_color;\
+			uniform sampler3D u_texture;\
+			void main() {\
+			  color = u_color * texture( u_texture, v_pos * 0.1 + vec3(0.5) );\
+			}\
+		');
+
+	var flat_shader = GL.Shader.getFlatShader();
+
+	//generic gl flags and settings
+	gl.clearColor(0.1,0.1,0.1,1);
+	gl.enable( gl.DEPTH_TEST );
+
+	//rendering loop
+	gl.ondraw = function()
+	{
+		gl.clearColor(0.1,0.1,0.1,1);
+		gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
+
+		mat4.multiply(mvp,persp,view);
+		flat_shader.uniforms({
+			u_color: [1,1,1,1],
+			u_mvp: mvp
+		}).draw(mesh, gl.LINES, "wireframe" );
+
+		//create modelview and projection matrices
+		mat4.multiply(temp,view,model);
+		mat4.multiply(mvp,persp,temp);
+
+		//render mesh using the shader
+		shader.uniforms({
+			u_color: [1,1,1,1],
+			u_model: model,
+			u_texture: texture.bind(0),
+			u_mvp: mvp
+		}).draw(mesh);
+	};
+
+	//update loop
+	gl.onupdate = function(dt)
+	{
+		//rotate cube
+		var axis = [0.75,1,0.5];
+		vec3.normalize(axis,axis);
+		mat4.rotate(model,model,dt*0.2,axis);
+	};
+	
+	</script>
+</body>
+
+</html>
+
+

@@ -5,10 +5,22 @@
             "name": "../src/core.js",
             "modules": {},
             "classes": {
-                "GL": 1
+                "GL": 1,
+                "gl": 1
             },
             "fors": {},
             "namespaces": {}
+        },
+        "../src/fbo.js": {
+            "name": "../src/fbo.js",
+            "modules": {},
+            "classes": {
+                "GL.FBO": 1
+            },
+            "fors": {},
+            "namespaces": {
+                "GL": 1
+            }
         },
         "../src/geo.js": {
             "name": "../src/geo.js",
@@ -40,26 +52,37 @@
             "name": "../src/mesh.js",
             "modules": {},
             "classes": {
-                "Indexer": 1,
-                "Buffer": 1
+                "GL.Indexer": 1,
+                "GL.Buffer": 1
             },
             "fors": {},
-            "namespaces": {}
+            "namespaces": {
+                "GL": 1
+            }
         },
         "../src/octree.js": {
             "name": "../src/octree.js",
             "modules": {},
             "classes": {
-                "Octree": 1
+                "GL.Octree": 1
             },
             "fors": {},
-            "namespaces": {}
+            "namespaces": {
+                "GL": 1
+            }
         },
         "../src/parsers.js": {
             "name": "../src/parsers.js",
             "modules": {},
+            "classes": {},
+            "fors": {},
+            "namespaces": {}
+        },
+        "../src/primitives.js": {
+            "name": "../src/primitives.js",
+            "modules": {},
             "classes": {
-                "Mesh": 1
+                "GL.Mesh": 1
             },
             "fors": {},
             "namespaces": {}
@@ -68,19 +91,23 @@
             "name": "../src/shader.js",
             "modules": {},
             "classes": {
-                "Shader": 1
+                "GL.Shader": 1
             },
             "fors": {},
-            "namespaces": {}
+            "namespaces": {
+                "GL": 1
+            }
         },
         "../src/texture.js": {
             "name": "../src/texture.js",
             "modules": {},
             "classes": {
-                "Texture": 1
+                "GL.Texture": 1
             },
             "fors": {},
-            "namespaces": {}
+            "namespaces": {
+                "GL": 1
+            }
         },
         "../src/utils.js": {
             "name": "../src/utils.js",
@@ -101,8 +128,51 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "../src/core.js",
-            "line": 7,
-            "description": "The static module that contains all the features"
+            "line": 2,
+            "description": "The global scope that contains all the classes from LiteGL and also all the enums of WebGL so you dont need to create a context to use the values."
+        },
+        "gl": {
+            "name": "gl",
+            "shortname": "gl",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "../src/core.js",
+            "line": 50,
+            "description": "the webgl context returned by GL.create, its a WebGLRenderingContext with some extra methods added"
+        },
+        "GL.FBO": {
+            "name": "GL.FBO",
+            "shortname": "GL.FBO",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "namespace": "GL",
+            "file": "../src/fbo.js",
+            "line": 1,
+            "description": "FBO for FrameBufferObjects, FBOs are used to store the render inside one or several textures \nSupports multibuffer and depthbuffer texture, useful for deferred rendering",
+            "params": [
+                {
+                    "name": "color_textures",
+                    "description": "an array containing the color textures, if not supplied a render buffer will be used",
+                    "type": "Array"
+                },
+                {
+                    "name": "depth_texture",
+                    "description": "the depth texture, if not supplied a render buffer will be used",
+                    "type": "GL.Texture"
+                },
+                {
+                    "name": "stencil",
+                    "description": "create a stencil buffer?",
+                    "type": "Bool"
+                }
+            ],
+            "is_constructor": 1
         },
         "geo": {
             "name": "geo",
@@ -112,9 +182,10 @@
             "extensions": [],
             "plugin_for": [],
             "extension_for": [],
+            "namespace": "",
             "file": "../src/geo.js",
-            "line": 6,
-            "description": "Computational geometry algorithms, is a static calss"
+            "line": 11,
+            "description": "Computational geometry algorithms, is a static class"
         },
         "BBox": {
             "name": "BBox",
@@ -124,8 +195,9 @@
             "extensions": [],
             "plugin_for": [],
             "extension_for": [],
+            "namespace": "",
             "file": "../src/geo.js",
-            "line": 514,
+            "line": 702,
             "description": "BBox is a class to create BoundingBoxes but it works as glMatrix, creating Float32Array with the info inside instead of objects\nThe bounding box is stored as center,halfsize,min,max,radius (total of 13 floats)"
         },
         "LEvent": {
@@ -136,41 +208,44 @@
             "extensions": [],
             "plugin_for": [],
             "extension_for": [],
+            "namespace": "",
             "file": "../src/levent.js",
-            "line": 1,
-            "description": "LEvent is a lightweight events library focused in low memory footprint",
+            "line": 5,
+            "description": "LEvent is a lightweight events library focused in low memory footprint and fast delivery.\nIt works by creating a property called \"__levents\" inside the object that has the bindings, and storing arrays with all the bindings.",
             "is_constructor": 1
         },
-        "Indexer": {
-            "name": "Indexer",
+        "GL.Indexer": {
+            "name": "GL.Indexer",
             "shortname": "Indexer",
             "classitems": [],
             "plugins": [],
             "extensions": [],
             "plugin_for": [],
             "extension_for": [],
+            "namespace": "GL",
             "file": "../src/mesh.js",
-            "line": 1,
+            "line": 5,
             "description": "Indexer used to reuse vertices among a mesh",
             "is_constructor": 1
         },
-        "Buffer": {
-            "name": "Buffer",
+        "GL.Buffer": {
+            "name": "GL.Buffer",
             "shortname": "Buffer",
             "classitems": [],
             "plugins": [],
             "extensions": [],
             "plugin_for": [],
             "extension_for": [],
+            "namespace": "GL",
             "file": "../src/mesh.js",
-            "line": 22,
+            "line": 26,
             "description": "A data buffer to be stored in the GPU",
             "is_constructor": 1,
             "params": [
                 {
                     "name": "target",
                     "description": "gl.ARRAY_BUFFER, ELEMENT_ARRAY_BUFFER",
-                    "type": "String"
+                    "type": "Number"
                 },
                 {
                     "name": "data",
@@ -189,47 +264,29 @@
                 }
             ]
         },
-        "Mesh": {
-            "name": "Mesh",
+        "GL.Mesh": {
+            "name": "GL.Mesh",
             "shortname": "Mesh",
             "classitems": [],
             "plugins": [],
             "extensions": [],
             "plugin_for": [],
             "extension_for": [],
-            "file": "../src/parsers.js",
-            "line": 2,
-            "description": "A data buffer to be stored in the GPU",
-            "params": [
-                {
-                    "name": "vertexBuffers",
-                    "description": "object with all the vertex streams",
-                    "type": "Object"
-                },
-                {
-                    "name": "indexBuffers",
-                    "description": "object with all the indices streams",
-                    "type": "Object"
-                },
-                {
-                    "name": "options",
-                    "description": "",
-                    "type": "Object"
-                }
-            ],
-            "is_constructor": 1,
-            "itemtype": "method"
+            "namespace": "GL",
+            "file": "../src/primitives.js",
+            "line": 2
         },
-        "Octree": {
-            "name": "Octree",
+        "GL.Octree": {
+            "name": "GL.Octree",
             "shortname": "Octree",
             "classitems": [],
             "plugins": [],
             "extensions": [],
             "plugin_for": [],
             "extension_for": [],
+            "namespace": "GL",
             "file": "../src/octree.js",
-            "line": 1,
+            "line": 5,
             "description": "Octree generator for fast ray triangle collision with meshes\n\tDependencies: glmatrix.js (for vector and matrix operations)",
             "is_constructor": 1,
             "params": [
@@ -240,27 +297,28 @@
                 }
             ]
         },
-        "Shader": {
-            "name": "Shader",
+        "GL.Shader": {
+            "name": "GL.Shader",
             "shortname": "Shader",
             "classitems": [],
             "plugins": [],
             "extensions": [],
             "plugin_for": [],
             "extension_for": [],
+            "namespace": "GL",
             "file": "../src/shader.js",
-            "line": 1,
+            "line": 6,
             "description": "Shader class to upload programs to the GPU",
             "is_constructor": 1,
             "params": [
                 {
                     "name": "vertexSource",
-                    "description": "",
+                    "description": "(it also allows to pass a compiled vertex shader)",
                     "type": "String"
                 },
                 {
                     "name": "fragmentSource",
-                    "description": "",
+                    "description": "(it also allows to pass a compiled fragment shader)",
                     "type": "String"
                 },
                 {
@@ -270,17 +328,18 @@
                 }
             ]
         },
-        "Texture": {
-            "name": "Texture",
+        "GL.Texture": {
+            "name": "GL.Texture",
             "shortname": "Texture",
             "classitems": [],
             "plugins": [],
             "extensions": [],
             "plugin_for": [],
             "extension_for": [],
+            "namespace": "GL",
             "file": "../src/texture.js",
-            "line": 1,
-            "description": "Texture class to upload images to the GPU, default is gl.TEXTURE_2D, gl.RGBAof gl.UNSIGNED_BYTE with filter gl.LINEAR, and gl.CLAMP_TO_EDGE\n\tThere is a list of options\n\t==========================\n\t- texture_type: gl.TEXTURE_2D, gl.TEXTURE_CUBE_MAP\n\t- format: gl.RGB, gl.RGBA, gl.DEPTH_COMPONENT\n\t- type: gl.UNSIGNED_BYTE, gl.UNSIGNED_SHORT, gl.HALF_FLOAT_OES, gl.FLOAT\n\t- filter: filtering for mag and min: gl.NEAREST or gl.LINEAR\n\t- magFilter: magnifying filter: gl.NEAREST, gl.LINEAR\n\t- minFilter: minifying filter: gl.NEAREST, gl.LINEAR, gl.LINEAR_MIPMAP_LINEAR\n\t- premultiply_alpha: multiplies alpha channel by every color channel\n\t- wrap: texture wrapping: gl.CLAMP_TO_EDGE, gl.REPEAT, gl.MIRROR",
+            "line": 5,
+            "description": "Texture class to upload images to the GPU, default is gl.TEXTURE_2D, gl.RGBA of gl.UNSIGNED_BYTE with filters set to gl.LINEAR and wrap to gl.CLAMP_TO_EDGE <br/>\n\tThere is a list of options <br/>\n\t========================== <br/>\n\t- texture_type: gl.TEXTURE_2D, gl.TEXTURE_CUBE_MAP, default gl.TEXTURE_2D <br/>\n\t- format: gl.RGB, gl.RGBA, gl.DEPTH_COMPONENT, default gl.RGBA <br/>\n\t- type: gl.UNSIGNED_BYTE, gl.UNSIGNED_SHORT, gl.HALF_FLOAT_OES, gl.FLOAT, default gl.UNSIGNED_BYTE <br/>\n\t- filter: filtering for mag and min: gl.NEAREST or gl.LINEAR, default gl.NEAREST <br/>\n\t- magFilter: magnifying filter: gl.NEAREST, gl.LINEAR, default gl.NEAREST <br/>\n\t- minFilter: minifying filter: gl.NEAREST, gl.LINEAR, gl.LINEAR_MIPMAP_LINEAR, default gl.NEAREST <br/>\n\t- wrap: texture wrapping: gl.CLAMP_TO_EDGE, gl.REPEAT, gl.MIRROR, default gl.CLAMP_TO_EDGE (also accepts wrapT and wrapS for separate settings) <br/>\n\t- pixel_data: ArrayBufferView with the pixel data to upload to the texture, otherwise the texture will be black (if cubemaps then pass an array[6] with the data for every face)<br/>\n\t- premultiply_alpha : multiply the color by the alpha value when uploading, default FALSE <br/>\n\t- no_flip : do not flip in Y, default TRUE <br/>\n\t- anisotropic : number of anisotropic fetches, default 0 <br/>\n\n\tcheck for more info about formats: https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texImage2D",
             "params": [
                 {
                     "name": "width",
@@ -301,40 +360,72 @@
             "is_constructor": 1
         }
     },
+    "elements": {},
     "classitems": [
         {
             "file": "../src/core.js",
-            "line": 19,
-            "description": "creates a new WebGL canvas",
+            "line": 7,
+            "description": "creates a new WebGL context (it can create the canvas or use an existing one)",
             "itemtype": "method",
             "name": "create",
             "params": [
                 {
                     "name": "options",
-                    "description": "supported are: width, height",
+                    "description": "supported are: \n- width\n- height\n- canvas\n- container (string or element)",
                     "type": "Object"
                 }
             ],
             "return": {
-                "description": "gl context for webgl",
-                "type": "Gl"
+                "description": "webgl context with all the extra functions (check gl in the doc for more info)",
+                "type": "WebGLRenderingContext"
             },
             "class": "GL"
         },
         {
             "file": "../src/core.js",
-            "line": 73,
-            "description": "Launch animation loop (calls gl.onupdate and gl.ondraw every frame)",
+            "line": 159,
+            "description": "sets this context as the current global gl context (in case you have more than one)",
             "itemtype": "method",
-            "name": "gl.animate",
-            "class": "GL"
+            "name": "makeCurrent",
+            "class": "gl"
         },
         {
             "file": "../src/core.js",
-            "line": 96,
-            "description": "Tells the system to capture mouse events on the canvas. This will trigger onmousedown, onmousemove, onmouseup, onmousewheel callbacks in the canvas.",
+            "line": 168,
+            "description": "executes callback inside this webgl context",
             "itemtype": "method",
-            "name": "gl.captureMouse",
+            "name": "execute",
+            "params": [
+                {
+                    "name": "callback",
+                    "description": "",
+                    "type": "Function"
+                }
+            ],
+            "class": "gl"
+        },
+        {
+            "file": "../src/core.js",
+            "line": 182,
+            "description": "Launch animation loop (calls gl.onupdate and gl.ondraw every frame)\nexample: gl.ondraw = function(){ ... }   or  gl.onupdate = function(dt) { ... }",
+            "itemtype": "method",
+            "name": "animate",
+            "class": "gl"
+        },
+        {
+            "file": "../src/core.js",
+            "line": 238,
+            "description": "Destroy this WebGL context (removes also the Canvas from the DOM)",
+            "itemtype": "method",
+            "name": "destroy",
+            "class": "gl"
+        },
+        {
+            "file": "../src/core.js",
+            "line": 281,
+            "description": "returns true if button num is pressed (where num could be GL.LEFT_MOUSE_BUTTON, GL.RIGHT_MOUSE_BUTTON, GL.MIDDLE_MOUSE_BUTTON",
+            "itemtype": "method",
+            "name": "captureMouse",
             "params": [
                 {
                     "name": "capture_wheel",
@@ -342,42 +433,287 @@
                     "type": "Boolean"
                 }
             ],
-            "class": "GL"
+            "class": "gl"
         },
         {
             "file": "../src/core.js",
-            "line": 197,
+            "line": 297,
+            "description": "Tells the system to capture mouse events on the canvas. \nThis will trigger onmousedown, onmousemove, onmouseup, onmousewheel callbacks assigned in the gl context\nexample: gl.onmousedown = function(e){ ... }\nThe event is a regular MouseEvent with some extra parameters",
+            "itemtype": "method",
+            "name": "captureMouse",
+            "params": [
+                {
+                    "name": "capture_wheel",
+                    "description": "capture also the mouse wheel",
+                    "type": "Boolean"
+                }
+            ],
+            "class": "gl"
+        },
+        {
+            "file": "../src/core.js",
+            "line": 495,
             "description": "Tells the system to capture key events on the canvas. This will trigger onkey",
             "itemtype": "method",
-            "name": "gl.captureKeys",
+            "name": "captureKeys",
             "params": [
                 {
                     "name": "prevent_default",
                     "description": "prevent default behaviour (like scroll on the web, etc)",
                     "type": "Boolean"
+                },
+                {
+                    "name": "only_canvas",
+                    "description": "only caches keyboard events if they happen when the canvas is in focus",
+                    "type": "Boolean"
                 }
             ],
-            "class": "GL"
+            "class": "gl"
         },
         {
             "file": "../src/core.js",
-            "line": 241,
+            "line": 579,
             "description": "Tells the system to capture gamepad events on the canvas.",
             "itemtype": "method",
-            "name": "gl.captureGamepads",
-            "class": "GL"
+            "name": "captureGamepads",
+            "class": "gl"
         },
         {
             "file": "../src/core.js",
-            "line": 260,
+            "line": 603,
             "description": "returns the detected gamepads on the system",
             "itemtype": "method",
-            "name": "gl.getGamepads",
-            "class": "GL"
+            "name": "getGamepads",
+            "params": [
+                {
+                    "name": "skip_mapping",
+                    "description": "if set to true it returns the basic gamepad, otherwise it returns a class with mapping info to XBOX controller",
+                    "type": "Bool"
+                }
+            ],
+            "class": "gl"
+        },
+        {
+            "file": "../src/core.js",
+            "line": 718,
+            "description": "launches de canvas in fullscreen mode",
+            "itemtype": "method",
+            "name": "fullscreen",
+            "class": "gl"
+        },
+        {
+            "file": "../src/core.js",
+            "line": 735,
+            "description": "returns a canvas with a snapshot of an area\nthis is safer than using the canvas itself due to internals of webgl",
+            "itemtype": "method",
+            "name": "snapshot",
+            "params": [
+                {
+                    "name": "startx",
+                    "description": "viewport x coordinate",
+                    "type": "Number"
+                },
+                {
+                    "name": "starty",
+                    "description": "viewport y coordinate from bottom",
+                    "type": "Number"
+                },
+                {
+                    "name": "areax",
+                    "description": "viewport area width",
+                    "type": "Number"
+                },
+                {
+                    "name": "areay",
+                    "description": "viewport area height",
+                    "type": "Number"
+                }
+            ],
+            "return": {
+                "description": "canvas",
+                "type": "Canvas"
+            },
+            "class": "gl"
+        },
+        {
+            "file": "../src/core.js",
+            "line": 797,
+            "description": "returns a texture and caches it inside gl.textures[]",
+            "itemtype": "method",
+            "name": "loadTexture",
+            "params": [
+                {
+                    "name": "url",
+                    "description": "",
+                    "type": "String"
+                },
+                {
+                    "name": "options",
+                    "description": "(same options as when creating a texture)",
+                    "type": "Object"
+                },
+                {
+                    "name": "callback",
+                    "description": "function called once the texture is loaded",
+                    "type": "Function"
+                }
+            ],
+            "return": {
+                "description": "texture",
+                "type": "Texture"
+            },
+            "class": "gl"
+        },
+        {
+            "file": "../src/core.js",
+            "line": 829,
+            "description": "draws a texture to the viewport",
+            "itemtype": "method",
+            "name": "drawTexture",
+            "params": [
+                {
+                    "name": "texture",
+                    "description": "",
+                    "type": "Texture"
+                },
+                {
+                    "name": "x",
+                    "description": "in viewport coordinates",
+                    "type": "Number"
+                },
+                {
+                    "name": "y",
+                    "description": "in viewport coordinates",
+                    "type": "Number"
+                },
+                {
+                    "name": "w",
+                    "description": "in viewport coordinates",
+                    "type": "Number"
+                },
+                {
+                    "name": "h",
+                    "description": "in viewport coordinates",
+                    "type": "Number"
+                },
+                {
+                    "name": "tx",
+                    "description": "texture x in texture coordinates",
+                    "type": "Number"
+                },
+                {
+                    "name": "ty",
+                    "description": "texture y in texture coordinates",
+                    "type": "Number"
+                },
+                {
+                    "name": "tw",
+                    "description": "texture width in texture coordinates",
+                    "type": "Number"
+                },
+                {
+                    "name": "th",
+                    "description": "texture height in texture coordinates",
+                    "type": "Number"
+                }
+            ],
+            "class": "gl"
+        },
+        {
+            "file": "../src/core.js",
+            "line": 892,
+            "description": "use it to reset the the initial gl state",
+            "itemtype": "method",
+            "name": "gl.reset",
+            "class": "gl"
+        },
+        {
+            "file": "../src/core.js",
+            "line": 1010,
+            "description": "Tells you if the app is running on a mobile device (iOS or Android)",
+            "itemtype": "method",
+            "name": "isMobile",
+            "return": {
+                "description": "true if is running on a iOS or Android device",
+                "type": "Boolean"
+            },
+            "class": "gl"
+        },
+        {
+            "file": "../src/fbo.js",
+            "line": 41,
+            "description": "Changes the textures binded to this FBO",
+            "itemtype": "method",
+            "name": "setTextures",
+            "params": [
+                {
+                    "name": "color_textures",
+                    "description": "an array containing the color textures, if not supplied a render buffer will be used",
+                    "type": "Array"
+                },
+                {
+                    "name": "depth_texture",
+                    "description": "the depth texture, if not supplied a render buffer will be used",
+                    "type": "GL.Texture"
+                },
+                {
+                    "name": "skip_disable",
+                    "description": "it doenst try to go back to the previous FBO enabled in case there was one",
+                    "type": "Boolean"
+                }
+            ],
+            "class": "GL.FBO",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/fbo.js",
+            "line": 103,
+            "description": "Updates the FBO with the new set of textures and buffers",
+            "itemtype": "method",
+            "name": "update",
+            "params": [
+                {
+                    "name": "skip_disable",
+                    "description": "it doenst try to go back to the previous FBO enabled in case there was one",
+                    "type": "Boolean"
+                }
+            ],
+            "class": "GL.FBO",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/fbo.js",
+            "line": 279,
+            "description": "Enables this FBO (from now on all the render will be stored in the textures attached to this FBO\nIt stores the previous viewport to restore it afterwards, and changes it to full FBO size",
+            "itemtype": "method",
+            "name": "bind",
+            "params": [
+                {
+                    "name": "keep_old",
+                    "description": "keeps the previous FBO is one was attached to restore it afterwards",
+                    "type": "Boolean"
+                }
+            ],
+            "class": "GL.FBO",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/fbo.js",
+            "line": 308,
+            "description": "Disables this FBO, if it was binded with keep_old then the old FBO is enabled, otherwise it will render to the screen\nRestores viewport to previous",
+            "itemtype": "method",
+            "name": "unbind",
+            "class": "GL.FBO",
+            "namespace": "GL"
         },
         {
             "file": "../src/geo.js",
-            "line": 13,
+            "line": 6,
+            "class": "geo"
+        },
+        {
+            "file": "../src/geo.js",
+            "line": 18,
             "description": "Returns a float4 containing the info about a plane with normal N and that passes through point P",
             "itemtype": "method",
             "name": "createPlane",
@@ -401,7 +737,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 25,
+            "line": 30,
             "description": "Computes the distance between the point and the plane",
             "itemtype": "method",
             "name": "distancePointToPlane",
@@ -425,7 +761,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 37,
+            "line": 42,
             "description": "Computes the square distance between the point and the plane",
             "itemtype": "method",
             "name": "distance2PointToPlane",
@@ -449,7 +785,75 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 49,
+            "line": 54,
+            "description": "Projects a 3D point on a 3D line",
+            "itemtype": "method",
+            "name": "projectPointOnLine",
+            "params": [
+                {
+                    "name": "P",
+                    "description": "",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "A",
+                    "description": "line start",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "B",
+                    "description": "line end",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "result",
+                    "description": "to store result (optional)",
+                    "type": "Vec3"
+                }
+            ],
+            "return": {
+                "description": "projectec point",
+                "type": "Vec3"
+            },
+            "class": "geo"
+        },
+        {
+            "file": "../src/geo.js",
+            "line": 76,
+            "description": "Projects a 2D point on a 2D line",
+            "itemtype": "method",
+            "name": "project2DPointOnLine",
+            "params": [
+                {
+                    "name": "P",
+                    "description": "",
+                    "type": "Vec2"
+                },
+                {
+                    "name": "A",
+                    "description": "line start",
+                    "type": "Vec2"
+                },
+                {
+                    "name": "B",
+                    "description": "line end",
+                    "type": "Vec2"
+                },
+                {
+                    "name": "result",
+                    "description": "to store result (optional)",
+                    "type": "Vec2"
+                }
+            ],
+            "return": {
+                "description": "projectec point",
+                "type": "Vec2"
+            },
+            "class": "geo"
+        },
+        {
+            "file": "../src/geo.js",
+            "line": 97,
             "description": "Projects point on plane",
             "itemtype": "method",
             "name": "projectPointOnPlane",
@@ -483,7 +887,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 66,
+            "line": 114,
             "description": "Finds the reflected point over a plane (useful for reflecting camera position when rendering reflections)",
             "itemtype": "method",
             "name": "reflectPointInPlane",
@@ -512,7 +916,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 84,
+            "line": 132,
             "description": "test a ray plane collision and retrieves the collision point",
             "itemtype": "method",
             "name": "testRayPlane",
@@ -551,7 +955,46 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 108,
+            "line": 156,
+            "description": "test collision between segment and plane and retrieves the collision point",
+            "itemtype": "method",
+            "name": "testSegmentPlane",
+            "params": [
+                {
+                    "name": "start",
+                    "description": "segment start",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "end",
+                    "description": "segment end",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "P",
+                    "description": "point where the plane passes",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "N",
+                    "description": "normal of the plane",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "result",
+                    "description": "collision position",
+                    "type": "Vec3"
+                }
+            ],
+            "return": {
+                "description": "returns if the segment collides the plane or it is parallel to the plane",
+                "type": "Boolean"
+            },
+            "class": "geo"
+        },
+        {
+            "file": "../src/geo.js",
+            "line": 187,
             "description": "test a ray sphere collision and retrieves the collision point",
             "itemtype": "method",
             "name": "testRaySphere",
@@ -563,7 +1006,7 @@
                 },
                 {
                     "name": "direction",
-                    "description": "ray direction",
+                    "description": "ray direction (normalized)",
                     "type": "Vec3"
                 },
                 {
@@ -578,8 +1021,13 @@
                 },
                 {
                     "name": "result",
-                    "description": "collision position",
+                    "description": "[optional] collision position",
                     "type": "Vec3"
+                },
+                {
+                    "name": "max_dist",
+                    "description": "not fully tested",
+                    "type": "Number"
                 }
             ],
             "return": {
@@ -590,10 +1038,10 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 149,
-            "description": "test a ray cylinder collision and retrieves the collision point",
+            "line": 234,
+            "description": "test a ray cylinder collision (only vertical cylinders) and retrieves the collision point [not fully tested]",
             "itemtype": "method",
-            "name": "testRaySphere",
+            "name": "testRayCylinder",
             "params": [
                 {
                     "name": "start",
@@ -634,7 +1082,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 235,
+            "line": 323,
             "description": "test a ray bounding-box collision and retrieves the collision point, the BB must be Axis Aligned",
             "itemtype": "method",
             "name": "testRayBox",
@@ -673,14 +1121,14 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 312,
+            "line": 411,
             "description": "test a ray bounding-box collision, it uses the  BBox class and allows to use non-axis aligned bbox",
             "itemtype": "method",
             "name": "testRayBBox",
             "params": [
                 {
-                    "name": "start",
-                    "description": "ray start",
+                    "name": "origin",
+                    "description": "ray origin",
                     "type": "Vec3"
                 },
                 {
@@ -695,12 +1143,12 @@
                 },
                 {
                     "name": "model",
-                    "description": "transformation of the BBox",
+                    "description": "transformation of the BBox [optional]",
                     "type": "Mat4"
                 },
                 {
                     "name": "result",
-                    "description": "collision position",
+                    "description": "collision position in world space unless in_local is true",
                     "type": "Vec3"
                 }
             ],
@@ -712,7 +1160,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 340,
+            "line": 445,
             "description": "test if a 3d point is inside a BBox",
             "itemtype": "method",
             "name": "testPointBBox",
@@ -736,7 +1184,60 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 387,
+            "line": 460,
+            "description": "test if a BBox overlaps another BBox",
+            "itemtype": "method",
+            "name": "testBBoxBBox",
+            "params": [
+                {
+                    "name": "a",
+                    "description": "",
+                    "type": "BBox"
+                },
+                {
+                    "name": "b",
+                    "description": "",
+                    "type": "BBox"
+                }
+            ],
+            "return": {
+                "description": "true if it overlaps",
+                "type": "Boolean"
+            },
+            "class": "geo"
+        },
+        {
+            "file": "../src/geo.js",
+            "line": 492,
+            "description": "test if a sphere overlaps a BBox",
+            "itemtype": "method",
+            "name": "testSphereBBox",
+            "params": [
+                {
+                    "name": "point",
+                    "description": "",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "radius",
+                    "description": "",
+                    "type": "Float"
+                },
+                {
+                    "name": "bounding_box",
+                    "description": "",
+                    "type": "BBox"
+                }
+            ],
+            "return": {
+                "description": "true if it overlaps",
+                "type": "Boolean"
+            },
+            "class": "geo"
+        },
+        {
+            "file": "../src/geo.js",
+            "line": 575,
             "description": "extract frustum planes given a view-projection matrix",
             "itemtype": "method",
             "name": "extractPlanes",
@@ -755,7 +1256,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 436,
+            "line": 624,
             "description": "test a BBox against the frustum",
             "itemtype": "method",
             "name": "frustumTestBox",
@@ -779,7 +1280,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 463,
+            "line": 651,
             "description": "test a Sphere against the frustum",
             "itemtype": "method",
             "name": "frustumTestSphere",
@@ -803,7 +1304,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 498,
+            "line": 686,
             "description": "test if a 2d point is inside a 2d polygon",
             "itemtype": "method",
             "name": "testPoint2DInPolygon",
@@ -827,7 +1328,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 529,
+            "line": 718,
             "description": "create an empty bbox",
             "itemtype": "method",
             "name": "create",
@@ -839,7 +1340,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 539,
+            "line": 728,
             "description": "create an bbox copy from another one",
             "itemtype": "method",
             "name": "clone",
@@ -851,7 +1352,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 549,
+            "line": 738,
             "description": "copy one bbox into another",
             "itemtype": "method",
             "name": "copy",
@@ -875,7 +1376,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 562,
+            "line": 751,
             "description": "create a bbox from one point",
             "itemtype": "method",
             "name": "fromPoint",
@@ -894,7 +1395,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 577,
+            "line": 766,
             "description": "create a bbox from min and max points",
             "itemtype": "method",
             "name": "fromMinMax",
@@ -918,7 +1419,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 591,
+            "line": 780,
             "description": "create a bbox from center and halfsize",
             "itemtype": "method",
             "name": "fromCenterHalfsize",
@@ -942,7 +1443,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 605,
+            "line": 794,
             "description": "create a bbox from a typed-array containing points",
             "itemtype": "method",
             "name": "fromPoints",
@@ -961,7 +1462,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 618,
+            "line": 807,
             "description": "set the values to a BB from a set of points",
             "itemtype": "method",
             "name": "setFromPoints",
@@ -985,7 +1486,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 648,
+            "line": 862,
             "description": "set the values to a BB from min and max",
             "itemtype": "method",
             "name": "setMinMax",
@@ -1014,7 +1515,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 674,
+            "line": 893,
             "description": "set the values to a BB from center and halfsize",
             "itemtype": "method",
             "name": "setCenterHalfsize",
@@ -1048,10 +1549,10 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 701,
+            "line": 920,
             "description": "Apply a matrix transformation to the BBox (applies to every corner and recomputes the BB)",
             "itemtype": "method",
-            "name": "setCenterHalfsize",
+            "name": "transformMat4",
             "params": [
                 {
                     "name": "out",
@@ -1077,7 +1578,7 @@
         },
         {
             "file": "../src/geo.js",
-            "line": 727,
+            "line": 963,
             "description": "Computes the eight corners of the BBox and returns it",
             "itemtype": "method",
             "name": "getCorners",
@@ -1101,12 +1602,17 @@
         },
         {
             "file": "../src/gl-matrix-extra.js",
-            "line": 115,
+            "line": 186,
             "class": "LEvent"
         },
         {
             "file": "../src/levent.js",
-            "line": 11,
+            "line": 1,
+            "class": "LEvent"
+        },
+        {
+            "file": "../src/levent.js",
+            "line": 14,
             "description": "Binds an event to an instance",
             "itemtype": "method",
             "name": "LEvent.bind",
@@ -1136,7 +1642,7 @@
         },
         {
             "file": "../src/levent.js",
-            "line": 30,
+            "line": 46,
             "description": "Unbinds an event from an instance",
             "itemtype": "method",
             "name": "LEvent.unbind",
@@ -1166,7 +1672,7 @@
         },
         {
             "file": "../src/levent.js",
-            "line": 59,
+            "line": 87,
             "description": "Unbinds all events from an instance (or the ones that match certain target_instance)",
             "itemtype": "method",
             "name": "LEvent.unbindAll",
@@ -1186,7 +1692,27 @@
         },
         {
             "file": "../src/levent.js",
-            "line": 103,
+            "line": 126,
+            "description": "Unbinds all callbacks associated to one specific event from this instance",
+            "itemtype": "method",
+            "name": "LEvent.unbindAll",
+            "params": [
+                {
+                    "name": "instance",
+                    "description": "where the events are binded",
+                    "type": "Object"
+                },
+                {
+                    "name": "event",
+                    "description": "name of the event you want to remove all binds",
+                    "type": "String"
+                }
+            ],
+            "class": "LEvent"
+        },
+        {
+            "file": "../src/levent.js",
+            "line": 146,
             "description": "Tells if there is a binded callback that matches the criteria",
             "itemtype": "method",
             "name": "LEvent.isBind",
@@ -1216,8 +1742,56 @@
         },
         {
             "file": "../src/levent.js",
-            "line": 123,
-            "description": "Triggers and event in an instance",
+            "line": 175,
+            "description": "Tells if there is any callback binded to this event",
+            "itemtype": "method",
+            "name": "LEvent.hasBind",
+            "params": [
+                {
+                    "name": "instance",
+                    "description": "where the are the events binded",
+                    "type": "Object"
+                },
+                {
+                    "name": "event_name",
+                    "description": "string defining the event name",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "true is there is at least one",
+                "type": "Boolean"
+            },
+            "class": "LEvent"
+        },
+        {
+            "file": "../src/levent.js",
+            "line": 192,
+            "description": "Tells if there is any callback binded to this object pointing to a method in the target object",
+            "itemtype": "method",
+            "name": "LEvent.hasBindTo",
+            "params": [
+                {
+                    "name": "instance",
+                    "description": "where there are the events binded",
+                    "type": "Object"
+                },
+                {
+                    "name": "target",
+                    "description": "instance to check to",
+                    "type": "Object"
+                }
+            ],
+            "return": {
+                "description": "true is there is at least one",
+                "type": "Boolean"
+            },
+            "class": "LEvent"
+        },
+        {
+            "file": "../src/levent.js",
+            "line": 222,
+            "description": "Triggers and event in an instance\nIf the callback returns true then it will stop the propagation and return true",
             "itemtype": "method",
             "name": "LEvent.trigger",
             "params": [
@@ -1237,17 +1811,22 @@
                     "type": "*"
                 },
                 {
-                    "name": "skip_jquery",
-                    "description": "[optional] force to skip jquery triggering",
-                    "type": "Boolean"
+                    "name": "reverse_order",
+                    "description": "trigger in reverse order (binded last get called first)",
+                    "type": "Bool"
+                },
+                {
+                    "name": "expand_parameters",
+                    "description": "parameters are passed not as one single parameter, but as many\nreturn {bool} true if the event passed was blocked by any binded callback",
+                    "type": "Bool"
                 }
             ],
             "class": "LEvent"
         },
         {
             "file": "../src/levent.js",
-            "line": 152,
-            "description": "Triggers and event to every element in an array",
+            "line": 283,
+            "description": "Triggers and event to every element in an array.\nIf the event returns true, it must be intercepted",
             "itemtype": "method",
             "name": "LEvent.triggerArray",
             "params": [
@@ -1267,16 +1846,42 @@
                     "type": "*"
                 },
                 {
-                    "name": "skip_jquery",
-                    "description": "[optional] force to skip jquery triggering",
-                    "type": "Boolean"
+                    "name": "reverse_order",
+                    "description": "trigger in reverse order (binded last get called first)",
+                    "type": "Bool"
+                },
+                {
+                    "name": "expand_parameters",
+                    "description": "parameters are passed not as one single parameter, but as many\nreturn {bool} false",
+                    "type": "Bool"
+                }
+            ],
+            "class": "LEvent"
+        },
+        {
+            "file": "../src/levent.js",
+            "line": 381,
+            "description": "Adds the methods to bind, trigger and unbind to this class prototype",
+            "itemtype": "method",
+            "name": "LEvent.extendClass",
+            "params": [
+                {
+                    "name": "constructor",
+                    "description": "",
+                    "type": "Object"
                 }
             ],
             "class": "LEvent"
         },
         {
             "file": "../src/mesh.js",
-            "line": 43,
+            "line": 1,
+            "class": "GL.Indexer",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 55,
             "description": "Applies an action to every vertex in this buffer",
             "itemtype": "method",
             "name": "forEach",
@@ -1287,14 +1892,31 @@
                     "type": "Function"
                 }
             ],
-            "class": "Buffer"
+            "class": "GL.Buffer",
+            "namespace": "GL"
         },
         {
             "file": "../src/mesh.js",
-            "line": 58,
+            "line": 70,
+            "description": "Applies a mat4 transform to every triplets in the buffer (assuming they are points)\nNo upload is performed (to ensure efficiency in case there are several operations performed)",
+            "itemtype": "method",
+            "name": "applyTransform",
+            "params": [
+                {
+                    "name": "mat",
+                    "description": "",
+                    "type": "Mat4"
+                }
+            ],
+            "class": "GL.Buffer",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 87,
             "description": "Uploads the buffer data (stored in this.data) to the GPU",
             "itemtype": "method",
-            "name": "compile",
+            "name": "upload",
             "params": [
                 {
                     "name": "stream_type",
@@ -1302,11 +1924,100 @@
                     "type": "Number"
                 }
             ],
-            "class": "Buffer"
+            "class": "GL.Buffer",
+            "namespace": "GL"
         },
         {
             "file": "../src/mesh.js",
-            "line": 136,
+            "line": 141,
+            "description": "Assign data to buffer and uploads it (it allows range)",
+            "itemtype": "method",
+            "name": "setData",
+            "params": [
+                {
+                    "name": "data",
+                    "description": "in Float32Array format usually",
+                    "type": "ArrayBufferView"
+                },
+                {
+                    "name": "offset",
+                    "description": "offset in bytes",
+                    "type": "Number"
+                }
+            ],
+            "class": "GL.Buffer",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 181,
+            "description": "Uploads part of the buffer data (stored in this.data) to the GPU",
+            "itemtype": "method",
+            "name": "uploadRange",
+            "params": [
+                {
+                    "name": "start",
+                    "description": "offset in bytes",
+                    "type": "Number"
+                },
+                {
+                    "name": "size",
+                    "description": "sizes in bytes",
+                    "type": "Number"
+                }
+            ],
+            "class": "GL.Buffer",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 204,
+            "description": "Clones one buffer (it allows to share the same data between both buffers)",
+            "itemtype": "method",
+            "name": "clone",
+            "params": [
+                {
+                    "name": "share",
+                    "description": "if you want that both buffers share the same data (default false)\nreturn {GL.Buffer} buffer cloned",
+                    "type": "Boolean"
+                }
+            ],
+            "class": "GL.Buffer",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 263,
+            "description": "Deletes the content from the GPU and destroys the handler",
+            "itemtype": "method",
+            "name": "delete",
+            "class": "GL.Buffer",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 348,
+            "description": "Adds buffer to mesh",
+            "itemtype": "method",
+            "name": "addBuffer",
+            "params": [
+                {
+                    "name": "name",
+                    "description": "",
+                    "type": "String"
+                },
+                {
+                    "name": "buffer",
+                    "description": "",
+                    "type": "Buffer"
+                }
+            ],
+            "class": "GL.Mesh",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 367,
             "description": "Adds vertex and indices buffers to a mesh",
             "itemtype": "method",
             "name": "addBuffers",
@@ -1327,14 +2038,15 @@
                     "type": "Enum"
                 }
             ],
-            "class": "Mesh"
+            "class": "GL.Mesh",
+            "namespace": "GL"
         },
         {
             "file": "../src/mesh.js",
-            "line": 216,
+            "line": 461,
             "description": "Creates a new empty buffer and attachs it to this mesh",
             "itemtype": "method",
-            "name": "addVertexBuffer",
+            "name": "createVertexBuffer",
             "params": [
                 {
                     "name": "name",
@@ -1348,7 +2060,7 @@
                 },
                 {
                     "name": "spacing",
-                    "description": "components per vertex [optioanl, if ommited is used the common_buffers, otherwise 3]",
+                    "description": "components per vertex [optional, if ommited is used the common_buffers, if not found then uses 3 ]",
                     "type": "Number"
                 },
                 {
@@ -1362,11 +2074,48 @@
                     "type": "Enum"
                 }
             ],
-            "class": "Mesh"
+            "class": "GL.Mesh",
+            "namespace": "GL"
         },
         {
             "file": "../src/mesh.js",
-            "line": 262,
+            "line": 508,
+            "description": "Updates a vertex buffer",
+            "itemtype": "method",
+            "name": "updateVertexBuffer",
+            "params": [
+                {
+                    "name": "name",
+                    "description": "the name of the buffer",
+                    "type": "String"
+                },
+                {
+                    "name": "attribute",
+                    "description": "the name of the attribute in the shader",
+                    "type": "String"
+                },
+                {
+                    "name": "spacing",
+                    "description": "number of numbers per component (3 per vertex, 2 per uvs...), default 3",
+                    "type": "Number"
+                },
+                {
+                    "name": "data",
+                    "description": "the array with all the data",
+                    "type": "*"
+                },
+                {
+                    "name": "stream_type",
+                    "description": "default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW",
+                    "type": "Enum"
+                }
+            ],
+            "class": "GL.Mesh",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 535,
             "description": "Removes a vertex buffer from the mesh",
             "itemtype": "method",
             "name": "removeVertexBuffer",
@@ -1375,13 +2124,19 @@
                     "name": "name",
                     "description": "\"vertices\",\"normals\"...",
                     "type": "String"
+                },
+                {
+                    "name": "free",
+                    "description": "if you want to remove the data from the GPU",
+                    "type": "Boolean"
                 }
             ],
-            "class": "Mesh"
+            "class": "GL.Mesh",
+            "namespace": "GL"
         },
         {
             "file": "../src/mesh.js",
-            "line": 273,
+            "line": 550,
             "description": "Returns a vertex buffer",
             "itemtype": "method",
             "name": "getVertexBuffer",
@@ -1396,14 +2151,15 @@
                 "description": "the buffer",
                 "type": "Buffer"
             },
-            "class": "Mesh"
+            "class": "GL.Mesh",
+            "namespace": "GL"
         },
         {
             "file": "../src/mesh.js",
-            "line": 285,
+            "line": 562,
             "description": "Creates a new empty index buffer and attachs it to this mesh",
             "itemtype": "method",
-            "name": "addIndexBuffer",
+            "name": "createIndexBuffer",
             "params": [
                 {
                     "name": "name",
@@ -1421,11 +2177,12 @@
                     "type": "Enum"
                 }
             ],
-            "class": "Mesh"
+            "class": "GL.Mesh",
+            "namespace": "GL"
         },
         {
             "file": "../src/mesh.js",
-            "line": 297,
+            "line": 590,
             "description": "Returns a vertex buffer",
             "itemtype": "method",
             "name": "getBuffer",
@@ -1440,11 +2197,12 @@
                 "description": "the buffer",
                 "type": "Buffer"
             },
-            "class": "Mesh"
+            "class": "GL.Mesh",
+            "namespace": "GL"
         },
         {
             "file": "../src/mesh.js",
-            "line": 308,
+            "line": 601,
             "description": "Returns a index buffer",
             "itemtype": "method",
             "name": "getIndexBuffer",
@@ -1459,14 +2217,36 @@
                 "description": "the buffer",
                 "type": "Buffer"
             },
-            "class": "Mesh"
+            "class": "GL.Mesh",
+            "namespace": "GL"
         },
         {
             "file": "../src/mesh.js",
-            "line": 319,
+            "line": 612,
+            "description": "Removes an index buffer from the mesh",
+            "itemtype": "method",
+            "name": "removeIndexBuffer",
+            "params": [
+                {
+                    "name": "name",
+                    "description": "\"vertices\",\"normals\"...",
+                    "type": "String"
+                },
+                {
+                    "name": "free",
+                    "description": "if you want to remove the data from the GPU",
+                    "type": "Boolean"
+                }
+            ],
+            "class": "GL.Mesh",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 628,
             "description": "Uploads data inside buffers to VRAM.",
             "itemtype": "method",
-            "name": "compile",
+            "name": "upload",
             "params": [
                 {
                     "name": "buffer_type",
@@ -1474,44 +2254,126 @@
                     "type": "Number"
                 }
             ],
-            "class": "Mesh"
+            "class": "GL.Mesh",
+            "namespace": "GL"
         },
         {
             "file": "../src/mesh.js",
-            "line": 338,
+            "line": 700,
+            "description": "Creates a clone of the mesh, the datarrays are cloned too",
+            "itemtype": "method",
+            "name": "clone",
+            "class": "GL.Mesh",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 724,
+            "description": "Creates a clone of the mesh, but the data-arrays are shared between both meshes (useful for sharing a mesh between contexts)",
+            "itemtype": "method",
+            "name": "clone",
+            "class": "GL.Mesh",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 735,
+            "description": "Creates an object with the info of the mesh (useful to transfer to workers)",
+            "itemtype": "method",
+            "name": "toObject",
+            "class": "GL.Mesh",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 819,
             "description": "Computes some data about the mesh",
             "itemtype": "method",
             "name": "generateMetadata",
-            "class": "Mesh"
+            "class": "GL.Mesh",
+            "namespace": "GL"
         },
         {
             "file": "../src/mesh.js",
-            "line": 410,
+            "line": 891,
             "description": "Creates a new index stream with wireframe",
             "itemtype": "method",
             "name": "computeWireframe",
-            "class": "Mesh"
+            "class": "GL.Mesh",
+            "namespace": "GL"
         },
         {
             "file": "../src/mesh.js",
-            "line": 460,
+            "line": 942,
+            "description": "Multiplies every normal by -1 and uploads it",
+            "itemtype": "method",
+            "name": "flipNormals",
+            "params": [
+                {
+                    "name": "stream_type",
+                    "description": "default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW)",
+                    "type": "Enum"
+                }
+            ],
+            "class": "GL.Mesh",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 975,
+            "description": "Compute indices for a mesh where vertices are shared",
+            "itemtype": "method",
+            "name": "computeIndices",
+            "class": "GL.Mesh",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 1071,
+            "description": "Breaks the indices",
+            "itemtype": "method",
+            "name": "explodeIndices",
+            "class": "GL.Mesh",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 1134,
             "description": "Creates a stream with the normals",
             "itemtype": "method",
             "name": "computeNormals",
-            "class": "Mesh"
+            "params": [
+                {
+                    "name": "stream_type",
+                    "description": "default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW)",
+                    "type": "Enum"
+                }
+            ],
+            "class": "GL.Mesh",
+            "namespace": "GL"
         },
         {
             "file": "../src/mesh.js",
-            "line": 531,
+            "line": 1220,
             "description": "Creates a new stream with the tangents",
             "itemtype": "method",
             "name": "computeTangents",
-            "class": "Mesh"
+            "class": "GL.Mesh",
+            "namespace": "GL"
         },
         {
             "file": "../src/mesh.js",
-            "line": 619,
-            "description": "Computes bounding information",
+            "line": 1325,
+            "description": "Creates texture coordinates using a triplanar aproximation",
+            "itemtype": "method",
+            "name": "computeTextureCoordinates",
+            "class": "GL.Mesh",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 1438,
+            "description": "Computes the number of vertices",
             "itemtype": "method",
             "name": "getVertexNumber",
             "params": [
@@ -1521,37 +2383,72 @@
                     "type": "Typed Array"
                 }
             ],
-            "class": "Mesh"
+            "class": "GL.Mesh",
+            "namespace": "GL"
         },
         {
             "file": "../src/mesh.js",
-            "line": 631,
+            "line": 1450,
             "description": "Computes bounding information",
             "itemtype": "method",
-            "name": "Mesh.computeBounding",
+            "name": "Mesh.computeBoundingBox",
             "params": [
                 {
                     "name": "vertices",
                     "description": "array containing all the vertices",
                     "type": "Typed Array"
+                },
+                {
+                    "name": "bb",
+                    "description": "where to store the bounding box",
+                    "type": "BBox"
+                },
+                {
+                    "name": "mask",
+                    "description": "[optional] to specify which vertices must be considered when creating the bbox, used to create BBox of a submesh",
+                    "type": "Array"
                 }
             ],
-            "class": "Mesh"
+            "class": "GL.Mesh",
+            "namespace": "GL"
         },
         {
             "file": "../src/mesh.js",
-            "line": 657,
+            "line": 1507,
+            "description": "returns the bounding box, if it is not computed, then computes it",
+            "itemtype": "method",
+            "name": "getBoundingBox",
+            "return": {
+                "description": "bounding box",
+                "type": "BBox"
+            },
+            "class": "GL.Mesh",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 1521,
             "description": "Update bounding information of this mesh",
             "itemtype": "method",
-            "name": "updateBounding",
-            "class": "Mesh"
+            "name": "updateBoundingBox",
+            "class": "GL.Mesh",
+            "namespace": "GL"
         },
         {
             "file": "../src/mesh.js",
-            "line": 668,
+            "line": 1534,
+            "description": "Update bounding information for every group submesh",
+            "itemtype": "method",
+            "name": "computeGroupsBoundingBoxes",
+            "class": "GL.Mesh",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 1581,
             "description": "forces a bounding box to be set",
             "itemtype": "method",
-            "name": "setBounding",
+            "name": "setBoundingBox",
             "params": [
                 {
                     "name": "center",
@@ -1564,19 +2461,47 @@
                     "type": "Vec3"
                 }
             ],
-            "class": "Mesh"
+            "class": "GL.Mesh",
+            "namespace": "GL"
         },
         {
             "file": "../src/mesh.js",
-            "line": 679,
+            "line": 1592,
             "description": "Remove all local memory from the streams (leaving it only in the VRAM) to save RAM",
             "itemtype": "method",
             "name": "freeData",
-            "class": "Mesh"
+            "class": "GL.Mesh",
+            "namespace": "GL"
         },
         {
             "file": "../src/mesh.js",
-            "line": 721,
+            "line": 1654,
+            "description": "Returns the amount of memory used by this mesh in bytes (sum of all buffers)",
+            "itemtype": "method",
+            "name": "getMemory",
+            "return": {
+                "description": "bytes",
+                "type": "Number"
+            },
+            "class": "GL.Mesh",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 1671,
+            "description": "returns a low poly version of the mesh that takes much less memory (but breaks tiling of uvs and smoothing groups)",
+            "itemtype": "method",
+            "name": "simplify",
+            "return": {
+                "description": "simplified mesh",
+                "type": "Mesh"
+            },
+            "class": "GL.Mesh",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 1723,
             "description": "Static method for the class Mesh to create a mesh from a list of common streams",
             "itemtype": "method",
             "name": "Mesh.load",
@@ -1588,91 +2513,54 @@
                 },
                 {
                     "name": "options",
-                    "description": "",
+                    "description": "[optional]",
                     "type": "Object"
                 },
                 {
                     "name": "output_mesh",
-                    "description": "optional mesh to store the mesh, otherwise is created",
+                    "description": "[optional] mesh to store the mesh, otherwise is created",
                     "type": "Mesh"
-                }
-            ],
-            "class": "Mesh"
-        },
-        {
-            "file": "../src/mesh.js",
-            "line": 736,
-            "description": "Returns a planar mesh (you can choose how many subdivisions)",
-            "itemtype": "method",
-            "name": "Mesh.plane",
-            "params": [
+                },
                 {
-                    "name": "options",
-                    "description": "valid options: detail, detailX, detailY, size, width, heigth, xz (horizontal plane)",
-                    "type": "Object"
+                    "name": "gl",
+                    "description": "[optional] if omitted, the global.gl is used",
+                    "type": "WebGLContext"
                 }
             ],
-            "class": "Mesh"
+            "class": "GL.Mesh",
+            "namespace": "GL"
         },
         {
             "file": "../src/mesh.js",
-            "line": 788,
-            "description": "Returns a 2D Mesh (be careful, stream is vertices2D )",
-            "itemtype": "method",
-            "name": "Mesh.plane2D",
-            "class": "Mesh"
-        },
-        {
-            "file": "../src/mesh.js",
-            "line": 805,
-            "description": "Returns a cube mesh",
-            "itemtype": "method",
-            "name": "Mesh.cube",
-            "params": [
-                {
-                    "name": "options",
-                    "description": "valid options: size",
-                    "type": "Object"
-                }
-            ],
-            "class": "Mesh"
-        },
-        {
-            "file": "../src/mesh.js",
-            "line": 831,
-            "description": "Returns a cube mesh",
-            "itemtype": "method",
-            "name": "Mesh.cylinder",
-            "params": [
-                {
-                    "name": "options",
-                    "description": "valid options: radius, height, subdivisions",
-                    "type": "Object"
-                }
-            ],
-            "class": "Mesh"
-        },
-        {
-            "file": "../src/mesh.js",
-            "line": 893,
-            "description": "Returns a sphere mesh",
-            "itemtype": "method",
-            "name": "Mesh.sphere",
-            "params": [
-                {
-                    "name": "options",
-                    "description": "valid options: radius, lat, long",
-                    "type": "Object"
-                }
-            ],
-            "class": "Mesh"
-        },
-        {
-            "file": "../src/mesh.js",
-            "line": 957,
-            "description": "Returns a mesh with all the meshes merged",
+            "line": 1740,
+            "description": "Returns a mesh with all the meshes merged (you can apply transforms individually to every buffer)",
             "itemtype": "method",
             "name": "Mesh.mergeMeshes",
+            "params": [
+                {
+                    "name": "meshes",
+                    "description": "array containing object like { mesh:, matrix:, texture_matrix: }",
+                    "type": "Array"
+                },
+                {
+                    "name": "options",
+                    "description": "{ only_data: to get the mesh data without uploading it }",
+                    "type": "Object"
+                }
+            ],
+            "return": {
+                "description": "the mesh in GL.Mesh format or Object format (if options.only_data is true)",
+                "type": "GL.Mesh|Object"
+            },
+            "class": "GL.Mesh",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 1907,
+            "description": "Returns am empty mesh and loads a mesh and parses it using the Mesh.parsers, by default only OBJ is supported",
+            "itemtype": "method",
+            "name": "Mesh.fromOBJ",
             "params": [
                 {
                     "name": "meshes",
@@ -1680,12 +2568,77 @@
                     "type": "Array"
                 }
             ],
-            "class": "Mesh"
+            "class": "GL.Mesh",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 1936,
+            "description": "given some data an information about the format, it search for a parser in Mesh.parsers and tries to extract the mesh information\nOnly obj supported now",
+            "itemtype": "method",
+            "name": "parse",
+            "params": [
+                {
+                    "name": "data",
+                    "description": "could be string or ArrayBuffer",
+                    "type": "*"
+                },
+                {
+                    "name": "format",
+                    "description": "parser file format name (p.e. \"obj\")",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "depending on the parser",
+                "type": "?"
+            },
+            "class": "GL.Mesh",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 1953,
+            "description": "It returns the mesh data encoded in the format specified\nOnly obj supported now",
+            "itemtype": "method",
+            "name": "encode",
+            "params": [
+                {
+                    "name": "format",
+                    "description": "to encode the data to (p.e. \"obj\")",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "String with the info",
+                "type": "?"
+            },
+            "class": "GL.Mesh",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/mesh.js",
+            "line": 1969,
+            "description": "Returns a shared mesh containing a quad to be used when rendering to the screen\nReusing the same quad helps not filling the memory",
+            "itemtype": "method",
+            "name": "getScreenQuad",
+            "return": {
+                "description": "the screen quad",
+                "type": "GL.Mesh"
+            },
+            "class": "GL.Mesh",
+            "namespace": "GL"
         },
         {
             "file": "../src/octree.js",
-            "line": 226,
-            "description": "Uploads a set of uniforms to the Shader",
+            "line": 1,
+            "class": "GL.Octree",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/octree.js",
+            "line": 216,
+            "description": "Test collision between ray and triangles in the octree",
             "itemtype": "method",
             "name": "testRay",
             "params": [
@@ -1714,12 +2667,417 @@
                 "description": "object containing pos and normal",
                 "type": "HitTest"
             },
-            "class": "Octree"
+            "class": "GL.Octree",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/octree.js",
+            "line": 263,
+            "description": "test collision between sphere and the triangles in the octree (only test if there is any vertex inside the sphere)",
+            "itemtype": "method",
+            "name": "testSphere",
+            "params": [
+                {
+                    "name": "origin",
+                    "description": "sphere center",
+                    "type": "Vec3"
+                },
+                {
+                    "name": "radius",
+                    "description": "",
+                    "type": "Number"
+                }
+            ],
+            "return": {
+                "description": "true if the sphere collided with the mesh",
+                "type": "Boolean"
+            },
+            "class": "GL.Octree",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/parsers.js",
+            "line": 2,
+            "description": "Parses a OBJ string and returns an object with the info ready to be passed to GL.Mesh.load",
+            "itemtype": "method",
+            "name": "Mesh.parseOBJ",
+            "params": [
+                {
+                    "name": "data",
+                    "description": "all the OBJ info to be parsed",
+                    "type": "String"
+                },
+                {
+                    "name": "options",
+                    "description": "",
+                    "type": "Object"
+                }
+            ],
+            "return": {
+                "description": "mesh information (vertices, coords, normals, indices)",
+                "type": "Object"
+            },
+            "class": "GL.Mesh",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/primitives.js",
+            "line": 6,
+            "description": "Returns a planar mesh (you can choose how many subdivisions)",
+            "itemtype": "method",
+            "name": "Mesh.plane",
+            "params": [
+                {
+                    "name": "options",
+                    "description": "valid options: detail, detailX, detailY, size, width, heigth, xz (horizontal plane)",
+                    "type": "Object"
+                }
+            ],
+            "class": "GL.Mesh",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/primitives.js",
+            "line": 63,
+            "description": "Returns a 2D Mesh (be careful, stream is vertices2D, used for 2D engines )",
+            "itemtype": "method",
+            "name": "Mesh.plane2D",
+            "class": "GL.Mesh",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/primitives.js",
+            "line": 80,
+            "description": "Returns a point mesh",
+            "itemtype": "method",
+            "name": "Mesh.point",
+            "params": [
+                {
+                    "name": "options",
+                    "description": "no options",
+                    "type": "Object"
+                }
+            ],
+            "class": "GL.Mesh",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/primitives.js",
+            "line": 89,
+            "description": "Returns a cube mesh",
+            "itemtype": "method",
+            "name": "Mesh.cube",
+            "params": [
+                {
+                    "name": "options",
+                    "description": "valid options: size",
+                    "type": "Object"
+                }
+            ],
+            "class": "GL.Mesh",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/primitives.js",
+            "line": 116,
+            "description": "Returns a cube mesh of a given size",
+            "itemtype": "method",
+            "name": "Mesh.cube",
+            "params": [
+                {
+                    "name": "options",
+                    "description": "valid options: size, sizex, sizey, sizez",
+                    "type": "Object"
+                }
+            ],
+            "class": "GL.Mesh",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/primitives.js",
+            "line": 154,
+            "description": "Returns a circle mesh",
+            "itemtype": "method",
+            "name": "Mesh.circle",
+            "params": [
+                {
+                    "name": "options",
+                    "description": "valid options: size,radius, xz = in xz plane, otherwise xy plane",
+                    "type": "Object"
+                }
+            ],
+            "class": "GL.Mesh",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/primitives.js",
+            "line": 264,
+            "description": "Returns a cube mesh",
+            "itemtype": "method",
+            "name": "Mesh.cylinder",
+            "params": [
+                {
+                    "name": "options",
+                    "description": "valid options: radius, height, subdivisions",
+                    "type": "Object"
+                }
+            ],
+            "class": "GL.Mesh",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/primitives.js",
+            "line": 386,
+            "description": "Returns a cone mesh",
+            "itemtype": "method",
+            "name": "Mesh.cone",
+            "params": [
+                {
+                    "name": "options",
+                    "description": "valid options: radius, height, subdivisions",
+                    "type": "Object"
+                }
+            ],
+            "class": "GL.Mesh",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/primitives.js",
+            "line": 468,
+            "description": "Returns a sphere mesh",
+            "itemtype": "method",
+            "name": "Mesh.sphere",
+            "params": [
+                {
+                    "name": "options",
+                    "description": "valid options: radius, lat, long, subdivisions, hemi",
+                    "type": "Object"
+                }
+            ],
+            "class": "GL.Mesh",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/primitives.js",
+            "line": 565,
+            "description": "Returns a grid mesh (must be rendered using gl.LINES)",
+            "itemtype": "method",
+            "name": "Mesh.grid",
+            "params": [
+                {
+                    "name": "options",
+                    "description": "valid options: size, lines",
+                    "type": "Object"
+                }
+            ],
+            "class": "GL.Mesh",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/primitives.js",
+            "line": 604,
+            "description": "Returns a icosahedron mesh (useful to create spheres by subdivision)",
+            "itemtype": "method",
+            "name": "Mesh.icosahedron",
+            "params": [
+                {
+                    "name": "options",
+                    "description": "valid options: radius, subdivisions (max: 6)",
+                    "type": "Object"
+                }
+            ],
+            "class": "GL.Mesh",
+            "namespace": "GL"
         },
         {
             "file": "../src/shader.js",
-            "line": 133,
-            "description": "Uploads a set of uniforms to the Shader",
+            "line": 2,
+            "class": "GL.Shader",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/shader.js",
+            "line": 77,
+            "description": "Compiles one single shader source (could be gl.VERTEX_SHADER or gl.FRAGMENT_SHADER) and returns the webgl shader handler \nUsed internaly to compile the vertex and fragment shader.\nIt throws an exception if there is any error in the code",
+            "itemtype": "method",
+            "name": "Shader.compileSource",
+            "params": [
+                {
+                    "name": "type",
+                    "description": "could be gl.VERTEX_SHADER or gl.FRAGMENT_SHADER",
+                    "type": "Number"
+                },
+                {
+                    "name": "source",
+                    "description": "the source file to compile",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "the handler from webgl",
+                "type": "WebGLShader"
+            },
+            "class": "GL.Shader",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/shader.js",
+            "line": 115,
+            "description": "It updates the code inside one shader",
+            "itemtype": "method",
+            "name": "updateShader",
+            "params": [
+                {
+                    "name": "vertexSource",
+                    "description": "",
+                    "type": "String"
+                },
+                {
+                    "name": "fragmentSource",
+                    "description": "",
+                    "type": "String"
+                },
+                {
+                    "name": "macros",
+                    "description": "[optional]",
+                    "type": "Object"
+                }
+            ],
+            "class": "GL.Shader",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/shader.js",
+            "line": 160,
+            "description": "It extract all the info about the compiled shader program, all the info about uniforms and attributes.\nThis info is stored so it works faster during rendering.",
+            "itemtype": "method",
+            "name": "extractShaderInfo",
+            "class": "GL.Shader",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/shader.js",
+            "line": 232,
+            "description": "Returns if this shader has a uniform with the given name",
+            "itemtype": "method",
+            "name": "hasUniform",
+            "params": [
+                {
+                    "name": "name",
+                    "description": "name of the uniform",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "Boolean"
+            },
+            "class": "GL.Shader",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/shader.js",
+            "line": 243,
+            "description": "Returns if this shader has an attribute with the given name",
+            "itemtype": "method",
+            "name": "hasAttribute",
+            "params": [
+                {
+                    "name": "name",
+                    "description": "name of the attribute",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "Boolean"
+            },
+            "class": "GL.Shader",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/shader.js",
+            "line": 255,
+            "description": "Tells you which function to call when uploading a uniform according to the data type in the shader\nUsed internally from extractShaderInfo to optimize calls",
+            "itemtype": "method",
+            "name": "Shader.getUniformFunc",
+            "params": [
+                {
+                    "name": "data",
+                    "description": "info about the uniform",
+                    "type": "Object"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "Function"
+            },
+            "class": "GL.Shader",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/shader.js",
+            "line": 300,
+            "description": "Create a shader from two urls. While the system is fetching the two urls, the shader contains a dummy shader that renders black.",
+            "itemtype": "method",
+            "name": "Shader.fromURL",
+            "params": [
+                {
+                    "name": "vs_path",
+                    "description": "the url to the vertex shader",
+                    "type": "String"
+                },
+                {
+                    "name": "fs_path",
+                    "description": "the url to the fragment shader",
+                    "type": "String"
+                },
+                {
+                    "name": "on_complete",
+                    "description": "[Optional] a callback to call once the shader is ready.",
+                    "type": "Function"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "Shader"
+            },
+            "class": "GL.Shader",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/shader.js",
+            "line": 355,
+            "description": "enables the shader (calls useProgram)",
+            "itemtype": "method",
+            "name": "bind",
+            "class": "GL.Shader",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/shader.js",
+            "line": 366,
+            "description": "Returns the location of a uniform or attribute",
+            "itemtype": "method",
+            "name": "getLocation",
+            "params": [
+                {
+                    "name": "name",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "location",
+                "type": "WebGLUniformLocation"
+            },
+            "class": "GL.Shader",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/shader.js",
+            "line": 380,
+            "description": "Uploads a set of uniforms to the Shader. You dont need to specify types, they are infered from the shader info.",
             "itemtype": "method",
             "name": "uniforms",
             "params": [
@@ -1729,11 +3087,33 @@
                     "type": "Object"
                 }
             ],
-            "class": "Shader"
+            "class": "GL.Shader",
+            "namespace": "GL"
         },
         {
             "file": "../src/shader.js",
-            "line": 226,
+            "line": 421,
+            "description": "Uploads a uniform to the Shader. You dont need to specify types, they are infered from the shader info. Shader must be binded!",
+            "itemtype": "method",
+            "name": "setUniform",
+            "params": [
+                {
+                    "name": "name",
+                    "description": "",
+                    "type": "String"
+                },
+                {
+                    "name": "value",
+                    "description": "",
+                    "type": "*"
+                }
+            ],
+            "class": "GL.Shader",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/shader.js",
+            "line": 488,
             "description": "Renders a mesh using this shader, remember to use the function uniforms before to enable the shader",
             "itemtype": "method",
             "name": "draw",
@@ -1747,13 +3127,19 @@
                     "name": "mode",
                     "description": "could be gl.LINES, gl.POINTS, gl.TRIANGLES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN",
                     "type": "Number"
+                },
+                {
+                    "name": "index_buffer_name",
+                    "description": "the name of the index buffer, if not provided triangles will be assumed",
+                    "type": "String"
                 }
             ],
-            "class": "Shader"
+            "class": "GL.Shader",
+            "namespace": "GL"
         },
         {
             "file": "../src/shader.js",
-            "line": 238,
+            "line": 502,
             "description": "Renders a range of a mesh using this shader",
             "itemtype": "method",
             "name": "drawRange",
@@ -1777,14 +3163,20 @@
                     "name": "length",
                     "description": "number of primitives to render",
                     "type": "Number"
+                },
+                {
+                    "name": "index_buffer_name",
+                    "description": "the name of the index buffer, if not provided triangles will be assumed",
+                    "type": "String"
                 }
             ],
-            "class": "Shader"
+            "class": "GL.Shader",
+            "namespace": "GL"
         },
         {
             "file": "../src/shader.js",
-            "line": 253,
-            "description": "Renders a range of a mesh using this shader",
+            "line": 520,
+            "description": "render several buffers with a given index buffer",
             "itemtype": "method",
             "name": "drawBuffers",
             "params": [
@@ -1814,19 +3206,185 @@
                     "type": "Number"
                 }
             ],
-            "class": "Shader"
+            "class": "GL.Shader",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/shader.js",
+            "line": 790,
+            "description": "Given a source code with the directive #import it expands it inserting the code using Shader.files to fetch for import files.\nWarning: Imports are evaluated only the first inclusion, the rest are ignored to avoid double inclusion of functions\n         Also, imports cannot have other imports inside.",
+            "itemtype": "method",
+            "name": "Shader.expandImports",
+            "params": [
+                {
+                    "name": "code",
+                    "description": "the source code",
+                    "type": "String"
+                },
+                {
+                    "name": "files",
+                    "description": "[Optional] object with files to import from (otherwise Shader.files is used)",
+                    "type": "Object"
+                }
+            ],
+            "return": {
+                "description": "the code with the lines #import removed and replaced by the code",
+                "type": "String"
+            },
+            "class": "GL.Shader",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/shader.js",
+            "line": 1065,
+            "description": "Allows to create a simple shader meant to be used to process a texture, instead of having to define the generic Vertex & Fragment Shader code",
+            "itemtype": "method",
+            "name": "Shader.createFX",
+            "params": [
+                {
+                    "name": "code",
+                    "description": "string containg code, like \"color = color * 2.0;\"",
+                    "type": "String"
+                },
+                {
+                    "name": "uniforms",
+                    "description": "string containg extra uniforms, like \"uniform vec3 u_pos;\"",
+                    "type": "String",
+                    "optional": true,
+                    "optdefault": "null"
+                }
+            ],
+            "class": "GL.Shader",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/shader.js",
+            "line": 1107,
+            "description": "Renders a fullscreen quad with this shader applied",
+            "itemtype": "method",
+            "name": "toViewport",
+            "params": [
+                {
+                    "name": "uniforms",
+                    "description": "",
+                    "type": "Object"
+                }
+            ],
+            "class": "GL.Shader",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/shader.js",
+            "line": 1122,
+            "description": "Returns a shader ready to render a textured quad in fullscreen, use with Mesh.getScreenQuad() mesh\nshader params: sampler2D u_texture",
+            "itemtype": "method",
+            "name": "Shader.getScreenShader",
+            "class": "GL.Shader",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/shader.js",
+            "line": 1137,
+            "description": "Returns a shader ready to render a flat color quad in fullscreen, use with Mesh.getScreenQuad() mesh\nshader params: vec4 u_color",
+            "itemtype": "method",
+            "name": "Shader.getFlatScreenShader",
+            "class": "GL.Shader",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/shader.js",
+            "line": 1152,
+            "description": "Returns a shader ready to render a colored textured quad in fullscreen, use with Mesh.getScreenQuad() mesh\nshader params vec4 u_color and sampler2D u_texture",
+            "itemtype": "method",
+            "name": "Shader.getColoredScreenShader",
+            "class": "GL.Shader",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/shader.js",
+            "line": 1167,
+            "description": "Returns a shader ready to render a quad with transform, use with Mesh.getScreenQuad() mesh\nshader must have: u_position, u_size, u_viewport, u_transform (mat3)",
+            "itemtype": "method",
+            "name": "Shader.getQuadShader",
+            "class": "GL.Shader",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/shader.js",
+            "line": 1181,
+            "description": "Returns a shader ready to render part of a texture into the viewport\nshader must have: u_position, u_size, u_viewport, u_transform, u_texture_area (vec4)",
+            "itemtype": "method",
+            "name": "Shader.getPartialQuadShader",
+            "class": "GL.Shader",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/shader.js",
+            "line": 1195,
+            "description": "Returns a shader that blends two textures\nshader must have: u_factor, u_texture, u_texture2",
+            "itemtype": "method",
+            "name": "Shader.getBlendShader",
+            "class": "GL.Shader",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/shader.js",
+            "line": 1209,
+            "description": "Returns a shader used to apply gaussian blur to one texture in one axis (you should use it twice to get a gaussian blur)\nshader params are: vec2 u_offset, float u_intensity",
+            "itemtype": "method",
+            "name": "Shader.getBlurShader",
+            "class": "GL.Shader",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/shader.js",
+            "line": 1401,
+            "description": "Returns a shader to apply FXAA antialiasing\nparams are vec2 u_viewportSize, vec2 u_iViewportSize or you can call shader.setup()",
+            "itemtype": "method",
+            "name": "Shader.getFXAAShader",
+            "class": "GL.Shader",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/shader.js",
+            "line": 1437,
+            "description": "Returns a flat shader (useful to render lines)",
+            "itemtype": "method",
+            "name": "Shader.getFlatShader",
+            "class": "GL.Shader",
+            "namespace": "GL"
         },
         {
             "file": "../src/texture.js",
-            "line": 97,
+            "line": 1,
+            "class": "GL.Texture",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 246,
+            "description": "Free the texture memory from the GPU, sets the texture handler to null",
+            "itemtype": "method",
+            "name": "delete",
+            "class": "GL.Texture",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 295,
             "description": "Returns if depth texture is supported by the GPU",
             "itemtype": "method",
             "name": "isDepthSupported",
-            "class": "Texture"
+            "return": {
+                "description": "true if supported",
+                "type": "Boolean"
+            },
+            "class": "GL.Texture",
+            "namespace": "GL"
         },
         {
             "file": "../src/texture.js",
-            "line": 106,
+            "line": 305,
             "description": "Binds the texture to one texture unit",
             "itemtype": "method",
             "name": "bind",
@@ -1841,11 +3399,12 @@
                 "description": "returns the texture unit",
                 "type": "Number"
             },
-            "class": "Texture"
+            "class": "GL.Texture",
+            "namespace": "GL"
         },
         {
             "file": "../src/texture.js",
-            "line": 119,
+            "line": 324,
             "description": "Unbinds the texture",
             "itemtype": "method",
             "name": "unbind",
@@ -1860,11 +3419,28 @@
                 "description": "returns the texture unit",
                 "type": "Number"
             },
-            "class": "Texture"
+            "class": "GL.Texture",
+            "namespace": "GL"
         },
         {
             "file": "../src/texture.js",
-            "line": 136,
+            "line": 351,
+            "description": "Unbinds the texture",
+            "itemtype": "method",
+            "name": "Texture.setUploadOptions",
+            "params": [
+                {
+                    "name": "options",
+                    "description": "a list of options to upload the texture\n- premultiply_alpha : multiply the color by the alpha value, default FALSE\n- no_flip : do not flip in Y, default TRUE",
+                    "type": "Object"
+                }
+            ],
+            "class": "GL.Texture",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 375,
             "description": "Given an Image/Canvas/Video it uploads it to the GPU",
             "itemtype": "method",
             "name": "uploadImage",
@@ -1873,13 +3449,19 @@
                     "name": "img",
                     "description": "",
                     "type": "Image"
+                },
+                {
+                    "name": "options",
+                    "description": "[optional] upload options (premultiply_alpha, no_flip)",
+                    "type": "Object"
                 }
             ],
-            "class": "Texture"
+            "class": "GL.Texture",
+            "namespace": "GL"
         },
         {
             "file": "../src/texture.js",
-            "line": 164,
+            "line": 414,
             "description": "Uploads data to the GPU (data must have the appropiate size)",
             "itemtype": "method",
             "name": "uploadData",
@@ -1888,14 +3470,20 @@
                     "name": "data",
                     "description": "",
                     "type": "ArrayBuffer"
+                },
+                {
+                    "name": "options",
+                    "description": "[optional] upload options (premultiply_alpha, no_flip, cubemap_face, mipmap_level)",
+                    "type": "Object"
                 }
             ],
-            "class": "Texture"
+            "class": "GL.Texture",
+            "namespace": "GL"
         },
         {
             "file": "../src/texture.js",
-            "line": 179,
-            "description": "Render to texture using FBO, just pass the callback to a rendering function and the content of the texture will be updated",
+            "line": 485,
+            "description": "Render to texture using FBO, just pass the callback to a rendering function and the content of the texture will be updated\nIf the texture is a cubemap, the callback will be called six times, once per face, the number of the face is passed as a second parameter\nfor further info about how to set up the propper cubemap camera, check the GL.Texture.cubemap_camera_parameters with the direction and up vector for every face.\n\nKeep in mind that it tries to reuse the last renderbuffer for the depth, and if it cannot (different size) it creates a new one (throwing the old)",
             "itemtype": "method",
             "name": "drawTo",
             "params": [
@@ -1905,95 +3493,38 @@
                     "type": "Function"
                 }
             ],
-            "class": "Texture"
+            "class": "GL.Texture",
+            "namespace": "GL"
         },
         {
             "file": "../src/texture.js",
-            "line": 228,
-            "description": "Copy content of one texture into another",
+            "line": 633,
+            "description": "Static version of drawTo meant to be used with several buffers",
             "itemtype": "method",
-            "name": "copyTo",
+            "name": "drawToColorAndDepth",
             "params": [
                 {
-                    "name": "target_texture",
+                    "name": "color_texture",
                     "description": "",
                     "type": "Texture"
-                }
-            ],
-            "class": "Texture"
-        },
-        {
-            "file": "../src/texture.js",
-            "line": 254,
-            "description": "Render texture in a quad to full viewport size",
-            "itemtype": "method",
-            "name": "toViewport",
-            "params": [
-                {
-                    "name": "shader",
-                    "description": "to apply, otherwise a default textured shader is applied",
-                    "type": "Shader"
                 },
                 {
-                    "name": "uniforms",
-                    "description": "for the shader if needed",
-                    "type": "Object"
-                }
-            ],
-            "class": "Texture"
-        },
-        {
-            "file": "../src/texture.js",
-            "line": 270,
-            "description": "Copy texture content to a canvas",
-            "itemtype": "method",
-            "name": "toCanvas",
-            "params": [
-                {
-                    "name": "canvas",
-                    "description": "must have the same size, if different the canvas will be resized",
-                    "type": "Canvas"
-                }
-            ],
-            "class": "Texture"
-        },
-        {
-            "file": "../src/texture.js",
-            "line": 296,
-            "description": "Applies a blur filter of one pixel to the texture (be careful using it, it is slow)",
-            "itemtype": "method",
-            "name": "applyBlur",
-            "params": [
-                {
-                    "name": "offsetx",
-                    "description": "scalar that multiplies the offset when fetching pixels horizontally (default 1)",
-                    "type": "Number"
-                },
-                {
-                    "name": "offsety",
-                    "description": "scalar that multiplies the offset when fetching pixels vertically (default 1)",
-                    "type": "Number"
-                },
-                {
-                    "name": "intensity",
-                    "description": "scalar that multiplies the result (default 1)",
-                    "type": "Number"
-                },
-                {
-                    "name": "temp_texture",
-                    "description": "blur needs a temp texture, if not supplied it will create a new one each time!",
+                    "name": "depth_texture",
+                    "description": "",
                     "type": "Texture"
+                },
+                {
+                    "name": "callback",
+                    "description": "",
+                    "type": "Function"
                 }
             ],
-            "return": {
-                "description": "returns the temp_texture in case you want to reuse it",
-                "type": "Texture"
-            },
-            "class": "Texture"
+            "class": "GL.Texture",
+            "namespace": "GL"
         },
         {
             "file": "../src/texture.js",
-            "line": 328,
+            "line": 745,
             "description": "Similar to drawTo but it also stores the depth in a depth texture",
             "itemtype": "method",
             "name": "drawToColorAndDepth",
@@ -2014,11 +3545,185 @@
                     "type": "Function"
                 }
             ],
-            "class": "Texture"
+            "class": "GL.Texture",
+            "namespace": "GL"
         },
         {
             "file": "../src/texture.js",
-            "line": 358,
+            "line": 781,
+            "description": "Copy content of one texture into another\nTODO: check using copyTexImage2D",
+            "itemtype": "method",
+            "name": "copyTo",
+            "params": [
+                {
+                    "name": "target_texture",
+                    "description": "",
+                    "type": "GL.Texture"
+                },
+                {
+                    "name": "shader",
+                    "description": "optional shader to apply while copying",
+                    "type": "GL.Shader",
+                    "optional": true,
+                    "optdefault": "null"
+                },
+                {
+                    "name": "uniforms",
+                    "description": "optional uniforms for the shader",
+                    "type": "Object",
+                    "optional": true,
+                    "optdefault": "null"
+                }
+            ],
+            "class": "GL.Texture",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 887,
+            "description": "Similar to CopyTo, but more specific, only for color texture_2D. It doesnt change the blend flag",
+            "itemtype": "method",
+            "name": "blit",
+            "params": [
+                {
+                    "name": "target_texture",
+                    "description": "",
+                    "type": "GL.Texture"
+                },
+                {
+                    "name": "shader",
+                    "description": "optional shader to apply while copying",
+                    "type": "GL.Shader",
+                    "optional": true,
+                    "optdefault": "null"
+                },
+                {
+                    "name": "uniforms",
+                    "description": "optional uniforms for the shader",
+                    "type": "Object",
+                    "optional": true,
+                    "optdefault": "null"
+                }
+            ],
+            "class": "GL.Texture",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 934,
+            "description": "Render texture in a quad to full viewport size",
+            "itemtype": "method",
+            "name": "toViewport",
+            "params": [
+                {
+                    "name": "shader",
+                    "description": "to apply, otherwise a default textured shader is applied [optional]",
+                    "type": "Shader"
+                },
+                {
+                    "name": "uniforms",
+                    "description": "for the shader if needed [optional]",
+                    "type": "Object"
+                }
+            ],
+            "class": "GL.Texture",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 951,
+            "description": "Fills the texture with a constant color (uses gl.clear)",
+            "itemtype": "method",
+            "name": "fill",
+            "params": [
+                {
+                    "name": "color",
+                    "description": "rgba",
+                    "type": "Vec4"
+                },
+                {
+                    "name": "skip_mipmaps",
+                    "description": "if true the mipmaps wont be updated",
+                    "type": "Boolean"
+                }
+            ],
+            "class": "GL.Texture",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 973,
+            "description": "Render texture in a quad of specified area",
+            "itemtype": "method",
+            "name": "renderQuad",
+            "params": [
+                {
+                    "name": "x",
+                    "description": "",
+                    "type": "Number"
+                },
+                {
+                    "name": "y",
+                    "description": "",
+                    "type": "Number"
+                },
+                {
+                    "name": "width",
+                    "description": "",
+                    "type": "Number"
+                },
+                {
+                    "name": "height",
+                    "description": "",
+                    "type": "Number"
+                }
+            ],
+            "class": "GL.Texture",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 1004,
+            "description": "Applies a blur filter of 5x5 pixels to the texture (be careful using it, it is slow)",
+            "itemtype": "method",
+            "name": "applyBlur",
+            "params": [
+                {
+                    "name": "offsetx",
+                    "description": "scalar that multiplies the offset when fetching pixels horizontally (default 1)",
+                    "type": "Number"
+                },
+                {
+                    "name": "offsety",
+                    "description": "scalar that multiplies the offset when fetching pixels vertically (default 1)",
+                    "type": "Number"
+                },
+                {
+                    "name": "intensity",
+                    "description": "scalar that multiplies the result (default 1)",
+                    "type": "Number"
+                },
+                {
+                    "name": "output_texture",
+                    "description": "[optional] if not passed the output is the own texture",
+                    "type": "Texture"
+                },
+                {
+                    "name": "temp_texture",
+                    "description": "blur needs a temp texture, if not supplied it will use the temporary textures pool",
+                    "type": "Texture"
+                }
+            ],
+            "return": {
+                "description": "returns the temp_texture in case you want to reuse it",
+                "type": "Texture"
+            },
+            "class": "GL.Texture",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 1126,
             "description": "Loads and uploads a texture from a url",
             "itemtype": "method",
             "name": "Texture.fromURL",
@@ -2043,11 +3748,12 @@
                 "description": "the texture",
                 "type": "Texture"
             },
-            "class": "Texture"
+            "class": "GL.Texture",
+            "namespace": "GL"
         },
         {
             "file": "../src/texture.js",
-            "line": 405,
+            "line": 1264,
             "description": "Create a texture from an Image",
             "itemtype": "method",
             "name": "Texture.fromImage",
@@ -2067,11 +3773,12 @@
                 "description": "the texture",
                 "type": "Texture"
             },
-            "class": "Texture"
+            "class": "GL.Texture",
+            "namespace": "GL"
         },
         {
             "file": "../src/texture.js",
-            "line": 429,
+            "line": 1307,
             "description": "Create a texture from a Video",
             "itemtype": "method",
             "name": "Texture.fromVideo",
@@ -2091,11 +3798,12 @@
                 "description": "the texture",
                 "type": "Texture"
             },
-            "class": "Texture"
+            "class": "GL.Texture",
+            "namespace": "GL"
         },
         {
             "file": "../src/texture.js",
-            "line": 453,
+            "line": 1330,
             "description": "Create a clone of a texture",
             "itemtype": "method",
             "name": "Texture.fromTexture",
@@ -2115,11 +3823,12 @@
                 "description": "the texture",
                 "type": "Texture"
             },
-            "class": "Texture"
+            "class": "GL.Texture",
+            "namespace": "GL"
         },
         {
             "file": "../src/texture.js",
-            "line": 467,
+            "line": 1353,
             "description": "Create a texture from an ArrayBuffer containing the pixels",
             "itemtype": "method",
             "name": "Texture.fromTexture",
@@ -2149,11 +3858,72 @@
                 "description": "the texture",
                 "type": "Texture"
             },
-            "class": "Texture"
+            "class": "GL.Texture",
+            "namespace": "GL"
         },
         {
             "file": "../src/texture.js",
-            "line": 505,
+            "line": 1391,
+            "description": "Create a texture from an ArrayBuffer containing the pixels",
+            "itemtype": "method",
+            "name": "Texture.fromDDSInMemory",
+            "params": [
+                {
+                    "name": "DDS",
+                    "description": "data",
+                    "type": "ArrayBuffer"
+                },
+                {
+                    "name": "options",
+                    "description": "",
+                    "type": "Object"
+                }
+            ],
+            "return": {
+                "description": "the texture",
+                "type": "Texture"
+            },
+            "class": "GL.Texture",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 1413,
+            "description": "Create a generative texture from a shader ( must GL.Shader.getScreenShader as reference for the shader )",
+            "itemtype": "method",
+            "name": "Texture.fromShader",
+            "params": [
+                {
+                    "name": "width",
+                    "description": "",
+                    "type": "Number"
+                },
+                {
+                    "name": "height",
+                    "description": "",
+                    "type": "Number"
+                },
+                {
+                    "name": "shader",
+                    "description": "",
+                    "type": "Shader"
+                },
+                {
+                    "name": "options",
+                    "description": "",
+                    "type": "Object"
+                }
+            ],
+            "return": {
+                "description": "the texture",
+                "type": "Texture"
+            },
+            "class": "GL.Texture",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 1438,
             "description": "Create a cubemap texture from a set of 6 images",
             "itemtype": "method",
             "name": "Texture.cubemapFromImages",
@@ -2173,12 +3943,13 @@
                 "description": "the texture",
                 "type": "Texture"
             },
-            "class": "Texture"
+            "class": "GL.Texture",
+            "namespace": "GL"
         },
         {
             "file": "../src/texture.js",
-            "line": 541,
-            "description": "Create a cubemap texture from a single image that contains all six images arranged vertically",
+            "line": 1490,
+            "description": "Create a cubemap texture from a single image that contains all six images \nIf it is a cross, it must be horizontally aligned, and options.is_cross must be equal to the column where the top and bottom are located (usually 1 or 2)\notherwise it assumes the 6 images are arranged vertically, in the order of OpenGL: +X, -X, +Y, -Y, +Z, -Z",
             "itemtype": "method",
             "name": "Texture.cubemapFromImage",
             "params": [
@@ -2197,35 +3968,202 @@
                 "description": "the texture",
                 "type": "Texture"
             },
-            "class": "Texture"
+            "class": "GL.Texture",
+            "namespace": "GL"
         },
         {
             "file": "../src/texture.js",
-            "line": 571,
+            "line": 1552,
+            "description": "Given the width and the height of an image, and in which column is the top and bottom sides of the cubemap, it gets the info to pass to Texture.cubemapFromImage in options.faces",
+            "itemtype": "method",
+            "name": "Texture.generateCubemapCrossFaces",
+            "params": [
+                {
+                    "name": "width",
+                    "description": "of the CROSS image (not the side image)",
+                    "type": "Number"
+                },
+                {
+                    "name": "column",
+                    "description": "the column where the top and the bottom is located",
+                    "type": "Number"
+                }
+            ],
+            "return": {
+                "description": "object to pass to Texture.cubemapFromImage in options.faces",
+                "type": "Object"
+            },
+            "class": "GL.Texture",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 1575,
+            "description": "Create a cubemap texture from a single image url that contains the six images\nif it is a cross, it must be horizontally aligned, and options.is_cross must be equal to the column where the top and bottom are located (usually 1 or 2)\notherwise it assumes the 6 images are arranged vertically.",
+            "itemtype": "method",
+            "name": "Texture.cubemapFromURL",
+            "params": [
+                {
+                    "name": "image",
+                    "description": "",
+                    "type": "Image"
+                },
+                {
+                    "name": "options",
+                    "description": "",
+                    "type": "Object"
+                },
+                {
+                    "name": "on_complete",
+                    "description": "callback",
+                    "type": "Function"
+                }
+            ],
+            "return": {
+                "description": "the texture",
+                "type": "Texture"
+            },
+            "class": "GL.Texture",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 1617,
+            "description": "returns an ArrayBuffer with the pixels in the texture, they are fliped in Y",
+            "itemtype": "method",
+            "name": "getPixels",
+            "params": [
+                {
+                    "name": "cubemap_face",
+                    "description": "[optional] the index of the cubemap face to read (ignore if texture_2D)",
+                    "type": "Number"
+                },
+                {
+                    "name": "mipmap",
+                    "description": "level [optional, default is 0]",
+                    "type": "Number"
+                }
+            ],
+            "return": {
+                "description": "the data ( Uint8Array, Uint16Array or Float32Array )",
+                "type": "ArrayBuffer"
+            },
+            "class": "GL.Texture",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 1673,
+            "description": "uploads some pixels to the texture (see uploadData method for more options)",
+            "itemtype": "method",
+            "name": "setPixels",
+            "params": [
+                {
+                    "name": "data",
+                    "description": "gl.UNSIGNED_BYTE or gl.FLOAT data",
+                    "type": "ArrayBuffer"
+                },
+                {
+                    "name": "no_flip",
+                    "description": "do not flip in Y",
+                    "type": "Boolean"
+                },
+                {
+                    "name": "skip_mipmaps",
+                    "description": "do not update mipmaps when possible",
+                    "type": "Boolean"
+                },
+                {
+                    "name": "cubemap_face",
+                    "description": "if the texture is a cubemap, which face",
+                    "type": "Number"
+                }
+            ],
+            "class": "GL.Texture",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 1689,
+            "description": "Copy texture content to a canvas",
+            "itemtype": "method",
+            "name": "toCanvas",
+            "params": [
+                {
+                    "name": "canvas",
+                    "description": "must have the same size, if different the canvas will be resized",
+                    "type": "Canvas"
+                },
+                {
+                    "name": "flip_y",
+                    "description": "optional, flip vertically",
+                    "type": "Boolean"
+                },
+                {
+                    "name": "max_size",
+                    "description": "optional, if it is supplied the canvas wont be bigger of max_size (the image will be scaled down)",
+                    "type": "Number"
+                }
+            ],
+            "class": "GL.Texture",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 1768,
+            "description": "returns the texture file in binary format",
+            "itemtype": "method",
+            "name": "toBinary",
+            "params": [
+                {
+                    "name": "flip_y",
+                    "description": "",
+                    "type": "Boolean"
+                }
+            ],
+            "return": {
+                "description": "the arraybuffer of the file containing the image",
+                "type": "ArrayBuffer"
+            },
+            "class": "GL.Texture",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 1792,
             "description": "returns a Blob containing all the data from the texture",
             "itemtype": "method",
-            "name": "Texture.toBlob",
+            "name": "toBlob",
             "return": {
                 "description": "the blob containing the data",
                 "type": "Blob"
             },
-            "class": "Texture"
+            "class": "GL.Texture",
+            "namespace": "GL"
         },
         {
             "file": "../src/texture.js",
-            "line": 607,
+            "line": 1824,
             "description": "returns a base64 String containing all the data from the texture",
             "itemtype": "method",
-            "name": "Texture.toBase64",
+            "name": "toBase64",
+            "params": [
+                {
+                    "name": "flip_y",
+                    "description": "if you want to flip vertically the image, WebGL saves the images upside down",
+                    "type": "Boolean"
+                }
+            ],
             "return": {
                 "description": "the data in base64 format",
                 "type": "String"
             },
-            "class": "Texture"
+            "class": "GL.Texture",
+            "namespace": "GL"
         },
         {
             "file": "../src/texture.js",
-            "line": 635,
+            "line": 1860,
             "description": "generates some basic metadata about the image",
             "itemtype": "method",
             "name": "generateMetadata",
@@ -2233,11 +4171,124 @@
                 "description": "",
                 "type": "Object"
             },
-            "class": "Texture"
+            "class": "GL.Texture",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 1889,
+            "description": "blends texture A and B and stores the result in OUT",
+            "itemtype": "method",
+            "name": "blend",
+            "params": [
+                {
+                    "name": "a",
+                    "description": "",
+                    "type": "Texture"
+                },
+                {
+                    "name": "b",
+                    "description": "",
+                    "type": "Texture"
+                },
+                {
+                    "name": "out",
+                    "description": "[optional]",
+                    "type": "Texture"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "Object"
+            },
+            "class": "GL.Texture",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 1936,
+            "description": "returns a white texture of 1x1 pixel",
+            "itemtype": "method",
+            "name": "Texture.getWhiteTexture",
+            "return": {
+                "description": "the white texture",
+                "type": "Texture"
+            },
+            "class": "GL.Texture",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 1952,
+            "description": "returns a black texture of 1x1 pixel",
+            "itemtype": "method",
+            "name": "Texture.getBlackTexture",
+            "return": {
+                "description": "the black texture",
+                "type": "Texture"
+            },
+            "class": "GL.Texture",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 1968,
+            "description": "Returns a texture from the texture pool, if none matches the specifications it creates one",
+            "itemtype": "method",
+            "name": "Texture.getTemporary",
+            "params": [
+                {
+                    "name": "width",
+                    "description": "the texture width",
+                    "type": "Number"
+                },
+                {
+                    "name": "height",
+                    "description": "the texture height",
+                    "type": "Number"
+                },
+                {
+                    "name": "options",
+                    "description": "to specifiy texture_type,type,format, it can be an object or another texture",
+                    "type": "Object|Texture"
+                },
+                {
+                    "name": "gl",
+                    "description": "[optional]",
+                    "type": "WebGLContext"
+                }
+            ],
+            "return": {
+                "description": "the textures that matches this settings",
+                "type": "Texture"
+            },
+            "class": "GL.Texture",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/texture.js",
+            "line": 2023,
+            "description": "Given a texture it adds it to the texture pool so it can be reused in the future",
+            "itemtype": "method",
+            "name": "Texture.releaseTemporary",
+            "params": [
+                {
+                    "name": "tex",
+                    "description": "",
+                    "type": "GL.Texture"
+                },
+                {
+                    "name": "gl",
+                    "description": "[optional]",
+                    "type": "WebGLContext"
+                }
+            ],
+            "class": "GL.Texture",
+            "namespace": "GL"
         },
         {
             "file": "../src/utils.js",
-            "line": 10,
+            "line": 6,
             "description": "Tells if one number is power of two (used for textures)",
             "itemtype": "method",
             "name": "isPowerOfTwo",
@@ -2252,11 +4303,12 @@
                 "description": "",
                 "type": "Boolean"
             },
-            "class": ""
+            "class": "",
+            "namespace": "GL"
         },
         {
             "file": "../src/utils.js",
-            "line": 21,
+            "line": 33,
             "description": "Get current time in milliseconds",
             "itemtype": "method",
             "name": "getTime",
@@ -2264,13 +4316,63 @@
                 "description": "",
                 "type": "Number"
             },
-            "class": ""
+            "class": "",
+            "namespace": "GL"
+        },
+        {
+            "file": "../src/utils.js",
+            "line": 78,
+            "description": "clone one object recursively, only allows objects containing number,strings,typed-arrays or other objects",
+            "itemtype": "method",
+            "name": "cloneObject",
+            "params": [
+                {
+                    "name": "object",
+                    "description": "",
+                    "type": "Object"
+                },
+                {
+                    "name": "target",
+                    "description": "if omited an empty object is created",
+                    "type": "Object"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "Object"
+            },
+            "class": "",
+            "namespace": "GL"
         }
     ],
     "warnings": [
         {
             "message": "Missing item type",
-            "line": " ../src/gl-matrix-extra.js:115"
+            "line": " ../src/geo.js:6"
+        },
+        {
+            "message": "Missing item type",
+            "line": " ../src/gl-matrix-extra.js:186"
+        },
+        {
+            "message": "Missing item type",
+            "line": " ../src/levent.js:1"
+        },
+        {
+            "message": "Missing item type",
+            "line": " ../src/mesh.js:1"
+        },
+        {
+            "message": "Missing item type",
+            "line": " ../src/octree.js:1"
+        },
+        {
+            "message": "Missing item type",
+            "line": " ../src/shader.js:2"
+        },
+        {
+            "message": "Missing item type",
+            "line": " ../src/texture.js:1"
         }
     ]
 }

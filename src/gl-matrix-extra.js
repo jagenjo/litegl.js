@@ -7,6 +7,47 @@ Math.clamp = function(v,a,b) { return (a > v ? a : (b < v ? b : v)); }
 var V3 = vec3.create;
 var M4 = vec3.create;
 
+
+vec3.ZERO = vec3.fromValues(0,0,0);
+vec3.FRONT = vec3.fromValues(0,0,-1);
+vec3.UP = vec3.fromValues(0,1,0);
+vec3.RIGHT = vec3.fromValues(1,0,0);
+
+vec2.rotate = function(out,vec,angle_in_rad)
+{
+	var x = vec[0], y = vec[1];
+	var cos = Math.cos(angle_in_rad);
+	var sin = Math.sin(angle_in_rad);
+	out[0] = x * cos - y * sin;
+	out[1] = x * sin + y * cos;
+	return out;
+}
+
+vec3.zero = function(a)
+{
+	a[0] = a[1] = 0.0;
+	return a;
+}
+
+//for signed angles
+vec2.perpdot = function(a,b)
+{
+	return a[1] * b[0] + -a[0] * b[1];
+}
+
+vec2.computeSignedAngle = function( a, b )
+{
+	return Math.atan2( vec2.perpdot(a,b), vec2.dot(a,b) );
+}
+
+vec2.random = function( vec, scale )
+{
+	scale = scale || 1.0;
+	vec[0] = Math.random() * scale;
+	vec[1] = Math.random() * scale;
+	return vec;
+}
+
 vec3.zero = function(a)
 {
 	a[0] = a[1] = a[2] = 0.0;
@@ -47,7 +88,6 @@ vec3.subValue = function(out,a,v)
 	out[1] = a[1] - v;
 	out[2] = a[2] - v;
 }
-
 
 vec3.toArray = function(vec)
 {
@@ -90,47 +130,80 @@ vec3.rotateZ = function(out,vec,angle_in_rad)
 	return out;
 }
 
-//signed angles
-vec2.perpdot = function(a,b)
+vec3.angle = function( a, b )
 {
-	return a[1] * b[0] + -a[0] * b[1];
+	return Math.acos( vec3.dot(a,b) );
 }
 
-vec2.computeSignedAngle = function( a, b )
+vec3.random = function(vec, scale)
 {
-	return Math.atan2( vec2.perpdot(a,b), vec2.dot(a,b) );
+	scale = scale || 1.0;
+	vec[0] = Math.random() * scale;
+	vec[1] = Math.random() * scale;
+	vec[2] = Math.random() * scale;
+	return vec;
 }
 
-//random value
-vec2.random = function(vec)
+//converts a polar coordinate (radius, lat, long) to (x,y,z)
+vec3.polarToCartesian = function(out, v)
 {
-	vec[0] = Math.random();
-	vec[1] = Math.random();
+	var r = v[0];
+	var lat = v[1];
+	var lon = v[2];
+	out[0] = r * Math.cos(lat) * Math.sin(lon);
+	out[1] = r * Math.sin(lat);
+	out[2] = r * Math.cos(lat) * Math.cos(lon);
+	return out;
 }
 
-vec3.random = function(vec)
+vec3.reflect = function(out, v, n)
 {
-	vec[0] = Math.random();
-	vec[1] = Math.random();
-	vec[2] = Math.random();
+	var x = v[0]; var y = v[1]; var z = v[2];
+	vec3.scale( out, n, -2 * vec3.dot(v,n) );
+	out[0] += x;
+	out[1] += y;
+	out[2] += z;
+	return out;
 }
 
-//random value
-vec4.random = function(vec)
+/* VEC4 */
+vec4.random = function(vec, scale)
 {
-	vec[0] = Math.random();
-	vec[1] = Math.random();
-	vec[2] = Math.random();
-	vec[3] = Math.random();	
+	scale = scale || 1.0;
+	vec[0] = Math.random() * scale;
+	vec[1] = Math.random() * scale;
+	vec[2] = Math.random() * scale;
+	vec[3] = Math.random() * scale;	
+	return vec;
+}
+
+vec4.toArray = function(vec)
+{
+	return [vec[0],vec[1],vec[2],vec[3]];
 }
 
 
 /** MATRIX ********************/
+mat3.IDENTITY = mat3.create();
+mat4.IDENTITY = mat4.create();
+
 mat4.toArray = function(mat)
 {
 	return [mat[0],mat[1],mat[2],mat[3],mat[4],mat[5],mat[6],mat[7],mat[8],mat[9],mat[10],mat[11],mat[12],mat[13],mat[14],mat[15]];
 }
 
+mat4.setUpAndOrthonormalize = function(out, m, up)
+{
+	if(m != out)
+		mat4.copy(out,m);
+	var right = out.subarray(0,3);
+	vec3.normalize(out.subarray(4,7),up);
+	var front = out.subarray(8,11);
+	vec3.cross( right, up, front );
+	vec3.normalize( right, right );
+	vec3.cross( front, right, up );
+	vec3.normalize( front, front );
+}
 
 mat4.multiplyVec3 = function(out, m, a) {
     var x = a[0], y = a[1], z = a[2];
@@ -140,26 +213,78 @@ mat4.multiplyVec3 = function(out, m, a) {
     return out;
 };
 
-mat4.projectVec3 = function(out, m, a) {
-	mat4.multiplyVec3( out, m, a );
-	out[0] /= out[2];
-	out[1] /= out[2];
+//from https://github.com/hughsk/from-3d-to-2d/blob/master/index.js
+//m should be a projection matrix (or a VP or MVP)
+//projects vector from 3D to 2D and returns the value in normalized screen space
+mat4.projectVec3 = function(out, m, a)
+{
+	var ix = a[0];
+	var iy = a[1];
+	var iz = a[2];
+
+	var ox = m[0] * ix + m[4] * iy + m[8] * iz + m[12];
+	var oy = m[1] * ix + m[5] * iy + m[9] * iz + m[13];
+	var oz = m[2] * ix + m[6] * iy + m[10] * iz + m[14];
+	var ow = m[3] * ix + m[7] * iy + m[11] * iz + m[15];
+
+	out[0] = (ox / ow + 1) / 2;
+	out[1] = (oy / ow + 1) / 2;
+	out[2] = (oz / ow + 1) / 2;
 	return out;
 };
 
 
-/*
-mat4.projectVec3 = function(out, m, a) {
-   var x = a[0], y = a[1], z = a[2];
-   var v = vec3.fromValues(
-      m[0] * x + m[1] * y + m[2] * z + m[3],
-      m[4] * x + m[5] * y + m[6] * z + m[7],
-      m[8] * x + m[9] * y + m[10] * z + m[11]
-    );
-   
-   return vec3.scale(v,v,1.0 / (m[12] * v[0] + m[13] * v[1] + m[14] * v[2] + m[15]) );
+//from https://github.com/hughsk/from-3d-to-2d/blob/master/index.js
+vec3.project = function(out, vec,  mvp, viewport) {
+	viewport = viewport || gl.viewport_data;
+
+	var m = mvp;
+
+	var ix = vec[0];
+	var iy = vec[1];
+	var iz = vec[2];
+
+	var ox = m[0] * ix + m[4] * iy + m[8] * iz + m[12];
+	var oy = m[1] * ix + m[5] * iy + m[9] * iz + m[13];
+	var oz = m[2] * ix + m[6] * iy + m[10] * iz + m[14];
+	var ow = m[3] * ix + m[7] * iy + m[11] * iz + m[15];
+
+	var projx =     (ox / ow + 1) / 2;
+	var projy = 1 - (oy / ow + 1) / 2;
+	var projz =     (oz / ow + 1) / 2;
+
+	out[0] = projx * viewport[2] + viewport[0];
+	out[1] = projy * viewport[3] + viewport[1];
+	out[2] = projz; //ow
+	return out;
 };
-*/
+
+var unprojectMat = mat4.create();
+var unprojectVec = vec4.create();
+
+vec3.unproject = function (out, vec, viewprojection, viewport) {
+
+	var m = unprojectMat;
+	var v = unprojectVec;
+	
+	v[0] = (vec[0] - viewport[0]) * 2.0 / viewport[2] - 1.0;
+	v[1] = (vec[1] - viewport[1]) * 2.0 / viewport[3] - 1.0;
+	v[2] = 2.0 * vec[2] - 1.0;
+	v[3] = 1.0;
+	
+	if(!mat4.invert(m,viewprojection)) 
+		return null;
+	
+	vec4.transformMat4(v, v, m);
+	if(v[3] === 0.0) 
+		return null;
+
+	out[0] = v[0] / v[3];
+	out[1] = v[1] / v[3];
+	out[2] = v[2] / v[3];
+	
+	return out;
+};
 
 //without translation
 mat4.rotateVec3 = function(out, m, a) {
@@ -245,46 +370,19 @@ mat4.scaleAndAdd = function(out, mat, mat2, v)
 	return out;
 }
 
-//not tested
-vec3.project = function(out, obj,  modelview, projection) {
-	//var point = projection.transformPoint(modelview.transformPoint(new Vector(objX, objY, objZ)));
-	//var point = projection.transformPoint( modelview.transformPoint( vec3.create(objX, objY, objZ)));
-	var pos = vec3.clone(obj);
-	mat4.multiplyVec3(pos, modelview, pos );
-	mat4.multiplyVec3(pos, projection, pos);
-	return vec3.set( out,
-	  viewport[0] + viewport[2] * (point[0] * 0.5 + 0.5),
-	  viewport[1] + viewport[3] * (point[1] * 0.5 + 0.5),
-	  point[2] * 0.5 + 0.5
-	);
-};
+quat.fromAxisAngle = function(axis, rad)
+{
+	var out = quat.create();
+    rad = rad * 0.5;
+    var s = Math.sin(rad);
+    out[0] = s * axis[0];
+    out[1] = s * axis[1];
+    out[2] = s * axis[2];
+    out[3] = Math.cos(rad);
+    return out;
+}
 
-var unprojectMat = mat4.create();
-var unprojectVec = vec4.create();
-
-vec3.unproject = function (out, vec, view, proj, viewport) {
-
-	var m = unprojectMat;
-	var v = unprojectVec;
-	
-	v[0] = (vec[0] - viewport[0]) * 2.0 / viewport[2] - 1.0;
-	v[1] = (vec[1] - viewport[1]) * 2.0 / viewport[3] - 1.0;
-	v[2] = 2.0 * vec[2] - 1.0;
-	v[3] = 1.0;
-	
-	mat4.multiply(m, proj, view);
-	if(!mat4.invert(m,m)) { return null; }
-	
-	vec4.transformMat4(v, v, m);
-	if(v[3] === 0.0) { return null; }
-
-	out[0] = v[0] / v[3];
-	out[1] = v[1] / v[3];
-	out[2] = v[2] / v[3];
-	
-	return out;
-};
-
+/*
 quat.toEuler = function(out, quat) {
 	var q = quat;
 	var heading, attitude, bank;
@@ -313,25 +411,84 @@ quat.toEuler = function(out, quat) {
 	vec3.set(out, heading, attitude, bank);
 	return out;
 }
+*/
+
+/*
+//FROM https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+//doesnt work well
+quat.toEuler = function(out, q)
+{
+    var yaw = Math.atan2(2*q[0]*q[3] + 2*q[1]*q[2], 1 - 2*q[2]*q[2] - 2*q[3]*q[3]);
+    var pitch = Math.asin(2*q[0]*q[2] - 2*q[3]*q[1]);
+    var roll = Math.atan2(2*q[0]*q[1] + 2*q[2]*q[3], 1 - 2*q[1]*q[1] - 2*q[2]*q[2]);
+	if(!out)
+		out = vec3.create();
+	vec3.set(out, yaw, pitch, roll);
+	return out;
+}
 
 quat.fromEuler = function(out, vec) {
-	var heading = vec[0]; //yaw
-	var attitude = vec[1]; //pitch
-	var bank = vec[2]; //roll
+	var yaw = vec[0];
+	var pitch = vec[1];
+	var roll = vec[2];
 
-	var C1 = Math.cos(heading);
-	var C2 = Math.cos(attitude);
-	var C3 = Math.cos(bank);
+	var C1 = Math.cos(yaw*0.5);
+	var C2 = Math.cos(pitch*0.5);
+	var C3 = Math.cos(roll*0.5);
+	var S1 = Math.sin(yaw*0.5);
+	var S2 = Math.sin(pitch*0.5);
+	var S3 = Math.sin(roll*0.5);
+
+	var x = C1*C2*C3 + S1*S2*S3;
+	var y = S1*C2*C3 - C1*S2*S3;
+	var z = C1*S2*C3 + S1*C2*S3;
+	var w = C1*C2*S3 - S1*S2*C3;
+
+	quat.set(out, x,y,z,w );
+	quat.normalize(out,out); //necessary?
+	return out;
+}
+*/
+
+quat.toEuler = function(out, q)
+{
+    var heading = Math.atan2(2*q[1]*q[3] - 2*q[0]*q[2], 1 - 2*q[1]*q[1] - 2*q[2]*q[2]);
+    var attitude = Math.asin(2*q[0]*q[1] + 2*q[2]*q[3]);
+    var bank = Math.atan2(2*q[0]*q[3] - 2*q[1]*q[2], 1 - 2*q[0]*q[0] - 2*q[2]*q[2]);
+	if(!out)
+		out = vec3.create();
+	vec3.set(out, heading, attitude, bank);
+	return out;
+}
+
+quat.fromEuler = function(out, vec) {
+	var heading = vec[0];
+	var attitude = vec[1];
+	var bank = vec[2];
+
+	var C1 = Math.cos(heading); //yaw
+	var C2 = Math.cos(attitude); //pitch
+	var C3 = Math.cos(bank); //roll
 	var S1 = Math.sin(heading);
 	var S2 = Math.sin(attitude);
 	var S3 = Math.sin(bank);
 
 	var w = Math.sqrt(1.0 + C1 * C2 + C1*C3 - S1 * S2 * S3 + C2*C3) * 0.5;
+	if(w == 0.0)
+	{
+		w = 0.000001;
+		//quat.set(out, 0,0,0,1 );
+		//return out;
+	}
+
 	var x = (C2 * S3 + C1 * S3 + S1 * S2 * C3) / (4.0 * w);
 	var y = (S1 * C2 + S1 * C3 + C1 * S2 * S3) / (4.0 * w);
 	var z = (-S1 * S3 + C1 * S2 * C3 + S2) /(4.0 * w);
-	return quat.set(out, x,y,z,w );
+	quat.set(out, x,y,z,w );
+	quat.normalize(out,out);
+	return out;
 };
+
 
 //not tested
 quat.fromMat4 = function(out,m)
@@ -365,27 +522,121 @@ quat.fromMat4 = function(out,m)
 	quat.normalize(out,out);
 }
 
-/* doesnt work 
-quat.lookAt = function(target, up, quat) {
-	var forward = vec3.normalize( target, vec3.create() );
-	up = vec3.normalize( up, vec3.create() );
-
-	var right = vec3.cross(up,forward, vec3.create() );
-	vec3.normalize( right );
-	vec3.cross(forward, right, up );
-
-	quat = quat || quat.create();
-
-	quat[3] = Math.sqrt(1.0 + right[0] + up[1] + forward[2]) * 0.5;
-	var w4_recip = 1.0 / (4.0 * quat[3]);
-	quat[0] = (forward[1] - up[2]) * w4_recip;
-	quat[1] = (right[2] - forward[0]) * w4_recip;
-	quat[2] = (up[0] - right[1]) * w4_recip;
-	 
-	return quat;
+//col according to common matrix notation, here are stored as rows
+vec3.getMat3Column = function(out, m, index )
+{
+	out[0] = m[index*3];
+	out[1] = m[index*3 + 1];
+	out[2] = m[index*3 + 2];
+	return out;
 }
-*/
 
+mat3.setColumn = function(out, v, index )
+{
+	out[index*3] = v[0];
+	out[index*3+1] = v[1];
+	out[index*3+2] = v[2];
+	return out;
+}
+
+
+//http://matthias-mueller-fischer.ch/publications/stablePolarDecomp.pdf
+//reusing the previous quaternion as an indicator to keep perpendicularity
+quat.fromMat3AndQuat = (function(){
+	var temp_mat3 = mat3.create();
+	var temp_quat = quat.create();
+	var Rcol0 = vec3.create();
+	var Rcol1 = vec3.create();
+	var Rcol2 = vec3.create();
+	var Acol0 = vec3.create();
+	var Acol1 = vec3.create();
+	var Acol2 = vec3.create();
+	var RAcross0 = vec3.create();
+	var RAcross1 = vec3.create();
+	var RAcross2 = vec3.create();
+	var omega = vec3.create();
+	var axis = mat3.create();
+
+	return function( q, A, max_iter )
+	{
+		max_iter = max_iter || 25;
+		for (var iter = 0; iter < max_iter; ++iter)
+		{
+			var R = mat3.fromQuat( temp_mat3, q );
+			vec3.getMat3Column(Rcol0,R,0);
+			vec3.getMat3Column(Rcol1,R,1);
+			vec3.getMat3Column(Rcol2,R,2);
+			vec3.getMat3Column(Acol0,A,0);
+			vec3.getMat3Column(Acol1,A,1);
+			vec3.getMat3Column(Acol2,A,2);
+			vec3.cross( RAcross0, Rcol0, Acol0 );
+			vec3.cross( RAcross1, Rcol1, Acol1 );
+			vec3.cross( RAcross2, Rcol2, Acol2 );
+			vec3.add( omega, RAcross0, RAcross1 );
+			vec3.add( omega, omega, RAcross2 );
+			var d = 1.0 / Math.abs( vec3.dot(Rcol0,Acol0) + vec3.dot(Rcol1,Acol1) + vec3.dot(Rcol2,Acol2) ) + 1.0e-9;
+			vec3.scale( omega, omega, d );
+			var w = vec3.length(omega);
+			if (w < 1.0e-9)
+				break;
+			vec3.scale(omega,omega,1/w); //normalize
+			quat.setAxisAngle( temp_quat, omega, w );
+			quat.mul( q, temp_quat, q );
+			quat.normalize(q,q);
+		}
+		return q;
+	};
+})();
+
+//http://number-none.com/product/IK%20with%20Quaternion%20Joint%20Limits/
+quat.rotateToFrom = (function(){ 
+	var tmp = vec3.create();
+	return function(out, v1, v2)
+	{
+		out = out || quat.create();
+		var axis = vec3.cross(tmp, v1, v2);
+		var dot = vec3.dot(v1, v2);
+		if( dot < -1 + 0.01){
+			out[0] = 0;
+			out[1] = 1; 
+			out[2] = 0; 
+			out[3] = 0; 
+			return out;
+		}
+		out[0] = axis[0] * 0.5;
+		out[1] = axis[1] * 0.5; 
+		out[2] = axis[2] * 0.5; 
+		out[3] = (1 + dot) * 0.5; 
+		quat.normalize(out, out); 
+		return out;    
+	}
+})();
+
+quat.lookAt = (function(){ 
+	var axis = vec3.create();
+	
+	return function( out, forwardVector, up )
+	{
+		var dot = vec3.dot( vec3.FRONT, forwardVector );
+
+		if ( Math.abs( dot - (-1.0)) < 0.000001 )
+		{
+			out.set( vec3.UP );
+			out[3] = Math.PI;
+			return out;
+		}
+		if ( Math.abs(dot - 1.0) < 0.000001 )
+		{
+			return quat.identity( out );
+		}
+
+		var rotAngle = Math.acos( dot );
+		vec3.cross( axis, vec3.FRONT, forwardVector );
+		vec3.normalize( axis, axis );
+		quat.setAxisAngle( out, axis, rotAngle );
+		return out;
+	}
+})();
 
 
 
