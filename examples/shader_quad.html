@@ -2,11 +2,15 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!--
+<meta property="og:title" content="GameEditor" />
+<meta property="og:description" content="GameEditor for simple games" />
+<meta property="og:image" content="" />
+-->
 
 <title>litegl.js: Quad example</title>
 	<link rel="stylesheet" type="text/css" href="style.css" />
 	<style type='text/css'>
-		html, body { width: 100%; height: 100%; margin: 0; padding: 0 }
 		body { background-color: #DDD;}
 		h1 { color: #777; background-color: #CCC; }
 	</style>
@@ -17,43 +21,53 @@
 	function init()
 	{
 		//create the rendering context
-		var container = document.body;
-
-		var gl = GL.create({width: container.offsetWidth, height: container.offsetHeight});
+		var gl = GL.create({width:1000,height:500});
+		var container = document.querySelector("#content");
 		container.appendChild(gl.canvas);
 		gl.animate();
 		gl.captureMouse();
-		var pos = [0,0];
-
 
 		//build the mesh
 		var texture = GL.Texture.fromURL("texture.png",{temp_color:[80,120,40,255], minFilter: gl.LINEAR_MIPMAP_LINEAR});
+		var start_time = getTime();
 
 		//basic distort shader
-		var shader = new Shader( Shader.SCREEN_VERTEX_SHADER, "\
+		var shader = new Shader("\n\
+			precision highp float;\n\
+			attribute vec3 a_vertex;\n\
+			attribute vec2 a_coord;\n\
+			varying vec2 coord;\n\
+			void main() { \n\
+				coord = a_coord; \n\
+				gl_Position = vec4(coord * 2.0 - 1.0, 0.0, 1.0); \n\
+			}\n\
+			","\
 			precision highp float;\n\
 			uniform sampler2D texture;\n\
 			uniform float u_time;\n\
 			uniform vec2 u_mousepos;\n\
-			varying vec2 v_coord;\n\
+			varying vec2 coord;\n\
 			void main() {\n\
-				vec2 n = (v_coord - u_mousepos);\n\
+				vec2 n = (coord - u_mousepos);\n\
 				float l = length(n);\n\
 				n /= l;\n\
-				vec2 uv = v_coord - n * 0.1;\n\
+				vec2 uv = coord - n * 0.1;\n\
 				gl_FragColor = texture2D(texture, uv);\n\
 			}\n\
 		");
 
+		//generic gl flags and settings
+		gl.disable( gl.DEPTH_TEST );
+
+		var pos = [0,0];
 
 		//rendering loop
 		gl.ondraw = function()
 		{
 			//render mesh using the shader
-			texture.bind(0);
-			shader.toViewport({
+			texture.toViewport( shader, {
 				u_texture: 0,
-				u_time: getTime() * 0.001,
+				u_time: (getTime() - start_time ) * 0.001,
 				u_mousepos: [pos[0]/gl.canvas.width,pos[1]/gl.canvas.height]
 			});
 		};
@@ -68,6 +82,14 @@
 	</script>
 </head>
 <body>
+
+<div id="wrap">
+	<div id="main">
+		<h1>SHADER DEMO</h1>
+		<div id="content"></div>
+	</div>
+</div>
+
 <script>init();</script>
 </body>
 </html>

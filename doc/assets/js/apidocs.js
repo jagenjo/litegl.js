@@ -43,12 +43,6 @@ pjax = new Y.Pjax({
             callbacks: defaultRoute
         },
 
-        // -- /elements/* -------------------------------------------------------
-        {
-            path     : '/elements/:element.html*',
-            callbacks: defaultRoute
-        },
-
         // -- /classes/* -------------------------------------------------------
         {
             path     : '/classes/:class.html*',
@@ -173,7 +167,7 @@ pjax.initLineNumbers = function () {
 };
 
 pjax.initRoot = function () {
-    var terminators = /^(?:classes|files|elements|modules)$/,
+    var terminators = /^(?:classes|files|modules)$/,
         parts       = pjax._getPathRoot().split('/'),
         root        = [],
         i, len, part;
@@ -290,7 +284,7 @@ pjax.handleClasses = function (req, res, next) {
     var status = res.ioResponse.status;
 
     // Handles success and local filesystem XHRs.
-    if (res.ioResponse.readyState === 4 && (!status || (status >= 200 && status < 300))) {
+    if (!status || (status >= 200 && status < 300)) {
         pjax.initClassTabView();
     }
 
@@ -301,7 +295,7 @@ pjax.handleFiles = function (req, res, next) {
     var status = res.ioResponse.status;
 
     // Handles success and local filesystem XHRs.
-    if (res.ioResponse.readyState === 4 && (!status || (status >= 200 && status < 300))) {
+    if (!status || (status >= 200 && status < 300)) {
         pjax.initLineNumbers();
     }
 

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>geo</title>
+    <title>Texture</title>
     <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -100,7 +100,7 @@
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-                        <h1>geo Class</h1>
+                        <h1>Texture Class</h1>
 <div class="box meta">
     
 
@@ -108,7 +108,7 @@
 
     
         <div class="foundat">
-            Defined in: <a href="../files/.._src_geo.js.html#l6"><code>..&#x2F;src&#x2F;geo.js:6</code></a>
+            Defined in: <a href="../files/.._src_texture.js.html#l1"><code>..&#x2F;src&#x2F;texture.js:1</code></a>
         </div>
     
 
@@ -120,10 +120,155 @@
 
 
 <div class="box intro">
-    <p>Computational geometry algorithms, is a static calss</p>
+    <p>Texture class to upload images to the GPU, default is gl.TEXTURE_2D, gl.RGBAof gl.UNSIGNED_BYTE with filter gl.LINEAR, and gl.CLAMP_TO_EDGE</p>
+<pre class="code prettyprint"><code>There is a list of options
+==========================
+- texture_type: gl.TEXTURE_2D, gl.TEXTURE_CUBE_MAP
+- format: gl.RGB, gl.RGBA, gl.DEPTH_COMPONENT
+- type: gl.UNSIGNED_BYTE, gl.UNSIGNED_SHORT, gl.HALF_FLOAT_OES, gl.FLOAT
+- filter: filtering for mag and min: gl.NEAREST or gl.LINEAR
+- magFilter: magnifying filter: gl.NEAREST, gl.LINEAR
+- minFilter: minifying filter: gl.NEAREST, gl.LINEAR, gl.LINEAR_MIPMAP_LINEAR
+- premultiply_alpha: multiplies alpha channel by every color channel
+- wrap: texture wrapping: gl.CLAMP_TO_EDGE, gl.REPEAT, gl.MIRROR</code></pre>
 
 </div>
 
+
+    <div class="constructor">
+        <h2>Constructor</h2>
+        <div id="method_Texture" class="method item">
+    <h3 class="name"><code>Texture</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>width</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>height</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>options</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_texture.js.html#l1"><code>..&#x2F;src&#x2F;texture.js:1</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">width</code>
+                        <span class="type">Number</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>texture width (any supported but Power of Two allows to have mipmaps), 0 means no memory reserved till its filled</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">height</code>
+                        <span class="type">Number</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>texture height (any supported but Power of Two allows to have mipmaps), 0 means no memory reserved till its filled</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">options</code>
+                        <span class="type">Object</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>Check the list in the description</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+</div>
+
+    </div>
 
 
 <div id="classdocs" class="tabview">
@@ -149,105 +294,147 @@
                     <ul class="index-list methods">
                         
                             <li class="index-item method">
-                                <a href="#method_createPlane">createPlane</a>
+                                <a href="#method_applyBlur">applyBlur</a>
 
                                 
                                 
                             </li>
                         
                             <li class="index-item method">
-                                <a href="#method_distance2PointToPlane">distance2PointToPlane</a>
+                                <a href="#method_bind">bind</a>
 
                                 
                                 
                             </li>
                         
                             <li class="index-item method">
-                                <a href="#method_distancePointToPlane">distancePointToPlane</a>
+                                <a href="#method_copyTo">copyTo</a>
 
                                 
                                 
                             </li>
                         
                             <li class="index-item method">
-                                <a href="#method_extractPlanes">extractPlanes</a>
+                                <a href="#method_drawTo">drawTo</a>
 
                                 
                                 
                             </li>
                         
                             <li class="index-item method">
-                                <a href="#method_frustumTestBox">frustumTestBox</a>
+                                <a href="#method_drawToColorAndDepth">drawToColorAndDepth</a>
 
                                 
                                 
                             </li>
                         
                             <li class="index-item method">
-                                <a href="#method_frustumTestSphere">frustumTestSphere</a>
+                                <a href="#method_generateMetadata">generateMetadata</a>
 
                                 
                                 
                             </li>
                         
                             <li class="index-item method">
-                                <a href="#method_projectPointOnPlane">projectPointOnPlane</a>
+                                <a href="#method_isDepthSupported">isDepthSupported</a>
 
                                 
                                 
                             </li>
                         
                             <li class="index-item method">
-                                <a href="#method_reflectPointInPlane">reflectPointInPlane</a>
+                                <a href="#method_Texture.cubemapFromImage">Texture.cubemapFromImage</a>
 
                                 
                                 
                             </li>
                         
                             <li class="index-item method">
-                                <a href="#method_testPoint2DInPolygon">testPoint2DInPolygon</a>
+                                <a href="#method_Texture.cubemapFromImages">Texture.cubemapFromImages</a>
 
                                 
                                 
                             </li>
                         
                             <li class="index-item method">
-                                <a href="#method_testPointBBox">testPointBBox</a>
+                                <a href="#method_Texture.fromImage">Texture.fromImage</a>
 
                                 
                                 
                             </li>
                         
                             <li class="index-item method">
-                                <a href="#method_testRayBBox">testRayBBox</a>
+                                <a href="#method_Texture.fromTexture">Texture.fromTexture</a>
 
                                 
                                 
                             </li>
                         
                             <li class="index-item method">
-                                <a href="#method_testRayBox">testRayBox</a>
+                                <a href="#method_Texture.fromTexture">Texture.fromTexture</a>
 
                                 
                                 
                             </li>
                         
                             <li class="index-item method">
-                                <a href="#method_testRayPlane">testRayPlane</a>
+                                <a href="#method_Texture.fromURL">Texture.fromURL</a>
 
                                 
                                 
                             </li>
                         
                             <li class="index-item method">
-                                <a href="#method_testRaySphere">testRaySphere</a>
+                                <a href="#method_Texture.fromVideo">Texture.fromVideo</a>
 
                                 
                                 
                             </li>
                         
                             <li class="index-item method">
-                                <a href="#method_testRaySphere">testRaySphere</a>
+                                <a href="#method_Texture.toBase64">Texture.toBase64</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
+                                <a href="#method_Texture.toBlob">Texture.toBlob</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
+                                <a href="#method_toCanvas">toCanvas</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
+                                <a href="#method_toViewport">toViewport</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
+                                <a href="#method_unbind">unbind</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
+                                <a href="#method_uploadData">uploadData</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
+                                <a href="#method_uploadImage">uploadImage</a>
 
                                 
                                 
@@ -269,8 +456,8 @@
                 <h2 class="off-left">Methods</h2>
 
                 
-                    <div id="method_createPlane" class="method item">
-    <h3 class="name"><code>createPlane</code></h3>
+                    <div id="method_applyBlur" class="method item">
+    <h3 class="name"><code>applyBlur</code></h3>
 
     
         <div class="args">
@@ -278,13 +465,25 @@
             
                 <li class="arg">
                     
-                        <code>P</code>
+                        <code>offsetx</code>
                     
                 </li>
             
                 <li class="arg">
                     
-                        <code>N</code>
+                        <code>offsety</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>intensity</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>temp_texture</code>
                     
                 </li>
             
@@ -294,7 +493,7 @@
 
     
         <span class="returns-inline">
-            <span class="type">Vec4</span>
+            <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>
         </span>
     
 
@@ -321,7 +520,7 @@
             
         
         
-        <a href="../files/.._src_geo.js.html#l13"><code>..&#x2F;src&#x2F;geo.js:13</code></a>
+        <a href="../files/.._src_texture.js.html#l296"><code>..&#x2F;src&#x2F;texture.js:296</code></a>
         
         </p>
 
@@ -332,7 +531,7 @@
     </div>
 
     <div class="description">
-        <p>Returns a float4 containing the info about a plane with normal N and that passes through point P</p>
+        <p>Applies a blur filter of one pixel to the texture (be careful using it, it is slow)</p>
 
     </div>
 
@@ -344,647 +543,62 @@
             
                 <li class="param">
                     
-                        <code class="param-name">P</code>
-                        <span class="type">Vec3</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                         
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">N</code>
-                        <span class="type">Vec3</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                         
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type">Vec4</span>:
-                    
-                    <p>plane values</p>
-
-                
-            </div>
-        </div>
-    
-
-    
-</div>
-
-                
-                    <div id="method_distance2PointToPlane" class="method item">
-    <h3 class="name"><code>distance2PointToPlane</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>point</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>plane</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-        <span class="returns-inline">
-            <span class="type">Number</span>
-        </span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/.._src_geo.js.html#l37"><code>..&#x2F;src&#x2F;geo.js:37</code></a>
-        
-        </p>
-
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        <p>Computes the square distance between the point and the plane</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">point</code>
-                        <span class="type">Vec3</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                         
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">plane</code>
-                        <span class="type">Vec4</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                         
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type">Number</span>:
-                    
-                    <p>distance*distance</p>
-
-                
-            </div>
-        </div>
-    
-
-    
-</div>
-
-                
-                    <div id="method_distancePointToPlane" class="method item">
-    <h3 class="name"><code>distancePointToPlane</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>point</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>plane</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-        <span class="returns-inline">
-            <span class="type">Number</span>
-        </span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/.._src_geo.js.html#l25"><code>..&#x2F;src&#x2F;geo.js:25</code></a>
-        
-        </p>
-
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        <p>Computes the distance between the point and the plane</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">point</code>
-                        <span class="type">Vec3</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                         
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">plane</code>
-                        <span class="type">Vec4</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                         
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type">Number</span>:
-                    
-                    <p>distance</p>
-
-                
-            </div>
-        </div>
-    
-
-    
-</div>
-
-                
-                    <div id="method_extractPlanes" class="method item">
-    <h3 class="name"><code>extractPlanes</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>viewprojection</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-        <span class="returns-inline">
-            <span class="type">Float32Array</span>
-        </span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/.._src_geo.js.html#l387"><code>..&#x2F;src&#x2F;geo.js:387</code></a>
-        
-        </p>
-
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        <p>extract frustum planes given a view-projection matrix</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">viewprojection</code>
-                        <span class="type">Mat4</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>matrix</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type">Float32Array</span>:
-                    
-                    <p>returns all 6 planes in a float32array[24]</p>
-
-                
-            </div>
-        </div>
-    
-
-    
-</div>
-
-                
-                    <div id="method_frustumTestBox" class="method item">
-    <h3 class="name"><code>frustumTestBox</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>planes</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>boundindbox</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-        <span class="returns-inline">
-            <span class="type">Enum</span>
-        </span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/.._src_geo.js.html#l436"><code>..&#x2F;src&#x2F;geo.js:436</code></a>
-        
-        </p>
-
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        <p>test a BBox against the frustum</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">planes</code>
-                        <span class="type">Float32Array</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>frustum planes</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">boundindbox</code>
-                        <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>in BBox format</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type">Enum</span>:
-                    
-                    <p>CLIP_INSIDE, CLIP_OVERLAP, CLIP_OUTSIDE</p>
-
-                
-            </div>
-        </div>
-    
-
-    
-</div>
-
-                
-                    <div id="method_frustumTestSphere" class="method item">
-    <h3 class="name"><code>frustumTestSphere</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>center</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>radius</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-        <span class="returns-inline">
-            <span class="type">Enum</span>
-        </span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/.._src_geo.js.html#l463"><code>..&#x2F;src&#x2F;geo.js:463</code></a>
-        
-        </p>
-
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        <p>test a Sphere against the frustum</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">center</code>
-                        <span class="type">Vec3</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>sphere center</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">radius</code>
+                        <code class="param-name">offsetx</code>
                         <span class="type">Number</span>
                     
 
                     
 
                     <div class="param-description">
-                        <p>sphere radius</p>
+                        <p>scalar that multiplies the offset when fetching pixels horizontally (default 1)</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">offsety</code>
+                        <span class="type">Number</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>scalar that multiplies the offset when fetching pixels vertically (default 1)</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">intensity</code>
+                        <span class="type">Number</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>scalar that multiplies the result (default 1)</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">temp_texture</code>
+                        <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>blur needs a temp texture, if not supplied it will create a new one each time!</p>
 
                     </div>
 
@@ -1002,9 +616,9 @@
             <div class="returns-description">
                 
                     
-                        <span class="type">Enum</span>:
+                        <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>:
                     
-                    <p>CLIP_INSIDE, CLIP_OVERLAP, CLIP_OUTSIDE</p>
+                    <p>returns the temp_texture in case you want to reuse it</p>
 
                 
             </div>
@@ -1015,8 +629,8 @@
 </div>
 
                 
-                    <div id="method_projectPointOnPlane" class="method item">
-    <h3 class="name"><code>projectPointOnPlane</code></h3>
+                    <div id="method_bind" class="method item">
+    <h3 class="name"><code>bind</code></h3>
 
     
         <div class="args">
@@ -1024,25 +638,7 @@
             
                 <li class="arg">
                     
-                        <code>point</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>P</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>N</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>result</code>
+                        <code>unit</code>
                     
                 </li>
             
@@ -1052,7 +648,7 @@
 
     
         <span class="returns-inline">
-            <span class="type">Vec3</span>
+            <span class="type">Number</span>
         </span>
     
 
@@ -1079,7 +675,7 @@
             
         
         
-        <a href="../files/.._src_geo.js.html#l49"><code>..&#x2F;src&#x2F;geo.js:49</code></a>
+        <a href="../files/.._src_texture.js.html#l106"><code>..&#x2F;src&#x2F;texture.js:106</code></a>
         
         </p>
 
@@ -1090,7 +686,7 @@
     </div>
 
     <div class="description">
-        <p>Projects point on plane</p>
+        <p>Binds the texture to one texture unit</p>
 
     </div>
 
@@ -1102,8 +698,300 @@
             
                 <li class="param">
                     
-                        <code class="param-name">point</code>
-                        <span class="type">Vec3</span>
+                        <code class="param-name">unit</code>
+                        <span class="type">Number</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>texture unit</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">Number</span>:
+                    
+                    <p>returns the texture unit</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_copyTo" class="method item">
+    <h3 class="name"><code>copyTo</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>target_texture</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_texture.js.html#l228"><code>..&#x2F;src&#x2F;texture.js:228</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Copy content of one texture into another</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">target_texture</code>
+                        <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="method_drawTo" class="method item">
+    <h3 class="name"><code>drawTo</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>callback</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_texture.js.html#l179"><code>..&#x2F;src&#x2F;texture.js:179</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Render to texture using FBO, just pass the callback to a rendering function and the content of the texture will be updated</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">callback</code>
+                        <span class="type">Function</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>function that does all the rendering inside this texture</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="method_drawToColorAndDepth" class="method item">
+    <h3 class="name"><code>drawToColorAndDepth</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>color_texture</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>depth_texture</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>callback</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_texture.js.html#l328"><code>..&#x2F;src&#x2F;texture.js:328</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Similar to drawTo but it also stores the depth in a depth texture</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">color_texture</code>
+                        <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>
                     
 
                     
@@ -1117,15 +1005,14 @@
             
                 <li class="param">
                     
-                        <code class="param-name">P</code>
-                        <span class="type">Vec3</span>
+                        <code class="param-name">depth_texture</code>
+                        <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>
                     
 
                     
 
                     <div class="param-description">
-                        <p>plane point</p>
-
+                         
                     </div>
 
                     
@@ -1133,31 +1020,14 @@
             
                 <li class="param">
                     
-                        <code class="param-name">N</code>
-                        <span class="type">Vec3</span>
+                        <code class="param-name">callback</code>
+                        <span class="type">Function</span>
                     
 
                     
 
                     <div class="param-description">
-                        <p>plane normal</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">result</code>
-                        <span class="type">Vec3</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>to store result (optional)</p>
-
+                         
                     </div>
 
                     
@@ -1168,57 +1038,21 @@
     
 
     
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type">Vec3</span>:
-                    
-                    <p>projectec point</p>
-
-                
-            </div>
-        </div>
-    
 
     
 </div>
 
                 
-                    <div id="method_reflectPointInPlane" class="method item">
-    <h3 class="name"><code>reflectPointInPlane</code></h3>
+                    <div id="method_generateMetadata" class="method item">
+    <h3 class="name"><code>generateMetadata</code></h3>
 
     
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>point</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>P</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>N</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
+        <span class="paren">()</span>
     
 
     
         <span class="returns-inline">
-            <span class="type">Vec3</span>
+            <span class="type">Object</span>
         </span>
     
 
@@ -1245,7 +1079,7 @@
             
         
         
-        <a href="../files/.._src_geo.js.html#l66"><code>..&#x2F;src&#x2F;geo.js:66</code></a>
+        <a href="../files/.._src_texture.js.html#l635"><code>..&#x2F;src&#x2F;texture.js:635</code></a>
         
         </p>
 
@@ -1256,66 +1090,10 @@
     </div>
 
     <div class="description">
-        <p>Finds the reflected point over a plane (useful for reflecting camera position when rendering reflections)</p>
+        <p>generates some basic metadata about the image</p>
 
     </div>
 
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">point</code>
-                        <span class="type">Vec3</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>point to reflect</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">P</code>
-                        <span class="type">Vec3</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>point where the plane passes</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">N</code>
-                        <span class="type">Vec3</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>normal of the plane</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
     
 
     
@@ -1325,10 +1103,8 @@
             <div class="returns-description">
                 
                     
-                        <span class="type">Vec3</span>:
+                        <span class="type">Object</span>:
                     
-                    <p>reflected point</p>
-
                 
             </div>
         </div>
@@ -1338,8 +1114,63 @@
 </div>
 
                 
-                    <div id="method_testPoint2DInPolygon" class="method item">
-    <h3 class="name"><code>testPoint2DInPolygon</code></h3>
+                    <div id="method_isDepthSupported" class="method item">
+    <h3 class="name"><code>isDepthSupported</code></h3>
+
+    
+        <span class="paren">()</span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_texture.js.html#l97"><code>..&#x2F;src&#x2F;texture.js:97</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Returns if depth texture is supported by the GPU</p>
+
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="method_Texture.cubemapFromImage" class="method item">
+    <h3 class="name"><code>Texture.cubemapFromImage</code></h3>
 
     
         <div class="args">
@@ -1347,13 +1178,13 @@
             
                 <li class="arg">
                     
-                        <code>poly</code>
+                        <code>image</code>
                     
                 </li>
             
                 <li class="arg">
                     
-                        <code>point</code>
+                        <code>options</code>
                     
                 </li>
             
@@ -1363,7 +1194,7 @@
 
     
         <span class="returns-inline">
-            <span class="type">Boolean</span>
+            <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>
         </span>
     
 
@@ -1390,7 +1221,7 @@
             
         
         
-        <a href="../files/.._src_geo.js.html#l498"><code>..&#x2F;src&#x2F;geo.js:498</code></a>
+        <a href="../files/.._src_texture.js.html#l541"><code>..&#x2F;src&#x2F;texture.js:541</code></a>
         
         </p>
 
@@ -1401,7 +1232,7 @@
     </div>
 
     <div class="description">
-        <p>test if a 2d point is inside a 2d polygon</p>
+        <p>Create a cubemap texture from a single image that contains all six images arranged vertically</p>
 
     </div>
 
@@ -1413,15 +1244,141 @@
             
                 <li class="param">
                     
-                        <code class="param-name">poly</code>
+                        <code class="param-name">image</code>
+                        <span class="type">Image</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">options</code>
+                        <span class="type">Object</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>:
+                    
+                    <p>the texture</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_Texture.cubemapFromImages" class="method item">
+    <h3 class="name"><code>Texture.cubemapFromImages</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>images</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>options</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_texture.js.html#l505"><code>..&#x2F;src&#x2F;texture.js:505</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Create a cubemap texture from a set of 6 images</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">images</code>
                         <span class="type">Array</span>
                     
 
                     
 
                     <div class="param-description">
-                        <p>array of 2d points</p>
-
+                         
                     </div>
 
                     
@@ -1429,8 +1386,8 @@
             
                 <li class="param">
                     
-                        <code class="param-name">point</code>
-                        <span class="type">Vec2</span>
+                        <code class="param-name">options</code>
+                        <span class="type">Object</span>
                     
 
                     
@@ -1453,9 +1410,9 @@
             <div class="returns-description">
                 
                     
-                        <span class="type">Boolean</span>:
+                        <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>:
                     
-                    <p>true if it is inside</p>
+                    <p>the texture</p>
 
                 
             </div>
@@ -1466,8 +1423,8 @@
 </div>
 
                 
-                    <div id="method_testPointBBox" class="method item">
-    <h3 class="name"><code>testPointBBox</code></h3>
+                    <div id="method_Texture.fromImage" class="method item">
+    <h3 class="name"><code>Texture.fromImage</code></h3>
 
     
         <div class="args">
@@ -1475,13 +1432,13 @@
             
                 <li class="arg">
                     
-                        <code>point</code>
+                        <code>image</code>
                     
                 </li>
             
                 <li class="arg">
                     
-                        <code>bbox</code>
+                        <code>options</code>
                     
                 </li>
             
@@ -1491,7 +1448,7 @@
 
     
         <span class="returns-inline">
-            <span class="type">Boolean</span>
+            <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>
         </span>
     
 
@@ -1518,7 +1475,7 @@
             
         
         
-        <a href="../files/.._src_geo.js.html#l340"><code>..&#x2F;src&#x2F;geo.js:340</code></a>
+        <a href="../files/.._src_texture.js.html#l405"><code>..&#x2F;src&#x2F;texture.js:405</code></a>
         
         </p>
 
@@ -1529,7 +1486,7 @@
     </div>
 
     <div class="description">
-        <p>test if a 3d point is inside a BBox</p>
+        <p>Create a texture from an Image</p>
 
     </div>
 
@@ -1541,8 +1498,8 @@
             
                 <li class="param">
                     
-                        <code class="param-name">point</code>
-                        <span class="type">Vec3</span>
+                        <code class="param-name">image</code>
+                        <span class="type">Image</span>
                     
 
                     
@@ -1556,8 +1513,8 @@
             
                 <li class="param">
                     
-                        <code class="param-name">bbox</code>
-                        <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>
+                        <code class="param-name">options</code>
+                        <span class="type">Object</span>
                     
 
                     
@@ -1580,9 +1537,9 @@
             <div class="returns-description">
                 
                     
-                        <span class="type">Boolean</span>:
+                        <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>:
                     
-                    <p>true if it is inside</p>
+                    <p>the texture</p>
 
                 
             </div>
@@ -1593,8 +1550,8 @@
 </div>
 
                 
-                    <div id="method_testRayBBox" class="method item">
-    <h3 class="name"><code>testRayBBox</code></h3>
+                    <div id="method_Texture.fromTexture" class="method item">
+    <h3 class="name"><code>Texture.fromTexture</code></h3>
 
     
         <div class="args">
@@ -1602,31 +1559,25 @@
             
                 <li class="arg">
                     
-                        <code>start</code>
+                        <code>width</code>
                     
                 </li>
             
                 <li class="arg">
                     
-                        <code>direction</code>
+                        <code>height</code>
                     
                 </li>
             
                 <li class="arg">
                     
-                        <code>box</code>
+                        <code>pixels</code>
                     
                 </li>
             
                 <li class="arg">
                     
-                        <code>model</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>result</code>
+                        <code>options</code>
                     
                 </li>
             
@@ -1636,7 +1587,7 @@
 
     
         <span class="returns-inline">
-            <span class="type">Boolean</span>
+            <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>
         </span>
     
 
@@ -1663,7 +1614,7 @@
             
         
         
-        <a href="../files/.._src_geo.js.html#l312"><code>..&#x2F;src&#x2F;geo.js:312</code></a>
+        <a href="../files/.._src_texture.js.html#l467"><code>..&#x2F;src&#x2F;texture.js:467</code></a>
         
         </p>
 
@@ -1674,7 +1625,7 @@
     </div>
 
     <div class="description">
-        <p>test a ray bounding-box collision, it uses the  BBox class and allows to use non-axis aligned bbox</p>
+        <p>Create a texture from an ArrayBuffer containing the pixels</p>
 
     </div>
 
@@ -1686,648 +1637,14 @@
             
                 <li class="param">
                     
-                        <code class="param-name">start</code>
-                        <span class="type">Vec3</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>ray start</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">direction</code>
-                        <span class="type">Vec3</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>ray direction</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">box</code>
-                        <span class="type"><a href="../classes/BBox.html" class="crosslink">BBox</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>in BBox format</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">model</code>
-                        <span class="type">Mat4</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>transformation of the BBox</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">result</code>
-                        <span class="type">Vec3</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>collision position</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type">Boolean</span>:
-                    
-                    <p>returns if the ray collides the box</p>
-
-                
-            </div>
-        </div>
-    
-
-    
-</div>
-
-                
-                    <div id="method_testRayBox" class="method item">
-    <h3 class="name"><code>testRayBox</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>start</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>direction</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>minB</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>maxB</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>result</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-        <span class="returns-inline">
-            <span class="type">Boolean</span>
-        </span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/.._src_geo.js.html#l235"><code>..&#x2F;src&#x2F;geo.js:235</code></a>
-        
-        </p>
-
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        <p>test a ray bounding-box collision and retrieves the collision point, the BB must be Axis Aligned</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">start</code>
-                        <span class="type">Vec3</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>ray start</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">direction</code>
-                        <span class="type">Vec3</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>ray direction</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">minB</code>
-                        <span class="type">Vec3</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>minimum position of the bounding box</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">maxB</code>
-                        <span class="type">Vec3</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>maximim position of the bounding box</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">result</code>
-                        <span class="type">Vec3</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>collision position</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type">Boolean</span>:
-                    
-                    <p>returns if the ray collides the box</p>
-
-                
-            </div>
-        </div>
-    
-
-    
-</div>
-
-                
-                    <div id="method_testRayPlane" class="method item">
-    <h3 class="name"><code>testRayPlane</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>start</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>direction</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>P</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>N</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>result</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-        <span class="returns-inline">
-            <span class="type">Boolean</span>
-        </span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/.._src_geo.js.html#l84"><code>..&#x2F;src&#x2F;geo.js:84</code></a>
-        
-        </p>
-
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        <p>test a ray plane collision and retrieves the collision point</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">start</code>
-                        <span class="type">Vec3</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>ray start</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">direction</code>
-                        <span class="type">Vec3</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>ray direction</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">P</code>
-                        <span class="type">Vec3</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>point where the plane passes</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">N</code>
-                        <span class="type">Vec3</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>normal of the plane</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">result</code>
-                        <span class="type">Vec3</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>collision position</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type">Boolean</span>:
-                    
-                    <p>returns if the ray collides the plane or the ray is parallel to the plane</p>
-
-                
-            </div>
-        </div>
-    
-
-    
-</div>
-
-                
-                    <div id="method_testRaySphere" class="method item">
-    <h3 class="name"><code>testRaySphere</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>start</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>direction</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>center</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>radius</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>result</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-        <span class="returns-inline">
-            <span class="type">Boolean</span>
-        </span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/.._src_geo.js.html#l108"><code>..&#x2F;src&#x2F;geo.js:108</code></a>
-        
-        </p>
-
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        <p>test a ray sphere collision and retrieves the collision point</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">start</code>
-                        <span class="type">Vec3</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>ray start</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">direction</code>
-                        <span class="type">Vec3</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>ray direction</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">center</code>
-                        <span class="type">Vec3</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>center of the sphere</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">radius</code>
+                        <code class="param-name">width</code>
                         <span class="type">Number</span>
                     
 
                     
 
                     <div class="param-description">
-                        <p>radius of the sphere</p>
-
+                         
                     </div>
 
                     
@@ -2335,15 +1652,44 @@
             
                 <li class="param">
                     
-                        <code class="param-name">result</code>
-                        <span class="type">Vec3</span>
+                        <code class="param-name">height</code>
+                        <span class="type">Number</span>
                     
 
                     
 
                     <div class="param-description">
-                        <p>collision position</p>
+                         
+                    </div>
 
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">pixels</code>
+                        <span class="type">ArrayBuffer</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">options</code>
+                        <span class="type">Object</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
                     </div>
 
                     
@@ -2360,9 +1706,9 @@
             <div class="returns-description">
                 
                     
-                        <span class="type">Boolean</span>:
+                        <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>:
                     
-                    <p>returns if the ray collides the sphere</p>
+                    <p>the texture</p>
 
                 
             </div>
@@ -2373,8 +1719,8 @@
 </div>
 
                 
-                    <div id="method_testRaySphere" class="method item">
-    <h3 class="name"><code>testRaySphere</code></h3>
+                    <div id="method_Texture.fromTexture" class="method item">
+    <h3 class="name"><code>Texture.fromTexture</code></h3>
 
     
         <div class="args">
@@ -2382,37 +1728,13 @@
             
                 <li class="arg">
                     
-                        <code>start</code>
+                        <code>old_texture</code>
                     
                 </li>
             
                 <li class="arg">
                     
-                        <code>direction</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>p</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>q</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>r</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>result</code>
+                        <code>options</code>
                     
                 </li>
             
@@ -2422,7 +1744,7 @@
 
     
         <span class="returns-inline">
-            <span class="type">Boolean</span>
+            <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>
         </span>
     
 
@@ -2449,7 +1771,7 @@
             
         
         
-        <a href="../files/.._src_geo.js.html#l149"><code>..&#x2F;src&#x2F;geo.js:149</code></a>
+        <a href="../files/.._src_texture.js.html#l453"><code>..&#x2F;src&#x2F;texture.js:453</code></a>
         
         </p>
 
@@ -2460,7 +1782,7 @@
     </div>
 
     <div class="description">
-        <p>test a ray cylinder collision and retrieves the collision point</p>
+        <p>Create a clone of a texture</p>
 
     </div>
 
@@ -2472,14 +1794,647 @@
             
                 <li class="param">
                     
-                        <code class="param-name">start</code>
-                        <span class="type">Vec3</span>
+                        <code class="param-name">old_texture</code>
+                        <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>
                     
 
                     
 
                     <div class="param-description">
-                        <p>ray start</p>
+                         
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">options</code>
+                        <span class="type">Object</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>:
+                    
+                    <p>the texture</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_Texture.fromURL" class="method item">
+    <h3 class="name"><code>Texture.fromURL</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>url</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>options</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>on_complete</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_texture.js.html#l358"><code>..&#x2F;src&#x2F;texture.js:358</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Loads and uploads a texture from a url</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">url</code>
+                        <span class="type">String</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">options</code>
+                        <span class="type">Object</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">on_complete</code>
+                        <span class="type">Function</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>:
+                    
+                    <p>the texture</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_Texture.fromVideo" class="method item">
+    <h3 class="name"><code>Texture.fromVideo</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>video</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>options</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_texture.js.html#l429"><code>..&#x2F;src&#x2F;texture.js:429</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Create a texture from a Video</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">video</code>
+                        <span class="type">Video</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">options</code>
+                        <span class="type">Object</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="../classes/Texture.html" class="crosslink">Texture</a></span>:
+                    
+                    <p>the texture</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_Texture.toBase64" class="method item">
+    <h3 class="name"><code>Texture.toBase64</code></h3>
+
+    
+        <span class="paren">()</span>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type">String</span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_texture.js.html#l607"><code>..&#x2F;src&#x2F;texture.js:607</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>returns a base64 String containing all the data from the texture</p>
+
+    </div>
+
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">String</span>:
+                    
+                    <p>the data in base64 format</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_Texture.toBlob" class="method item">
+    <h3 class="name"><code>Texture.toBlob</code></h3>
+
+    
+        <span class="paren">()</span>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type">Blob</span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_texture.js.html#l571"><code>..&#x2F;src&#x2F;texture.js:571</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>returns a Blob containing all the data from the texture</p>
+
+    </div>
+
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">Blob</span>:
+                    
+                    <p>the blob containing the data</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_toCanvas" class="method item">
+    <h3 class="name"><code>toCanvas</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>canvas</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_texture.js.html#l270"><code>..&#x2F;src&#x2F;texture.js:270</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Copy texture content to a canvas</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">canvas</code>
+                        <span class="type">Canvas</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>must have the same size, if different the canvas will be resized</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="method_toViewport" class="method item">
+    <h3 class="name"><code>toViewport</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>shader</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>uniforms</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_texture.js.html#l254"><code>..&#x2F;src&#x2F;texture.js:254</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Render texture in a quad to full viewport size</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">shader</code>
+                        <span class="type"><a href="../classes/Shader.html" class="crosslink">Shader</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>to apply, otherwise a default textured shader is applied</p>
 
                     </div>
 
@@ -2488,78 +2443,107 @@
             
                 <li class="param">
                     
-                        <code class="param-name">direction</code>
-                        <span class="type">Vec3</span>
+                        <code class="param-name">uniforms</code>
+                        <span class="type">Object</span>
                     
 
                     
 
                     <div class="param-description">
-                        <p>ray direction</p>
+                        <p>for the shader if needed</p>
 
                     </div>
 
                     
                 </li>
             
-                <li class="param">
+            </ul>
+        </div>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="method_unbind" class="method item">
+    <h3 class="name"><code>unbind</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
                     
-                        <code class="param-name">p</code>
-                        <span class="type">Vec3</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>center of the cylinder</p>
-
-                    </div>
-
+                        <code>unit</code>
                     
                 </li>
             
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type">Number</span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_texture.js.html#l119"><code>..&#x2F;src&#x2F;texture.js:119</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Unbinds the texture</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
                 <li class="param">
                     
-                        <code class="param-name">q</code>
+                        <code class="param-name">unit</code>
                         <span class="type">Number</span>
                     
 
                     
 
                     <div class="param-description">
-                        <p>height of the cylinder</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">r</code>
-                        <span class="type">Number</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>radius of the cylinder</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">result</code>
-                        <span class="type">Vec3</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>collision position</p>
+                        <p>texture unit</p>
 
                     </div>
 
@@ -2577,13 +2561,189 @@
             <div class="returns-description">
                 
                     
-                        <span class="type">Boolean</span>:
+                        <span class="type">Number</span>:
                     
-                    <p>returns if the ray collides the cylinder</p>
+                    <p>returns the texture unit</p>
 
                 
             </div>
         </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_uploadData" class="method item">
+    <h3 class="name"><code>uploadData</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>data</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_texture.js.html#l164"><code>..&#x2F;src&#x2F;texture.js:164</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Uploads data to the GPU (data must have the appropiate size)</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">data</code>
+                        <span class="type">ArrayBuffer</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="method_uploadImage" class="method item">
+    <h3 class="name"><code>uploadImage</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>img</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_texture.js.html#l136"><code>..&#x2F;src&#x2F;texture.js:136</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Given an Image/Canvas/Video it uploads it to the GPU</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">img</code>
+                        <span class="type">Image</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
     
 
     

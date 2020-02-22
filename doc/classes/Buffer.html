@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>GL</title>
+    <title>Buffer</title>
     <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -100,7 +100,7 @@
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-                        <h1>GL Class</h1>
+                        <h1>Buffer Class</h1>
 <div class="box meta">
     
 
@@ -108,7 +108,7 @@
 
     
         <div class="foundat">
-            Defined in: <a href="../files/.._src_core.js.html#l7"><code>..&#x2F;src&#x2F;core.js:7</code></a>
+            Defined in: <a href="../files/.._src_mesh.js.html#l22"><code>..&#x2F;src&#x2F;mesh.js:22</code></a>
         </div>
     
 
@@ -120,10 +120,167 @@
 
 
 <div class="box intro">
-    <p>The static module that contains all the features</p>
+    <p>A data buffer to be stored in the GPU</p>
 
 </div>
 
+
+    <div class="constructor">
+        <h2>Constructor</h2>
+        <div id="method_Buffer" class="method item">
+    <h3 class="name"><code>Buffer</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>target</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>data</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>spacing</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>stream_type</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_mesh.js.html#l22"><code>..&#x2F;src&#x2F;mesh.js:22</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">target</code>
+                        <span class="type">String</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>gl.ARRAY_BUFFER, ELEMENT_ARRAY_BUFFER</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">data</code>
+                        <span class="type">ArrayBufferView</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>the data in typed-array format</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">spacing</code>
+                        <span class="type">Number</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>number of numbers per component (3 per vertex, 2 per uvs...), default 3</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">stream_type</code>
+                        <span class="type">Enum</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+</div>
+
+    </div>
 
 
 <div id="classdocs" class="tabview">
@@ -149,42 +306,14 @@
                     <ul class="index-list methods">
                         
                             <li class="index-item method">
-                                <a href="#method_create">create</a>
+                                <a href="#method_compile">compile</a>
 
                                 
                                 
                             </li>
                         
                             <li class="index-item method">
-                                <a href="#method_gl.animate">gl.animate</a>
-
-                                
-                                
-                            </li>
-                        
-                            <li class="index-item method">
-                                <a href="#method_gl.captureGamepads">gl.captureGamepads</a>
-
-                                
-                                
-                            </li>
-                        
-                            <li class="index-item method">
-                                <a href="#method_gl.captureKeys">gl.captureKeys</a>
-
-                                
-                                
-                            </li>
-                        
-                            <li class="index-item method">
-                                <a href="#method_gl.captureMouse">gl.captureMouse</a>
-
-                                
-                                
-                            </li>
-                        
-                            <li class="index-item method">
-                                <a href="#method_gl.getGamepads">gl.getGamepads</a>
+                                <a href="#method_forEach">forEach</a>
 
                                 
                                 
@@ -206,8 +335,8 @@
                 <h2 class="off-left">Methods</h2>
 
                 
-                    <div id="method_create" class="method item">
-    <h3 class="name"><code>create</code></h3>
+                    <div id="method_compile" class="method item">
+    <h3 class="name"><code>compile</code></h3>
 
     
         <div class="args">
@@ -215,224 +344,7 @@
             
                 <li class="arg">
                     
-                        <code>options</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-        <span class="returns-inline">
-            <span class="type">Gl</span>
-        </span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/.._src_core.js.html#l19"><code>..&#x2F;src&#x2F;core.js:19</code></a>
-        
-        </p>
-
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        <p>creates a new WebGL canvas</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">options</code>
-                        <span class="type">Object</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>supported are: width, height</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type">Gl</span>:
-                    
-                    <p>gl context for webgl</p>
-
-                
-            </div>
-        </div>
-    
-
-    
-</div>
-
-                
-                    <div id="method_gl.animate" class="method item">
-    <h3 class="name"><code>gl.animate</code></h3>
-
-    
-        <span class="paren">()</span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/.._src_core.js.html#l73"><code>..&#x2F;src&#x2F;core.js:73</code></a>
-        
-        </p>
-
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        <p>Launch animation loop (calls gl.onupdate and gl.ondraw every frame)</p>
-
-    </div>
-
-    
-
-    
-
-    
-</div>
-
-                
-                    <div id="method_gl.captureGamepads" class="method item">
-    <h3 class="name"><code>gl.captureGamepads</code></h3>
-
-    
-        <span class="paren">()</span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/.._src_core.js.html#l241"><code>..&#x2F;src&#x2F;core.js:241</code></a>
-        
-        </p>
-
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        <p>Tells the system to capture gamepad events on the canvas.</p>
-
-    </div>
-
-    
-
-    
-
-    
-</div>
-
-                
-                    <div id="method_gl.captureKeys" class="method item">
-    <h3 class="name"><code>gl.captureKeys</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>prevent_default</code>
+                        <code>stream_type</code>
                     
                 </li>
             
@@ -465,7 +377,7 @@
             
         
         
-        <a href="../files/.._src_core.js.html#l197"><code>..&#x2F;src&#x2F;core.js:197</code></a>
+        <a href="../files/.._src_mesh.js.html#l58"><code>..&#x2F;src&#x2F;mesh.js:58</code></a>
         
         </p>
 
@@ -476,7 +388,7 @@
     </div>
 
     <div class="description">
-        <p>Tells the system to capture key events on the canvas. This will trigger onkey</p>
+        <p>Uploads the buffer data (stored in this.data) to the GPU</p>
 
     </div>
 
@@ -488,14 +400,14 @@
             
                 <li class="param">
                     
-                        <code class="param-name">prevent_default</code>
-                        <span class="type">Boolean</span>
+                        <code class="param-name">stream_type</code>
+                        <span class="type">Number</span>
                     
 
                     
 
                     <div class="param-description">
-                        <p>prevent default behaviour (like scroll on the web, etc)</p>
+                        <p>default gl.STATIC_DRAW (other: gl.DYNAMIC_DRAW, gl.STREAM_DRAW</p>
 
                     </div>
 
@@ -512,8 +424,8 @@
 </div>
 
                 
-                    <div id="method_gl.captureMouse" class="method item">
-    <h3 class="name"><code>gl.captureMouse</code></h3>
+                    <div id="method_forEach" class="method item">
+    <h3 class="name"><code>forEach</code></h3>
 
     
         <div class="args">
@@ -521,7 +433,7 @@
             
                 <li class="arg">
                     
-                        <code>capture_wheel</code>
+                        <code>callback</code>
                     
                 </li>
             
@@ -554,7 +466,7 @@
             
         
         
-        <a href="../files/.._src_core.js.html#l96"><code>..&#x2F;src&#x2F;core.js:96</code></a>
+        <a href="../files/.._src_mesh.js.html#l43"><code>..&#x2F;src&#x2F;mesh.js:43</code></a>
         
         </p>
 
@@ -565,7 +477,7 @@
     </div>
 
     <div class="description">
-        <p>Tells the system to capture mouse events on the canvas. This will trigger onmousedown, onmousemove, onmouseup, onmousewheel callbacks in the canvas.</p>
+        <p>Applies an action to every vertex in this buffer</p>
 
     </div>
 
@@ -577,14 +489,14 @@
             
                 <li class="param">
                     
-                        <code class="param-name">capture_wheel</code>
-                        <span class="type">Boolean</span>
+                        <code class="param-name">callback</code>
+                        <span class="type">Function</span>
                     
 
                     
 
                     <div class="param-description">
-                        <p>capture also the mouse wheel</p>
+                        <p>to be called for every vertex (or whatever is contained in the buffer)</p>
 
                     </div>
 
@@ -593,61 +505,6 @@
             
             </ul>
         </div>
-    
-
-    
-
-    
-</div>
-
-                
-                    <div id="method_gl.getGamepads" class="method item">
-    <h3 class="name"><code>gl.getGamepads</code></h3>
-
-    
-        <span class="paren">()</span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/.._src_core.js.html#l260"><code>..&#x2F;src&#x2F;core.js:260</code></a>
-        
-        </p>
-
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        <p>returns the detected gamepads on the system</p>
-
-    </div>
-
     
 
     

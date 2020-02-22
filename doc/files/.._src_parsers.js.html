@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
-    <link rel="icon" href="../assets/favicon.ico">
+    <link rel="shortcut icon" type="image/png" href="../assets/favicon.png">
     <script src="http://yui.yahooapis.com/combo?3.9.1/build/yui/yui-min.js"></script>
 </head>
 <body class="yui3-skin-sam">
@@ -14,7 +14,9 @@
 <div id="doc">
     <div id="hd" class="yui3-g header">
         <div class="yui3-u-3-4">
-                <h1><img src="../assets/css/logo.png" title="" width="117" height="52"></h1>
+            
+                <h1><img src="../assets/css/logo.png" title=""></h1>
+            
         </div>
         <div class="yui3-u-1-4 version">
             <em>API Docs for: </em>
@@ -25,82 +27,93 @@
         <div class="yui3-u-1-4">
             <div id="docs-sidebar" class="sidebar apidocs">
                 <div id="api-list">
-                    <h2 class="off-left">APIs</h2>
-                    <div id="api-tabview" class="tabview">
-                        <ul class="tabs">
-                            <li><a href="#api-classes">Classes</a></li>
-                            <li><a href="#api-modules">Modules</a></li>
-                        </ul>
-                
-                        <div id="api-tabview-filter">
-                            <input type="search" id="api-filter" placeholder="Type to filter APIs">
-                        </div>
-                
-                        <div id="api-tabview-panel">
-                            <ul id="api-classes" class="apis classes">
-                                <li><a href="../classes/BBox.html">BBox</a></li>
-                                <li><a href="../classes/geo.html">geo</a></li>
-                                <li><a href="../classes/GL.html">GL</a></li>
-                                <li><a href="../classes/gl.html">gl</a></li>
-                                <li><a href="../classes/GL.Buffer.html">GL.Buffer</a></li>
-                                <li><a href="../classes/GL.FBO.html">GL.FBO</a></li>
-                                <li><a href="../classes/GL.Indexer.html">GL.Indexer</a></li>
-                                <li><a href="../classes/GL.Mesh.html">GL.Mesh</a></li>
-                                <li><a href="../classes/GL.Octree.html">GL.Octree</a></li>
-                                <li><a href="../classes/GL.Shader.html">GL.Shader</a></li>
-                                <li><a href="../classes/GL.Texture.html">GL.Texture</a></li>
-                                <li><a href="../classes/LEvent.html">LEvent</a></li>
-                            </ul>
-                
-                
-                            <ul id="api-modules" class="apis modules">
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+    <h2 class="off-left">APIs</h2>
+    <div id="api-tabview" class="tabview">
+        <ul class="tabs">
+            <li><a href="#api-classes">Classes</a></li>
+            <li><a href="#api-modules">Modules</a></li>
+        </ul>
+
+        <div id="api-tabview-filter">
+            <input type="search" id="api-filter" placeholder="Type to filter APIs">
+        </div>
+
+        <div id="api-tabview-panel">
+            <ul id="api-classes" class="apis classes">
+            
+                <li><a href="../classes/BBox.html">BBox</a></li>
+            
+                <li><a href="../classes/Buffer.html">Buffer</a></li>
+            
+                <li><a href="../classes/geo.html">geo</a></li>
+            
+                <li><a href="../classes/GL.html">GL</a></li>
+            
+                <li><a href="../classes/Indexer.html">Indexer</a></li>
+            
+                <li><a href="../classes/LEvent.html">LEvent</a></li>
+            
+                <li><a href="../classes/Mesh.html">Mesh</a></li>
+            
+                <li><a href="../classes/Octree.html">Octree</a></li>
+            
+                <li><a href="../classes/Shader.html">Shader</a></li>
+            
+                <li><a href="../classes/Texture.html">Texture</a></li>
+            
+            </ul>
+
+            <ul id="api-modules" class="apis modules">
+            
+            </ul>
+        </div>
+    </div>
+</div>
+
             </div>
         </div>
         <div class="yui3-u-3-4">
                 <div id="api-options">
-                    Show:
-                    <label for="api-show-inherited">
-                        <input type="checkbox" id="api-show-inherited" checked>
-                        Inherited
-                    </label>
-            
-                    <label for="api-show-protected">
-                        <input type="checkbox" id="api-show-protected">
-                        Protected
-                    </label>
-            
-                    <label for="api-show-private">
-                        <input type="checkbox" id="api-show-private">
-                        Private
-                    </label>
-                    <label for="api-show-deprecated">
-                        <input type="checkbox" id="api-show-deprecated">
-                        Deprecated
-                    </label>
-            
-                </div>
-            
+        Show:
+        <label for="api-show-inherited">
+            <input type="checkbox" id="api-show-inherited" checked>
+            Inherited
+        </label>
+
+        <label for="api-show-protected">
+            <input type="checkbox" id="api-show-protected">
+            Protected
+        </label>
+
+        <label for="api-show-private">
+            <input type="checkbox" id="api-show-private">
+            Private
+        </label>
+        <label for="api-show-deprecated">
+            <input type="checkbox" id="api-show-deprecated">
+            Deprecated
+        </label>
+
+    </div>
+
+
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-<h1 class="file-heading">File: ../src/parsers.js</h1>
+                        <h1 class="file-heading">File: ../src/parsers.js</h1>
 
 <div class="file">
     <pre class="code prettyprint linenums">
 //***** OBJ parser adapted from SpiderGL implementation *****************
 /**
-* Parses a OBJ string and returns an object with the info ready to be passed to GL.Mesh.load
+* A data buffer to be stored in the GPU
+* @class Mesh
 * @method Mesh.parseOBJ
 * @param {String} data all the OBJ info to be parsed
 * @param {Object} options
-* @return {Object} mesh information (vertices, coords, normals, indices)
 */
 
-Mesh.parseOBJ = function( text, options )
+Mesh.parseOBJ = function(text, options)
 {
 	options = options || {};
 
@@ -146,15 +159,6 @@ Mesh.parseOBJ = function( text, options )
 	var groups = [];
 	var materials_found = {};
 
-	var V_CODE = 1;
-	var VT_CODE = 2;
-	var VN_CODE = 3;
-	var F_CODE = 4;
-	var G_CODE = 5;
-	var O_CODE = 6;
-	var codes = { v: V_CODE, vt: VT_CODE, vn: VN_CODE, f: F_CODE, g: G_CODE, o: O_CODE };
-
-
 	var lines = text.split(&quot;\n&quot;);
 	var length = lines.length;
 	for (var lineIndex = 0;  lineIndex &lt; length; ++lineIndex) {
@@ -164,51 +168,30 @@ Mesh.parseOBJ = function( text, options )
 		if(line == &quot;&quot;) continue;
 
 		tokens = line.split(&quot; &quot;);
-		var code = codes[ tokens[0] ];
 
-		if(parsingFaces &amp;&amp; code == V_CODE) //another mesh?
+		if(parsingFaces &amp;&amp; tokens[0] == &quot;v&quot;) //another mesh?
 		{
 			indices_offset = index;
 			parsingFaces = false;
-			//trace(&quot;multiple meshes: &quot; + indices_offset);
 		}
 
-		//read and parse numbers
-		if( code &lt;= VN_CODE ) //v,vt,vn
-		{
-			x = parseFloat(tokens[1]);
-			y = parseFloat(tokens[2]);
-			if( code != VT_CODE )
-			{
-				if(tokens[3] == &#x27;\\&#x27;) //super weird case, OBJ allows to break lines with slashes...
-				{
-					//HACK! only works if the var is the thirth position...
-					++lineIndex;
-					line = lines[lineIndex].replace(/[ \t]+/g, &quot; &quot;).replace(/\s\s*$/, &quot;&quot;); //better than trim
-					z = parseFloat(line);
-				}
-				else
-					z = parseFloat(tokens[3]);
-			}
-		}
-
-		if (code == V_CODE) {
+		if (tokens[0] == &quot;v&quot;) {
 			if(flip_axis) //maya and max notation style
-				positions.push(-1*x,z,y);
+				positions.push(-1*parseFloat(tokens[1]),parseFloat(tokens[3]),parseFloat(tokens[2]));
 			else
-				positions.push(x,y,z);
+				positions.push(parseFloat(tokens[1]),parseFloat(tokens[2]),parseFloat(tokens[3]));
 		}
-		else if (code == VT_CODE) {
-			texcoords.push(x,y);
+		else if (tokens[0] == &quot;vt&quot;) {
+			texcoords.push(parseFloat(tokens[1]),parseFloat(tokens[2]));
 		}
-		else if (code == VN_CODE) {
+		else if (tokens[0] == &quot;vn&quot;) {
 
 			if(flip_normals)  //maya and max notation style
-				normals.push(-y,-z,x);
+				normals.push(-parseFloat(tokens[2]),-parseFloat(tokens[3]),parseFloat(tokens[1]));
 			else
-				normals.push(x,y,z);
+				normals.push(parseFloat(tokens[1]),parseFloat(tokens[2]),parseFloat(tokens[3]));
 		}
-		else if (code == F_CODE) {
+		else if (tokens[0] == &quot;f&quot;) {
 			parsingFaces = true;
 
 			if (tokens.length &lt; 4) continue; //faces with less that 3 vertices? nevermind
@@ -241,21 +224,13 @@ Mesh.parseOBJ = function( text, options )
 						return false;
 					}
 
-					if(i &gt; 3 &amp;&amp; skip_indices) //break polygon in triangles
-					{
-						//first
-						var pl = positionsArray.length;
-						positionsArray.push( positionsArray[pl - (i-3)*9], positionsArray[pl - (i-3)*9 + 1], positionsArray[pl - (i-3)*9 + 2]);
-						positionsArray.push( positionsArray[pl - 3], positionsArray[pl - 2], positionsArray[pl - 1]);
-						pl = texcoordsArray.length;
-						texcoordsArray.push( texcoordsArray[pl - (i-3)*6], texcoordsArray[pl - (i-3)*6 + 1]);
-						texcoordsArray.push( texcoordsArray[pl - 2], texcoordsArray[pl - 1]);
-						pl = normalsArray.length;
-						normalsArray.push( normalsArray[pl - (i-3)*9], normalsArray[pl - (i-3)*9 + 1], normalsArray[pl - (i-3)*9 + 2]);
-						normalsArray.push( normalsArray[pl - 3], normalsArray[pl - 2], normalsArray[pl - 1]);
-					}
+					/*
+					//pos = Math.abs(pos); tex = Math.abs(tex); nor = Math.abs(nor);
+					if(pos &lt; 0) pos = positions.length/3 + pos - negative_offset;
+					if(tex &lt; 0) tex = texcoords.length/2 + tex - negative_offset;
+					if(nor &lt; 0) nor = normals.length/3 + nor - negative_offset;
+					*/
 
-					//add new vertex
 					x = 0.0;
 					y = 0.0;
 					z = 0.0;
@@ -265,9 +240,10 @@ Mesh.parseOBJ = function( text, options )
 						y = positions[pos*3+1];
 						z = positions[pos*3+2];
 					}
-					positionsArray.push(x,y,z);
 
-					//add new texture coordinate
+					positionsArray.push(x,y,z);
+					//positionsArray.push([x,y,z]);
+
 					x = 0.0;
 					y = 0.0;
 					if ((tex * 2 + 1) &lt; texcoords.length) {
@@ -276,8 +252,8 @@ Mesh.parseOBJ = function( text, options )
 						y = texcoords[tex*2+1];
 					}
 					texcoordsArray.push(x,y);
+					//texcoordsArray.push([x,y]);
 
-					//add new normal
 					x = 0.0;
 					y = 0.0;
 					z = 1.0;
@@ -291,6 +267,7 @@ Mesh.parseOBJ = function( text, options )
 						}
 						
 						normalsArray.push(x,y,z);
+						//normalsArray.push([x,y,z]);
 					}
 
 					//Save the string &quot;10/10/10&quot; and tells which index represents it in the arrays
@@ -318,7 +295,7 @@ Mesh.parseOBJ = function( text, options )
 				}
 			}
 		}
-		else if (code == G_CODE || tokens[0] == &quot;usemtl&quot;) {
+		else if (tokens[0] == &quot;g&quot; || tokens[0] == &quot;usemtl&quot;) {
 			negative_offset = positions.length / 3 - 1;
 
 			if(tokens.length &gt; 1)
@@ -406,391 +383,14 @@ Mesh.parseOBJ = function( text, options )
 		info.groups = groups;
 	mesh.info = info;
 
-	if(options.only_data)
-		return mesh;
-
-	//creates and returns a GL.Mesh
-	var final_mesh = null;
-	final_mesh = Mesh.load( mesh, null, options.mesh );
-	final_mesh.updateBoundingBox();
+	var final_mesh = Mesh.load(mesh);
+	final_mesh.updateBounding();
 	return final_mesh;
 }
 
-Mesh.parsers[&quot;obj&quot;] = Mesh.parseOBJ;
-
-Mesh.encoders[&quot;obj&quot;] = function( mesh, options )
-{
-	//store vertices
-	var verticesBuffer = mesh.getBuffer(&quot;vertices&quot;);
-	if(!verticesBuffer)
-		return null;
-
-	var result = &quot;# Generated with liteGL.js by Javi Agenjo\n\n&quot;;
-
-	var vertices = verticesBuffer.data;
-	for (var i = 0; i &lt; vertices.length; i+=3)
-		result += &quot;v &quot; + vertices[i].toFixed(4) + &quot; &quot; + vertices[i+1].toFixed(4) + &quot; &quot; + vertices[i+2].toFixed(4) + &quot;\n&quot;;
-
-	//store normals
-	var normalsBuffer = mesh.getBuffer(&quot;normals&quot;);
-	if(normalsBuffer)
-	{
-		result += &quot;\n&quot;;
-		var normals = normalsBuffer.data;
-		for (var i = 0; i &lt; normals.length; i+=3)
-			result += &quot;vn &quot; + normals[i].toFixed(4) + &quot; &quot; + normals[i+1].toFixed(4) + &quot; &quot; + normals[i+2].toFixed(4) + &quot;\n&quot;;
-	}
-	
-	//store uvs
-	var coordsBuffer = mesh.getBuffer(&quot;coords&quot;);
-	if(coordsBuffer)
-	{
-		result += &quot;\n&quot;;
-		var coords = coordsBuffer.data;
-		for (var i = 0; i &lt; coords.length; i+=2)
-			result += &quot;vt &quot; + coords[i].toFixed(4) + &quot; &quot; + coords[i+1].toFixed(4) + &quot; &quot; + &quot; 0.0000\n&quot;;
-	}
-
-	result += &quot;\ng mesh\n&quot;;
-
-	//store faces
-	var indicesBuffer = mesh.getIndexBuffer(&quot;triangles&quot;);
-	if(indicesBuffer)
-	{
-		var indices = indicesBuffer.data;
-		for (var i = 0; i &lt; indices.length; i+=3)
-			result += &quot;f &quot; + (indices[i]+1) + &quot;/&quot; + (indices[i]+1) + &quot;/&quot; + (indices[i]+1) + &quot; &quot; + (indices[i+1]+1) + &quot;/&quot; + (indices[i+1]+1) + &quot;/&quot; + (indices[i+1]+1) + &quot; &quot; + (indices[i+2]+1) + &quot;/&quot; + (indices[i+2]+1) + &quot;/&quot; + (indices[i+2]+1) + &quot;\n&quot;;
-	}
-	else //no indices
-	{
-		for (var i = 0; i &lt; (vertices.length / 3); i+=3)
-			result += &quot;f &quot; + (i+1) + &quot;/&quot; + (i+1) + &quot;/&quot; + (i+1) + &quot; &quot; + (i+2) + &quot;/&quot; + (i+2) + &quot;/&quot; + (i+2) + &quot; &quot; + (i+3) + &quot;/&quot; + (i+3) + &quot;/&quot; + (i+3) + &quot;\n&quot;;
-	}
-	
-	return result;
-}
-
-/* BINARYU FORMAT ************************************/
-
-if(global.WBin)
-	global.WBin.classes[&quot;Mesh&quot;] = Mesh;
-
-Mesh.binary_file_formats[&quot;wbin&quot;] = true;
-
-Mesh.parsers[&quot;wbin&quot;] = Mesh.fromBinary = function( data_array, options )
-{
-	if(!global.WBin)
-		throw(&quot;To use binary meshes you need to install WBin.js from https://github.com/jagenjo/litescene.js/blob/master/src/utils/wbin.js &quot;);
-
-	options = options || {};
-
-	var o = null;
-	if( data_array.constructor == ArrayBuffer )
-		o = WBin.load( data_array, true );
-	else
-		o = data_array;
-
-	if(!o.info)
-		console.warn(&quot;This WBin doesn&#x27;t seem to contain a mesh. Classname: &quot;, o[&quot;@classname&quot;] );
-
-	if( o.format )
-		GL.Mesh.decompress( o );
-
-	var vertex_buffers = {};
-	if(o.vertex_buffers)
-	{
-		for(var i in o.vertex_buffers)
-			vertex_buffers[ o.vertex_buffers[i] ] = o[ o.vertex_buffers[i] ];
-	}
-	else
-	{
-		if(o.vertices) vertex_buffers.vertices = o.vertices;
-		if(o.normals) vertex_buffers.normals = o.normals;
-		if(o.coords) vertex_buffers.coords = o.coords;
-		if(o.weights) vertex_buffers.weights = o.weights;
-		if(o.bone_indices) vertex_buffers.bone_indices = o.bone_indices;
-	}
-
-	var index_buffers = {};
-	if( o.index_buffers )
-	{
-		for(var i in o.index_buffers)
-			index_buffers[ o.index_buffers[i] ] = o[ o.index_buffers[i] ];
-	}
-	else
-	{
-		if(o.triangles) index_buffers.triangles = o.triangles;
-		if(o.wireframe) index_buffers.wireframe = o.wireframe;
-	}
-
-	var mesh = { 
-		vertex_buffers: vertex_buffers,
-		index_buffers: index_buffers,
-		bounding: o.bounding,
-		info: o.info
-	};
-
-	if(o.bones)
-	{
-		mesh.bones = o.bones;
-		//restore Float32array
-		for(var i = 0; i &lt; mesh.bones.length; ++i)
-			mesh.bones[i][1] = mat4.clone(mesh.bones[i][1]);
-		if(o.bind_matrix)
-			mesh.bind_matrix = mat4.clone( o.bind_matrix );		
-	}
-
-	if(o.morph_targets)
-		mesh.morph_targets = o.morph_targets;
-
-	if(options.only_data)
-		return mesh;
-
-	//build mesh object
-	var final_mesh = options.mesh || new GL.Mesh();
-	final_mesh.configure( mesh );
-	return final_mesh;
-}
-
-Mesh.encoders[&quot;wbin&quot;] = function( mesh, options )
-{
-	return mesh.toBinary( options );
-}
-
-Mesh.prototype.toBinary = function( options )
-{
-	if(!global.WBin)
-		throw(&quot;to use Mesh.toBinary you need to have WBin included. Check the repository for wbin.js&quot;);
-
-	if(!this.info)
-		this.info = {};
-
-	//clean data
-	var o = {
-		object_class: &quot;Mesh&quot;,
-		info: this.info,
-		groups: this.groups
-	};
-
-	if(this.bones)
-	{
-		var bones = [];
-		//convert to array
-		for(var i = 0; i &lt; this.bones.length; ++i)
-			bones.push([ this.bones[i][0], mat4.toArray( this.bones[i][1] ) ]);
-		o.bones = bones;
-		if(this.bind_matrix)
-			o.bind_matrix = this.bind_matrix;
-	}
-
-	//bounding box
-	if(!this.bounding)	
-		this.updateBoundingBox();
-	o.bounding = this.bounding;
-
-	var vertex_buffers = [];
-	var index_buffers = [];
-
-	for(var i in this.vertexBuffers)
-	{
-		var stream = this.vertexBuffers[i];
-		o[ stream.name ] = stream.data;
-		vertex_buffers.push( stream.name );
-
-		if(stream.name == &quot;vertices&quot;)
-			o.info.num_vertices = stream.data.length / 3;
-	}
-
-	for(var i in this.indexBuffers)
-	{
-		var stream = this.indexBuffers[i];
-		o[i] = stream.data;
-		index_buffers.push( i );
-	}
-
-	o.vertex_buffers = vertex_buffers;
-	o.index_buffers = index_buffers;
-
-	//compress wbin using the bounding
-	if( GL.Mesh.enable_wbin_compression ) //apply compression
-		GL.Mesh.compress( o );
-
-	//create pack file
-	var bin = WBin.create( o, &quot;Mesh&quot; ); 
-	return bin;
-}
-
-Mesh.compress = function( o, format )
-{
-	format = format || &quot;bounding_compressed&quot;;
-	o.format = {
-		type: format
-	};
-
-	var func = Mesh.compressors[ format ];
-	if(!func)
-		throw(&quot;compression format not supported:&quot; + format );
-	return func( o );
-}
-
-Mesh.decompress = function( o )
-{
-	if(!o.format)
-		return;
-	var func = Mesh.decompressors[ o.format.type ];
-	if(!func)
-		throw(&quot;decompression format not supported:&quot; + o.format.type );
-	return func( o );
-}
-
-Mesh.compressors[&quot;bounding_compressed&quot;] = function(o)
-{
-	if(!o.vertex_buffers)
-		throw(&quot;buffers not found&quot;);
-
-	var min = BBox.getMin( o.bounding );
-	var max = BBox.getMax( o.bounding );
-	var range = vec3.sub( vec3.create(), max, min );
-
-	var vertices = o.vertices;
-	var new_vertices = new Uint16Array( vertices.length );
-	for(var i = 0; i &lt; vertices.length; i+=3)
-	{
-		new_vertices[i] = ((vertices[i] - min[0]) / range[0]) * 65535;
-		new_vertices[i+1] = ((vertices[i+1] - min[1]) / range[1]) * 65535;
-		new_vertices[i+2] = ((vertices[i+2] - min[2]) / range[2]) * 65535;
-	}
-	o.vertices = new_vertices;		
-
-	if( o.normals )
-	{
-		var normals = o.normals;
-		var new_normals = new Uint8Array( normals.length );
-		var normals_range = new_normals.constructor == Uint8Array ? 255 : 65535;
-		for(var i = 0; i &lt; normals.length; i+=3)
-		{
-			new_normals[i] = (normals[i] * 0.5 + 0.5) * normals_range;
-			new_normals[i+1] = (normals[i+1] * 0.5 + 0.5) * normals_range;
-			new_normals[i+2] = (normals[i+2] * 0.5 + 0.5) * normals_range;
-		}
-		o.normals = new_normals;
-	}
-
-	if( o.coords )
-	{
-		//compute uv bounding: [minu,minv,maxu,maxv]
-		var coords = o.coords;
-		var uvs_bounding = [10000,10000,-10000,-10000];
-		for(var i = 0; i &lt; coords.length; i+=2)
-		{
-			var u = coords[i];
-			if( uvs_bounding[0] &gt; u ) uvs_bounding[0] = u;
-			else if( uvs_bounding[2] &lt; u ) uvs_bounding[2] = u;
-			var v = coords[i+1];
-			if( uvs_bounding[1] &gt; v ) uvs_bounding[1] = v;
-			else if( uvs_bounding[3] &lt; v ) uvs_bounding[3] = v;
-		}
-		o.format.uvs_bounding = uvs_bounding;
-
-		var new_coords = new Uint16Array( coords.length );
-		var range = [ uvs_bounding[2] - uvs_bounding[0], uvs_bounding[3] - uvs_bounding[1] ];
-		for(var i = 0; i &lt; coords.length; i+=2)
-		{
-			new_coords[i] = ((coords[i] - uvs_bounding[0]) / range[0]) * 65535;
-			new_coords[i+1] = ((coords[i+1] - uvs_bounding[1]) / range[1]) * 65535;
-		}
-		o.coords = new_coords;
-	}
-
-	if( o.weights )
-	{
-		var weights = o.weights;
-		var new_weights = new Uint16Array( weights.length ); //using only one byte distorts the meshes a lot
-		var weights_range = new_weights.constructor == Uint8Array ? 255 : 65535;
-		for(var i = 0; i &lt; weights.length; i+=4)
-		{
-			new_weights[i] = weights[i] * weights_range;
-			new_weights[i+1] = weights[i+1] * weights_range;
-			new_weights[i+2] = weights[i+2] * weights_range;
-			new_weights[i+3] = weights[i+3] * weights_range;
-		}
-		o.weights = new_weights;
-	}
-}
-
-
-Mesh.decompressors[&quot;bounding_compressed&quot;] = function(o)
-{
-	var bounding = o.bounding;
-	if(!bounding)
-		throw(&quot;error in mesh decompressing data: bounding not found, cannot use the bounding decompression.&quot;);
-
-	var min = BBox.getMin( bounding );
-	var max = BBox.getMax( bounding );
-	var range = vec3.sub( vec3.create(), max, min );
-
-	var format = o.format;
-
-	var inv8 = 1 / 255;
-	var inv16 = 1 / 65535;
-	var vertices = o.vertices;
-	var new_vertices = new Float32Array( vertices.length );
-	for( var i = 0, l = vertices.length; i &lt; l; i += 3 )
-	{
-		new_vertices[i] = ((vertices[i] * inv16) * range[0]) + min[0];
-		new_vertices[i+1] = ((vertices[i+1] * inv16) * range[1]) + min[1];
-		new_vertices[i+2] = ((vertices[i+2] * inv16) * range[2]) + min[2];
-	}
-	o.vertices = new_vertices;		
-
-	if( o.normals &amp;&amp; o.normals.constructor != Float32Array )
-	{
-		var normals = o.normals;
-		var new_normals = new Float32Array( normals.length );
-		var inormals_range = normals.constructor == Uint8Array ? inv8 : inv16;
-		for( var i = 0, l = normals.length; i &lt; l; i += 3 )
-		{
-			new_normals[i] = (normals[i] * inormals_range) * 2.0 - 1.0;
-			new_normals[i+1] = (normals[i+1] * inormals_range) * 2.0 - 1.0;
-			new_normals[i+2] = (normals[i+2] * inormals_range) * 2.0 - 1.0;
-			var N = new_normals.subarray(i,i+3);
-			vec3.normalize(N,N);
-		}
-		o.normals = new_normals;
-	}
-
-	if( o.coords &amp;&amp; format.uvs_bounding &amp;&amp; o.coords.constructor != Float32Array )
-	{
-		var coords = o.coords;
-		var uvs_bounding = format.uvs_bounding;
-		var range = [ uvs_bounding[2] - uvs_bounding[0], uvs_bounding[3] - uvs_bounding[1] ];
-		var new_coords = new Float32Array( coords.length );
-		for( var i = 0, l = coords.length; i &lt; l; i += 2 )
-		{
-			new_coords[i] = (coords[i] * inv16) * range[0] + uvs_bounding[0];
-			new_coords[i+1] = (coords[i+1] * inv16) * range[1] + uvs_bounding[1];
-		}
-		o.coords = new_coords;
-	}
-
-	//bones are already in Uint8 format so dont need to compress them further, but weights yes
-	if( o.weights &amp;&amp; o.weights.constructor != Float32Array ) //do we really need to unpack them? what if we use them like this?
-	{
-		var weights = o.weights;
-		var new_weights = new Float32Array( weights.length );
-		var iweights_range = weights.constructor == Uint8Array ? inv8 : inv16;
-		for(var i = 0, l = weights.length; i &lt; l; i += 4 )
-		{
-			new_weights[i] = weights[i] * iweights_range;
-			new_weights[i+1] = weights[i+1] * iweights_range;
-			new_weights[i+2] = weights[i+2] * iweights_range;
-			new_weights[i+3] = weights[i+3] * iweights_range;
-		}
-		o.weights = new_weights;
-	}
-}
     </pre>
 </div>
+
                     </div>
                 </div>
             </div>

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>../src/utils.js</title>
+    <title>Indexer</title>
     <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -100,143 +100,120 @@
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-                        <h1 class="file-heading">File: ../src/utils.js</h1>
+                        <h1>Indexer Class</h1>
+<div class="box meta">
+    
 
-<div class="file">
-    <pre class="code prettyprint linenums">
-//litegl.js (Javi Agenjo 2014 @tamat)
-//forked from lightgl.js by Evan Wallace (madebyevan.com)
-&quot;use strict&quot;
+    
 
-var gl;
-var DEG2RAD = 0.0174532925;
-var RAD2DEG = 57.295779578552306;
-var EPSILON = 0.000001;
+    
+        <div class="foundat">
+            Defined in: <a href="../files/.._src_mesh.js.html#l1"><code>..&#x2F;src&#x2F;mesh.js:1</code></a>
+        </div>
+    
 
-/**
-* Tells if one number is power of two (used for textures)
-* @method isPowerOfTwo
-* @param {v} number
-* @return {boolean}
-*/
-function isPowerOfTwo(v)
-{
-	return ((Math.log(v) / Math.log(2)) % 1) == 0;
-}
+    
 
-/**
-* Get current time in milliseconds
-* @method getTime
-* @return {number}
-*/
-function getTime() {
-	//return new Date().getTime();
-  return performance.now();
-}
-
-function isFunction(obj) {
-  return !!(obj &amp;&amp; obj.constructor &amp;&amp; obj.call &amp;&amp; obj.apply);
-}
-
-function isArray(obj) {
-  return (obj &amp;&amp; obj.constructor === Array );
-  //var str = Object.prototype.toString.call(obj);
-  //return str == &#x27;[object Array]&#x27; || str == &#x27;[object Float32Array]&#x27;;
-}
-
-function isNumber(obj) {
-  return (obj != null &amp;&amp; obj.constructor === Number );
-}
+    
+</div>
 
 
-/* SLOW because accepts booleans
-function isNumber(obj) {
-  var str = Object.prototype.toString.call(obj);
-  return str == &#x27;[object Number]&#x27; || str == &#x27;[object Boolean]&#x27;;
-}
-*/
 
-//given a regular expression, a text and a callback, it calls the function every time it finds it
-function regexMap(regex, text, callback) {
-  var result;
-  while ((result = regex.exec(text)) != null) {
-    callback(result);
-  }
-}
+<div class="box intro">
+    <p>Indexer used to reuse vertices among a mesh</p>
 
-function createCanvas(width, height) {
-    var canvas = document.createElement(&#x27;canvas&#x27;);
-    canvas.width = width;
-    canvas.height = height;
-    return canvas;
-}
-
-function cloneCanvas(c) {
-    var canvas = document.createElement(&#x27;canvas&#x27;);
-    canvas.width = c.width;
-    canvas.height = c.height;
-    var ctx = canvas.getContext(&quot;2d&quot;);
-    ctx.drawImage(c,0,0);
-    return canvas;
-}
+</div>
 
 
-String.prototype.replaceAll = function(words){
-	var str = this;
-	for(var i in words)
-		str = str.split(i).join(words[i]);
-    return str;
-};
+    <div class="constructor">
+        <h2>Constructor</h2>
+        <div id="method_Indexer" class="method item">
+    <h3 class="name"><code>Indexer</code></h3>
 
-//avoid errors when Typed array is expected and regular array is found
-//Array.prototype.subarray = Array.prototype.slice;
-Object.defineProperty(Array.prototype, &quot;subarray&quot;, { value: Array.prototype.slice, enumerable: false });
+    
+        <span class="paren">()</span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/.._src_mesh.js.html#l1"><code>..&#x2F;src&#x2F;mesh.js:1</code></a>
+        
+        </p>
 
 
-// remove all properties on obj, effectively reverting it to a new object (to reduce garbage)
-function wipeObject(obj)
-{
-  for (var p in obj)
-  {
-    if (obj.hasOwnProperty(p))
-      delete obj[p];
-  }
-};
+        
 
-function HttpRequest(url,data)
-{
-  var xhr = new XMLHttpRequest();
-  xhr.open(&#x27;POST&#x27;, url, true);
-  xhr.onload = function()
-  {
-    var response = this.response;
-    if(this.status != 200)
-    {
-      LEvent.trigger(xhr,&quot;fail&quot;,this.status);
-      return;
-    }
-  }
-  xhr.onerror = function(err)
-  {
-    LEvent.trigger(xhr,&quot;fail&quot;,err);
-  }
+        
+    </div>
 
-  return xhr;
-}
+    <div class="description">
+        
+    </div>
 
-//cheap simple promises
-Object.defineProperty( XMLHttpRequest.prototype, &quot;done&quot;, { enumerable: false, value: function(callback)
-{
-  LEvent.bind(this,&quot;done&quot;, function(e,err) { callback(err); } );
-  return this;
-}});
+    
 
-Object.defineProperty( XMLHttpRequest.prototype, &quot;fail&quot;, { enumerable: false, value: function(callback)
-{
-  LEvent.bind(this,&quot;fail&quot;, function(e,err) { callback(err); } );
-  return this;
-}});
-    </pre>
+    
+
+    
+</div>
+
+    </div>
+
+
+<div id="classdocs" class="tabview">
+    <ul class="api-class-tabs">
+        <li class="api-class-tab index"><a href="#index">Index</a></li>
+
+        
+        
+        
+        
+    </ul>
+
+    <div>
+        <div id="index" class="api-class-tabpanel index">
+            <h2 class="off-left">Item Index</h2>
+
+            
+
+            
+
+            
+
+            
+        </div>
+
+        
+
+        
+
+        
+
+        
+    </div>
 </div>
 
                     </div>

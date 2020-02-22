@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>../src/core.js</title>
+    <title>../src/litegl.js</title>
     <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -100,7 +100,7 @@
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-                        <h1 class="file-heading">File: ../src/core.js</h1>
+                        <h1 class="file-heading">File: ../src/litegl.js</h1>
 
 <div class="file">
     <pre class="code prettyprint linenums">
@@ -506,35 +506,6 @@ var GL = {
 
 
 };
-
-
-//Define WEBGL ENUMS as statics
-//sometimes I need some gl enums before having the gl context, solution: define them globally because the specs says they are constant:
-
-GL.BYTE = 5120;
-GL.UNSIGNED_BYTE = 5121;
-GL.SHORT = 5122;
-GL.UNSIGNED_SHORT = 5123;
-GL.INT = 5124;
-GL.UNSIGNED_INT = 5125;
-GL.FLOAT = 5126;
-GL.UNSIGNED_BYTE = 5125;
-
-GL.ZERO = 0;
-GL.ONE = 1;
-GL.SRC_COLOR = 768;
-GL.ONE_MINUS_SRC_COLOR = 769;
-GL.SRC_ALPHA = 770;
-GL.ONE_MINUS_SRC_ALPHA = 771;
-GL.DST_ALPHA = 772;
-GL.ONE_MINUS_DST_ALPHA = 773;
-GL.DST_COLOR = 774;
-GL.ONE_MINUS_DST_COLOR = 775;
-GL.SRC_ALPHA_SATURATE = 776;
-GL.CONSTANT_COLOR = 32769;
-GL.ONE_MINUS_CONSTANT_COLOR = 32770;
-GL.CONSTANT_ALPHA = 32771;
-GL.ONE_MINUS_CONSTANT_ALPHA = 32772;
 
 
 

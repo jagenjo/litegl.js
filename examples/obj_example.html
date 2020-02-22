@@ -2,31 +2,42 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!--
+<meta property="og:title" content="GameEditor" />
+<meta property="og:description" content="GameEditor for simple games" />
+<meta property="og:image" content="" />
+-->
 
-<title>litegl.js: cubemap texture example</title>
+<title>litegl.js: obj mesh example</title>
 	<link rel="stylesheet" type="text/css" href="style.css" />
 	<style type='text/css'>
-		html, body { background-color: #DDD; margin: 0; padding: 0; width: 100%; height: 100%;}
+		body { background-color: #DDD;}
+		h1 { color: #777; background-color: #CCC; }
 	</style>
 	<script type="text/javascript" src="../external/gl-matrix.js"></script>
 	<script type="text/javascript" src="../build/litegl.js"></script>
 	<script type="text/javascript">
-		
+	
 	function init()
 	{
 		//create the rendering context
-		var container = document.body;
-
-		var gl = GL.create({width: container.offsetWidth, height: container.offsetHeight});
+		var gl = GL.create({width:1000,height:500});
+		var container = document.querySelector("#content");
 		container.appendChild(gl.canvas);
 		gl.animate();
 
+		var mesh = null;
+
 		//build the mesh
-		var mesh = GL.Mesh.sphere({size:10});
-		var texture = GL.Texture.cubemapFromURL("cross-cubemap.png",{temp_color:[80,120,40,255], is_cross: 1, minFilter: gl.LINEAR_MIPMAP_LINEAR });
+		var request = new XMLHttpRequest;
+		request.open('GET', "man.obj", true);
+		request.send();
+		request.onload = function() {
+			mesh = GL.Mesh.parseOBJ(this.response);
+		}
 
 		//create basic matrices for cameras and transformation
-		var proj = mat4.create();
+		var persp = mat4.create();
 		var view = mat4.create();
 		var model = mat4.create();
 		var mvp = mat4.create();
@@ -36,15 +47,13 @@
 		gl.captureMouse();
 		gl.onmousemove = function(e)
 		{
-			if(!e.dragging)
-				return;
-			mat4.rotateY(model,model,e.deltax * 0.01);
-			mat4.rotateX(model,model,e.deltay * 0.01);
+			if(e.dragging)
+				mat4.rotateY(model,model,e.deltax * 0.01);
 		}
 
 		//set the camera position
-		mat4.perspective( proj, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 0.1, 1000);
-		mat4.lookAt(view, [0,30,30],[0,0,0], [0,1,0]);
+		mat4.perspective(persp, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 0.1, 1000);
+		mat4.lookAt(view, [0,100,250],[0,100,0], [0,1,0]);
 
 		//basic phong shader
 		var shader = new Shader('\
@@ -52,22 +61,20 @@
 				attribute vec3 a_vertex;\
 				attribute vec3 a_normal;\
 				varying vec3 v_normal;\
-				uniform mat4 u_model;\
 				uniform mat4 u_mvp;\
+				uniform mat4 u_modelt;\
 				void main() {\
-					v_normal = a_normal;\
+					v_normal = (u_modelt * vec4(a_normal,1.0)).xyz;\
 					gl_Position = u_mvp * vec4(a_vertex,1.0);\
 				}\
 				', '\
 				precision highp float;\
 				varying vec3 v_normal;\
-				varying vec2 v_coord;\
-				uniform samplerCube u_texture;\
-				uniform vec3 u_camera_eye;\
+				uniform vec3 u_lightvector;\
+				uniform vec4 u_color;\
 				void main() {\
 				  vec3 N = normalize(v_normal);\
-				  vec4 color = textureCube( u_texture, N );\
-				  gl_FragColor = color;\
+				  gl_FragColor = u_color * max(0.0, dot(u_lightvector,N));\
 				}\
 			');
 
@@ -83,23 +90,25 @@
 
 			//create modelview and projection matrices
 			mat4.multiply(temp,view,model);
-			mat4.multiply(mvp,proj,temp);
+			mat4.multiply(mvp,persp,temp);
 
 			//compute rotation matrix for normals
-			texture.bind(0);
+			var modelt = mat4.toRotationMat4(mat4.create(), model);
 
 			//render mesh using the shader
-			shader.uniforms({
-				u_model: model,
-				u_texture: 0,
-				u_mvp: mvp
-			}).draw(mesh);
+			if(mesh)
+				shader.uniforms({
+					u_color: [1,1,1,1],
+					u_lightvector: vec3.normalize(vec3.create(),[1,1,1]),
+					u_modelt: modelt,
+					u_mvp: mvp
+				}).draw(mesh);
 		};
 
 		//update loop
-		gl.onupdate = function(dt)
+		gl.onforceupdate = function(dt)
 		{
-			//rotate cube
+			//rotate world
 			mat4.rotateY(model,model,dt*0.2);
 		};
 	}	
@@ -107,7 +116,15 @@
 	</script>
 </head>
 <body>
-	<script>init();</script>
+
+<div id="wrap">
+	<div id="main">
+		<h1>Mesh DEMO</h1>
+		<div id="content"></div>
+	</div>
+</div>
+
+<script>init();</script>
 </body>
 </html>
 

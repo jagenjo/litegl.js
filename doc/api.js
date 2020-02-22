@@ -2,20 +2,17 @@ YUI.add("yuidoc-meta", function(Y) {
    Y.YUIDoc = { meta: {
     "classes": [
         "BBox",
+        "Buffer",
         "GL",
-        "GL.Buffer",
-        "GL.FBO",
-        "GL.Indexer",
-        "GL.Mesh",
-        "GL.Octree",
-        "GL.Shader",
-        "GL.Texture",
+        "Indexer",
         "LEvent",
-        "geo",
-        "gl"
+        "Mesh",
+        "Octree",
+        "Shader",
+        "Texture",
+        "geo"
     ],
     "modules": [],
-    "allModules": [],
-    "elements": []
+    "allModules": []
 } };
 });

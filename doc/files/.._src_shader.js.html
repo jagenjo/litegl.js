@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
-    <link rel="icon" href="../assets/favicon.ico">
+    <link rel="shortcut icon" type="image/png" href="../assets/favicon.png">
     <script src="http://yui.yahooapis.com/combo?3.9.1/build/yui/yui-min.js"></script>
 </head>
 <body class="yui3-skin-sam">
@@ -14,7 +14,9 @@
 <div id="doc">
     <div id="hd" class="yui3-g header">
         <div class="yui3-u-3-4">
-                <h1><img src="../assets/css/logo.png" title="" width="117" height="52"></h1>
+            
+                <h1><img src="../assets/css/logo.png" title=""></h1>
+            
         </div>
         <div class="yui3-u-1-4 version">
             <em>API Docs for: </em>
@@ -25,246 +27,131 @@
         <div class="yui3-u-1-4">
             <div id="docs-sidebar" class="sidebar apidocs">
                 <div id="api-list">
-                    <h2 class="off-left">APIs</h2>
-                    <div id="api-tabview" class="tabview">
-                        <ul class="tabs">
-                            <li><a href="#api-classes">Classes</a></li>
-                            <li><a href="#api-modules">Modules</a></li>
-                        </ul>
-                
-                        <div id="api-tabview-filter">
-                            <input type="search" id="api-filter" placeholder="Type to filter APIs">
-                        </div>
-                
-                        <div id="api-tabview-panel">
-                            <ul id="api-classes" class="apis classes">
-                                <li><a href="../classes/BBox.html">BBox</a></li>
-                                <li><a href="../classes/geo.html">geo</a></li>
-                                <li><a href="../classes/GL.html">GL</a></li>
-                                <li><a href="../classes/gl.html">gl</a></li>
-                                <li><a href="../classes/GL.Buffer.html">GL.Buffer</a></li>
-                                <li><a href="../classes/GL.FBO.html">GL.FBO</a></li>
-                                <li><a href="../classes/GL.Indexer.html">GL.Indexer</a></li>
-                                <li><a href="../classes/GL.Mesh.html">GL.Mesh</a></li>
-                                <li><a href="../classes/GL.Octree.html">GL.Octree</a></li>
-                                <li><a href="../classes/GL.Shader.html">GL.Shader</a></li>
-                                <li><a href="../classes/GL.Texture.html">GL.Texture</a></li>
-                                <li><a href="../classes/LEvent.html">LEvent</a></li>
-                            </ul>
-                
-                
-                            <ul id="api-modules" class="apis modules">
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+    <h2 class="off-left">APIs</h2>
+    <div id="api-tabview" class="tabview">
+        <ul class="tabs">
+            <li><a href="#api-classes">Classes</a></li>
+            <li><a href="#api-modules">Modules</a></li>
+        </ul>
+
+        <div id="api-tabview-filter">
+            <input type="search" id="api-filter" placeholder="Type to filter APIs">
+        </div>
+
+        <div id="api-tabview-panel">
+            <ul id="api-classes" class="apis classes">
+            
+                <li><a href="../classes/BBox.html">BBox</a></li>
+            
+                <li><a href="../classes/Buffer.html">Buffer</a></li>
+            
+                <li><a href="../classes/geo.html">geo</a></li>
+            
+                <li><a href="../classes/GL.html">GL</a></li>
+            
+                <li><a href="../classes/Indexer.html">Indexer</a></li>
+            
+                <li><a href="../classes/LEvent.html">LEvent</a></li>
+            
+                <li><a href="../classes/Mesh.html">Mesh</a></li>
+            
+                <li><a href="../classes/Octree.html">Octree</a></li>
+            
+                <li><a href="../classes/Shader.html">Shader</a></li>
+            
+                <li><a href="../classes/Texture.html">Texture</a></li>
+            
+            </ul>
+
+            <ul id="api-modules" class="apis modules">
+            
+            </ul>
+        </div>
+    </div>
+</div>
+
             </div>
         </div>
         <div class="yui3-u-3-4">
                 <div id="api-options">
-                    Show:
-                    <label for="api-show-inherited">
-                        <input type="checkbox" id="api-show-inherited" checked>
-                        Inherited
-                    </label>
-            
-                    <label for="api-show-protected">
-                        <input type="checkbox" id="api-show-protected">
-                        Protected
-                    </label>
-            
-                    <label for="api-show-private">
-                        <input type="checkbox" id="api-show-private">
-                        Private
-                    </label>
-                    <label for="api-show-deprecated">
-                        <input type="checkbox" id="api-show-deprecated">
-                        Deprecated
-                    </label>
-            
-                </div>
-            
+        Show:
+        <label for="api-show-inherited">
+            <input type="checkbox" id="api-show-inherited" checked>
+            Inherited
+        </label>
+
+        <label for="api-show-protected">
+            <input type="checkbox" id="api-show-protected">
+            Protected
+        </label>
+
+        <label for="api-show-private">
+            <input type="checkbox" id="api-show-private">
+            Private
+        </label>
+        <label for="api-show-deprecated">
+            <input type="checkbox" id="api-show-deprecated">
+            Deprecated
+        </label>
+
+    </div>
+
+
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-<h1 class="file-heading">File: ../src/shader.js</h1>
+                        <h1 class="file-heading">File: ../src/shader.js</h1>
 
 <div class="file">
     <pre class="code prettyprint linenums">
-
-/**
-* @namespace GL
-*/
-
 /**
 * Shader class to upload programs to the GPU
 * @class Shader
 * @constructor
-* @param {String} vertexSource (it also allows to pass a compiled vertex shader)
-* @param {String} fragmentSource (it also allows to pass a compiled fragment shader)
+* @param {String} vertexSource
+* @param {String} fragmentSource
 * @param {Object} macros (optional) precompiler macros to be applied when compiling
 */
-global.Shader = GL.Shader = function Shader( vertexSource, fragmentSource, macros )
+function Shader(vertexSource, fragmentSource, macros)
 {
-	if(GL.debug)
-		console.log(&quot;GL.Shader created&quot;);
-
-	if( !vertexSource || !fragmentSource )
-		throw(&quot;GL.Shader source code parameter missing&quot;);
-
-	//used to avoid problems with resources moving between different webgl context
-	this._context_id = global.gl.context_id; 
-	var gl = this.gl = global.gl;
-
+	var extra_code = &quot;&quot;;
 	//expand macros
-	var extra_code = Shader.expandMacros( macros );
+	if(macros)
+		for(var i in macros)
+			extra_code += &quot;#define &quot; + i + &quot; &quot; + (macros[i] ? macros[i] : &quot;&quot;) + &quot;\n&quot;;
 
-	var final_vertexSource = vertexSource.constructor === String ? Shader.injectCode( extra_code, vertexSource, gl ) : vertexSource;
-	var final_fragmentSource = fragmentSource.constructor === String ? Shader.injectCode( extra_code, fragmentSource, gl ) : fragmentSource;
+	//Compile shader
+	function compileSource(type, source) {
+		var shader = gl.createShader(type);
+		gl.shaderSource(shader, source);
+		gl.compileShader(shader);
+		if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+			throw (type == gl.VERTEX_SHADER ? &quot;Vertex&quot; : &quot;Fragment&quot;) + &#x27; shader compile error: &#x27; + gl.getShaderInfoLog(shader);
+		}
+		return shader;
+	}
 
 	this.program = gl.createProgram();
-
-	var vs = vertexSource.constructor === String ? GL.Shader.compileSource( gl.VERTEX_SHADER, final_vertexSource ) : vertexSource;
-	var fs = fragmentSource.constructor === String ? GL.Shader.compileSource( gl.FRAGMENT_SHADER, final_fragmentSource ) : fragmentSource;
-
-	gl.attachShader( this.program, vs, gl );
-	gl.attachShader( this.program, fs, gl );
+	gl.attachShader(this.program, compileSource(gl.VERTEX_SHADER, extra_code + vertexSource));
+	gl.attachShader(this.program, compileSource(gl.FRAGMENT_SHADER, extra_code + fragmentSource));
 	gl.linkProgram(this.program);
 	if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
 		throw &#x27;link error: &#x27; + gl.getProgramInfoLog(this.program);
 	}
 
-	this.vs_shader = vs;
-	this.fs_shader = fs;
-
 	//Extract info from the shader
 	this.attributes = {}; 
 	this.uniformInfo = {};
 	this.samplers = {};
+	/* old version, search samplers using regexMap as done by lightGL, now I query the shader directly
+	var samplers = this.samplers;
+	regexMap(/uniform\s+sampler(1D|2D|3D|Cube)\s+(\w+)\s*;/g, vertexSource + fragmentSource, function(groups) {
+		samplers[groups[2]] = 1;
+	});
+	*/
 
-	//extract info about the shader to speed up future processes
-	this.extractShaderInfo();
-}
-
-Shader.expandMacros = function(macros)
-{
-	var extra_code = &quot;&quot;; //add here preprocessor directives that should be above everything
-	if(macros)
-		for(var i in macros)
-			extra_code += &quot;#define &quot; + i + &quot; &quot; + (macros[i] ? macros[i] : &quot;&quot;) + &quot;\n&quot;;
-	return extra_code;
-}
-
-//this is done to avoid problems with the #version which must be in the first line
-Shader.injectCode = function( inject_code, code, gl )
-{
-	var index = code.indexOf(&quot;\n&quot;);
-	var version = ( gl ? &quot;#define WEBGL&quot; + gl.webgl_version + &quot;\n&quot; : &quot;&quot;);
-	var first_line = code.substr(0,index).trim();
-	if( first_line.indexOf(&quot;#version&quot;) == -1 )
-		return version + inject_code + code;
-	return first_line + &quot;\n&quot; + version + inject_code + code.substr(index);
-}
-
-
-/**
-* Compiles one single shader source (could be gl.VERTEX_SHADER or gl.FRAGMENT_SHADER) and returns the webgl shader handler 
-* Used internaly to compile the vertex and fragment shader.
-* It throws an exception if there is any error in the code
-* @method Shader.compileSource
-* @param {Number} type could be gl.VERTEX_SHADER or gl.FRAGMENT_SHADER
-* @param {String} source the source file to compile
-* @return {WebGLShader} the handler from webgl
-*/
-Shader.compileSource = function( type, source, gl, shader )
-{
-	gl = gl || global.gl;
-	shader = shader || gl.createShader(type);
-	gl.shaderSource(shader, source);
-	gl.compileShader(shader);
-	if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-		throw (type == gl.VERTEX_SHADER ? &quot;Vertex&quot; : &quot;Fragment&quot;) + &#x27; shader compile error: &#x27; + gl.getShaderInfoLog(shader);
-	}
-	return shader;
-}
-
-Shader.parseError = function( error_str, vs_code, fs_code )
-{
-	if(!error_str)
-		return null;
-
-	var t = error_str.split(&quot; &quot;);
-	var nums = t[5].split(&quot;:&quot;);
-
-	return {
-		type: t[0],
-		line_number: parseInt( nums[1] ),
-		line_pos: parseInt( nums[0] ),
-		line_code: ( t[0] == &quot;Fragment&quot; ? fs_code : vs_code ).split(&quot;\n&quot;)[ parseInt( nums[1] ) ],
-		err: error_str
-	};
-}
-
-/**
-* It updates the code inside one shader
-* @method updateShader
-* @param {String} vertexSource 
-* @param {String} fragmentSource 
-* @param {Object} macros [optional]
-*/
-Shader.prototype.updateShader = function( vertexSource, fragmentSource, macros )
-{
-	var gl = this.gl || global.gl;
-
-	//expand macros
-	var extra_code = Shader.expandMacros( macros );
-
-	if(this.program)
-		this.program = gl.createProgram();
-
-	var extra_code = Shader.expandMacros( macros );
-
-	var final_vertexSource = vertexSource.constructor === String ? Shader.injectCode( extra_code, vertexSource, gl ) : vertexSource;
-	var final_fragmentSource = fragmentSource.constructor === String ? Shader.injectCode( extra_code, fragmentSource, gl ) : fragmentSource;
-
-	var vs = vertexSource.constructor === String ? GL.Shader.compileSource( gl.VERTEX_SHADER, final_vertexSource ) : vertexSource;
-	var fs = fragmentSource.constructor === String ? GL.Shader.compileSource( gl.FRAGMENT_SHADER, final_fragmentSource ) : fragmentSource;
-
-	gl.attachShader( this.program, vs, gl );
-	gl.attachShader( this.program, fs, gl );
-	gl.linkProgram( this.program );
-	if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
-		throw &#x27;link error: &#x27; + gl.getProgramInfoLog( this.program );
-	}
-
-	//store shaders separated
-	this.vs_shader = vs;
-	this.fs_shader = fs;
-
-	//Extract info from the shader
-	this.attributes = {}; 
-	this.uniformInfo = {};
-	this.samplers = {};
-
-	//extract info about the shader to speed up future processes
-	this.extractShaderInfo();
-}
-
-/**
-* It extract all the info about the compiled shader program, all the info about uniforms and attributes.
-* This info is stored so it works faster during rendering.
-* @method extractShaderInfo
-*/
-
-
-Shader.prototype.extractShaderInfo = function()
-{
-	var gl = this.gl;
-	
-	var l = gl.getProgramParameter( this.program, gl.ACTIVE_UNIFORMS );
-
-	//extract uniforms info
-	for(var i = 0; i &lt; l; ++i)
+	//extract uniform and attribs locations to speed up future processes
+	for(var i = 0, l = gl.getProgramParameter(this.program, gl.ACTIVE_UNIFORMS); i &lt; l; ++i)
 	{
 		var data = gl.getActiveUniform( this.program, i);
 		if(!data) break;
@@ -274,11 +161,7 @@ Shader.prototype.extractShaderInfo = function()
 		//arrays have uniformName[0], strip the [] (also data.size tells you if it is an array)
 		var pos = uniformName.indexOf(&quot;[&quot;); 
 		if(pos != -1)
-		{
-			var pos2 = uniformName.indexOf(&quot;].&quot;); //leave array of structs though
-			if(pos2 == -1)
-				uniformName = uniformName.substr(0,pos);
-		}
+			uniformName = uniformName.substr(0,pos);
 
 		//store texture samplers
 		if(data.type == gl.SAMPLER_2D || data.type == gl.SAMPLER_CUBE)
@@ -289,306 +172,172 @@ Shader.prototype.extractShaderInfo = function()
 		var is_matrix = false;
 		if(data.type == gl.FLOAT_MAT2 || data.type == gl.FLOAT_MAT3 || data.type == gl.FLOAT_MAT4)
 			is_matrix = true;
-		var type_length = GL.TYPE_LENGTH[ data.type ] || 1;
 
-		//save the info so the user doesnt have to specify types when uploading data to the shader
-		this.uniformInfo[ uniformName ] = { 
-			type: data.type,
-			func: func,
-			size: data.size,
-			type_length: type_length,
-			is_matrix: is_matrix,
-			loc: gl.getUniformLocation(this.program, uniformName),
-			data: new Float32Array( type_length * data.size ) //prealloc space to assign uniforms that are not typed
-		};
+
+		//save the info so I the user doesnt have to specify types when uploading data to the shader
+		this.uniformInfo[ uniformName ] = { type: data.type, func: func, size: data.size, is_matrix: is_matrix, loc: gl.getUniformLocation(this.program, uniformName) };
 	}
 
-	//extract attributes info
 	for(var i = 0, l = gl.getProgramParameter(this.program, gl.ACTIVE_ATTRIBUTES); i &lt; l; ++i)
 	{
 		var data = gl.getActiveAttrib( this.program, i);
-		if(!data)
-			break;
+		if(!data) break;
 		var func = Shader.getUniformFunc(data);
-		var type_length = GL.TYPE_LENGTH[ data.type ] || 1;
-		this.uniformInfo[ data.name ] = { 
-			type: data.type,
-			func: func,
-			type_length: type_length,
-			size: data.size,
-			loc: null 
-		}; //gl.getAttribLocation( this.program, data.name )
+		//this.uniformInfo[ data.name ] = { type: data.gl.getUniformLocation(this.program, data.name) };
+		this.uniformInfo[ data.name ] = { type: data.type, func: func, size: data.size, loc: gl.getUniformLocation(this.program, data.name ) };
 		this.attributes[ data.name ] = gl.getAttribLocation(this.program, data.name );	
 	}
 }
 
-/**
-* Returns if this shader has a uniform with the given name
-* @method hasUniform
-* @param {String} name name of the uniform
-* @return {Boolean}
-*/
-Shader.prototype.hasUniform = function(name)
-{
-	return this.uniformInfo[name];
-}
-
-/**
-* Returns if this shader has an attribute with the given name
-* @method hasAttribute
-* @param {String} name name of the attribute
-* @return {Boolean}
-*/
-Shader.prototype.hasAttribute = function(name)
-{
-	return this.attributes[name];
-}
-
-
-/**
-* Tells you which function to call when uploading a uniform according to the data type in the shader
-* Used internally from extractShaderInfo to optimize calls 
-* @method Shader.getUniformFunc
-* @param {Object} data info about the uniform
-* @return {Function}
-*/
+//Tells you which function to call when uploading a uniform according to the data type in the shader
 Shader.getUniformFunc = function( data )
 {
 	var func = null;
 	switch (data.type)
 	{
-		case GL.FLOAT: 		
+		case gl.FLOAT: 		
 			if(data.size == 1)
 				func = gl.uniform1f; 
 			else
 				func = gl.uniform1fv; 
 			break;
-		case GL.FLOAT_MAT2: func = gl.uniformMatrix2fv; break;
-		case GL.FLOAT_MAT3:	func = gl.uniformMatrix3fv; break;
-		case GL.FLOAT_MAT4:	func = gl.uniformMatrix4fv; break;
-		case GL.FLOAT_VEC2: func = gl.uniform2fv; break;
-		case GL.FLOAT_VEC3: func = gl.uniform3fv; break;
-		case GL.FLOAT_VEC4: func = gl.uniform4fv; break;
+		case gl.FLOAT_MAT2: func = gl.uniformMatrix2fv; break;
+		case gl.FLOAT_MAT3:	func = gl.uniformMatrix3fv; break;
+		case gl.FLOAT_MAT4:	func = gl.uniformMatrix4fv; break;
+		case gl.FLOAT_VEC2: func = gl.uniform2fv; break;
+		case gl.FLOAT_VEC3: func = gl.uniform3fv; break;
+		case gl.FLOAT_VEC4: func = gl.uniform4fv; break;
 
-		case GL.UNSIGNED_INT: 
-		case GL.INT: 	  
+		case gl.UNSIGNED_INT: 
+		case gl.INT: 	  
 			if(data.size == 1)
 				func = gl.uniform1i; 
 			else
 				func = gl.uniform1iv; 
 			break;
-		case GL.INT_VEC2: func = gl.uniform2iv; break;
-		case GL.INT_VEC3: func = gl.uniform3iv; break;
-		case GL.INT_VEC4: func = gl.uniform4iv; break;
+		case gl.INT_VEC2: func = gl.uniform2iv; break;
+		case gl.INT_VEC3: func = gl.uniform3iv; break;
+		case gl.INT_VEC4: func = gl.uniform4iv; break;
 
-		case GL.SAMPLER_2D:
-		case GL.SAMPLER_3D:
-		case GL.SAMPLER_CUBE:
+		case gl.SAMPLER_2D:
+		case gl.SAMPLER_CUBE:
 			func = gl.uniform1i; break;
 		default: func = gl.uniform1f; break;
 	}	
 	return func;
 }
 
-/**
-* Create a shader from two urls. While the system is fetching the two urls, the shader contains a dummy shader that renders black.
-* @method Shader.fromURL
-* @param {String} vs_path the url to the vertex shader
-* @param {String} fs_path the url to the fragment shader
-* @param {Function} on_complete [Optional] a callback to call once the shader is ready.
-* @return {Shader}
-*/
-Shader.fromURL = function( vs_path, fs_path, on_complete )
+/* TODO, I dont like the idea of creating a shader which is not complete till files are retrieved
+Shader.fromFiles = function( vs_path, ps_path )
 {
-	//create simple shader first
-	var vs_code = &quot;\n\
-			precision highp float;\n\
-			attribute vec3 a_vertex;\n\
-			attribute mat4 u_mvp;\n\
-			void main() { \n\
-				gl_Position = u_mvp * vec4(a_vertex,1.0); \n\
-			}\n\
-		&quot;;
-	var fs_code = &quot;\n\
-			precision highp float;\n\
-			void main() {\n\
-				gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n\
-			}\n\
-			&quot;;
+	var vs_code = null;
+	var fs_code = null;
 	
-	var shader = new GL.Shader(vs_code, fs_code);
-	shader.ready = false;
-
-	var true_vs = null;
-	var true_fs = null;
-
-	HttpRequest( vs_path, null, function(vs_code) {
-		true_vs = vs_code;
-		if(true_fs)
-			compileShader();
-	});
-
-	HttpRequest( fs_path, null, function(fs_code) {
-		true_fs = fs_code;
-		if(true_vs)
-			compileShader();
-	});
-
-	function compileShader()
-	{
-		var true_shader = new GL.Shader(true_vs, true_fs);
-		for(var i in true_shader)
-			shader[i] = true_shader[i];
-		shader.ready = true;
-	}
-
-	return shader;
 }
-
-/**
-* enables the shader (calls useProgram)
-* @method bind
 */
-Shader.prototype.bind = function()
-{
-	var gl = this.gl;
-	gl.useProgram( this.program );
-	gl._current_shader = this;
-}
 
 /**
-* Returns the location of a uniform or attribute
-* @method getLocation
-* @param {String} name
-* @return {WebGLUniformLocation} location
-*/
-Shader.prototype.getLocation = function( name )
-{
-	var info = this.uniformInfo[name];
-	if(info)
-		return this.uniformInfo[name].loc;
-	return null;
-}
-
-/**
-* Uploads a set of uniforms to the Shader. You dont need to specify types, they are infered from the shader info.
+* Uploads a set of uniforms to the Shader
 * @method uniforms
 * @param {Object} uniforms
 */
+
 Shader._temp_uniform = new Float32Array(16);
 
 Shader.prototype.uniforms = function(uniforms) {
-	var gl = this.gl;
+
 	gl.useProgram(this.program);
-	gl._current_shader = this;
+	//var last_slot = 0;
 
-	for (var name in uniforms)
-	{
-		var info = this.uniformInfo[ name ];
-		if (!info)
-			continue;
-		this._setUniform( name, uniforms[name] );
-		//this.setUniform( name, uniforms[name] );
-		//this._assing_uniform(uniforms, name, gl );
+	for (var name in uniforms) {
+		var info = this.uniformInfo[name];
+		if (!info) continue;
+
+		var value = uniforms[name];
+		if(value == null) continue;
+
+		if(value.constructor === Array)
+			value = new Float32Array(value);  //garbage...
+
+		if(info.is_matrix)
+			info.func.call( gl, info.loc, false, value );
+		else
+			info.func.call( gl, info.loc, value );
 	}
-
 	return this;
 }//uniforms
 
-Shader.prototype.uniformsArray = function(array) {
-	var gl = this.gl;
-	gl.useProgram( this.program );
-	gl._current_shader = this;
+/*
+Shader.prototype.uniforms_OLD = function(uniforms) {
 
-	for(var i = 0, l = array.length; i &lt; l; ++i)
-	{
-		var uniforms = array[i];
-		for (var name in uniforms)
-			this._setUniform( name, uniforms[name] );
-			//this._assing_uniform(uniforms, name, gl );
-	}
+	gl.useProgram(this.program);
+	//var last_slot = 0;
 
-	return this;
-}
-
-/**
-* Uploads a uniform to the Shader. You dont need to specify types, they are infered from the shader info. Shader must be binded!
-* @method setUniform
-* @param {string} name
-* @param {*} value
-*/
-Shader.prototype.setUniform = (function(){
-
-	return (function(name, value)
-	{
-		if(	this.gl._current_shader != this )
-			this.bind();
-
+	for (var name in uniforms) {
 		var info = this.uniformInfo[name];
-		if (!info)
-			return;
+		if (!info) continue;
+		var location = info.loc;
 
-		if(info.loc === null)
-			return;
-
-		if(value == null) //strict?
-			return;
-
-		if(value.constructor === Array)
+		var value = uniforms[name];
+		if(value == null) continue;
+		if(value.constructor == Float32Array)
 		{
-			info.data.set( value );
-			value = info.data;
-		}
-
-		if(info.is_matrix)
-			info.func.call( this.gl, info.loc, false, value );
-		else
-			info.func.call( this.gl, info.loc, value );
-	});
-})();
-
-//skips enabling shader
-Shader.prototype._setUniform = (function(){
-
-	return (function(name, value)
-	{
-		var info = this.uniformInfo[ name ];
-		if (!info)
-			return;
-
-		if(info.loc === null)
-			return;
-
-		//if(info.loc.constructor !== Function)
-		//	return;
-
-		if(value == null) 
-			return;
-
-		if(value.constructor === Array)
+			switch (value.length) {
+				case 1: gl.uniform1fv(location, value); break; //float
+				case 2: gl.uniform2fv(location, value); break; //vec2
+				case 3: gl.uniform3fv(location, value); break; //vec3
+				case 4: gl.uniform4fv(location, value); break; //vec4
+				case 9: gl.uniformMatrix3fv(location, false,  value); break; //matrix3
+				case 16: gl.uniformMatrix4fv(location, false, value); break; //matrix4
+				default: 
+					var data = gl.getActiveAttrib( this.program, name );
+					if(value.length % 16 == 0) //HACK for bones
+						gl.uniformMatrix4fv(location, false, value ); //mat4
+					else
+						gl.uniform1fv(location, value); 
+					break; //n float
+				//default: throw &#x27;don\&#x27;t know how to load uniform &quot;&#x27; + name + &#x27;&quot; of length &#x27; + value.length;
+			}
+		} 
+		else if (isArray(value)) //non-typed arrays
 		{
-			info.data.set( value );
-			value = info.data;
+			switch (value.length) {
+			case 1: gl.uniform1f(location, value); break; //float
+			case 2: gl.uniform2f(location, value[0], value[1] ); break; //vec2
+			case 3: gl.uniform3f(location, value[0], value[1], value[2] ); break; //vec3
+			case 4: gl.uniform4f(location, value[0], value[1], value[2], value[3] ); break; //vec4
+			case 9: Shader._temp_uniform.set( value ); gl.uniformMatrix3fv(location, false, Shader._temp_uniform ); break; //mat3
+			case 16: Shader._temp_uniform.set( value ); gl.uniformMatrix4fv(location, false, Shader._temp_uniform ); break; //mat4
+			default: 
+				Shader._temp_uniform.set( value ); 
+				if(value.length % 16 == 0)
+					gl.uniformMatrix4fv(location, false, Shader._temp_uniform ); //mat4
+				else
+					gl.uniform1fv(location, Shader._temp_uniform); 
+				break; //n float
+			//default: throw &#x27;don\&#x27;t know how to load uniform &quot;&#x27; + name + &#x27;&quot; of length &#x27; + value.length;
+			}
 		}
-
-		if(info.is_matrix)
-			info.func.call( this.gl, info.loc, false, value );
-		else
-			info.func.call( this.gl, info.loc, value );
-	});
-})();
+		else if (isNumber(value))
+		{
+			(this.samplers[name] ? gl.uniform1i : gl.uniform1f).call(gl, location, value);
+		} else {
+			throw &#x27;attempted to set uniform &quot;&#x27; + name + &#x27;&quot; to invalid value &#x27; + value;
+		}
+	}
+	return this;
+}//uniforms
+*/
 
 /**
 * Renders a mesh using this shader, remember to use the function uniforms before to enable the shader
 * @method draw
 * @param {Mesh} mesh
 * @param {number} mode could be gl.LINES, gl.POINTS, gl.TRIANGLES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN
-* @param {String} index_buffer_name the name of the index buffer, if not provided triangles will be assumed
 */
-Shader.prototype.draw = function( mesh, mode, index_buffer_name ) {
-	index_buffer_name = index_buffer_name === undefined ? (mode == gl.LINES ? &#x27;lines&#x27; : &#x27;triangles&#x27;) : index_buffer_name;
-	this.drawBuffers( mesh.vertexBuffers,
-	  index_buffer_name ? mesh.indexBuffers[ index_buffer_name ] : null,
+Shader.prototype.draw = function(mesh, mode) {
+	this.drawBuffers(mesh.vertexBuffers,
+	  mesh.indexBuffers[mode == gl.LINES ? &#x27;lines&#x27; : &#x27;triangles&#x27;],
 	  arguments.length &lt; 2 ? gl.TRIANGLES : mode);
 }
 
@@ -599,19 +348,16 @@ Shader.prototype.draw = function( mesh, mode, index_buffer_name ) {
 * @param {number} mode could be gl.LINES, gl.POINTS, gl.TRIANGLES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN
 * @param {number} start first primitive to render
 * @param {number} length number of primitives to render
-* @param {String} index_buffer_name the name of the index buffer, if not provided triangles will be assumed
 */
-Shader.prototype.drawRange = function(mesh, mode, start, length, index_buffer_name )
+Shader.prototype.drawRange = function(mesh, mode, start, length)
 {
-	index_buffer_name = index_buffer_name === undefined ? (mode == gl.LINES ? &#x27;lines&#x27; : &#x27;triangles&#x27;) : index_buffer_name;
-
-	this.drawBuffers( mesh.vertexBuffers,
-	  index_buffer_name ? mesh.indexBuffers[ index_buffer_name ] : null,
+	this.drawBuffers(mesh.vertexBuffers,
+	  mesh.indexBuffers[mode == gl.LINES ? &#x27;lines&#x27; : &#x27;triangles&#x27;],
 	  mode, start, length);
 }
 
 /**
-* render several buffers with a given index buffer
+* Renders a range of a mesh using this shader
 * @method drawBuffers
 * @param {Object} vertexBuffers an object containing all the buffers
 * @param {IndexBuffer} indexBuffer
@@ -621,22 +367,17 @@ Shader.prototype.drawRange = function(mesh, mode, start, length, index_buffer_na
 */
 
 //this two variables are a hack to avoid memory allocation on drawCalls
-var temp_attribs_array = new Uint8Array(16);
-var temp_attribs_array_zero = new Uint8Array(16); //should be filled with zeros always
+Shader._temp_attribs_array = new Uint8Array(16);
+Shader._temp_attribs_array_zero = new Uint8Array(16); //should be filled with zeros always
 
-Shader.prototype.drawBuffers = function( vertexBuffers, indexBuffer, mode, range_start, range_length )
+Shader.prototype.drawBuffers = function(vertexBuffers, indexBuffer, mode, range_start, range_length)
 {
-	if(range_length == 0)
-		return;
-
-	var gl = this.gl;
-
-	gl.useProgram(this.program); //this could be removed assuming every shader is called with some uniforms 
+	if(range_length == 0) return;
 
 	// enable attributes as necessary.
 	var length = 0;
-	var attribs_in_use = temp_attribs_array; //hack to avoid garbage
-	attribs_in_use.set( temp_attribs_array_zero ); //reset
+	var attribs_in_use = Shader._temp_attribs_array; //hack to avoid garbage
+	attribs_in_use.set( Shader._temp_attribs_array_zero ); //reset
 
 	for (var name in vertexBuffers)
 	{
@@ -659,18 +400,14 @@ Shader.prototype.drawBuffers = function( vertexBuffers, indexBuffer, mode, range
 	}
 
 	//range rendering
-	var offset = 0; //in bytes
+	var offset = 0;
 	if(range_start &gt; 0) //render a polygon range
-		offset = range_start; //in bytes (Uint16 == 2 bytes)
+		offset = range_start * (indexBuffer ? indexBuffer.constructor.BYTES_PER_ELEMENT : 1); //in bytes (Uint16 == 2 bytes)
 
-	if (indexBuffer)
-		length = indexBuffer.buffer.length - offset;
-
-	if(range_length &gt; 0 &amp;&amp; range_length &lt; length) //to avoid problems
+	if(range_length &gt; 0)
 		length = range_length;
-
-	var BYTES_PER_ELEMENT = (indexBuffer &amp;&amp; indexBuffer.data) ? indexBuffer.data.constructor.BYTES_PER_ELEMENT : 1;
-	offset *= BYTES_PER_ELEMENT;
+	else if (indexBuffer)
+		length = indexBuffer.buffer.length - offset;
 
 	// Force to disable buffers in this shader that are not in this mesh
 	for (var attribute in this.attributes)
@@ -685,7 +422,7 @@ Shader.prototype.drawBuffers = function( vertexBuffers, indexBuffer, mode, range
 	if (length &amp;&amp; (!indexBuffer || indexBuffer.buffer)) {
 	  if (indexBuffer) {
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer.buffer);
-		gl.drawElements( mode, length, indexBuffer.buffer.gl_type, offset); //gl.UNSIGNED_SHORT
+		gl.drawElements(mode, length, gl.UNSIGNED_SHORT, offset);
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 	  } else {
 		gl.drawArrays(mode, offset, length);
@@ -695,623 +432,51 @@ Shader.prototype.drawBuffers = function( vertexBuffers, indexBuffer, mode, range
 	return this;
 }
 
-Shader._instancing_arrays = [];
-
-Shader.prototype.drawInstanced = function( mesh, primitive, indices, instanced_uniforms, range_start, range_length )
-{
-	if(range_length == 0)
-		return;
-
-	//bind buffers
-	var gl = this.gl;
-
-	if( gl.webgl_version == 1 &amp;&amp; !gl.extensions.ANGLE_instanced_arrays )
-		throw(&quot;instancing not supported&quot;);
-
-	gl.useProgram(this.program); //this could be removed assuming every shader is called with some uniforms 
-
-	// enable attributes as necessary.
-	var length = 0;
-	var attribs_in_use = temp_attribs_array; //hack to avoid garbage
-	attribs_in_use.set( temp_attribs_array_zero ); //reset
-
-	var vertexBuffers = mesh.vertexBuffers;
-
-	for (var name in vertexBuffers)
-	{
-		var buffer = vertexBuffers[name];
-		var attribute = buffer.attribute || name;
-		//precompute attribute locations in shader
-		var location = this.attributes[attribute];// || gl.getAttribLocation(this.program, attribute);
-
-		if (location == null || !buffer.buffer) //-1 changed for null
-			continue; //ignore this buffer
-
-		attribs_in_use[location] = 1; //mark it as used
-
-		//this.attributes[attribute] = location;
-		gl.bindBuffer(gl.ARRAY_BUFFER, buffer.buffer);
-		gl.enableVertexAttribArray(location);
-
-		gl.vertexAttribPointer(location, buffer.buffer.spacing, buffer.buffer.gl_type, false, 0, 0);
-		length = buffer.buffer.length / buffer.buffer.spacing;
-	}
-
-	var indexBuffer = indices ? mesh.getIndexBuffer( indices ) : null;
-
-	//range rendering
-	var offset = 0; //in bytes
-	if(range_start &gt; 0) //render a polygon range
-		offset = range_start; //in bytes (Uint16 == 2 bytes)
-
-	if (indexBuffer)
-		length = indexBuffer.buffer.length - offset;
-
-	if(range_length &gt; 0 &amp;&amp; range_length &lt; length) //to avoid problems
-		length = range_length;
-
-	var BYTES_PER_ELEMENT = (indexBuffer &amp;&amp; indexBuffer.data) ? indexBuffer.data.constructor.BYTES_PER_ELEMENT : 1;
-	offset *= BYTES_PER_ELEMENT;
-
-	// Force to disable buffers in this shader that are not in this mesh
-	for (var attribute in this.attributes)
-	{
-		var location = this.attributes[attribute];
-		if (!(attribs_in_use[location])) {
-			gl.disableVertexAttribArray(this.attributes[attribute]);
-		}
-	}
-
-	var ext = gl.extensions.ANGLE_instanced_arrays;
-	var batch_length = 0;
-
-	//pack the instanced uniforms
-	var index = 0;
-	for(var uniform in instanced_uniforms)
-	{
-		var values = instanced_uniforms[ uniform ];
-		batch_length = values.length;
-		var uniformLocation = this.attributes[ uniform ];
-		if( uniformLocation == null )
-			return; //not found
-		var element_size = 0;
-		var total_size = 0;
-		if( values.constructor === Array )
-		{
-			element_size = values[0].constructor === Number ? 1 : values[0].length;
-			total_size = element_size * values.length;
-		}
-		else //typed array
-		{
-			element_size = this.uniformInfo[ uniform ].type_length;
-			total_size = values.length;
-			batch_length = total_size / element_size;
-		}
-
-		var data_array = Shader._instancing_arrays[ index ];
-		if( !data_array || data_array.data.length &lt; total_size )
-			data_array = Shader._instancing_arrays[ index ] = { data: new Float32Array( total_size ), buffer: gl.createBuffer() };
-		data_array.uniform = uniform;
-		data_array.element_size = element_size;
-		if( values.constructor === Array )
-			for(var j = 0; j &lt; values.length; ++j)
-				data_array.data.set( values[j], j*element_size ); //flatten array
-		else
-			data_array.data.set( values ); //copy
-		gl.bindBuffer( gl.ARRAY_BUFFER, data_array.buffer );
-		gl.bufferData( gl.ARRAY_BUFFER, data_array.data, gl.STREAM_DRAW );
-
-		if(element_size == 16) //mat4
-		{
-			for(var k = 0; k &lt; 4; ++k)
-			{
-				gl.enableVertexAttribArray( uniformLocation+k );
-				gl.vertexAttribPointer( uniformLocation+k, 4, gl.FLOAT , false, 16*4, k*4*4 ); //4 bytes per float
-				if( ext ) //webgl 1
-					ext.vertexAttribDivisorANGLE( uniformLocation+k, 1 ); // This makes it instanced!
-				else
-					gl.vertexAttribDivisor( uniformLocation+k, 1 ); // This makes it instanced!
-			}
-		}
-		else //others
-		{
-			gl.enableVertexAttribArray( uniformLocation );
-			gl.vertexAttribPointer( uniformLocation, element_size, gl.FLOAT, false, element_size*4, 0 ); //4 bytes per float, 0 offset
-			if( ext ) //webgl 1
-				ext.vertexAttribDivisorANGLE( uniformLocation, 1 ); // This makes it instanced!
-			else
-				gl.vertexAttribDivisor( uniformLocation, 1 ); // This makes it instanced!
-		}
-		index+=1;
-	}
-
-	if( ext ) //webgl 1.0
-	{
-		if(indexBuffer)
-		{
-			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer.buffer);
-			ext.drawElementsInstancedANGLE( primitive, length, indexBuffer.buffer.gl_type, offset, batch_length );
-			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null );
-		}
-		else
-			ext.drawArraysInstancedANGLE( primitive, offset, length, batch_length);
-	}
-	else
-	{
-		if(indexBuffer)
-		{
-			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer.buffer);
-			gl.drawElementsInstanced( primitive, length, indexBuffer.buffer.gl_type, offset, batch_length );
-			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null );
-		}
-		else
-			gl.drawArraysInstanced( primitive, offset, length, batch_length);
-	}
-
-	//disable instancing buffers
-	for(var i = 0; i &lt; index; ++i)
-	{
-		var info = Shader._instancing_arrays[ i ];
-		var uniformLocation = this.attributes[ info.uniform ];
-		var element_size = info.element_size;
-		if( element_size == 16) //mat4
-		{
-			for(var k = 0; k &lt; 4; ++k)
-			{
-				gl.disableVertexAttribArray( uniformLocation+k );
-				if( ext ) //webgl 1
-					ext.vertexAttribDivisorANGLE( uniformLocation+k, 0 );
-				else
-					gl.vertexAttribDivisor( uniformLocation+k, 0 ); 
-			}
-		}
-		else //others
-		{
-			gl.enableVertexAttribArray( uniformLocation );
-			if( ext ) //webgl 1
-				ext.vertexAttribDivisorANGLE( uniformLocation, 0 );
-			else
-				gl.vertexAttribDivisor( uniformLocation, 0 );
-		}
-	}
-
-	return this;
-}
-
-
-
-/**
-* Given a source code with the directive #import it expands it inserting the code using Shader.files to fetch for import files.
-* Warning: Imports are evaluated only the first inclusion, the rest are ignored to avoid double inclusion of functions
-*          Also, imports cannot have other imports inside.
-* @method Shader.expandImports
-* @param {String} code the source code
-* @param {Object} files [Optional] object with files to import from (otherwise Shader.files is used)
-* @return {String} the code with the lines #import removed and replaced by the code
-*/
-Shader.expandImports = function(code, files)
-{
-	files = files || Shader.files;
-
-	var already_imported = {}; //avoid to import two times the same code
-	if( !files )
-		throw(&quot;Shader.files not initialized, assign files there&quot;);
-
-	var replace_import = function(v)
-	{
-		var token = v.split(&quot;\&quot;&quot;);
-		var id = token[1];
-		if( already_imported[id] )
-			return &quot;//already imported: &quot; + id + &quot;\n&quot;;
-		var file = files[id];
-		already_imported[ id ] = true;
-		if(file)
-			return file + &quot;\n&quot;;
-		return &quot;//import code not found: &quot; + id + &quot;\n&quot;;
-	}
-
-	//return code.replace(/#import\s+\&quot;(\w+)\&quot;\s*\n/g, replace_import );
-	return code.replace(/#import\s+\&quot;([a-zA-Z0-9_\.]+)\&quot;\s*\n/g, replace_import );
-}
-
-Shader.dumpErrorToConsole = function(err, vscode, fscode)
-{
-	console.error(err);
-	var msg = err.msg;
-	var code = null;
-	if(err.indexOf(&quot;Fragment&quot;) != -1)
-		code = fscode;
-	else
-		code = vscode;
-
-	var lines = code.split(&quot;\n&quot;);
-	for(var i in lines)
-		lines[i] = i + &quot;| &quot; + lines[i];
-
-	console.groupCollapsed(&quot;Shader code&quot;);
-	console.log( lines.join(&quot;\n&quot;) );
-	console.groupEnd();
-}
-
-Shader.convertTo100 = function(code,type)
-{
-	//in VERTEX
-		//change in for attribute
-		//change out for varying
-		//add #extension GL_OES_standard_derivatives
-	//in FRAGMENT
-		//change in for varying 
-		//remove out vec4 _gl_FragColor
-		//rename _gl_FragColor for gl_FragColor
-	//in both
-		//change #version 300 es for #version 100
-		//replace &#x27;texture(&#x27; for &#x27;texture2D(&#x27;
-}
-
-
-Shader.convertTo300 = function(code,type)
-{
-	//in VERTEX
-		//change attribute for in
-		//change varying for out
-		//remove #extension GL_OES_standard_derivatives
-	//in FRAGMENT
-		//change varying for in
-		//rename gl_FragColor for _gl_FragColor
-		//rename gl_FragData[0] for _gl_FragColor
-		//add out vec4 _gl_FragColor
-	//in both
-		//replace texture2D for texture
-}
-
-//helps to check if a variable value is valid to an specific uniform in a shader
-Shader.validateValue = function( value, uniform_info )
-{
-	if(value === null || value === undefined)
-		return false;
-
-	switch (uniform_info.type)
-	{
-		//used to validate shaders
-		case GL.INT: 
-		case GL.FLOAT: 
-		case GL.SAMPLER_2D: 
-		case GL.SAMPLER_CUBE: 
-			return isNumber(value);
-		case GL.INT_VEC2: 
-		case GL.FLOAT_VEC2:
-			return value.length === 2;
-		case GL.INT_VEC3: 
-		case GL.FLOAT_VEC3:
-			return value.length === 3;
-		case GL.INT_VEC4: 
-		case GL.FLOAT_VEC4:
-		case GL.FLOAT_MAT2:
-			 return value.length === 4;
-		case GL.FLOAT_MAT3:
-			 return value.length === 8;
-		case GL.FLOAT_MAT4:
-			 return value.length === 16;
-	}
-	return true;
-}
-
-//**************** SHADERS ***********************************
-
-Shader.DEFAULT_VERTEX_SHADER = &quot;\n\
-			precision highp float;\n\
-			attribute vec3 a_vertex;\n\
-			attribute vec3 a_normal;\n\
-			attribute vec2 a_coord;\n\
-			varying vec3 v_position;\n\
-			varying vec3 v_normal;\n\
-			varying vec2 v_coord;\n\
-			uniform mat4 u_model;\n\
-			uniform mat4 u_mvp;\n\
-			void main() {\n\
-				v_position = (u_model * vec4(a_vertex,1.0)).xyz;\n\
-				v_normal = (u_model * vec4(a_normal,0.0)).xyz;\n\
-				v_coord = a_coord;\n\
-				gl_Position = u_mvp * vec4(a_vertex,1.0);\n\
-			}\n\
-			&quot;;
-
-Shader.SCREEN_VERTEX_SHADER = &quot;\n\
-			precision highp float;\n\
-			attribute vec3 a_vertex;\n\
-			attribute vec2 a_coord;\n\
-			varying vec2 v_coord;\n\
-			void main() { \n\
-				v_coord = a_coord; \n\
-				gl_Position = vec4(a_coord * 2.0 - 1.0, 0.0, 1.0); \n\
-			}\n\
-			&quot;;
-
-Shader.SCREEN_FRAGMENT_SHADER = &quot;\n\
-			precision highp float;\n\
-			uniform sampler2D u_texture;\n\
-			varying vec2 v_coord;\n\
-			void main() {\n\
-				gl_FragColor = texture2D(u_texture, v_coord);\n\
-			}\n\
-			&quot;;
-
-//used in createFX
-Shader.SCREEN_FRAGMENT_FX = &quot;\n\
-			precision highp float;\n\
-			uniform sampler2D u_texture;\n\
-			varying vec2 v_coord;\n\
-			#ifdef FX_UNIFORMS\n\
-				FX_UNIFORMS\n\
-			#endif\n\
-			void main() {\n\
-				vec2 uv = v_coord;\n\
-				vec4 color = texture2D(u_texture, uv);\n\
-				#ifdef FX_CODE\n\
-					FX_CODE ;\n\
-				#endif\n\
-				gl_FragColor = color;\n\
-			}\n\
-			&quot;;
-
-Shader.SCREEN_COLORED_FRAGMENT_SHADER = &quot;\n\
-			precision highp float;\n\
-			uniform sampler2D u_texture;\n\
-			uniform vec4 u_color;\n\
-			varying vec2 v_coord;\n\
-			void main() {\n\
-				gl_FragColor = u_color * texture2D(u_texture, v_coord);\n\
-			}\n\
-			&quot;;
-
-Shader.BLEND_FRAGMENT_SHADER = &quot;\n\
-			precision highp float;\n\
-			uniform sampler2D u_texture;\n\
-			uniform sampler2D u_texture2;\n\
-			uniform float u_factor;\n\
-			varying vec2 v_coord;\n\
-			void main() {\n\
-				gl_FragColor = mix( texture2D(u_texture, v_coord), texture2D(u_texture2, v_coord), u_factor);\n\
-			}\n\
-			&quot;;
-
-//used to paint quads
-Shader.QUAD_VERTEX_SHADER = &quot;\n\
-			precision highp float;\n\
-			attribute vec3 a_vertex;\n\
-			attribute vec2 a_coord;\n\
-			varying vec2 v_coord;\n\
-			uniform vec2 u_position;\n\
-			uniform vec2 u_size;\n\
-			uniform vec2 u_viewport;\n\
-			uniform mat3 u_transform;\n\
-			void main() { \n\
-				vec3 pos = vec3(u_position + vec2(a_coord.x,1.0 - a_coord.y)  * u_size, 1.0);\n\
-				v_coord = a_coord; \n\
-				pos = u_transform * pos;\n\
-				pos.z = 0.0;\n\
-				//normalize\n\
-				pos.x = (2.0 * pos.x / u_viewport.x) - 1.0;\n\
-				pos.y = -((2.0 * pos.y / u_viewport.y) - 1.0);\n\
-				gl_Position = vec4(pos, 1.0); \n\
-			}\n\
-			&quot;;
-
-Shader.QUAD_FRAGMENT_SHADER = &quot;\n\
-			precision highp float;\n\
-			uniform sampler2D u_texture;\n\
-			uniform vec4 u_color;\n\
-			varying vec2 v_coord;\n\
-			void main() {\n\
-				gl_FragColor = u_color * texture2D(u_texture, v_coord);\n\
-			}\n\
-			&quot;;
-
-//used to render partially a texture
-Shader.QUAD2_FRAGMENT_SHADER = &quot;\n\
-			precision highp float;\n\
-			uniform sampler2D u_texture;\n\
-			uniform vec4 u_color;\n\
-			uniform vec4 u_texture_area;\n\
-			varying vec2 v_coord;\n\
-			void main() {\n\
-			    vec2 uv = vec2( mix(u_texture_area.x, u_texture_area.z, v_coord.x), 1.0 - mix(u_texture_area.w, u_texture_area.y, v_coord.y) );\n\
-				gl_FragColor = u_color * texture2D(u_texture, uv);\n\
-			}\n\
-			&quot;;
-
-Shader.PRIMITIVE2D_VERTEX_SHADER = &quot;\n\
-			precision highp float;\n\
-			attribute vec3 a_vertex;\n\
-			uniform vec2 u_viewport;\n\
-			uniform mat3 u_transform;\n\
-			void main() { \n\
-				vec3 pos = a_vertex;\n\
-				pos = u_transform * pos;\n\
-				pos.z = 0.0;\n\
-				//normalize\n\
-				pos.x = (2.0 * pos.x / u_viewport.x) - 1.0;\n\
-				pos.y = -((2.0 * pos.y / u_viewport.y) - 1.0);\n\
-				gl_Position = vec4(pos, 1.0); \n\
-			}\n\
-			&quot;;
-
-Shader.FLAT_VERTEX_SHADER = &quot;\n\
-			precision highp float;\n\
-			attribute vec3 a_vertex;\n\
-			uniform mat4 u_mvp;\n\
-			void main() { \n\
-				gl_Position = u_mvp * vec4(a_vertex,1.0); \n\
-			}\n\
-			&quot;;
-
-Shader.FLAT_FRAGMENT_SHADER = &quot;\n\
-			precision highp float;\n\
-			uniform vec4 u_color;\n\
-			void main() {\n\
-				gl_FragColor = u_color;\n\
-			}\n\
-			&quot;;
-Shader.SCREEN_FLAT_FRAGMENT_SHADER = Shader.FLAT_FRAGMENT_SHADER; //legacy
-
-
-/**
-* Allows to create a simple shader meant to be used to process a texture, instead of having to define the generic Vertex &amp; Fragment Shader code
-* @method Shader.createFX
-* @param {string} code string containg code, like &quot;color = color * 2.0;&quot;
-* @param {string} [uniforms=null] string containg extra uniforms, like &quot;uniform vec3 u_pos;&quot;
-*/
-Shader.createFX = function(code, uniforms, shader)
-{
-	//remove comments
-	code = GL.Shader.removeComments( code, true ); //remove comments and breaklines to avoid problems with the macros
-	var macros = {
-		FX_CODE: code,
-		FX_UNIFORMS: uniforms || &quot;&quot;
-	}
-	if(!shader)
-		return new GL.Shader( GL.Shader.SCREEN_VERTEX_SHADER, GL.Shader.SCREEN_FRAGMENT_FX, macros );
-	shader.updateShader( GL.Shader.SCREEN_VERTEX_SHADER, GL.Shader.SCREEN_FRAGMENT_FX, macros );
-	return shader;
-}
-
-Shader.removeComments = function(code, one_line)
-{
-	if(!code)
-		return &quot;&quot;;
-
-	var rx = /(\/\*([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*\*+\/)|(\/\/.*)/g;
-	var code = code.replace( rx ,&quot;&quot;);
-	var lines = code.split(&quot;\n&quot;);
-	var result = [];
-	for(var i = 0; i &lt; lines.length; ++i)
-	{
-		var line = lines[i]; 
-		var pos = line.indexOf(&quot;//&quot;);
-		if(pos != -1)
-			line = lines[i].substr(0,pos);
-		line = line.trim();
-		if(line.length)
-			result.push(line);
-	}
-	return result.join( one_line ? &quot;&quot; : &quot;\n&quot; );
-}
-
-/**
-* Renders a fullscreen quad with this shader applied
-* @method toViewport
-* @param {object} uniforms
-*/
-Shader.prototype.toViewport = function(uniforms)
-{
-	var mesh = GL.Mesh.getScreenQuad();
-	if(uniforms)
-		this.uniforms(uniforms);
-	this.draw( mesh );
-}
 
 //Now some common shaders everybody needs
 
-/**
-* Returns a shader ready to render a textured quad in fullscreen, use with Mesh.getScreenQuad() mesh
-* shader params: sampler2D u_texture
-* @method Shader.getScreenShader
-*/
-Shader.getScreenShader = function(gl)
+//Screen shader: used to render one texture into another
+Shader.getScreenShader = function()
 {
-	gl = gl || global.gl;
-	var shader = gl.shaders[&quot;:screen&quot;];
-	if(shader)
-		return shader;
-	shader = gl.shaders[&quot;:screen&quot;] = new GL.Shader( Shader.SCREEN_VERTEX_SHADER, Shader.SCREEN_FRAGMENT_SHADER );
-	return shader.uniforms({u_texture:0}); //do it the first time so I dont have to do it every time
+	if(gl._screen_shader)
+		return gl._screen_shader;
+
+	var shader = new GL.Shader(&quot;\n\
+			precision highp float;\n\
+			attribute vec3 a_vertex;\n\
+			attribute vec2 a_coord;\n\
+			varying vec2 coord;\n\
+			void main() { \n\
+				coord = a_coord; \n\
+				gl_Position = vec4(coord * 2.0 - 1.0, 0.0, 1.0); \n\
+			}\n\
+			&quot;,&quot;\n\
+			precision highp float;\n\
+			uniform sampler2D texture;\n\
+			varying vec2 coord;\n\
+			void main() {\n\
+				gl_FragColor = texture2D(texture, coord);\n\
+			}\n\
+			&quot;);
+	gl._screen_shader = shader;
+	return gl._screen_shader;
 }
 
-/**
-* Returns a shader ready to render a flat color quad in fullscreen, use with Mesh.getScreenQuad() mesh
-* shader params: vec4 u_color
-* @method Shader.getFlatScreenShader
-*/
-Shader.getFlatScreenShader = function(gl)
+//Blur shader
+Shader.getBlurShader = function()
 {
-	gl = gl || global.gl;
-	var shader = gl.shaders[&quot;:flat_screen&quot;];
-	if(shader)
-		return shader;
-	shader = gl.shaders[&quot;:flat_screen&quot;] = new GL.Shader( Shader.SCREEN_VERTEX_SHADER, Shader.FLAT_FRAGMENT_SHADER );
-	return shader.uniforms({u_color:[1,1,1,1]}); //do it the first time so I dont have to do it every time
-}
+	if(gl._blur_shader)
+		return gl._blur_shader;
 
-/**
-* Returns a shader ready to render a colored textured quad in fullscreen, use with Mesh.getScreenQuad() mesh
-* shader params vec4 u_color and sampler2D u_texture
-* @method Shader.getColoredScreenShader
-*/
-Shader.getColoredScreenShader = function(gl)
-{
-	gl = gl || global.gl;
-	var shader = gl.shaders[&quot;:colored_screen&quot;];
-	if(shader)
-		return shader;
-	shader = gl.shaders[&quot;:colored_screen&quot;] = new GL.Shader( Shader.SCREEN_VERTEX_SHADER, Shader.SCREEN_COLORED_FRAGMENT_SHADER );
-	return shader.uniforms({u_texture:0, u_color: vec4.fromValues(1,1,1,1) }); //do it the first time so I dont have to do it every time
-}
-
-/**
-* Returns a shader ready to render a quad with transform, use with Mesh.getScreenQuad() mesh
-* shader must have: u_position, u_size, u_viewport, u_transform (mat3)
-* @method Shader.getQuadShader
-*/
-Shader.getQuadShader = function(gl)
-{
-	gl = gl || global.gl;
-	var shader = gl.shaders[&quot;:quad&quot;];
-	if(shader)
-		return shader;
-	return gl.shaders[&quot;:quad&quot;] = new GL.Shader( Shader.QUAD_VERTEX_SHADER, Shader.QUAD_FRAGMENT_SHADER );
-}
-
-/**
-* Returns a shader ready to render part of a texture into the viewport
-* shader must have: u_position, u_size, u_viewport, u_transform, u_texture_area (vec4)
-* @method Shader.getPartialQuadShader
-*/
-Shader.getPartialQuadShader = function(gl)
-{
-	gl = gl || global.gl;
-	var shader = gl.shaders[&quot;:quad2&quot;];
-	if(shader)
-		return shader;
-	return gl.shaders[&quot;:quad2&quot;] = new GL.Shader( Shader.QUAD_VERTEX_SHADER, Shader.QUAD2_FRAGMENT_SHADER );
-}
-
-/**
-* Returns a shader that blends two textures
-* shader must have: u_factor, u_texture, u_texture2
-* @method Shader.getBlendShader
-*/
-Shader.getBlendShader = function(gl)
-{
-	gl = gl || global.gl;
-	var shader = gl.shaders[&quot;:blend&quot;];
-	if(shader)
-		return shader;
-	return gl.shaders[&quot;:blend&quot;] = new GL.Shader( Shader.SCREEN_VERTEX_SHADER, Shader.BLEND_FRAGMENT_SHADER );
-}
-
-/**
-* Returns a shader used to apply gaussian blur to one texture in one axis (you should use it twice to get a gaussian blur)
-* shader params are: vec2 u_offset, float u_intensity
-* @method Shader.getBlurShader
-*/
-Shader.getBlurShader = function(gl)
-{
-	gl = gl || global.gl;
-	var shader = gl.shaders[&quot;:blur&quot;];
-	if(shader)
-		return shader;
-
-	var shader = new GL.Shader( Shader.SCREEN_VERTEX_SHADER,&quot;\n\
+	var shader = new GL.Shader(&quot;\n\
+			precision highp float;\n\
+			attribute vec3 a_vertex;\n\
+			attribute vec2 a_coord;\n\
+			varying vec2 v_coord;\n\
+			void main() {\n\
+				v_coord = a_coord; gl_Position = vec4(v_coord * 2.0 - 1.0, 0.0, 1.0);\n\
+			}\n\
+			&quot;,&quot;\n\
 			precision highp float;\n\
 			varying vec2 v_coord;\n\
 			uniform sampler2D u_texture;\n\
@@ -1331,219 +496,12 @@ Shader.getBlurShader = function(gl)
 			   gl_FragColor = u_intensity * sum;\n\
 			}\n\
 			&quot;);
-	return gl.shaders[&quot;:blur&quot;] = shader;
-}
-
-//shader to copy a depth texture into another one
-Shader.getCopyDepthShader = function(gl)
-{
-	gl = gl || global.gl;
-	var shader = gl.shaders[&quot;:copy_depth&quot;];
-	if(shader)
-		return shader;
-
-	var shader = new GL.Shader( Shader.SCREEN_VERTEX_SHADER,&quot;\n\
-			#extension GL_EXT_frag_depth : enable\n\
-			precision highp float;\n\
-			varying vec2 v_coord;\n\
-			uniform sampler2D u_texture;\n\
-			void main() {\n\
-			   gl_FragDepthEXT = texture2D( u_texture, v_coord ).x;\n\
-			   gl_FragColor = vec4(1.0);\n\
-			}\n\
-			&quot;);
-	return gl.shaders[&quot;:copy_depth&quot;] = shader;
-}
-
-Shader.getCubemapShowShader = function(gl)
-{
-	gl = gl || global.gl;
-	var shader = gl.shaders[&quot;:show_cubemap&quot;];
-	if(shader)
-		return shader;
-
-	var shader = new GL.Shader( Shader.DEFAULT_VERTEX_SHADER,&quot;\n\
-			precision highp float;\n\
-			varying vec3 v_normal;\n\
-			uniform samplerCube u_texture;\n\
-			void main() {\n\
-			   gl_FragColor = textureCube( u_texture, v_normal );\n\
-			}\n\
-			&quot;);
-	shader.uniforms({u_texture:0});
-	return gl.shaders[&quot;:show_cubemap&quot;] = shader;
-}
-
-//shader to copy a cubemap into another 
-Shader.getCubemapCopyShader = function(gl)
-{
-	gl = gl || global.gl;
-	var shader = gl.shaders[&quot;:copy_cubemap&quot;];
-	if(shader)
-		return shader;
-
-	var shader = new GL.Shader( Shader.SCREEN_VERTEX_SHADER,&quot;\n\
-			precision highp float;\n\
-			varying vec2 v_coord;\n\
-			uniform samplerCube u_texture;\n\
-			uniform mat3 u_rotation;\n\
-			void main() {\n\
-				vec2 uv = vec2( v_coord.x, 1.0 - v_coord.y );\n\
-				vec3 dir = vec3( uv - vec2(0.5), 0.5 );\n\
-				dir = u_rotation * dir;\n\
-			   gl_FragColor = textureCube( u_texture, dir );\n\
-			}\n\
-			&quot;);
-	return gl.shaders[&quot;:copy_cubemap&quot;] = shader;
-}
-
-//shader to blur a cubemap
-Shader.getCubemapBlurShader = function(gl)
-{
-	gl = gl || global.gl;
-	var shader = gl.shaders[&quot;:blur_cubemap&quot;];
-	if(shader)
-		return shader;
-
-	var shader = new GL.Shader( Shader.SCREEN_VERTEX_SHADER,&quot;\n\
-			#ifndef NUM_SAMPLES\n\
-				#define NUM_SAMPLES 4\n\
-			#endif\n\
-			\n\
-			precision highp float;\n\
-			varying vec2 v_coord;\n\
-			uniform samplerCube u_texture;\n\
-			uniform mat3 u_rotation;\n\
-			uniform vec2 u_offset;\n\
-			uniform float u_intensity;\n\
-			void main() {\n\
-				vec4 sum = vec4(0.0);\n\
-				vec2 uv = vec2( v_coord.x, 1.0 - v_coord.y ) - vec2(0.5);\n\
-				vec3 dir = vec3(0.0);\n\
-				vec4 color = vec4(0.0);\n\
-				for( int x = -2; x &lt;= 2; x++ )\n\
-				{\n\
-					for( int y = -2; y &lt;= 2; y++ )\n\
-					{\n\
-						dir.xy = uv + vec2( u_offset.x * float(x), u_offset.y * float(y)) * 0.5;\n\
-						dir.z = 0.5;\n\
-						dir = u_rotation * dir;\n\
-						color = textureCube( u_texture, dir );\n\
-						color.xyz = color.xyz * color.xyz;/*linearize*/\n\
-						sum += color;\n\
-					}\n\
-				}\n\
-				sum /= 25.0;\n\
-			   gl_FragColor = vec4( sqrt( sum.xyz ), sum.w ) ;\n\
-			}\n\
-			&quot;);
-	return gl.shaders[&quot;:blur_cubemap&quot;] = shader;
-}
-
-//shader to do FXAA (antialiasing)
-Shader.FXAA_FUNC = &quot;\n\
-	uniform vec2 u_viewportSize;\n\
-	uniform vec2 u_iViewportSize;\n\
-	#define FXAA_REDUCE_MIN   (1.0/ 128.0)\n\
-	#define FXAA_REDUCE_MUL   (1.0 / 8.0)\n\
-	#define FXAA_SPAN_MAX     8.0\n\
-	\n\
-	/* from mitsuhiko/webgl-meincraft based on the code on geeks3d.com */\n\
-	vec4 applyFXAA(sampler2D tex, vec2 fragCoord)\n\
-	{\n\
-		vec4 color = vec4(0.0);\n\
-		/*vec2 u_iViewportSize = vec2(1.0 / u_viewportSize.x, 1.0 / u_viewportSize.y);*/\n\
-		vec3 rgbNW = texture2D(tex, (fragCoord + vec2(-1.0, -1.0)) * u_iViewportSize).xyz;\n\
-		vec3 rgbNE = texture2D(tex, (fragCoord + vec2(1.0, -1.0)) * u_iViewportSize).xyz;\n\
-		vec3 rgbSW = texture2D(tex, (fragCoord + vec2(-1.0, 1.0)) * u_iViewportSize).xyz;\n\
-		vec3 rgbSE = texture2D(tex, (fragCoord + vec2(1.0, 1.0)) * u_iViewportSize).xyz;\n\
-		vec3 rgbM  = texture2D(tex, fragCoord  * u_iViewportSize).xyz;\n\
-		vec3 luma = vec3(0.299, 0.587, 0.114);\n\
-		float lumaNW = dot(rgbNW, luma);\n\
-		float lumaNE = dot(rgbNE, luma);\n\
-		float lumaSW = dot(rgbSW, luma);\n\
-		float lumaSE = dot(rgbSE, luma);\n\
-		float lumaM  = dot(rgbM,  luma);\n\
-		float lumaMin = min(lumaM, min(min(lumaNW, lumaNE), min(lumaSW, lumaSE)));\n\
-		float lumaMax = max(lumaM, max(max(lumaNW, lumaNE), max(lumaSW, lumaSE)));\n\
-		\n\
-		vec2 dir;\n\
-		dir.x = -((lumaNW + lumaNE) - (lumaSW + lumaSE));\n\
-		dir.y =  ((lumaNW + lumaSW) - (lumaNE + lumaSE));\n\
-		\n\
-		float dirReduce = max((lumaNW + lumaNE + lumaSW + lumaSE) * (0.25 * FXAA_REDUCE_MUL), FXAA_REDUCE_MIN);\n\
-		\n\
-		float rcpDirMin = 1.0 / (min(abs(dir.x), abs(dir.y)) + dirReduce);\n\
-		dir = min(vec2(FXAA_SPAN_MAX, FXAA_SPAN_MAX), max(vec2(-FXAA_SPAN_MAX, -FXAA_SPAN_MAX), dir * rcpDirMin)) * u_iViewportSize;\n\
-		\n\
-		vec3 rgbA = 0.5 * (texture2D(tex, fragCoord * u_iViewportSize + dir * (1.0 / 3.0 - 0.5)).xyz + \n\
-			texture2D(tex, fragCoord * u_iViewportSize + dir * (2.0 / 3.0 - 0.5)).xyz);\n\
-		vec3 rgbB = rgbA * 0.5 + 0.25 * (texture2D(tex, fragCoord * u_iViewportSize + dir * -0.5).xyz + \n\
-			texture2D(tex, fragCoord * u_iViewportSize + dir * 0.5).xyz);\n\
-		\n\
-		return vec4(rgbA,1.0);\n\
-		float lumaB = dot(rgbB, luma);\n\
-		if ((lumaB &lt; lumaMin) || (lumaB &gt; lumaMax))\n\
-			color = vec4(rgbA, 1.0);\n\
-		else\n\
-			color = vec4(rgbB, 1.0);\n\
-		return color;\n\
-	}\n\
-&quot;;
-
-/**
-* Returns a shader to apply FXAA antialiasing
-* params are vec2 u_viewportSize, vec2 u_iViewportSize or you can call shader.setup()
-* @method Shader.getFXAAShader
-*/
-Shader.getFXAAShader = function(gl)
-{
-	gl = gl || global.gl;
-	var shader = gl.shaders[&quot;:fxaa&quot;];
-	if(shader)
-		return shader;
-
-	var shader = new GL.Shader( Shader.SCREEN_VERTEX_SHADER,&quot;\n\
-			precision highp float;\n\
-			varying vec2 v_coord;\n\
-			uniform sampler2D u_texture;\n\
-			&quot; + Shader.FXAA_FUNC + &quot;\n\
-			\n\
-			void main() {\n\
-			   gl_FragColor = applyFXAA( u_texture, v_coord * u_viewportSize) ;\n\
-			}\n\
-			&quot;);
-
-	var viewport = vec2.fromValues( gl.viewport_data[2], gl.viewport_data[3] );
-	var iviewport = vec2.fromValues( 1/gl.viewport_data[2], 1/gl.viewport_data[3] );
-
-	shader.setup = function() {
-		viewport[0] = gl.viewport_data[2];
-		viewport[1] = gl.viewport_data[3];
-		iviewport[0] = 1/gl.viewport_data[2];
-		iviewport[1] = 1/gl.viewport_data[3];
-		this.uniforms({ u_viewportSize: viewport, u_iViewportSize: iviewport });	
-	}
-	return gl.shaders[&quot;:fxaa&quot;] = shader;
-}
-
-/**
-* Returns a flat shader (useful to render lines)
-* @method Shader.getFlatShader
-*/
-Shader.getFlatShader = function(gl)
-{
-	gl = gl || global.gl;
-	var shader = gl.shaders[&quot;:flat&quot;];
-	if(shader)
-		return shader;
-
-	var shader = new GL.Shader( Shader.FLAT_VERTEX_SHADER,Shader.FLAT_FRAGMENT_SHADER);
-	shader.uniforms({u_color:[1,1,1,1]});
-	return gl.shaders[&quot;:flat&quot;] = shader;
+	gl._blur_shader = shader;
+	return gl._blur_shader;
 }
     </pre>
 </div>
+
                     </div>
                 </div>
             </div>

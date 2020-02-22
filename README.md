@@ -1,30 +1,7 @@
 litegl.js
 =========
 
-Litegl.js is a javascript library that wraps WebGL to make it more user-friendly by creating classes for managing different items like Buffer, Mesh, Texture, Shader and other common aspects of any WebGL applications.
-
-It helps simplifying working with WebGL without having to handle all the low-level calls but without losing any freedom.
-
-Some features are:
-
-* Easy context creation
-* Classes for: 
-	- *Meshes and Buffers*: Fill a buffer easily and upload it to the GPU
-	- *Textures*: load, fill, clone, copy (even blur) for TEXTURE_2D and TEXTURE_CUBE_MAP
-	- *Shaders*: compile from string, from file, insert preprocessor macros, extracts all the uniform locations 
-	- *FrameBufferObjects*: to render to a texture, to multiple textures, to depth texture.
-* Some basic primitive shapes (plane, cube, sphere, cylinder, hemisphere).
-* OBJ parser and encoder (easy to add new ones)
-* Loaders for Images and Meshes from URL (uses a placeholder till its loaded)
-* Uses typed-arrays for everything (uses glMatrix for all operations)
-* No garbage generated (reuses containers)
-* Basic Raytracing (for ray-sphere and ray-plane collision)
-* Events system 
-* Cross-browser input handling for mouse, keyboard and gamepad
-* Supports multiple WebGL contexts
-* Supports WebGL1 and WebGL2
-* Octree class
-
+Litegl.js is a library that wraps WebGL to make it more user-friendly by creating classes for managing different items like Buffer, Mesh, Texture, Shader and other common aspects of any WebGL applications.
 It is a fork from [LightGL.js](https://github.com/evanw/lightgl.js/) by [Evan Wallace](http://madebyevan.com), but some major changes have been made.
 Some of the main differences:
 
@@ -35,16 +12,10 @@ Some of the main differences:
  * Better event handling (mouse position, mouse wheel, dragging)
  * Textures expanded to support Arraybuffers and Cubemaps
  * Events system to trigger events from any object
- * Support for multiple WebGL contexts in the same page
-
-This library has been used in several projects like [Rendeer.js](https://github.com/jagenjo/rendeer.js) or [Canvas2DtoWebGL](https://github.com/jagenjo/Canvas2DtoWebGL).</p>
-
-For a list of similar libraries check [this list](https://qiita.com/cx20/items/0fa19c96aa6470d98807)
-
 
 Demos
 -----
-Demos are included in the Examples folder but you can check them in [this website](http://tamats.com/projects/litegl/examples).
+Demos are included in the Examples folder but you can check them in [this website](http://tamats.com/webglstudio/litegl/#examples).
 
 Usage
 -----
@@ -65,6 +36,12 @@ Attach to DOM
 document.getElementById("mycontainer").appendChild( gl.canvas )
 ```
 
+Hook events
+```js
+gl.ondraw = function() { ... }
+gl.onupdate = function(dt) { ... }
+```
+
 Get user input
 ```js
 gl.captureMouse();
@@ -76,38 +53,22 @@ gl.onkey = function(e) { ... }
 
 Compile shader
 ```js
-var shader = new GL.Shader( vertex_shader_code, fragment_shader_code );
+var shader = new Shader( vertex_shader_code, fragment_shader_code);
 ```
 
 Create Mesh
 ```js
-var mesh = new GL.Mesh({vertices:[-1,-1,0, 1,-1,0, 0,1,0], coords:[0,0, 1,0, 0.5,1]});
+var mesh = Mesh.cube();
 ```
-
-Load a texture
-```js
-var texture = GL.Texture.fromURL("image.jpg", { minFilter: gl.LINEAR_MIPMAP_LINEAR });
-```
-
 
 Render
 ```js
-gl.ondraw = function() {
-	texture.bind(0);
-	var my_uniforms = { u_texture: 0, u_color: [1,1,1,1] };
-	shader.uniforms( my_uniforms ).draw( mesh );
-}
-
-gl.animate(); //calls the requestAnimFrame constantly, which will call ondraw
+shader.uniforms( my_uniforms ).draw( mesh );
 ```
-
-For better understanding of all the features and how to use them check the [guides](guides) folder.
 
 Documentation
 -------------
-The doc folder contains the documentation. For info about [glmatrix.net](http://glmatrix.net/) check the documentation in its website.
-
-Check the [guides](guides) folder to see how to use all the features.
+The doc folder contains the documentation. For info about [http://glmatrix.com](glMatrix) check the documentation in its website.
 
 Utils
 -----
