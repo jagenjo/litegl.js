@@ -1626,6 +1626,16 @@ vec3.angle = function( a, b )
 	return Math.acos( vec3.dot(a,b) );
 }
 
+vec3.signedAngle = function(from, to, axis)
+{
+	var unsignedAngle = vec3.angle( from, to );
+	var cross_x = from[1] * to[2] - from[2] * to[1];
+	var cross_y = from[2] * to[0] - from[0] * to[2];
+	var cross_z = from[0] * to[1] - from[1] * to[0];
+	var sign = Math.sign(axis[0] * cross_x + axis[1] * cross_y + axis[2] * cross_z);
+	return unsignedAngle * sign;
+}
+
 vec3.random = function(vec, scale)
 {
 	scale = scale || 1.0;
@@ -1872,6 +1882,71 @@ quat.fromAxisAngle = function(axis, rad)
     out[3] = Math.cos(rad);
     return out;
 }
+
+//from https://answers.unity.com/questions/467614/what-is-the-source-code-of-quaternionlookrotation.html
+quat.lookRotation = (function(){
+	var vector = vec3.create();
+	var vector2 = vec3.create();
+	var vector3 = vec3.create();
+
+	return function( q, front, up )
+	{
+		vec3.normalize(vector,front);
+		vec3.cross( vector2, up, vector );
+		vec3.normalize(vector2,vector2);
+		vec3.cross( vector3, vector, vector2 );
+
+		var m00 = vector2[0];
+		var m01 = vector2[1];
+		var m02 = vector2[2];
+		var m10 = vector3[0];
+		var m11 = vector3[1];
+		var m12 = vector3[2];
+		var m20 = vector[0];
+		var m21 = vector[1];
+		var m22 = vector[2];
+
+		var num8 = (m00 + m11) + m22;
+
+		 if (num8 > 0)
+		 {
+			 var num = Math.sqrt(num8 + 1);
+			 q[3] = num * 0.5;
+			 num = 0.5 / num;
+			 q[0] = (m12 - m21) * num;
+			 q[1] = (m20 - m02) * num;
+			 q[2] = (m01 - m10) * num;
+			 return q;
+		 }
+		 if ((m00 >= m11) && (m00 >= m22))
+		 {
+			 var num7 = Math.sqrt(((1 + m00) - m11) - m22);
+			 var num4 = 0.5 / num7;
+			 q[0] = 0.5 * num7;
+			 q[1] = (m01 + m10) * num4;
+			 q[2] = (m02 + m20) * num4;
+			 q[3] = (m12 - m21) * num4;
+			 return q;
+		 }
+		 if (m11 > m22)
+		 {
+			 var num6 = Math.sqrt(((1 + m11) - m00) - m22);
+			 var num3 = 0.5 / num6;
+			 q[0] = (m10+ m01) * num3;
+			 q[1] = 0.5 * num6;
+			 q[2] = (m21 + m12) * num3;
+			 q[3] = (m20 - m02) * num3;
+			 return q; 
+		 }
+		 var num5 = Math.sqrt(((1 + m22) - m00) - m11);
+		 var num2 = 0.5 / num5;
+		 q[0] = (m20 + m02) * num2;
+		 q[1] = (m21 + m12) * num2;
+		 q[2] = 0.5 * num5;
+		 q[3] = (m01 - m10) * num2;
+		 return q;
+	};
+})();
 
 /*
 quat.toEuler = function(out, quat) {
@@ -2128,10 +2203,6 @@ quat.lookAt = (function(){
 		return out;
 	}
 })();
-
-
-
-
 /**
 * @namespace GL
 */
@@ -4835,6 +4906,102 @@ Mesh.cone = function( options, gl ) {
 	return Mesh.load( buffers, options, gl );
 }
 
+
+
+/**
+* Returns a torus mesh (warning, it reuses vertices in the last loop so UVs will be messed up, sorry)
+* @method Mesh.torus
+* @param {Object} options valid options: innerradius, outerradius, innerslices, outerslices
+*/
+Mesh.torus = function( options, gl ) {
+	options = options || {};
+	var outerradius = options.outerradius || options.radius || 1;
+	var outerslices = Math.ceil(options.outerslices || options.slices || 24);
+	var innerradius = options.innerradius || outerradius * 0.1;
+	var innerslices = Math.ceil(options.innerslices || outerslices );
+
+	var innerdelta = (2 * Math.PI) / innerslices;
+	var outerdelta = (2 * Math.PI) / outerslices;
+	var xz = false;
+	var index = xz ? 2 : 1;
+
+	var center = vec3.create();
+	var A = vec3.create();
+	var N = vec3.fromValues(0,0,1);
+	var uv_center = vec2.fromValues(0.5,0.5);
+	var uv = vec2.create();
+
+	//circle vertices
+	var cvertices = new Float32Array(3 * innerslices);
+	var cnormals = new Float32Array(3 * innerslices);
+
+	var sin = 0;
+	var cos = 0;
+	//compute circle vertices
+	for(var i = 0; i < innerslices; ++i )
+	{
+		sin = Math.sin( innerdelta * i );
+		cos = Math.cos( innerdelta * i );
+		A[0] = sin * innerradius;
+		A[index] = cos * innerradius;
+		uv[0] = sin * 0.5 + 0.5;
+		uv[1] = cos * 0.5 + 0.5;
+		cvertices.set(A, i * 3);
+		vec3.normalize(N,A);
+		cnormals.set(N, i * 3);
+	}
+
+	var vertices = new Float32Array(3 * outerslices * innerslices);
+	var normals = new Float32Array(3 * outerslices * innerslices);
+	var coords = new Float32Array(2 * outerslices * innerslices);
+	var triangles = null;
+
+	var sin = 0;
+	var cos = 0;
+
+	var M = mat4.create();
+	var offset = vec3.fromValues(-outerradius,0,0);
+	var axis = vec3.fromValues(0,1,0);
+	var v = vec3.create();
+
+	var triangles = [];
+	var next = innerslices;
+
+	//compute vertices
+	for(var i = 0; i < outerslices; ++i )
+	{
+		mat4.identity(M);
+		mat4.rotate( M, M, i * outerdelta, axis );
+		mat4.translate( M, M, offset );
+
+		var bindex = i * innerslices;
+		var next = i < outerslices - 1 ? innerslices : (outerslices - 1) * -innerslices;
+
+		for(var j = 0; j < innerslices; ++j )
+		{
+			var cv = cvertices.subarray(j*3,j*3+3);
+			var cn = cnormals.subarray(j*3,j*3+3);
+			mat4.multiplyVec3( A, M, cv );
+			mat4.rotateVec3( N, M, cn );
+			vertices.set(A, j * 3 + i * 3 * innerslices);
+			normals.set(N, j * 3 + i * 3 * innerslices);
+			coords.set([i/outerslices,j/innerslices], j * 2 + i * 2 * innerslices);
+			
+			var a = bindex + j;
+			var b = bindex + (j + 1) % innerslices;
+			triangles.push( a,b,a+next,a+next,b,b+next );
+			//else
+			//	triangles.push( i,i+1,i+next, i,i+next,i+next+1 );
+		}
+	}
+
+	var size = innerradius + outerradius;
+	options.bounding = BBox.fromCenterHalfsize( [0,0,0], xz ? [size,innerradius,size] : [size,size,innerradius] );
+	var buffers = {vertices: vertices, normals: normals, coords: coords, triangles: triangles};
+	return GL.Mesh.load( buffers, options, gl );
+}
+
+
 /**
 * Returns a sphere mesh 
 * @method Mesh.sphere
@@ -5877,6 +6044,8 @@ Texture.drawToColorAndDepth = function( color_texture, depth_texture, callback )
 Texture.prototype.copyTo = function( target_texture, shader, uniforms ) {
 	var that = this;
 	var gl = this.gl;
+	if(!target_texture)
+		throw("target_texture required");
 
 	//save state
 	var previous_fbo = gl.getParameter( gl.FRAMEBUFFER_BINDING );
@@ -5900,10 +6069,22 @@ Texture.prototype.copyTo = function( target_texture, shader, uniforms ) {
 	gl.viewport(0,0,target_texture.width, target_texture.height);
 	if(this.texture_type == gl.TEXTURE_2D)
 	{
+		//regular color texture
 		if(this.format !== gl.DEPTH_COMPONENT && this.format !== gl.DEPTH_STENCIL )
 		{
-			gl.framebufferTexture2D( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, target_texture.handler, 0);
-			this.toViewport( shader );
+			/* doesnt work
+			if( this.width == target_texture.width && this.height == target_texture.height && this.format == target_texture.format)
+			{
+				gl.framebufferTexture2D( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.handler, 0);
+				gl.bindTexture( target_texture.texture_type, target_texture.handler );
+				gl.copyTexImage2D( target_texture.texture_type, 0, this.format, 0, 0, target_texture.width, target_texture.height, 0);
+			}
+			else
+			*/
+			{
+				gl.framebufferTexture2D( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, target_texture.handler, 0);
+				this.toViewport( shader );
+			}
 		}
 		else //copying a depth texture is harder
 		{
@@ -7251,7 +7432,6 @@ Texture.nextPOT = function( size )
 {
 	return Math.pow( 2, Math.ceil( Math.log(size) / Math.log(2) ) );
 }
-
 /** 
 * FBO for FrameBufferObjects, FBOs are used to store the render inside one or several textures 
 * Supports multibuffer and depthbuffer texture, useful for deferred rendering
@@ -7288,6 +7468,7 @@ function FBO( textures, depth_texture, stencil, gl )
 	//save state
 	this._old_fbo_handler = null;
 	this._old_viewport = new Float32Array(4);
+	this.order = null;
 }
 
 GL.FBO = FBO;
@@ -7532,7 +7713,7 @@ FBO.prototype.update = function( skip_disable )
 }
 
 /**
-* Enables this FBO (from now on all the render will be stored in the textures attached to this FBO
+* Enables this FBO (from now on all the render will be stored in the textures attached to this FBO)
 * It stores the previous viewport to restore it afterwards, and changes it to full FBO size
 * @method bind
 * @param {boolean} keep_old keeps the previous FBO is one was attached to restore it afterwards
@@ -7558,6 +7739,7 @@ FBO.prototype.bind = function( keep_old )
 		this.depth_texture._in_current_fbo = true;
 
 	gl.viewport( 0,0, this.width, this.height );
+	FBO.current = this;
 }
 
 /**
@@ -7576,6 +7758,7 @@ FBO.prototype.unbind = function()
 		this.color_textures[i]._in_current_fbo = false;
 	if(this.depth_texture)
 		this.depth_texture._in_current_fbo = false;
+	FBO.current = null;
 }
 
 //binds another FBO without switch back to previous (faster)
@@ -7598,6 +7781,8 @@ FBO.prototype.switchTo = function( next_fbo )
 		next_fbo.color_textures[i]._in_current_fbo = true;
 	if(next_fbo.depth_texture)
 		next_fbo.depth_texture._in_current_fbo = true;
+
+	FBO.current = next_fbo;
 }
 
 FBO.prototype.delete = function()
@@ -7628,6 +7813,50 @@ FBO.testSupport = function( type, format ) {
 	return true;
 }
 
+FBO.prototype.toSingle = function()
+{
+	if( this.color_textures.length < 2 )
+		return; //nothing to do
+	var ext = gl.extensions.WEBGL_draw_buffers;
+	if( ext )
+		ext.drawBuffersWEBGL( [ this.order[0] ] );
+	else
+		gl.drawBuffers( [ this.order[0] ] );
+}
+
+FBO.prototype.toMulti = function()
+{
+	if( this.color_textures.length < 2 )
+		return; //nothing to do
+	var ext = gl.extensions.WEBGL_draw_buffers;
+	if( ext )
+		ext.drawBuffersWEBGL( this.order );
+	else
+		gl.drawBuffers( this.order );
+}
+
+//clears only the secondary buffers (not the main one)
+FBO.prototype.clearSecondary = function( color )
+{
+	if(!this.order || this.order.length < 2)
+		return;
+
+	var ext = gl.extensions.WEBGL_draw_buffers;
+	var new_order = [gl.NONE];
+	for(var i = 1; i < this.order.length; ++i)
+		new_order.push(this.order[i]);
+	if(ext)
+		ext.drawBuffersWEBGL( new_order );
+	else
+		gl.drawBuffers( new_order );
+	gl.clearColor( color[0],color[1],color[2],color[3] );
+	gl.clear( gl.COLOR_BUFFER_BIT );
+
+	if(ext)
+		ext.drawBuffersWEBGL( this.order );
+	else
+		gl.drawBuffers( this.order );
+}
 
 
 /**
@@ -8280,7 +8509,14 @@ Shader.prototype.drawInstanced = function( mesh, primitive, indices, instanced_u
 		length = buffer.buffer.length / buffer.buffer.spacing;
 	}
 
-	var indexBuffer = indices ? mesh.getIndexBuffer( indices ) : null;
+	var indexBuffer = null;
+	if( indices )
+	{
+		if( indices.constructor === String) 
+			indexBuffer = mesh.getIndexBuffer( indices );
+		else if( indices.constructor === GL.Buffer )
+			indexBuffer = indices;
+	}
 
 	//range rendering
 	var offset = 0; //in bytes
@@ -8719,6 +8955,20 @@ Shader.createFX = function(code, uniforms, shader)
 		return new GL.Shader( GL.Shader.SCREEN_VERTEX_SHADER, GL.Shader.SCREEN_FRAGMENT_FX, macros );
 	shader.updateShader( GL.Shader.SCREEN_VERTEX_SHADER, GL.Shader.SCREEN_FRAGMENT_FX, macros );
 	return shader;
+}
+
+/**
+* Given a shader code with some vars inside (like {{varname}}) and an object with the variable values, it will replace them.
+* @method Shader.replaceCodeUsingContext
+* @param {string} code string containg code and vars in {{varname}} format
+* @param {object} context object containing all var values
+*/
+Shader.replaceCodeUsingContext = function( code_template, context )
+{
+	return code_template.replace(/\{\{[a-zA-Z0-9_]*\}\}/g, function(v){
+		v = v.replace( /[\{\}]/g, "" );
+		return context[v] || "";
+	});
 }
 
 Shader.removeComments = function(code, one_line)
@@ -11675,6 +11925,11 @@ Octree.MAX_OCTREE_DEPTH = 8;
 Octree.OCTREE_MARGIN_RATIO = 0.01;
 Octree.OCTREE_MIN_MARGIN = 0.1;
 
+//mode
+Octree.NEAREST = 0; //returns the nearest collision
+Octree.FIRST = 1; //returns the first collision
+Octree.ALL = 2;  //returns the all collisions
+
 var octree_tested_boxes = 0;
 var octree_tested_triangles = 0;
 
@@ -11871,6 +12126,8 @@ Octree.prototype.trim = function(node)
 * @param {vec3} direction ray direction position
 * @param {number} dist_min
 * @param {number} dist_max
+* @param {number} test_backfaces if rays colliding with the back face must be considered a valid collision
+* @param {number} mode which mode to use (Octree.NEAREST: nearest collision to origin, Octree.FIRST: first collision detected (fastest), Octree.ALL: all collision (slowest)
 * @return {HitTest} object containing pos and normal
 */
 Octree.prototype.testRay = (function(){ 
@@ -11879,10 +12136,11 @@ Octree.prototype.testRay = (function(){
 	var min_temp = vec3.create();
 	var max_temp = vec3.create();
 
-	return function(origin, direction, dist_min, dist_max, test_backfaces )
+	return function(origin, direction, dist_min, dist_max, test_backfaces, mode )
 	{
 		octree_tested_boxes = 0;
 		octree_tested_triangles = 0;
+		mode = mode || Octree.NEAREST;
 
 		if(!this.root)
 		{
@@ -11898,18 +12156,99 @@ Octree.prototype.testRay = (function(){
 		if(!test) //no collision with mesh bounding box
 			return null;
 
-		var test = Octree.testRayInNode( this.root, origin_temp, direction_temp, test_backfaces );
-		if(test != null)
-		{
-			var pos = vec3.scale( vec3.create(), direction, test.t );
-			vec3.add( pos, pos, origin );
-			test.pos = pos;
-			return test;
-		}
+		var test = Octree.testRayInNode( this.root, origin_temp, direction_temp, test_backfaces, mode );
+		if(test == null )
+			return null;
 
-		return null;
+		if(mode == Octree.ALL)
+			return test;
+
+		var pos = vec3.scale( vec3.create(), direction, test.t );
+		vec3.add( pos, pos, origin );
+		test.pos = pos;
+		return test;
 	}
 })();
+
+//tests collisions with a node of the octree and its children
+//WARNING: cannot use static here, it uses recursion
+Octree.testRayInNode = function( node, origin, direction, test_backfaces, mode )
+{
+	var test = null;
+	var prev_test = null;
+	octree_tested_boxes += 1;
+
+	//test faces
+	if(node.faces)
+		for(var i = 0, l = node.faces.length; i < l; ++i)
+		{
+			var face = node.faces[i];
+			octree_tested_triangles += 1;
+			test = Octree.hitTestTriangle( origin, direction, face.subarray(0,3) , face.subarray(3,6), face.subarray(6,9), test_backfaces );
+			if (test == null)
+				continue;
+			if(mode == Octree.FIRST)
+				return test;
+			if(mode == Octree.ALL)
+			{
+				if(!prev_test)
+					prev_test = [];
+				prev_test.push(test);
+			}
+			else { //find closer
+				test.face = face;
+				if(prev_test)
+					prev_test.mergeWith( test );
+				else
+					prev_test = test;
+			}
+		}
+
+	//WARNING: cannot use statics here, this function uses recursion
+	var child_min = vec3.create();
+	var child_max = vec3.create();
+
+	//test children nodes faces
+	var child;
+	if(node.c)
+		for(var i = 0; i < node.c.length; ++i)
+		{
+			child = node.c[i];
+			child_min.set( child.min );
+			child_max.set( child.max );
+
+			//test with node box
+			test = Octree.hitTestBox( origin, direction, child_min, child_max );
+			if( test == null )
+				continue;
+
+			//nodebox behind current collision, then ignore node
+			if(mode != Octree.ALL && prev_test && test.t > prev_test.t)
+				continue;
+
+			//test collision with node
+			test = Octree.testRayInNode( child, origin, direction, test_backfaces, mode );
+			if(test == null)
+				continue;
+			if(mode == Octree.FIRST)
+				return test;
+
+			if(mode == Octree.ALL)
+			{
+				if(!prev_test)
+					prev_test = [];
+				prev_test.push(test);
+			}
+			else {
+				if(prev_test)
+					prev_test.mergeWith( test );
+				else
+					prev_test = test;
+			}
+		}
+
+	return prev_test;
+}
 
 /**
 * test collision between sphere and the triangles in the octree (only test if there is any vertex inside the sphere)
@@ -11934,65 +12273,6 @@ Octree.prototype.testSphere = function( origin, radius )
 		return false; //out of the box
 
 	return Octree.testSphereInNode( this.root, origin, rr );
-}
-
-//WARNING: cannot use static here, it uses recursion
-Octree.testRayInNode = function( node, origin, direction, test_backfaces )
-{
-	var test = null;
-	var prev_test = null;
-	octree_tested_boxes += 1;
-
-	//test faces
-	if(node.faces)
-		for(var i = 0, l = node.faces.length; i < l; ++i)
-		{
-			var face = node.faces[i];
-			octree_tested_triangles += 1;
-			test = Octree.hitTestTriangle( origin, direction, face.subarray(0,3) , face.subarray(3,6), face.subarray(6,9), test_backfaces );
-			if (test==null)
-				continue;
-			test.face = face;
-			if(prev_test)
-				prev_test.mergeWith( test );
-			else
-				prev_test = test;
-		}
-
-	//WARNING: cannot use statics here, this function uses recursion
-	var child_min = vec3.create();
-	var child_max = vec3.create();
-
-	//test children nodes faces
-	var child;
-	if(node.c)
-		for(var i = 0; i < node.c.length; ++i)
-		{
-			child = node.c[i];
-			child_min.set( child.min );
-			child_max.set( child.max );
-
-			//test with node box
-			test = Octree.hitTestBox( origin, direction, child_min, child_max );
-			if( test == null )
-				continue;
-
-			//nodebox behind current collision, then ignore node
-			if(prev_test && test.t > prev_test.t)
-				continue;
-
-			//test collision with node
-			test = Octree.testRayInNode( child, origin, direction, test_backfaces );
-			if(test == null)
-				continue;
-
-			if(prev_test)
-				prev_test.mergeWith( test );
-			else
-				prev_test = test;
-		}
-
-	return prev_test;
 }
 
 //WARNING: cannot use static here, it uses recursion

@@ -465,6 +465,102 @@ Mesh.cone = function( options, gl ) {
 	return Mesh.load( buffers, options, gl );
 }
 
+
+
+/**
+* Returns a torus mesh (warning, it reuses vertices in the last loop so UVs will be messed up, sorry)
+* @method Mesh.torus
+* @param {Object} options valid options: innerradius, outerradius, innerslices, outerslices
+*/
+Mesh.torus = function( options, gl ) {
+	options = options || {};
+	var outerradius = options.outerradius || options.radius || 1;
+	var outerslices = Math.ceil(options.outerslices || options.slices || 24);
+	var innerradius = options.innerradius || outerradius * 0.1;
+	var innerslices = Math.ceil(options.innerslices || outerslices );
+
+	var innerdelta = (2 * Math.PI) / innerslices;
+	var outerdelta = (2 * Math.PI) / outerslices;
+	var xz = false;
+	var index = xz ? 2 : 1;
+
+	var center = vec3.create();
+	var A = vec3.create();
+	var N = vec3.fromValues(0,0,1);
+	var uv_center = vec2.fromValues(0.5,0.5);
+	var uv = vec2.create();
+
+	//circle vertices
+	var cvertices = new Float32Array(3 * innerslices);
+	var cnormals = new Float32Array(3 * innerslices);
+
+	var sin = 0;
+	var cos = 0;
+	//compute circle vertices
+	for(var i = 0; i < innerslices; ++i )
+	{
+		sin = Math.sin( innerdelta * i );
+		cos = Math.cos( innerdelta * i );
+		A[0] = sin * innerradius;
+		A[index] = cos * innerradius;
+		uv[0] = sin * 0.5 + 0.5;
+		uv[1] = cos * 0.5 + 0.5;
+		cvertices.set(A, i * 3);
+		vec3.normalize(N,A);
+		cnormals.set(N, i * 3);
+	}
+
+	var vertices = new Float32Array(3 * outerslices * innerslices);
+	var normals = new Float32Array(3 * outerslices * innerslices);
+	var coords = new Float32Array(2 * outerslices * innerslices);
+	var triangles = null;
+
+	var sin = 0;
+	var cos = 0;
+
+	var M = mat4.create();
+	var offset = vec3.fromValues(-outerradius,0,0);
+	var axis = vec3.fromValues(0,1,0);
+	var v = vec3.create();
+
+	var triangles = [];
+	var next = innerslices;
+
+	//compute vertices
+	for(var i = 0; i < outerslices; ++i )
+	{
+		mat4.identity(M);
+		mat4.rotate( M, M, i * outerdelta, axis );
+		mat4.translate( M, M, offset );
+
+		var bindex = i * innerslices;
+		var next = i < outerslices - 1 ? innerslices : (outerslices - 1) * -innerslices;
+
+		for(var j = 0; j < innerslices; ++j )
+		{
+			var cv = cvertices.subarray(j*3,j*3+3);
+			var cn = cnormals.subarray(j*3,j*3+3);
+			mat4.multiplyVec3( A, M, cv );
+			mat4.rotateVec3( N, M, cn );
+			vertices.set(A, j * 3 + i * 3 * innerslices);
+			normals.set(N, j * 3 + i * 3 * innerslices);
+			coords.set([i/outerslices,j/innerslices], j * 2 + i * 2 * innerslices);
+			
+			var a = bindex + j;
+			var b = bindex + (j + 1) % innerslices;
+			triangles.push( a,b,a+next,a+next,b,b+next );
+			//else
+			//	triangles.push( i,i+1,i+next, i,i+next,i+next+1 );
+		}
+	}
+
+	var size = innerradius + outerradius;
+	options.bounding = BBox.fromCenterHalfsize( [0,0,0], xz ? [size,innerradius,size] : [size,size,innerradius] );
+	var buffers = {vertices: vertices, normals: normals, coords: coords, triangles: triangles};
+	return GL.Mesh.load( buffers, options, gl );
+}
+
+
 /**
 * Returns a sphere mesh 
 * @method Mesh.sphere

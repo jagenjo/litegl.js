@@ -820,6 +820,8 @@ Texture.drawToColorAndDepth = function( color_texture, depth_texture, callback )
 Texture.prototype.copyTo = function( target_texture, shader, uniforms ) {
 	var that = this;
 	var gl = this.gl;
+	if(!target_texture)
+		throw("target_texture required");
 
 	//save state
 	var previous_fbo = gl.getParameter( gl.FRAMEBUFFER_BINDING );
@@ -843,10 +845,22 @@ Texture.prototype.copyTo = function( target_texture, shader, uniforms ) {
 	gl.viewport(0,0,target_texture.width, target_texture.height);
 	if(this.texture_type == gl.TEXTURE_2D)
 	{
+		//regular color texture
 		if(this.format !== gl.DEPTH_COMPONENT && this.format !== gl.DEPTH_STENCIL )
 		{
-			gl.framebufferTexture2D( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, target_texture.handler, 0);
-			this.toViewport( shader );
+			/* doesnt work
+			if( this.width == target_texture.width && this.height == target_texture.height && this.format == target_texture.format)
+			{
+				gl.framebufferTexture2D( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.handler, 0);
+				gl.bindTexture( target_texture.texture_type, target_texture.handler );
+				gl.copyTexImage2D( target_texture.texture_type, 0, this.format, 0, 0, target_texture.width, target_texture.height, 0);
+			}
+			else
+			*/
+			{
+				gl.framebufferTexture2D( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, target_texture.handler, 0);
+				this.toViewport( shader );
+			}
 		}
 		else //copying a depth texture is harder
 		{

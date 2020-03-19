@@ -27,7 +27,7 @@
 
 	//build the mesh
 	var objects = [];
-	for(var i = 0; i < 11; i++)
+	for(var i = 0; i < 12; i++)
 	{
 		var object = {};
 		object.primitive = gl.TRIANGLES;
@@ -48,6 +48,8 @@
 	objects[8].primitive = gl.LINES;
 	objects[9].mesh = GL.Mesh.icosahedron({size:1,subdivisions:1});
 	objects[10].mesh = GL.Mesh.cone({radius:0.5,height:1});
+	objects[11].mesh = GL.Mesh.torus({innerradius:0.25,outerradius:1,innerslices:8});
+	//objects[11].primitive = gl.POINTS;
 
 	//create basic matrices for cameras and transformation
 	var proj = mat4.create();
@@ -65,21 +67,26 @@
 			precision highp float;\
 			attribute vec3 a_vertex;\
 			attribute vec3 a_normal;\
+			attribute vec2 a_coord;\
 			varying vec3 v_normal;\
+			varying vec2 v_coord;\
 			uniform mat4 u_mvp;\
 			uniform mat4 u_model;\
 			void main() {\
 				v_normal = (u_model * vec4(a_normal,0.0)).xyz;\
+			    v_coord = a_coord;\
 				gl_Position = u_mvp * vec4(a_vertex,1.0);\
+				gl_PointSize = 2.0;\
 			}\
 			', '\
 			precision highp float;\
 			varying vec3 v_normal;\
 			uniform vec3 u_lightvector;\
 			uniform vec4 u_color;\
+			varying vec2 v_coord;\
 			void main() {\
-			  vec3 N = normalize(v_normal);\
-			  gl_FragColor = u_color * max(0.0, dot(u_lightvector,N));\
+			  float NdotL = dot(u_lightvector,normalize(v_normal)) * 0.5 + 0.5;\
+			  gl_FragColor = vec4(v_coord,0.0,1.0) * u_color * NdotL;\
 			}\
 		');
 
