@@ -4703,6 +4703,111 @@ Mesh.circle = function( options, gl ) {
 }
 
 /**
+* Returns a ring mesh 
+* @method Mesh.ring
+* @param {Object} options valid options: radius, thickness, xz = in xz plane, otherwise xy plane
+*/
+Mesh.ring = function( options, gl ) {
+	options = options || {};
+	var size = options.size || options.radius || 1;
+	var thickness = options.thickness || size * 0.1;
+	var slices = Math.ceil(options.slices || 24);
+	var xz = options.xz || false;
+	var empty = options.empty || false;
+	if(slices < 3) slices = 3;
+	var delta = (2 * Math.PI) / slices;
+
+	var center = vec3.create();
+	var A = vec3.create();
+	var B = vec3.create();
+	var N = vec3.fromValues(0,0,1);
+	var uv_center = vec2.fromValues(0.5,0.5);
+	var uv = vec2.create();
+
+	if(xz) N.set([0,1,0]);
+
+	var index = xz ? 2 : 1;
+
+	var vertices = new Float32Array(3 * (slices * 2 + 2));
+	var normals = new Float32Array(3 * (slices * 2 + 2));
+	var coords = new Float32Array(2 * (slices * 2 + 2));
+	var triangles = null;
+
+	var sin = 0;
+	var cos = 0;
+
+	//compute vertices
+	for(var i = 0; i <= slices; ++i )
+	{
+		sin = Math.sin( delta * i );
+		cos = Math.cos( delta * i );
+
+		A[0] = sin * (size - thickness);
+		A[index] = cos * (size - thickness);
+		uv[0] = i/slices;
+		uv[1] = 0;
+		vertices.set(A, i * 6);
+		normals.set(N, i * 6);
+		coords.set(uv, i * 4);
+
+		B[0] = sin * (size + thickness);
+		B[index] = cos * (size + thickness);
+		uv[1] = 1;
+		vertices.set(B, i * 6+3);
+		normals.set(N, i * 6+3);
+		coords.set(uv, i * 4+2);
+	}
+
+	if(empty)
+	{
+		vertices = vertices.subarray(3);
+		normals = vertices.subarray(3);
+		coords = vertices.subarray(2);
+		triangles = null;
+	}
+	else
+	{
+		var triangles = new Uint16Array(6 * slices);
+		var offset = 2;
+		var offset2 = 1;
+		if(xz)
+		{
+			offset = 1;
+			offset2 = 2;
+		}
+
+		//compute indices
+		for(var i = 0; i < slices; ++i )
+		{
+			triangles[i*6] = i*2;
+			triangles[i*6+1] = i*2+offset;
+			triangles[i*6+2] = i*2+offset2;
+			triangles[i*6+3] = i*2+offset2;
+			triangles[i*6+4] = i*2+offset;
+			triangles[i*6+5] = i*2+3;
+		}
+	}
+
+	options.bounding = BBox.fromCenterHalfsize( [0,0,0], xz ? [size+thickness,0,size+thickness] : [size+thickness,size+thickness,0] );
+
+	var buffers = {vertices: vertices, normals: normals, coords: coords, triangles: triangles};
+
+	if(options.wireframe)
+	{
+		var wireframe = new Uint16Array(slices*4);
+		for(var i = 0; i < slices; i++)
+		{
+			wireframe[i*4] = i*2;
+			wireframe[i*4+1] = i*2+2;
+			wireframe[i*4+2] = i*2+1;
+			wireframe[i*4+3] = i*2+3;
+		}
+		buffers.wireframe = wireframe;
+	}
+	return GL.Mesh.load( buffers, options, gl );
+}
+
+/**
 * Returns a cube mesh 
 * @method Mesh.cylinder
 * @param {Object} options valid options: radius, height, subdivisions 
@@ -4919,9 +5024,10 @@ Mesh.torus = function( options, gl ) {
 	var outerslices = Math.ceil(options.outerslices || options.slices || 24);
 	var innerradius = options.innerradius || outerradius * 0.1;
 	var innerslices = Math.ceil(options.innerslices || outerslices );
+	var angle = options.angle || (Math.PI * 2);
 
-	var innerdelta = (2 * Math.PI) / innerslices;
-	var outerdelta = (2 * Math.PI) / outerslices;
+	var innerdelta = Math.PI * 2 / innerslices;
+	var outerdelta = angle / outerslices;
 	var xz = false;
 	var index = xz ? 2 : 1;
 
@@ -4930,6 +5036,7 @@ Mesh.torus = function( options, gl ) {
 	var N = vec3.fromValues(0,0,1);
 	var uv_center = vec2.fromValues(0.5,0.5);
 	var uv = vec2.create();
+	var close = angle == (Math.PI * 2);
 
 	//circle vertices
 	var cvertices = new Float32Array(3 * innerslices);
@@ -4975,7 +5082,12 @@ Mesh.torus = function( options, gl ) {
 		mat4.translate( M, M, offset );
 
 		var bindex = i * innerslices;
-		var next = i < outerslices - 1 ? innerslices : (outerslices - 1) * -innerslices;
+		var next = innerslices;
+		if(i >= outerslices - 1 )
+		{
+			next = (outerslices - 1) * -innerslices;
+			if(!close) 	next = 0;
+		}
 
 		for(var j = 0; j < innerslices; ++j )
 		{
@@ -4989,7 +5101,7 @@ Mesh.torus = function( options, gl ) {
 			
 			var a = bindex + j;
 			var b = bindex + (j + 1) % innerslices;
-			triangles.push( a,b,a+next,a+next,b,b+next );
+			triangles.push( b,a,a+next,b,a+next,b+next );
 			//else
 			//	triangles.push( i,i+1,i+next, i,i+next,i+next+1 );
 		}

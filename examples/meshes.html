@@ -27,7 +27,7 @@
 
 	//build the mesh
 	var objects = [];
-	for(var i = 0; i < 12; i++)
+	for(var i = 0; i < 13; i++)
 	{
 		var object = {};
 		object.primitive = gl.TRIANGLES;
@@ -49,6 +49,7 @@
 	objects[9].mesh = GL.Mesh.icosahedron({size:1,subdivisions:1});
 	objects[10].mesh = GL.Mesh.cone({radius:0.5,height:1});
 	objects[11].mesh = GL.Mesh.torus({innerradius:0.25,outerradius:1,innerslices:8});
+	objects[12].mesh = GL.Mesh.ring({radius:1,thickness:0.2,slices:32,xz:false});
 	//objects[11].primitive = gl.POINTS;
 
 	//create basic matrices for cameras and transformation
@@ -94,6 +95,7 @@
 	//generic gl flags and settings
 	gl.clearColor(0.1,0.1,0.1,1);
 	gl.enable( gl.DEPTH_TEST );
+	gl.enable( gl.CULL_FACE );
 
 	var uniforms = {
 		u_color: [1,1,1,1],
