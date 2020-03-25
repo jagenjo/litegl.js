@@ -65,14 +65,16 @@ global.cartesianToPolar = function( out, x,y,z )
 //Global Scope
 //better array conversion to string for serializing
 var typed_arrays = [ Uint8Array, Int8Array, Uint16Array, Int16Array, Uint32Array, Int32Array, Float32Array, Float64Array ];
-function typedToArray(){ 
+function typedToArray(){
 	return Array.prototype.slice.call(this);
 }
-typed_arrays.forEach( function(v) { 
+typed_arrays.forEach( function(v) {
 	if(!v.prototype.toJSON)
 		Object.defineProperty( v.prototype, "toJSON", {
 			value: typedToArray,
-			enumerable: false
+			enumerable: false,
+            configurable: true,
+            writable: true
 		});
 });
 
@@ -126,7 +128,7 @@ global.getClassName = function getClassName(obj)
 /**
 * clone one object recursively, only allows objects containing number,strings,typed-arrays or other objects
 * @method cloneObject
-* @param {Object} object 
+* @param {Object} object
 * @param {Object} target if omited an empty object is created
 * @return {Object}
 */
@@ -221,7 +223,7 @@ if(typeof(Image) != "undefined") //not existing inside workers
 }
 
 //you must pass an object with characters to replace and replace with what {"a":"A","c":"C"}
-if(!String.prototype.hasOwnProperty("replaceAll")) 
+if(!String.prototype.hasOwnProperty("replaceAll"))
 	Object.defineProperty(String.prototype, "replaceAll", {
 		value: function(words){
 			var str = this;
@@ -230,7 +232,7 @@ if(!String.prototype.hasOwnProperty("replaceAll"))
 			return str;
 		},
 		enumerable: false
-	});	
+	});
 
 /*
 String.prototype.replaceAll = function(words){
@@ -242,7 +244,7 @@ String.prototype.replaceAll = function(words){
 */
 
 //used for hashing keys
-if(!String.prototype.hasOwnProperty("hashCode")) 
+if(!String.prototype.hasOwnProperty("hashCode"))
 	Object.defineProperty(String.prototype, "hashCode", {
 		value: function(){
 			var hash = 0, i, c, l;
@@ -255,7 +257,7 @@ if(!String.prototype.hasOwnProperty("hashCode"))
 			return hash;
 		},
 		enumerable: false
-	});	
+	});
 
 //avoid errors when Typed array is expected and regular array is found
 //Array.prototype.subarray = Array.prototype.slice;
@@ -293,16 +295,16 @@ global.extendClass = GL.extendClass = function extendClass( target, origin ) {
 		for(var i = 0; i < prop_names.length; ++i) //only enumerables
 		{
 			var name = prop_names[i];
-			//if(!origin.prototype.hasOwnProperty(name)) 
+			//if(!origin.prototype.hasOwnProperty(name))
 			//	continue;
 
 			if(target.prototype.hasOwnProperty(name)) //avoid overwritting existing ones
 				continue;
 
-			//copy getters 
+			//copy getters
 			if(origin.prototype.__lookupGetter__(name))
 				target.prototype.__defineGetter__(name, origin.prototype.__lookupGetter__(name));
-			else 
+			else
 				target.prototype[name] = origin.prototype[name];
 
 			//and setters
@@ -311,11 +313,11 @@ global.extendClass = GL.extendClass = function extendClass( target, origin ) {
 		}
 	}
 
-	if(!target.hasOwnProperty("superclass")) 
+	if(!target.hasOwnProperty("superclass"))
 		Object.defineProperty(target, "superclass", {
 			get: function() { return origin },
 			enumerable: false
-		});	
+		});
 }
 
 
@@ -361,7 +363,7 @@ global.HttpRequest = GL.request = function HttpRequest( url, params, callback, e
 	{
 		LEvent.trigger(xhr,"fail",err);
 	}
-	
+
 	if(options)
 	{
 		for(var i in options)
@@ -399,10 +401,10 @@ global.getFileExtension = function getFileExtension(url)
 	if(question != -1)
 		url = url.substr(0,question);
 	var point = url.lastIndexOf(".");
-	if(point == -1) 
+	if(point == -1)
 		return "";
 	return url.substr(point+1).toLowerCase();
-} 
+}
 
 
 //allows to pack several (text)files inside one single file (useful for shaders)
@@ -412,7 +414,7 @@ global.loadFileAtlas = GL.loadFileAtlas = function loadFileAtlas(url, callback, 
 	var deferred_callback = null;
 
 	HttpRequest(url, null, function(data) {
-		var files = GL.processFileAtlas(data); 
+		var files = GL.processFileAtlas(data);
 		if(callback)
 			callback(files);
 		if(deferred_callback)
@@ -458,7 +460,7 @@ global.processFileAtlas = GL.processFileAtlas = function(data, skip_trim)
 global.halfFloatToFloat = function( h )
 {
 	function convertMantissa(i) {
-	    if (i == 0) 
+	    if (i == 0)
 			return 0
 		else if (i < 1024)
 		{
@@ -498,7 +500,7 @@ global.halfFloatToFloat = function( h )
 
 	var v = convertMantissa( convertOffset( h >> 10) + (h & 0x3ff) ) + convertExponent(h >> 10);
 	var a = new Uint32Array([v]);
-	return (new Float32Array(a.buffer))[0]; 
+	return (new Float32Array(a.buffer))[0];
 }
 */
 
@@ -511,7 +513,7 @@ global.typedArrayToArray = function(array)
 	return r;
 }
 
-global.RGBToHex = function(r, g, b) { 
+global.RGBToHex = function(r, g, b) {
 	r = Math.min(255, r*255)|0;
 	g = Math.min(255, g*255)|0;
 	b = Math.min(255, b*255)|0;

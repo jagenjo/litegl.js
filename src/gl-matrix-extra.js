@@ -565,7 +565,7 @@ quat.fromEuler = function(out, vec) {
 };
 
 
-//not tested
+//not tested, it gives weird results sometimes
 quat.fromMat4 = function(out,m)
 {
 	var trace = m[0] + m[5] + m[10];
@@ -575,7 +575,7 @@ quat.fromMat4 = function(out,m)
 		out[3] = s * 0.5;//w
 		var recip = 0.5 / s;
 		out[0] = ( m[9] - m[6] ) * recip; //2,1  1,2
-		out[1] = ( m[2] - m[8] ) * recip; //0,2  2,0
+		out[1] = ( m[8] - m[2] ) * recip; //0,2  2,0
 		out[2] = ( m[4] - m[1] ) * recip; //1,0  0,1
 	}
 	else

@@ -26,6 +26,7 @@ function FBO( textures, depth_texture, stencil, gl )
 
 	this._stencil_enabled = false;
 	this._num_binded_textures = 0;
+	this.order = null;
 
 	//assign textures
 	if((textures && textures.length) || depth_texture)
@@ -34,7 +35,6 @@ function FBO( textures, depth_texture, stencil, gl )
 	//save state
 	this._old_fbo_handler = null;
 	this._old_viewport = new Float32Array(4);
-	this.order = null;
 }
 
 GL.FBO = FBO;

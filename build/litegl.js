@@ -276,14 +276,16 @@ global.cartesianToPolar = function( out, x,y,z )
 //Global Scope
 //better array conversion to string for serializing
 var typed_arrays = [ Uint8Array, Int8Array, Uint16Array, Int16Array, Uint32Array, Int32Array, Float32Array, Float64Array ];
-function typedToArray(){ 
+function typedToArray(){
 	return Array.prototype.slice.call(this);
 }
-typed_arrays.forEach( function(v) { 
+typed_arrays.forEach( function(v) {
 	if(!v.prototype.toJSON)
 		Object.defineProperty( v.prototype, "toJSON", {
 			value: typedToArray,
-			enumerable: false
+			enumerable: false,
+            configurable: true,
+            writable: true
 		});
 });
 
@@ -337,7 +339,7 @@ global.getClassName = function getClassName(obj)
 /**
 * clone one object recursively, only allows objects containing number,strings,typed-arrays or other objects
 * @method cloneObject
-* @param {Object} object 
+* @param {Object} object
 * @param {Object} target if omited an empty object is created
 * @return {Object}
 */
@@ -432,7 +434,7 @@ if(typeof(Image) != "undefined") //not existing inside workers
 }
 
 //you must pass an object with characters to replace and replace with what {"a":"A","c":"C"}
-if(!String.prototype.hasOwnProperty("replaceAll")) 
+if(!String.prototype.hasOwnProperty("replaceAll"))
 	Object.defineProperty(String.prototype, "replaceAll", {
 		value: function(words){
 			var str = this;
@@ -441,7 +443,7 @@ if(!String.prototype.hasOwnProperty("replaceAll"))
 			return str;
 		},
 		enumerable: false
-	});	
+	});
 
 /*
 String.prototype.replaceAll = function(words){
@@ -453,7 +455,7 @@ String.prototype.replaceAll = function(words){
 */
 
 //used for hashing keys
-if(!String.prototype.hasOwnProperty("hashCode")) 
+if(!String.prototype.hasOwnProperty("hashCode"))
 	Object.defineProperty(String.prototype, "hashCode", {
 		value: function(){
 			var hash = 0, i, c, l;
@@ -466,7 +468,7 @@ if(!String.prototype.hasOwnProperty("hashCode"))
 			return hash;
 		},
 		enumerable: false
-	});	
+	});
 
 //avoid errors when Typed array is expected and regular array is found
 //Array.prototype.subarray = Array.prototype.slice;
@@ -504,16 +506,16 @@ global.extendClass = GL.extendClass = function extendClass( target, origin ) {
 		for(var i = 0; i < prop_names.length; ++i) //only enumerables
 		{
 			var name = prop_names[i];
-			//if(!origin.prototype.hasOwnProperty(name)) 
+			//if(!origin.prototype.hasOwnProperty(name))
 			//	continue;
 
 			if(target.prototype.hasOwnProperty(name)) //avoid overwritting existing ones
 				continue;
 
-			//copy getters 
+			//copy getters
 			if(origin.prototype.__lookupGetter__(name))
 				target.prototype.__defineGetter__(name, origin.prototype.__lookupGetter__(name));
-			else 
+			else
 				target.prototype[name] = origin.prototype[name];
 
 			//and setters
@@ -522,11 +524,11 @@ global.extendClass = GL.extendClass = function extendClass( target, origin ) {
 		}
 	}
 
-	if(!target.hasOwnProperty("superclass")) 
+	if(!target.hasOwnProperty("superclass"))
 		Object.defineProperty(target, "superclass", {
 			get: function() { return origin },
 			enumerable: false
-		});	
+		});
 }
 
 
@@ -572,7 +574,7 @@ global.HttpRequest = GL.request = function HttpRequest( url, params, callback, e
 	{
 		LEvent.trigger(xhr,"fail",err);
 	}
-	
+
 	if(options)
 	{
 		for(var i in options)
@@ -610,10 +612,10 @@ global.getFileExtension = function getFileExtension(url)
 	if(question != -1)
 		url = url.substr(0,question);
 	var point = url.lastIndexOf(".");
-	if(point == -1) 
+	if(point == -1)
 		return "";
 	return url.substr(point+1).toLowerCase();
-} 
+}
 
 
 //allows to pack several (text)files inside one single file (useful for shaders)
@@ -623,7 +625,7 @@ global.loadFileAtlas = GL.loadFileAtlas = function loadFileAtlas(url, callback, 
 	var deferred_callback = null;
 
 	HttpRequest(url, null, function(data) {
-		var files = GL.processFileAtlas(data); 
+		var files = GL.processFileAtlas(data);
 		if(callback)
 			callback(files);
 		if(deferred_callback)
@@ -669,7 +671,7 @@ global.processFileAtlas = GL.processFileAtlas = function(data, skip_trim)
 global.halfFloatToFloat = function( h )
 {
 	function convertMantissa(i) {
-	    if (i == 0) 
+	    if (i == 0)
 			return 0
 		else if (i < 1024)
 		{
@@ -709,7 +711,7 @@ global.halfFloatToFloat = function( h )
 
 	var v = convertMantissa( convertOffset( h >> 10) + (h & 0x3ff) ) + convertExponent(h >> 10);
 	var a = new Uint32Array([v]);
-	return (new Float32Array(a.buffer))[0]; 
+	return (new Float32Array(a.buffer))[0];
 }
 */
 
@@ -722,7 +724,7 @@ global.typedArrayToArray = function(array)
 	return r;
 }
 
-global.RGBToHex = function(r, g, b) { 
+global.RGBToHex = function(r, g, b) {
 	r = Math.min(255, r*255)|0;
 	g = Math.min(255, g*255)|0;
 	b = Math.min(255, b*255)|0;
@@ -864,6 +866,7 @@ global.hexColorToRGBA = (function() {
 	return color;
 	}
 })();
+
 /**
  * @fileoverview dds - Utilities for loading DDS texture files
  * @author Brandon Jones
@@ -2056,7 +2059,7 @@ quat.fromEuler = function(out, vec) {
 };
 
 
-//not tested
+//not tested, it gives weird results sometimes
 quat.fromMat4 = function(out,m)
 {
 	var trace = m[0] + m[5] + m[10];
@@ -2066,7 +2069,7 @@ quat.fromMat4 = function(out,m)
 		out[3] = s * 0.5;//w
 		var recip = 0.5 / s;
 		out[0] = ( m[9] - m[6] ) * recip; //2,1  1,2
-		out[1] = ( m[2] - m[8] ) * recip; //0,2  2,0
+		out[1] = ( m[8] - m[2] ) * recip; //0,2  2,0
 		out[2] = ( m[4] - m[1] ) * recip; //1,0  0,1
 	}
 	else
@@ -7572,6 +7575,7 @@ function FBO( textures, depth_texture, stencil, gl )
 
 	this._stencil_enabled = false;
 	this._num_binded_textures = 0;
+	this.order = null;
 
 	//assign textures
 	if((textures && textures.length) || depth_texture)
@@ -7580,7 +7584,6 @@ function FBO( textures, depth_texture, stencil, gl )
 	//save state
 	this._old_fbo_handler = null;
 	this._old_viewport = new Float32Array(4);
-	this.order = null;
 }
 
 GL.FBO = FBO;
@@ -12842,6 +12845,278 @@ Raytracer.hitTestTriangle = function(origin, ray, a, b, c) {
 * @return {Object} mesh information (vertices, coords, normals, indices)
 */
 
+Mesh.parseOBJ = function(text, options)
+{
+	options = options || {};
+	var MATNAME_EXTENSION = options.matextension || "";//".json";
+	var support_uint = true;
+
+	//unindexed containers
+	var vertices = [];
+	var normals = [];
+	var uvs = [];
+
+	//final containers
+	var vertices_buffer_data = [];
+	var normals_buffer_data = [];
+	var uvs_buffer_data = [];
+
+	//groups
+	var group_id = 0;
+	var groups = [];
+	var current_group_materials = {};
+	var last_group_name = null;
+	var materials_found = {};
+	var mtllib = null;
+	var group = createGroup();
+
+	var indices_map = new Map();
+	var next_index = 0;
+
+	var V_CODE = 1;
+	var VT_CODE = 2;
+	var VN_CODE = 3;
+	var F_CODE = 4;
+	var G_CODE = 5;
+	var O_CODE = 6;
+	var USEMTL_CODE = 7;
+	var MTLLIB_CODE = 8;
+	var codes = { v: V_CODE, vt: VT_CODE, vn: VN_CODE, f: F_CODE, g: G_CODE, o: O_CODE, usemtl: USEMTL_CODE, mtllib: MTLLIB_CODE };
+
+	var x,y,z;
+
+	var lines = text.split("\n");
+	var length = lines.length;
+	for (var lineIndex = 0;  lineIndex < length; ++lineIndex) {
+
+		var line = lines[lineIndex];
+		line = line.replace(/[ \t]+/g, " ").replace(/\s\s*$/, ""); //better than trim
+
+		if(line[ line.length - 1 ] == "\\") //breakline support
+		{
+			lineIndex += 1;
+			var next_line = lines[lineIndex].replace(/[ \t]+/g, " ").replace(/\s\s*$/, ""); //better than trim
+			line = (line.substr(0,line.length - 1) + next_line).replace(/[ \t]+/g, " ").replace(/\s\s*$/, "");
+		}
+		
+		if (line[0] == "#")
+			continue;
+		if(line == "")
+			continue;
+
+		var tokens = line.split(" ");
+		var code = codes[ tokens[0] ];
+
+		if( code <= VN_CODE ) //v,vt,vn
+		{
+			x = parseFloat(tokens[1]);
+			y = parseFloat(tokens[2]);
+			if( code != VT_CODE ) //not always present
+				z = parseFloat(tokens[3]); 
+		}
+		
+		switch(code)
+		{
+			case V_CODE: vertices.push(x,y,z);	break;
+			case VT_CODE: uvs.push(x,y);	break;
+			case VN_CODE: normals.push(x,y,z);	break;
+			case F_CODE: 
+				if (tokens.length < 4)
+					continue; //faces with less that 3 vertices? nevermind
+				//get the triangle indices
+				var polygon_indices = [];
+				for(var i = 1; i < tokens.length; ++i)
+					polygon_indices.push( getIndex( tokens[i] ) );
+				group.indices.push( polygon_indices[0], polygon_indices[1], polygon_indices[2] );
+				//polygons are break intro triangles
+				for(var i = 2; i < polygon_indices.length-1; ++i)
+					group.indices.push( polygon_indices[0], polygon_indices[i], polygon_indices[i+1] );
+				break;
+			case G_CODE:  
+			case O_CODE:  //whats the difference?
+				var name = tokens[1];
+				last_group_name = name;
+				if(!group.name)
+					group.name = name;
+				else
+				{
+					current_group_materials = {};
+					group = createGroup( name );
+				}
+				break;
+			case USEMTL_CODE: 
+				changeMaterial( tokens[1] );
+				break;
+			case MTLLIB_CODE:
+				mtllib = tokens[1];
+				break;
+			default:
+		}
+	}
+
+	//generate indices
+	var indices = [];
+	var group_index = 0;
+	var final_groups = [];
+	for(var i = 0; i < groups.length; ++i)
+	{
+		var group = groups[i];
+		if(!group.indices) //already added?
+			continue;
+		group.start = group_index;
+		group.length = group.indices.length;
+		indices = indices.concat( group.indices );
+		delete group.indices; //do not store indices in JSON format!
+		group_index += group.length;
+		final_groups.push( group );
+	}
+	groups = final_groups;
+
+	//finish mesh
+	var mesh = {};
+
+	if(!vertices.length)
+	{
+		console.error("mesh without vertices");
+		return null;
+	}
+
+	//create typed arrays
+	mesh.vertices = new Float32Array( vertices_buffer_data );
+	if ( normals_buffer_data.length )
+		mesh.normals = new Float32Array( normals_buffer_data );
+	if ( uvs_buffer_data.length )
+		mesh.coords = new Float32Array( uvs_buffer_data );
+	if ( indices && indices.length > 0 )
+		mesh.triangles = new ( support_uint && group_index > 256*256 ? Uint32Array : Uint16Array )(indices);
+
+	//extra info
+	mesh.bounding = GL.Mesh.computeBoundingBox( mesh.vertices );
+	var info = {};
+	if(groups.length > 1)
+	{
+		info.groups = groups;
+		//compute bounding of groups? //TODO: this is complicated, it is affected by indices, etc, better done afterwards
+	}
+
+	mesh.info = info;
+	if( !mesh.bounding )
+	{
+		console.log("empty mesh");
+		return null;
+	}
+
+	if( mesh.bounding.radius == 0 || isNaN(mesh.bounding.radius))
+		console.log("no radius found in mesh");
+	//console.log(mesh);
+	return mesh;
+
+	//this function helps reuse triplets that have been created before
+	function getIndex( str )
+	{
+		var pos,tex,nor,f;
+		var has_negative = false;
+
+		//cannot use negative indices as keys, convert them to positive
+		if(str.indexOf("-") == -1)
+		{
+			var index = indices_map.get(str);
+			if(index !== undefined)
+				return index;
+		}
+		else
+			has_negative = true;
+
+		if(!f) //maybe it was parsed before
+			f = str.split("/");
+
+		if (f.length == 1) { //unpacked
+			pos = parseInt(f[0]);
+			tex = pos;
+			nor = pos;
+		}
+		else if (f.length == 2) { //no normals
+			pos = parseInt(f[0]);
+			tex = parseInt(f[1]);
+			nor = pos;
+		}
+		else if (f.length == 3) { //all three indexed
+			pos = parseInt(f[0]);
+			tex = parseInt(f[1]);
+			nor = parseInt(f[2]);
+		}
+		else {
+			console.log("Problem parsing: unknown number of values per face");
+			return -1;
+		}
+
+		//negative indices are relative to the end
+		if(pos < 0) 
+			pos = vertices.length / 3 + pos + 1;
+		if(nor < 0)
+			nor = normals.length / 2 + nor + 1;
+		if(tex < 0)
+			tex = uvs.length / 2 + tex + 1;
+
+		//try again to see if we already have this
+		if(has_negative)
+		{
+			str = pos + "/" + tex + "/" + nor;
+			var index = indices_map.get(str);
+			if(index !== undefined)
+				return index;
+		}
+
+		//fill buffers
+		pos -= 1; tex -= 1; nor -= 1; //indices in obj start in 1, buffers in 0
+		vertices_buffer_data.push( vertices[pos*3+0], vertices[pos*3+1], vertices[pos*3+2] );
+		if(uvs.length)
+			uvs_buffer_data.push( uvs[tex*2+0], uvs[tex*2+1] );
+		if(normals.length)
+			normals_buffer_data.push( normals[nor*3+0], normals[nor*3+1], normals[nor*3+2] );
+
+		//store index
+		var index = next_index;
+		indices_map.set( str, index );
+		++next_index;
+		return index;
+	}
+
+	function createGroup( name )
+	{
+		var g = {
+			name: name || "",
+			material: "",
+			start: -1,
+			length: -1,
+			indices: []
+		};
+		groups.push(g);
+		return g;
+	}
+
+	function changeMaterial( material_name )
+	{
+		if( !group.material )
+		{
+			group.material = material_name + MATNAME_EXTENSION;
+			current_group_materials[ material_name ] = group;
+			return group;
+		}
+
+		var g = current_group_materials[ material_name ];
+		if(!g)
+		{
+			g = createGroup( last_group_name + "_" + material_name );
+			g.material = material_name + MATNAME_EXTENSION;
+			current_group_materials[ material_name ] = g;
+		}
+		group = g;
+		return g;
+	}
+}
+
+/*
 Mesh.parseOBJ = function( text, options )
 {
 	options = options || {};
@@ -13135,7 +13410,7 @@ Mesh.parseOBJ = function( text, options )
 		mesh.triangles = new Uint16Array(indicesArray);
 
 	var info = {};
-	if(groups.length > 1)
+	//if(groups.length > 1) //???
 		info.groups = groups;
 	mesh.info = info;
 
@@ -13148,6 +13423,7 @@ Mesh.parseOBJ = function( text, options )
 	final_mesh.updateBoundingBox();
 	return final_mesh;
 }
+*/
 
 Mesh.parsers["obj"] = Mesh.parseOBJ;
 
