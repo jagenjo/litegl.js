@@ -15,7 +15,7 @@ var texture = new GL.Texture(512,512, { magFilter: gl.LINEAR });
 var fbo = new GL.FBO([texture]);
 ```
 
-One created if we want to render the scene inside the texture, we must bind the FBO, do the render calls and once finished rendering inside the texture, unbind it:
+Once the FBO is created, when we want to render the scene inside the texture we must bind the FBO, do the render calls and once finished rendering inside the texture, unbind it:
 
 ```js
 fbo.bind();
@@ -51,6 +51,23 @@ As you can see we not only created two color textures (texture_albedo and textur
 
 Remember that the FBO requires that all color textures have the same settings (size, format, etc).
 
+## gl_FragColor vs gl_FragData
+
+To render to multiple buffer remember your shader must use gl_FragData instead of gl_FragColor:
+
+```c
+gl_FragData[0] = vec4(...);
+gl_FragData[1] = vec4(...);
+```
+If you just want to draw to the first buffer skipping the rest without having to change FBO (useful for debug rendering) you can do it using the ```toSingle``` method:
+
+```js
+myfbo.toSingle();
+//render something using a shader that uses gl_FragColor
+//...
+myfbo.toMulti();
+```
+
 ## Using texture.drawTo(...)
 
 There is another way to render to a texture if you dont want to create the FBO, you can use the drawTo method in the class texture, this is a little bit slower though:
@@ -64,3 +81,4 @@ texture.drawTo( function(){
 ```
 
 Check the [examples folder](https://github.com/jagenjo/litegl.js/tree/master/examples) to see more about FBOs.
+
