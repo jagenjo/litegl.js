@@ -7,7 +7,6 @@
 * @return {Object} mesh information (vertices, coords, normals, indices)
 */
 
-/*
 Mesh.parseOBJ = function(text, options)
 {
 	options = options || {};
@@ -172,7 +171,14 @@ Mesh.parseOBJ = function(text, options)
 	if( mesh.bounding.radius == 0 || isNaN(mesh.bounding.radius))
 		console.log("no radius found in mesh");
 	//console.log(mesh);
-	return mesh;
+	if(options.only_data)
+		return mesh;
+
+	//creates and returns a GL.Mesh
+	var final_mesh = null;
+	final_mesh = Mesh.load( mesh, null, options.mesh );
+	final_mesh.updateBoundingBox();
+	return final_mesh;
 
 	//this function helps reuse triplets that have been created before
 	function getIndex( str )
@@ -278,8 +284,8 @@ Mesh.parseOBJ = function(text, options)
 		return g;
 	}
 }
-*/
 
+/* old 
 Mesh.parseOBJ = function( text, options )
 {
 	options = options || {};

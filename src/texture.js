@@ -661,13 +661,7 @@ Texture.prototype.drawTo = function(callback, params)
 	return this;
 }
 
-/**
-* Static version of drawTo meant to be used with several buffers
-* @method drawToColorAndDepth
-* @param {Texture} color_texture
-* @param {Texture} depth_texture
-* @param {Function} callback
-*/
+/*
 Texture.drawTo = function( color_textures, callback, depth_texture )
 {
 	var w = -1,
@@ -773,13 +767,6 @@ Texture.drawTo = function( color_textures, callback, depth_texture )
 	gl.viewport(v[0], v[1], v[2], v[3]);
 }
 
-/**
-* Similar to drawTo but it also stores the depth in a depth texture
-* @method drawToColorAndDepth
-* @param {Texture} color_texture
-* @param {Texture} depth_texture
-* @param {Function} callback
-*/
 Texture.drawToColorAndDepth = function( color_texture, depth_texture, callback ) {
 	var gl = color_texture.gl; //static function
 
@@ -806,7 +793,7 @@ Texture.drawToColorAndDepth = function( color_texture, depth_texture, callback )
 
 	gl.viewport(v[0], v[1], v[2], v[3]);
 }
-
+*/
 
 
 /**
@@ -877,7 +864,7 @@ Texture.prototype.copyTo = function( target_texture, shader, uniforms ) {
 			var attachment_point = target_texture.format == gl.DEPTH_STENCIL ? gl.DEPTH_STENCIL_ATTACHMENT : gl.DEPTH_ATTACHMENT;
 			gl.framebufferTexture2D( gl.FRAMEBUFFER, attachment_point, gl.TEXTURE_2D, target_texture.handler, 0);
 
-			var complete = gl.checkFramebufferStatus( gl.FRAMEBUFFER );
+			var complete = gl.checkFramebufferStatus( gl.FRAMEBUFFER ); //this line is slow according to Mozilla?
 			if(complete !== gl.FRAMEBUFFER_COMPLETE)
 				throw("FBO not complete: " + complete);
 
