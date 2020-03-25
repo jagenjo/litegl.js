@@ -7,6 +7,7 @@
 * @return {Object} mesh information (vertices, coords, normals, indices)
 */
 
+/*
 Mesh.parseOBJ = function(text, options)
 {
 	options = options || {};
@@ -277,8 +278,8 @@ Mesh.parseOBJ = function(text, options)
 		return g;
 	}
 }
+*/
 
-/*
 Mesh.parseOBJ = function( text, options )
 {
 	options = options || {};
@@ -585,7 +586,7 @@ Mesh.parseOBJ = function( text, options )
 	final_mesh.updateBoundingBox();
 	return final_mesh;
 }
-*/
+//*/
 
 Mesh.parsers["obj"] = Mesh.parseOBJ;
 

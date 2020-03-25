@@ -4250,13 +4250,15 @@ Mesh.fromURL = function(url, on_complete, gl, options)
 
 	var pos = url.lastIndexOf(".");
 	var extension = url.substr(pos+1).toLowerCase();
+	if(options.extension)
+		extension = options.extension;
 	options.binary = Mesh.binary_file_formats[ extension ];
 
 	HttpRequest( url, null, function(data) {
 		mesh.parse( data, extension );
 		delete mesh["ready"];
 		if(on_complete)
-			on_complete.call(mesh,mesh, url);
+			on_complete.call(mesh, mesh, url);
 	}, function(err){
 		if(on_complete)
 			on_complete(null);
@@ -12845,6 +12847,7 @@ Raytracer.hitTestTriangle = function(origin, ray, a, b, c) {
 * @return {Object} mesh information (vertices, coords, normals, indices)
 */
 
+/*
 Mesh.parseOBJ = function(text, options)
 {
 	options = options || {};
@@ -13115,8 +13118,8 @@ Mesh.parseOBJ = function(text, options)
 		return g;
 	}
 }
+*/
 
-/*
 Mesh.parseOBJ = function( text, options )
 {
 	options = options || {};
@@ -13423,7 +13426,7 @@ Mesh.parseOBJ = function( text, options )
 	final_mesh.updateBoundingBox();
 	return final_mesh;
 }
-*/
+//*/
 
 Mesh.parsers["obj"] = Mesh.parseOBJ;
 

@@ -2042,13 +2042,15 @@ Mesh.fromURL = function(url, on_complete, gl, options)
 
 	var pos = url.lastIndexOf(".");
 	var extension = url.substr(pos+1).toLowerCase();
+	if(options.extension)
+		extension = options.extension;
 	options.binary = Mesh.binary_file_formats[ extension ];
 
 	HttpRequest( url, null, function(data) {
 		mesh.parse( data, extension );
 		delete mesh["ready"];
 		if(on_complete)
-			on_complete.call(mesh,mesh, url);
+			on_complete.call(mesh, mesh, url);
 	}, function(err){
 		if(on_complete)
 			on_complete(null);
