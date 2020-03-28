@@ -893,3 +893,128 @@ Mesh.icosahedron = function( options, gl ) {
 
 	return new GL.Mesh.load({vertices: vertices, coords: coords, normals: normals, triangles: indices},options,gl);
 }
+
+/**
+* Returns a closed shape from a 2D closed line, it can be extruded!
+* @method Mesh.shape
+* @param {Object} options valid options: extrude, xy
+*/
+Mesh.shape = function( line, options, gl ) {
+	options = options || {};
+	if(typeof(earcut) === "undefined")
+		throw("To use GL.Mesh.shape you must download and include earcut.js (do not link it directly!): https://raw.githubusercontent.com/mapbox/earcut/master/src/earcut.js");
+	if(!line || !line.length || line.length % 2 == 1)
+		throw("GL.Mesh.shape line missing, must be an array of 2D vertices");
+	var ext = options.extrude || 0;
+	if(line[0].constructor === Array)
+		line = earcut.flatten( line );
+	var triangulation = earcut( line ).reverse();
+	console.log(triangulation);
+	var vertices = [];
+	var normals = [];
+	var uvs = [];
+
+	//bounding
+	var minmaxX = [line[0],line[1]];
+	var minmaxY = [line[0],line[1]];
+	for(var i = 0; i < line.length; i+=2)
+	{
+		minmaxX[0] = Math.min(minmaxX[0],line[i]);
+		minmaxX[1] = Math.max(minmaxX[1],line[i]);
+		minmaxY[0] = Math.min(minmaxY[0],line[i+1]);
+		minmaxY[1] = Math.max(minmaxY[1],line[i+1]);
+	}
+	var rangeX = minmaxX[1] - minmaxX[0];
+	var rangeY = minmaxY[1] - minmaxY[0];
+	var groups = [];
+	var indices = null;
+	if(ext)
+	{
+		indices = [];
+		var N = vec3.create();
+		//side
+		var num = line.length;
+		for(var i = 0; i < line.length; i+=2)
+		{
+			var x = line[i];
+			var y = line[i+1];
+			var x2 = line[(i+2)%num];
+			var y2 = line[(i+3)%num];
+			var A = vertices.length/3;
+			vertices.push(x,ext*0.5,y); //top
+			vertices.push(x,ext*-0.5,y); //bottom
+			vertices.push(x2,ext*0.5,y2); //top next
+			vertices.push(x2,ext*-0.5,y2); //bottom next
+			vec3.normalize(N,vec3.cross(N,[0,1,0],[x2-x,0,y2-y]));
+			normals.push(N[0],N[1],N[2],N[0],N[1],N[2],N[0],N[1],N[2],N[0],N[1],N[2]);
+			var u = (x - minmaxX[0]) / rangeX;
+			var v = (y - minmaxY[0]) / rangeY;
+			var u2 = (x2 - minmaxX[0]) / rangeX;
+			var v2 = (y2 - minmaxY[0]) / rangeY;
+			uvs.push(u,v,u,v,u2,v2,u2,v2);
+			indices.push(A,A+2,A+1,A+2,A+3,A+1);
+		}
+		groups.push({name:"side",start:0,length:indices.length});
+
+		//caps
+		var offset = vertices.length / 3;
+		var start = indices.length;
+		for(var i = 0; i < line.length; i+=2)
+		{
+			var x = line[i];
+			var y = line[i+1];
+			var u = (x - minmaxX[0]) / rangeX;
+			var v = (y - minmaxY[0]) / rangeY;
+			vertices.push(x,ext*0.5,y); //top
+			vertices.push(x,ext*-0.5,y); //bottom
+			normals.push(0,1,0,0,-1,0);
+			uvs.push(u,v,u,v);
+		}
+
+		for(var i = 0; i < triangulation.length; i+=3)
+		{
+			indices.push(offset+triangulation[i]*2,offset+triangulation[i+1]*2,offset+triangulation[i+2]*2);
+			indices.push(offset+triangulation[i]*2+1,offset+triangulation[i+2]*2+1,offset+triangulation[i+1]*2+1);
+		}
+		groups.push({name:"caps",start:start,length:indices.length});
+
+		options.bounding = BBox.fromCenterHalfsize( [(minmaxX[0]+minmaxX[1])*0.5,0,(minmaxY[0]+minmaxY[1])*0.5], [rangeX*0.5,ext*0.5,rangeY*0.5], vec2.len([rangeX*0.5,ext*0.5,rangeY*0.5]) );
+	}
+	else //flat
+	{
+		//cap
+		for(var i = 0; i < line.length; i+=2)
+		{
+			vertices.push(line[i],0,line[i+1]);
+			normals.push(0,1,0);
+			uvs.push( (line[i] - minmaxX[0]) / rangeX,(line[i+1] - minmaxY[0]) / rangeY );
+		}
+		indices = triangulation;
+		groups.push({name:"side",start:0,length:indices.length});
+		options.bounding = BBox.fromCenterHalfsize( [(minmaxX[0]+minmaxX[1])*0.5,0,(minmaxY[0]+minmaxY[1])*0.5], [rangeX*0.5,0,rangeY*0.5], vec2.len([rangeX*0.5,0,rangeY*0.5]) );
+	}
+
+	if(options.xy)
+	{
+		for(var i = 0; i < vertices.length; i+=3)
+		{
+			swap( vertices, i);
+			swap( normals, i);
+		}
+		if(ext)
+			options.bounding = BBox.fromCenterHalfsize( [(minmaxX[0]+minmaxX[1])*0.5,(minmaxY[0]+minmaxY[1])*0.5,0], [rangeX*0.5,rangeY*0.5,ext*0.5], vec2.len([rangeX*0.5,rangeY*0.5,ext*0.5]) );
+		else
+			options.bounding = BBox.fromCenterHalfsize( [(minmaxX[0]+minmaxX[1])*0.5,(minmaxY[0]+minmaxY[1])*0.5,0], [rangeX*0.5,rangeY*0.5,0], vec2.len([rangeX*0.5,rangeY*0.5,0]) );
+	}
+
+	options.info = { groups: groups };
+
+	return new GL.Mesh.load({vertices: vertices, coords: uvs, normals: normals, triangles: indices},options,gl);
+
+	function swap(v,pos)
+	{
+		var tmp = v[pos+1];
+		v[pos+1] = v[pos+2];
+		v[pos+2] = -tmp;
+	}
+}

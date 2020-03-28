@@ -981,19 +981,30 @@ Texture.prototype.toViewport = function(shader, uniforms)
 }
 
 /**
-* Fills the texture with a constant color (uses gl.clear)
+* Fills the texture with a constant color (uses gl.clear) or shader
 * @method fill
-* @param {vec4} color rgba
+* @param {vec4|GL.Shader} color rgba or shader
 * @param {boolean} skip_mipmaps if true the mipmaps wont be updated
 */
-Texture.prototype.fill = function(color, skip_mipmaps )
+Texture.prototype.fill = function(color_or_shader, skip_mipmaps )
 {
-	var old_color = gl.getParameter( gl.COLOR_CLEAR_VALUE );
-	gl.clearColor( color[0], color[1], color[2], color[3] );
-	this.drawTo( function() {
-		gl.clear( gl.COLOR_BUFFER_BIT );	
-	});
-	gl.clearColor( old_color[0], old_color[1], old_color[2], old_color[3] );
+	if(color_or_shader.constructor === GL.Shader)
+	{
+		var shader = color_or_shader;
+		this.drawTo( function() {
+			shader.toViewport();
+		});
+	}
+	else
+	{
+		var color = color_or_shader;
+		var old_color = gl.getParameter( gl.COLOR_CLEAR_VALUE );
+		gl.clearColor( color[0], color[1], color[2], color[3] );
+		this.drawTo( function() {
+			gl.clear( gl.COLOR_BUFFER_BIT );	
+		});
+		gl.clearColor( old_color[0], old_color[1], old_color[2], old_color[3] );
+	}
 
 	if (!skip_mipmaps && this.minFilter && this.minFilter != gl.NEAREST && this.minFilter != gl.LINEAR ) {
 		this.bind();

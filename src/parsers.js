@@ -34,6 +34,9 @@ Mesh.parseOBJ = function(text, options)
 
 	var indices_map = new Map();
 	var next_index = 0;
+	var s = 1; //scaling to change unit system
+	if(options.scale)
+		s = options.scale;
 
 	var V_CODE = 1;
 	var VT_CODE = 2;
@@ -79,7 +82,10 @@ Mesh.parseOBJ = function(text, options)
 		
 		switch(code)
 		{
-			case V_CODE: vertices.push(x,y,z);	break;
+			case V_CODE: 
+				x *= s; y *= s; z *= s;
+				vertices.push(x,y,z);
+				break;
 			case VT_CODE: uvs.push(x,y);	break;
 			case VN_CODE: normals.push(x,y,z);	break;
 			case F_CODE: 
@@ -168,8 +174,8 @@ Mesh.parseOBJ = function(text, options)
 		return null;
 	}
 
-	if( mesh.bounding.radius == 0 || isNaN(mesh.bounding.radius))
-		console.log("no radius found in mesh");
+	//if( mesh.bounding.radius == 0 || isNaN(mesh.bounding.radius))
+	//	console.log("no radius found in mesh");
 	//console.log(mesh);
 	if(options.only_data)
 		return mesh;
@@ -177,7 +183,7 @@ Mesh.parseOBJ = function(text, options)
 	//creates and returns a GL.Mesh
 	var final_mesh = null;
 	final_mesh = Mesh.load( mesh, null, options.mesh );
-	final_mesh.updateBoundingBox();
+	//final_mesh.updateBoundingBox();
 	return final_mesh;
 
 	//this function helps reuse triplets that have been created before

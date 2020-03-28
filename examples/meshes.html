@@ -13,7 +13,8 @@
 
 </head>
 <body>
-
+	<script>if(typeof(window.module) == "undefined") window.module = {};</script>
+	<script type="text/javascript" src="../external/earcut.js"></script>
 	<script type="text/javascript" src="../external/gl-matrix.js"></script>
 	<script type="text/javascript" src="../build/litegl.js"></script>
 	<script type="text/javascript">
@@ -27,7 +28,7 @@
 
 	//build the mesh
 	var objects = [];
-	for(var i = 0; i < 13; i++)
+	for(var i = 0; i < 14; i++)
 	{
 		var object = {};
 		object.primitive = gl.TRIANGLES;
@@ -50,6 +51,7 @@
 	objects[10].mesh = GL.Mesh.cone({radius:0.5,height:1});
 	objects[11].mesh = GL.Mesh.torus({innerradius:0.25,outerradius:1,innerslices:8});
 	objects[12].mesh = GL.Mesh.ring({radius:1,thickness:0.2,slices:32,xz:false});
+	objects[13].mesh = GL.Mesh.shape([-1,-1,1,-1,1,1,0.4,0.4,-0.3,1,-1,0.3,-0.4,-0.4],{extrude:1,xy:true});
 	//objects[11].primitive = gl.POINTS;
 
 	//create basic matrices for cameras and transformation

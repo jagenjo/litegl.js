@@ -2047,7 +2047,7 @@ Mesh.fromURL = function(url, on_complete, gl, options)
 	options.binary = Mesh.binary_file_formats[ extension ];
 
 	HttpRequest( url, null, function(data) {
-		mesh.parse( data, extension );
+		mesh.parse( data, extension, options );
 		delete mesh["ready"];
 		if(on_complete)
 			on_complete.call(mesh, mesh, url);
@@ -2066,12 +2066,14 @@ Mesh.fromURL = function(url, on_complete, gl, options)
 * @param {String} format parser file format name (p.e. "obj")
 * @return {?} depending on the parser
 */
-Mesh.prototype.parse = function( data, format )
+Mesh.prototype.parse = function( data, format, options )
 {
+	options = options || {};
+	options.mesh = this;
 	format = format.toLowerCase();
 	var parser = GL.Mesh.parsers[ format ];
 	if(parser)
-		return parser.call(null, data, {mesh: this});
+		return parser.call(null, data, options);
 	throw("GL.Mesh.parse: no parser found for format " + format );
 }
 
