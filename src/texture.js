@@ -144,9 +144,10 @@ global.Texture = GL.Texture = function Texture( width, height, options, gl ) {
 		return new Uint8Array( data );
 	}
 
-	//gl.TEXTURE_1D is not supported by WebGL...
+	Texture.setUploadOptions(options);
 
 	//here we create all **********************************
+	//gl.TEXTURE_1D is not supported by WebGL...
 	if(this.texture_type == GL.TEXTURE_2D)
 	{
 		//create the texture
@@ -161,8 +162,19 @@ global.Texture = GL.Texture = function Texture( width, height, options, gl ) {
 	}
 	else if(this.texture_type == GL.TEXTURE_CUBE_MAP)
 	{
+		var facesize = width*width*(this.format == GL.RGBA ? 4 : 3);
 		for(var i = 0; i < 6; ++i)
-			gl.texImage2D( gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, this.internalFormat, this.width, this.height, 0, this.format, this.type, pixel_data ? pixel_data[i] : null );
+		{
+			var cubemap_data = pixel_data;
+			if(cubemap_data)
+			{
+				if(cubemap_data.constructor === Array) //six arrays
+					cubemap_data = cubemap_data[i];
+				else //all data mixed in a single array
+					cubemap_data.subarray(facesize*i, facesize*(i+1));
+			}
+			gl.texImage2D( gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, this.internalFormat, this.width, this.height, 0, this.format, this.type, cubemap_data || null );
+		}
 	}
 	else if(this.texture_type == GL.TEXTURE_3D)
 	{
@@ -201,7 +213,7 @@ Texture.prototype.computeInternalFormat = function()
 	//automatic selection of internal format for depth textures to avoid problems between webgl1 and 2
 	if( this.format == GL.DEPTH_COMPONENT )
 	{
-		this.minFilter = this.magFilter = GL.NEAREST;
+		this.minFilter = GL.NEAREST; //this.magFilter = 
 
 		if( gl.webgl_version == 2 ) 
 		{
@@ -1227,6 +1239,8 @@ Texture.fromURL = function( url, options, on_complete, gl ) {
 			if(!img_data)
 				return;
 			options.texture = texture;
+			if(img_data.flipY)
+				options.no_flip = true;
 			if(img_data.format == "RGB")
 				texture.format = gl.RGB;
 			texture = GL.Texture.fromMemory( img_data.width, img_data.height, img_data.pixels, options );
@@ -1281,26 +1295,15 @@ Texture.parseTGA = function(data)
 	img.imageSize = img.width * img.height * img.bytesPerPixel;
 	img.pixels = data.subarray(18,18+img.imageSize);
 	img.pixels = new Uint8Array( img.pixels ); 	//clone
-	if(	(header[5] & (1<<4)) == 0) //hack, needs swap
+	img.flipY = ((header[5] & (1<<5)) == 0); //needs swap in Y
+	//TGA comes in BGR format so we swap it, this is slooooow
+	for(var i = 0; i < img.imageSize; i+= img.bytesPerPixel)
 	{
-		//TGA comes in BGR format so we swap it, this is slooooow
-		for(var i = 0; i < img.imageSize; i+= img.bytesPerPixel)
-		{
-			var temp = img.pixels[i];
-			img.pixels[i] = img.pixels[i+2];
-			img.pixels[i+2] = temp;
-		}
-		header[5] |= 1<<4; //mark as swaped
-		img.format = img.bpp == 32 ? "RGBA" : "RGB";
+		var temp = img.pixels[i];
+		img.pixels[i] = img.pixels[i+2];
+		img.pixels[i+2] = temp;
 	}
-	else
-		img.format = img.bpp == 32 ? "RGBA" : "RGB";
-	//some extra bytes to avoid alignment problems
-	//img.pixels = new Uint8Array( img.imageSize + 14);
-	//img.pixels.set( data.subarray(18,18+img.imageSize), 0);
-	img.flipY = true;
-	//img.format = img.bpp == 32 ? "BGRA" : "BGR";
-	//trace("TGA info: " + img.width + "x" + img.height );
+	img.format = img.bpp == 32 ? "RGBA" : "RGB";
 	return img;
 }
 

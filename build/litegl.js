@@ -3826,6 +3826,9 @@ Mesh.prototype.computeGroupsBoundingBoxes = function()
 		return false;
 
 	var groups = this.info.groups;
+	if(!groups)
+		return;
+
 	for(var i = 0; i < groups.length; ++i)
 	{
 		var group = groups[i];
@@ -4258,7 +4261,7 @@ Mesh.fromURL = function(url, on_complete, gl, options)
 		mesh.parse( data, extension, options );
 		delete mesh["ready"];
 		if(on_complete)
-			on_complete.call(mesh, mesh, url);
+			on_complete.call(mesh, mesh, url, options);
 	}, function(err){
 		if(on_complete)
 			on_complete(null);
@@ -5613,9 +5616,10 @@ global.Texture = GL.Texture = function Texture( width, height, options, gl ) {
 		return new Uint8Array( data );
 	}
 
-	//gl.TEXTURE_1D is not supported by WebGL...
+	Texture.setUploadOptions(options);
 
 	//here we create all **********************************
+	//gl.TEXTURE_1D is not supported by WebGL...
 	if(this.texture_type == GL.TEXTURE_2D)
 	{
 		//create the texture
@@ -5630,8 +5634,19 @@ global.Texture = GL.Texture = function Texture( width, height, options, gl ) {
 	}
 	else if(this.texture_type == GL.TEXTURE_CUBE_MAP)
 	{
+		var facesize = width*width*(this.format == GL.RGBA ? 4 : 3);
 		for(var i = 0; i < 6; ++i)
-			gl.texImage2D( gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, this.internalFormat, this.width, this.height, 0, this.format, this.type, pixel_data ? pixel_data[i] : null );
+		{
+			var cubemap_data = pixel_data;
+			if(cubemap_data)
+			{
+				if(cubemap_data.constructor === Array) //six arrays
+					cubemap_data = cubemap_data[i];
+				else //all data mixed in a single array
+					cubemap_data.subarray(facesize*i, facesize*(i+1));
+			}
+			gl.texImage2D( gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, this.internalFormat, this.width, this.height, 0, this.format, this.type, cubemap_data || null );
+		}
 	}
 	else if(this.texture_type == GL.TEXTURE_3D)
 	{
@@ -5670,7 +5685,7 @@ Texture.prototype.computeInternalFormat = function()
 	//automatic selection of internal format for depth textures to avoid problems between webgl1 and 2
 	if( this.format == GL.DEPTH_COMPONENT )
 	{
-		this.minFilter = this.magFilter = GL.NEAREST;
+		this.minFilter = GL.NEAREST; //this.magFilter = 
 
 		if( gl.webgl_version == 2 ) 
 		{
@@ -6696,6 +6711,8 @@ Texture.fromURL = function( url, options, on_complete, gl ) {
 			if(!img_data)
 				return;
 			options.texture = texture;
+			if(img_data.flipY)
+				options.no_flip = true;
 			if(img_data.format == "RGB")
 				texture.format = gl.RGB;
 			texture = GL.Texture.fromMemory( img_data.width, img_data.height, img_data.pixels, options );
@@ -6750,26 +6767,15 @@ Texture.parseTGA = function(data)
 	img.imageSize = img.width * img.height * img.bytesPerPixel;
 	img.pixels = data.subarray(18,18+img.imageSize);
 	img.pixels = new Uint8Array( img.pixels ); 	//clone
-	if(	(header[5] & (1<<4)) == 0) //hack, needs swap
+	img.flipY = ((header[5] & (1<<5)) == 0); //needs swap in Y
+	//TGA comes in BGR format so we swap it, this is slooooow
+	for(var i = 0; i < img.imageSize; i+= img.bytesPerPixel)
 	{
-		//TGA comes in BGR format so we swap it, this is slooooow
-		for(var i = 0; i < img.imageSize; i+= img.bytesPerPixel)
-		{
-			var temp = img.pixels[i];
-			img.pixels[i] = img.pixels[i+2];
-			img.pixels[i+2] = temp;
-		}
-		header[5] |= 1<<4; //mark as swaped
-		img.format = img.bpp == 32 ? "RGBA" : "RGB";
+		var temp = img.pixels[i];
+		img.pixels[i] = img.pixels[i+2];
+		img.pixels[i+2] = temp;
 	}
-	else
-		img.format = img.bpp == 32 ? "RGBA" : "RGB";
-	//some extra bytes to avoid alignment problems
-	//img.pixels = new Uint8Array( img.imageSize + 14);
-	//img.pixels.set( data.subarray(18,18+img.imageSize), 0);
-	img.flipY = true;
-	//img.format = img.bpp == 32 ? "BGRA" : "BGR";
-	//trace("TGA info: " + img.width + "x" + img.height );
+	img.format = img.bpp == 32 ? "RGBA" : "RGB";
 	return img;
 }
 
@@ -8056,15 +8062,16 @@ FBO.testSupport = function( type, format ) {
 	return true;
 }
 
-FBO.prototype.toSingle = function()
+FBO.prototype.toSingle = function(index)
 {
+	index = index || 0;
 	if( this.color_textures.length < 2 )
 		return; //nothing to do
 	var ext = gl.extensions.WEBGL_draw_buffers;
 	if( ext )
-		ext.drawBuffersWEBGL( [ this.order[0] ] );
+		ext.drawBuffersWEBGL( [ this.order[index] ] );
 	else
-		gl.drawBuffers( [ this.order[0] ] );
+		gl.drawBuffers( [ this.order[index] ] );
 }
 
 FBO.prototype.toMulti = function()
@@ -8705,6 +8712,7 @@ Shader.prototype.drawBuffers = function( vertexBuffers, indexBuffer, mode, range
 	  } else {
 		gl.drawArrays(mode, offset, length);
 	  }
+	  gl.draw_calls++;
 	}
 
 	return this;
@@ -9777,6 +9785,8 @@ GL.create = function(options) {
 	gl.textures = {};
 	gl.meshes = {};
 
+	gl.draw_calls = 0;
+
 	/**
 	* sets this context as the current global gl context (in case you have more than one)
 	* @method makeCurrent
@@ -9816,6 +9826,7 @@ GL.create = function(options) {
 		var post = global.requestAnimationFrame;
 		var time = getTime();
 		var context = this;
+		var last_mouse_buttons = 0;
 
 		//loop only if browser tab visible
 		function loop() {
@@ -9827,7 +9838,8 @@ GL.create = function(options) {
 			var now = getTime();
 			var dt = (now - time) * 0.001;
 			if(context.mouse)
-				context.mouse.last_buttons = context.mouse.buttons;
+				context.mouse.last_buttons = last_mouse_buttons;
+			last_mouse_buttons = context.mouse.buttons;
 			if (context.onupdate) 
 				context.onupdate(dt);
 			LEvent.trigger( context, "update", dt);
@@ -10108,6 +10120,8 @@ GL.create = function(options) {
 		simulatedEvent.originalEvent = simulatedEvent;
 		simulatedEvent.is_touch = true;
 		first.target.dispatchEvent( simulatedEvent );
+
+		//if we block this touch (to avoid weird canvas draggings) then we are blocking the gestures
 		e.preventDefault();
 	}
 
@@ -10667,6 +10681,8 @@ GL.isMobile = function()
 	if( (navigator.userAgent.match(/iPhone/i)) || 
 		(navigator.userAgent.match(/iPod/i)) || 
 		(navigator.userAgent.match(/iPad/i)) || 
+		(navigator.userAgent.match(/SamsungBrowser/i)) || 
+		(navigator.userAgent.match(/Mobile\ VR/i)) || 
 		(navigator.userAgent.match(/Android/i))) {
 		return this.mobile = true;
 	}
@@ -12151,14 +12167,14 @@ global.planeBoxOverlap = GL.planeBoxOverlap = function planeBoxOverlap(plane, bo
 * @param {Mesh} mesh object containing vertices buffer (indices buffer optional)
 */
 
-global.Octree = GL.Octree = function Octree( mesh )
+global.Octree = GL.Octree = function Octree( mesh, start, length )
 {
 	this.root = null;
 	this.total_depth = 0;
 	this.total_nodes = 0;
 	if(mesh)
 	{
-		this.buildFromMesh(mesh);
+		this.buildFromMesh(mesh, start, length);
 		this.total_nodes = this.trim();
 	}
 }
@@ -12176,17 +12192,25 @@ Octree.ALL = 2;  //returns the all collisions
 var octree_tested_boxes = 0;
 var octree_tested_triangles = 0;
 
-Octree.prototype.buildFromMesh = function( mesh )
+Octree.prototype.buildFromMesh = function( mesh, start, length )
 {
 	this.total_depth = 0;
 	this.total_nodes = 0;
+	start = start || 0;
 
 	var vertices = mesh.getBuffer("vertices").data;
 	var triangles = mesh.getIndexBuffer("triangles");
 	if(triangles) 
 		triangles = triangles.data; //get the internal data
 
-	var root = this.computeAABB(vertices);
+	if( !length )
+		length = triangles ? triangles.length : vertices.length / 3;
+
+	var root = null;
+	if( triangles )
+		root = this.computeAABBFromIndices(vertices,triangles,start,length);
+	else
+		root = this.computeAABB(vertices);
 	this.root = root;
 	this.total_nodes = 1;
 	this.total_triangles = triangles ? triangles.length / 3 : vertices.length / 9;
@@ -12204,11 +12228,11 @@ Octree.prototype.buildFromMesh = function( mesh )
 	root.faces = [];
 	root.inside = 0;
 
-
 	//indexed
+	var end = start + length;
 	if(triangles)
 	{
-		for(var i = 0; i < triangles.length; i+=3)
+		for(var i = start; i < end; i+=3)
 		{
 			var face = new Float32Array([vertices[triangles[i]*3], vertices[triangles[i]*3+1],vertices[triangles[i]*3+2],
 						vertices[triangles[i+1]*3], vertices[triangles[i+1]*3+1],vertices[triangles[i+1]*3+2],
@@ -12218,7 +12242,7 @@ Octree.prototype.buildFromMesh = function( mesh )
 	}
 	else
 	{
-		for(var i = 0; i < vertices.length; i+=9)
+		for(var i = start*3; i < length*3; i+=9) //vertices
 		{
 			var face = new Float32Array( 10 );
 			face.set( vertices.subarray(i,i+9) );
@@ -12334,6 +12358,30 @@ Octree.prototype.computeAABB = function(vertices)
 				min[j] = vertices[i+j];
 			if(max[j] < vertices[i+j]) 
 				max[j] = vertices[i+j];
+		}
+	}
+
+	return {min: min, max: max, size: vec3.sub( vec3.create(), max, min) };
+}
+
+Octree.prototype.computeAABBFromIndices = function(vertices,indices,start,length)
+{
+	start = start || 0;
+	length = length || indices.length;
+
+	var index = indices[start];
+	var min = new Float32Array([ vertices[index*3], vertices[index*3+1], vertices[index*3+2] ]);
+	var max = new Float32Array([ vertices[index*3], vertices[index*3+1], vertices[index*3+2] ]);
+
+	for(var i = start+1; i < start+length; ++i)
+	{
+		var index = indices[i]*3;
+		for(var j = 0; j < 3; j++)
+		{
+			if(min[j] > vertices[index+j]) 
+				min[j] = vertices[index+j];
+			if(max[j] < vertices[index+j]) 
+				max[j] = vertices[index+j];
 		}
 	}
 
@@ -13115,6 +13163,13 @@ Mesh.parseOBJ = function(text, options)
 		return null;
 	}
 
+	if(options.flip_normals && normals_buffer_data.length)
+	{
+		var normals = normals_buffer_data;
+		for(var i = 0; i < normals.length; ++i)
+			normals[i] *= -1;
+	}
+
 	//create typed arrays
 	mesh.vertices = new Float32Array( vertices_buffer_data );
 	if ( normals_buffer_data.length )
@@ -13616,7 +13671,10 @@ Mesh.encoders["obj"] = function( mesh, options )
 		{
 			var group = groups[j];
 			lines.push("g " + group.name );
-			lines.push("usemtl " + (group.material || ("mat_"+j)));
+			var matname = (group.material || ("mat_"+j));
+			if(matname.indexOf(".json") != -1) //remove json from matnames or mtl name wont match
+				matname = matname.substr(0,matname.indexOf(".json"));
+			lines.push("usemtl " + matname);
 			var start = group.start;
 			var end = start + group.length;
 			for (var i = start; i < end; i+=3)

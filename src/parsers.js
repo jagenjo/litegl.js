@@ -149,6 +149,13 @@ Mesh.parseOBJ = function(text, options)
 		return null;
 	}
 
+	if(options.flip_normals && normals_buffer_data.length)
+	{
+		var normals = normals_buffer_data;
+		for(var i = 0; i < normals.length; ++i)
+			normals[i] *= -1;
+	}
+
 	//create typed arrays
 	mesh.vertices = new Float32Array( vertices_buffer_data );
 	if ( normals_buffer_data.length )
@@ -650,7 +657,10 @@ Mesh.encoders["obj"] = function( mesh, options )
 		{
 			var group = groups[j];
 			lines.push("g " + group.name );
-			lines.push("usemtl " + (group.material || ("mat_"+j)));
+			var matname = (group.material || ("mat_"+j));
+			if(matname.indexOf(".json") != -1) //remove json from matnames or mtl name wont match
+				matname = matname.substr(0,matname.indexOf(".json"));
+			lines.push("usemtl " + matname);
 			var start = group.start;
 			var end = start + group.length;
 			for (var i = start; i < end; i+=3)

@@ -602,6 +602,7 @@ Shader.prototype.drawBuffers = function( vertexBuffers, indexBuffer, mode, range
 	  } else {
 		gl.drawArrays(mode, offset, length);
 	  }
+	  gl.draw_calls++;
 	}
 
 	return this;

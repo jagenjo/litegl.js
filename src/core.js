@@ -166,6 +166,8 @@ GL.create = function(options) {
 	gl.textures = {};
 	gl.meshes = {};
 
+	gl.draw_calls = 0;
+
 	/**
 	* sets this context as the current global gl context (in case you have more than one)
 	* @method makeCurrent
@@ -205,6 +207,7 @@ GL.create = function(options) {
 		var post = global.requestAnimationFrame;
 		var time = getTime();
 		var context = this;
+		var last_mouse_buttons = 0;
 
 		//loop only if browser tab visible
 		function loop() {
@@ -216,7 +219,8 @@ GL.create = function(options) {
 			var now = getTime();
 			var dt = (now - time) * 0.001;
 			if(context.mouse)
-				context.mouse.last_buttons = context.mouse.buttons;
+				context.mouse.last_buttons = last_mouse_buttons;
+			last_mouse_buttons = context.mouse.buttons;
 			if (context.onupdate) 
 				context.onupdate(dt);
 			LEvent.trigger( context, "update", dt);
@@ -497,6 +501,8 @@ GL.create = function(options) {
 		simulatedEvent.originalEvent = simulatedEvent;
 		simulatedEvent.is_touch = true;
 		first.target.dispatchEvent( simulatedEvent );
+
+		//if we block this touch (to avoid weird canvas draggings) then we are blocking the gestures
 		e.preventDefault();
 	}
 
@@ -1056,6 +1062,8 @@ GL.isMobile = function()
 	if( (navigator.userAgent.match(/iPhone/i)) || 
 		(navigator.userAgent.match(/iPod/i)) || 
 		(navigator.userAgent.match(/iPad/i)) || 
+		(navigator.userAgent.match(/SamsungBrowser/i)) || 
+		(navigator.userAgent.match(/Mobile\ VR/i)) || 
 		(navigator.userAgent.match(/Android/i))) {
 		return this.mobile = true;
 	}
