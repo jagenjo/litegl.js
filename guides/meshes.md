@@ -62,6 +62,21 @@ var mesh = GL.Mesh.load({
 });
 ```
 
+You can pass other streams if you want here, like:
+* colors: vec4
+* extra1: float
+* extra2: vec2
+* extra3: vec3
+
+This can be useful if you want to have extra info per vertex.
+
+Or you can include the buffers later using the addVertexBuffer method:
+
+```js
+//to add a vec3 array of data per vertex
+mesh.createVertexBuffer("mydata", "a_mydata", 3, mydata_array );
+```
+
 ## Basic primitives ##
 
 If you want to generate procedurally some basic geometric shapes (like spheres, planes, cubes, etc) the class ```GL.Mesh``` comes with some handy functions.
