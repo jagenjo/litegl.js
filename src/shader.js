@@ -193,7 +193,9 @@ Shader.prototype.extractShaderInfo = function()
 		}
 
 		//store texture samplers
-		if(data.type == gl.SAMPLER_2D || data.type == gl.SAMPLER_CUBE || data.type == GL.SAMPLER_3D)
+		if(data.type == GL.SAMPLER_2D || data.type == GL.SAMPLER_CUBE || data.type == GL.SAMPLER_3D ||
+			data.type == GL.INT_SAMPLER_2D || data.type == GL.INT_SAMPLER_CUBE || data.type == GL.INT_SAMPLER_3D ||
+			data.type == GL.UNSIGNED_INT_SAMPLER_2D || data.type == GL.UNSIGNED_INT_SAMPLER_CUBE || data.type == GL.UNSIGNED_INT_SAMPLER_3D)
 			this.samplers[ uniformName ] = data.type;
 		
 		//get which function to call when uploading this uniform
@@ -296,6 +298,12 @@ Shader.getUniformFunc = function( data )
 		case GL.SAMPLER_2D:
 		case GL.SAMPLER_3D:
 		case GL.SAMPLER_CUBE:
+		case GL.INT_SAMPLER_2D:
+		case GL.INT_SAMPLER_3D:
+		case GL.INT_SAMPLER_CUBE:
+		case GL.UNSIGNED_INT_SAMPLER_2D:
+		case GL.UNSIGNED_INT_SAMPLER_3D:
+		case GL.UNSIGNED_INT_SAMPLER_CUBE:
 			func = gl.uniform1i; break;
 		default: func = gl.uniform1f; break;
 	}	
@@ -898,8 +906,15 @@ Shader.validateValue = function( value, uniform_info )
 		//used to validate shaders
 		case GL.INT: 
 		case GL.FLOAT: 
-		case GL.SAMPLER_2D: 
-		case GL.SAMPLER_CUBE: 
+		case GL.SAMPLER_2D:
+		case GL.SAMPLER_3D:
+		case GL.SAMPLER_CUBE:
+		case GL.INT_SAMPLER_2D:
+		case GL.INT_SAMPLER_3D:
+		case GL.INT_SAMPLER_CUBE:
+		case GL.UNSIGNED_INT_SAMPLER_2D:
+		case GL.UNSIGNED_INT_SAMPLER_3D:
+		case GL.UNSIGNED_INT_SAMPLER_CUBE:
 			return isNumber(value);
 		case GL.INT_VEC2: 
 		case GL.FLOAT_VEC2:
