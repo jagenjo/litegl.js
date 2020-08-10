@@ -413,7 +413,7 @@ Mesh.prototype.addBuffers = function( vertexbuffers, indexbuffers, stream_type )
 		if(!data) 
 			continue;
 		
-		if( data.constructor == GL.Buffer )
+		if( data.constructor == GL.Buffer || data.data ) //allows to clone meshes
 		{
 			data = data.data;
 		}
@@ -461,7 +461,7 @@ Mesh.prototype.addBuffers = function( vertexbuffers, indexbuffers, stream_type )
 			var data = indexbuffers[i];
 			if(!data) continue;
 
-			if( data.constructor == GL.Buffer )
+			if( data.constructor == GL.Buffer || data.data )
 			{
 				data = data.data;
 			}
@@ -1938,7 +1938,8 @@ Mesh.mergeMeshes = function( meshes, options )
 
 	for(var j in index_buffers)
 	{
-		index_buffers[j] = new Uint32Array( index_buffers[j] );
+		var datatype = current_vertex_offset < 256*256 ? Uint16Array : Uint32Array;
+		index_buffers[j] = new datatype( index_buffers[j] );
 		offsets[j] = 0;
 	}
 
@@ -2004,6 +2005,8 @@ Mesh.mergeMeshes = function( meshes, options )
 
 	function apply_offset( array, start, length, offset )
 	{
+		if(!offset)
+			return;
 		var l = start + length;
 		for(var i = start; i < l; ++i)
 			array[i] += offset;

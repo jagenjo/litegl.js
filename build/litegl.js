@@ -2626,7 +2626,7 @@ Mesh.prototype.addBuffers = function( vertexbuffers, indexbuffers, stream_type )
 		if(!data) 
 			continue;
 		
-		if( data.constructor == GL.Buffer )
+		if( data.constructor == GL.Buffer || data.data ) //allows to clone meshes
 		{
 			data = data.data;
 		}
@@ -2674,7 +2674,7 @@ Mesh.prototype.addBuffers = function( vertexbuffers, indexbuffers, stream_type )
 			var data = indexbuffers[i];
 			if(!data) continue;
 
-			if( data.constructor == GL.Buffer )
+			if( data.constructor == GL.Buffer || data.data )
 			{
 				data = data.data;
 			}
@@ -4151,7 +4151,8 @@ Mesh.mergeMeshes = function( meshes, options )
 
 	for(var j in index_buffers)
 	{
-		index_buffers[j] = new Uint32Array( index_buffers[j] );
+		var datatype = current_vertex_offset < 256*256 ? Uint16Array : Uint32Array;
+		index_buffers[j] = new datatype( index_buffers[j] );
 		offsets[j] = 0;
 	}
 
@@ -4217,6 +4218,8 @@ Mesh.mergeMeshes = function( meshes, options )
 
 	function apply_offset( array, start, length, offset )
 	{
+		if(!offset)
+			return;
 		var l = start + length;
 		for(var i = start; i < l; ++i)
 			array[i] += offset;
@@ -7804,7 +7807,8 @@ FBO.prototype.update = function( skip_disable )
 
 	var w = -1,
 		h = -1,
-		type = null;
+		type = null,
+		format = null;
 
 	var color_textures = this.color_textures;
 	var depth_texture = this.depth_texture;
@@ -7824,8 +7828,11 @@ FBO.prototype.update = function( skip_disable )
 				h = t.height;
 			else if(h != t.height)
 				throw("Cannot bind textures with different dimensions");
-			if(type == null) //first one defines the type
+			if(type == null) //first one defines the type: UNSIGNED_BYTE, etc
+			{
 				type = t.type;
+				format = t.format;
+			}
 			else if (type != t.type)
 				throw("Cannot bind textures to a FBO with different pixel formats");
 			if (t.texture_type != gl.TEXTURE_2D)
@@ -7957,7 +7964,11 @@ FBO.prototype.update = function( skip_disable )
 	//check completion
 	var complete = gl.checkFramebufferStatus( target );
 	if(complete !== gl.FRAMEBUFFER_COMPLETE) //36054: GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT
+	{
+		if( format == GL.RGB && (type == GL.FLOAT || type == GL.HALF_FLOAT_OES))
+			console.error("Tip: Firefox does not support RGB channel float/half_float textures, you must use RGBA");
 		throw("FBO not complete: " + complete);
+	}
 
 	//restore state
 	gl.bindTexture(gl.TEXTURE_2D, null);

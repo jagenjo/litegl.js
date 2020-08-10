@@ -116,7 +116,8 @@ FBO.prototype.update = function( skip_disable )
 
 	var w = -1,
 		h = -1,
-		type = null;
+		type = null,
+		format = null;
 
 	var color_textures = this.color_textures;
 	var depth_texture = this.depth_texture;
@@ -136,8 +137,11 @@ FBO.prototype.update = function( skip_disable )
 				h = t.height;
 			else if(h != t.height)
 				throw("Cannot bind textures with different dimensions");
-			if(type == null) //first one defines the type
+			if(type == null) //first one defines the type: UNSIGNED_BYTE, etc
+			{
 				type = t.type;
+				format = t.format;
+			}
 			else if (type != t.type)
 				throw("Cannot bind textures to a FBO with different pixel formats");
 			if (t.texture_type != gl.TEXTURE_2D)
@@ -269,7 +273,11 @@ FBO.prototype.update = function( skip_disable )
 	//check completion
 	var complete = gl.checkFramebufferStatus( target );
 	if(complete !== gl.FRAMEBUFFER_COMPLETE) //36054: GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT
+	{
+		if( format == GL.RGB && (type == GL.FLOAT || type == GL.HALF_FLOAT_OES))
+			console.error("Tip: Firefox does not support RGB channel float/half_float textures, you must use RGBA");
 		throw("FBO not complete: " + complete);
+	}
 
 	//restore state
 	gl.bindTexture(gl.TEXTURE_2D, null);

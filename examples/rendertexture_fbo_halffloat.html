@@ -30,7 +30,7 @@
 
 	//build the mesh
 	var cube = GL.Mesh.sphere({size:10});
-	var texture = new GL.Texture(gl.canvas.width,gl.canvas.height, { format: gl.RGB, type: GL.HALF_FLOAT_OES, magFilter: gl.LINEAR });
+	var texture = new GL.Texture( gl.canvas.width,gl.canvas.height, { format: gl.RGB, type: GL.HALF_FLOAT_OES, magFilter: gl.LINEAR });
 	var fbo = new GL.FBO([texture]);
 
 	//create basic matrices for cameras and transformation
