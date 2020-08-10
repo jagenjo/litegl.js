@@ -326,7 +326,8 @@ global.extendClass = GL.extendClass = function extendClass( target, origin ) {
 global.HttpRequest = GL.request = function HttpRequest( url, params, callback, error, options )
 {
 	var async = true;
-	if(options && options.async !== undefined)
+	options = options || {};
+	if(options.async !== undefined)
 		async = options.async;
 
 	if(params)
