@@ -267,6 +267,10 @@ Texture.prototype.computeInternalFormat = function()
 				console.warn("webgl 1 does not use HALF_FLOAT, converting to HALF_FLOAT_OES")
 				this.type = GL.HALF_FLOAT_OES;
 			}
+			else if( this.type == GL.FLOAT )
+			{
+				//this.internalFormat = this.format == GL.RGB ? GL.RGB32F : GL.RGBA32F;
+			}
 		}
 	}
 }
