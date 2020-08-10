@@ -341,6 +341,7 @@ global.HttpRequest = GL.request = function HttpRequest( url, params, callback, e
 
 	var xhr = new XMLHttpRequest();
 	xhr.open('GET', url, async);
+	xhr.responseType = options.responseType || "text";
 	xhr.onload = function(e)
 	{
 		var response = this.response;
