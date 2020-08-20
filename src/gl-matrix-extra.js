@@ -3,10 +3,13 @@ if(typeof(glMatrix) == "undefined")
 	throw("You must include glMatrix on your project");
 
 Math.clamp = function(v,a,b) { return (a > v ? a : (b < v ? b : v)); }
+Math.lerp =  function(a,b,f) { return a * (1 - f) + b * f; }
+Math.lerp01 =  function(a,b,f) { return Math.clamp(a * (1 - f) + b * f,0,1); }
+Math.iLerp =  function(a,b,v) { return (v - a) / (b - a); }
+Math.remap =  function(v,min,max,min2,max2) { return Math.lerp(min2,max2, Math.iLerp(min,max,v)); }
 
 var V3 = vec3.create;
 var M4 = vec3.create;
-
 
 vec3.ZERO = vec3.fromValues(0,0,0);
 vec3.FRONT = vec3.fromValues(0,0,-1);

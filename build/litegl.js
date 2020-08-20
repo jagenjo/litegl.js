@@ -1540,10 +1540,13 @@ if(typeof(glMatrix) == "undefined")
 	throw("You must include glMatrix on your project");
 
 Math.clamp = function(v,a,b) { return (a > v ? a : (b < v ? b : v)); }
+Math.lerp =  function(a,b,f) { return a * (1 - f) + b * f; }
+Math.lerp01 =  function(a,b,f) { return Math.clamp(a * (1 - f) + b * f,0,1); }
+Math.iLerp =  function(a,b,v) { return (v - a) / (b - a); }
+Math.remap =  function(v,min,max,min2,max2) { return Math.lerp(min2,max2, Math.iLerp(min,max,v)); }
 
 var V3 = vec3.create;
 var M4 = vec3.create;
-
 
 vec3.ZERO = vec3.fromValues(0,0,0);
 vec3.FRONT = vec3.fromValues(0,0,-1);
@@ -9597,6 +9600,7 @@ Shader.FXAA_FUNC = "\n\
 	#define FXAA_SPAN_MAX     8.0\n\
 	\n\
 	/* from mitsuhiko/webgl-meincraft based on the code on geeks3d.com */\n\
+	/* fragCoord MUST BE IN PIXELS */\n\
 	vec4 applyFXAA(sampler2D tex, vec2 fragCoord)\n\
 	{\n\
 		vec4 color = vec4(0.0);\n\
@@ -9629,7 +9633,7 @@ Shader.FXAA_FUNC = "\n\
 		vec3 rgbB = rgbA * 0.5 + 0.25 * (texture2D(tex, fragCoord * u_iViewportSize + dir * -0.5).xyz + \n\
 			texture2D(tex, fragCoord * u_iViewportSize + dir * 0.5).xyz);\n\
 		\n\
-		return vec4(rgbA,1.0);\n\
+		//return vec4(rgbA,1.0);\n\
 		float lumaB = dot(rgbB, luma);\n\
 		if ((lumaB < lumaMin) || (lumaB > lumaMax))\n\
 			color = vec4(rgbA, 1.0);\n\

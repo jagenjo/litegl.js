@@ -1429,6 +1429,7 @@ Shader.FXAA_FUNC = "\n\
 	#define FXAA_SPAN_MAX     8.0\n\
 	\n\
 	/* from mitsuhiko/webgl-meincraft based on the code on geeks3d.com */\n\
+	/* fragCoord MUST BE IN PIXELS */\n\
 	vec4 applyFXAA(sampler2D tex, vec2 fragCoord)\n\
 	{\n\
 		vec4 color = vec4(0.0);\n\
@@ -1461,7 +1462,7 @@ Shader.FXAA_FUNC = "\n\
 		vec3 rgbB = rgbA * 0.5 + 0.25 * (texture2D(tex, fragCoord * u_iViewportSize + dir * -0.5).xyz + \n\
 			texture2D(tex, fragCoord * u_iViewportSize + dir * 0.5).xyz);\n\
 		\n\
-		return vec4(rgbA,1.0);\n\
+		//return vec4(rgbA,1.0);\n\
 		float lumaB = dot(rgbB, luma);\n\
 		if ((lumaB < lumaMin) || (lumaB > lumaMax))\n\
 			color = vec4(rgbA, 1.0);\n\
