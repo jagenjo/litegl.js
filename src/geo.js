@@ -15,6 +15,8 @@ global.CLIP_OVERLAP = GL.CLIP_OVERLAP = 2;
 
 global.geo = {
 
+	last_t: -1,
+
 	/**
 	* Returns a float4 containing the info about a plane with normal N and that passes through point P
 	* @method createPlane
@@ -145,8 +147,9 @@ global.geo = {
 		var numer = D - vec3.dot(N, start);
 		var denom = vec3.dot(N, direction);
 		if( Math.abs(denom) < EPSILON) return false;
-		var t = (numer / denom);
-		if(t < 0.0) return false; //behind the ray
+		var t = this.last_t = (numer / denom);
+		if(t < 0.0)
+			return false; //behind the ray
 		if(result)
 			vec3.add( result,  start, vec3.scale( result, direction, t) );
 
@@ -173,7 +176,7 @@ global.geo = {
 			var denom = vec3.dot(N, direction);
 			if( Math.abs(denom) < EPSILON)
 				return false; //parallel 
-			var t = (numer / denom);
+			var t = this.last_t = (numer / denom);
 			if(t < 0.0)
 				return false; //behind the start
 			if(t > 1.0)
@@ -225,10 +228,51 @@ global.geo = {
 				var t = r1 < r2 ? r1 : r2;
 				if(max_dist !== undefined && t > max_dist)
 					return false;
+				this.last_t = t;
 				vec3.add(result, start, vec3.scale( result, direction, t ) );
 			}
 			return true;//real roots
 		};
+	})(),
+
+	//NOT TESTED!
+	hitTestTriangle: (function(){
+		var ab = vec3.create();
+		var ac = vec3.create();
+		var normal = vec3.create();
+		var temp = vec3.create();
+		var hit = vec3.create();
+		
+		return function(origin, direction, a, b, c, result) {
+			vec3.subtract(ab, b,a );
+			vec3.subtract(ac, c,a );
+			vec3.cross( normal, ab,ac);
+			vec3.normalize( normal, normal );
+			var t = vec3.dot(normal, vec3.subtract( temp, a,origin)) / vec3.dot(normal,direction);
+
+			if (t > 0) {
+				vec3.add( hit, origin, vec3.scale(temp, direction,t ));
+				var toHit = vec3.subtract( temp, temp, a);
+				var dot00 = vec3.dot(ac,ac);
+				var dot01 = vec3.dot(ac,ab);
+				var dot02 = vec3.dot(ac,toHit);
+				var dot11 = vec3.dot(ab,ab);
+				var dot12 = vec3.dot(ab,toHit);
+				var divide = dot00 * dot11 - dot01 * dot01;
+				var u = (dot11 * dot02 - dot01 * dot12) / divide;
+				var v = (dot00 * dot12 - dot01 * dot02) / divide;
+				if (u >= 0 && v >= 0 && u + v <= 1)
+				{
+					this.last_t = t;
+					//return new HitTest(t, hit, normal);
+					if(result)
+						vec3.add(result, origin, vec3.scale( temp, direction, t ) );
+					return true;
+				}
+			  }
+
+			  return false;
+			};
 	})(),
 
 	/**
@@ -314,6 +358,7 @@ global.geo = {
 			return k+dd - 2*md+t*(2*(mn - nd)+t*nn) <= 0.0;
 		}
 		// Segment intersects cylinder between the endcaps; t is correct
+		this.last_t = t;
 		if(result)
 			vec3.add(result, sa, vec3.scale(result, n,t) );
 		return true;
@@ -370,6 +415,7 @@ global.geo = {
 
 		/* Ray origin inside bounding box */
 		if(inside)	{
+			this.last_t = 0;
 			if(result)
 				vec3.copy(result, start);
 			return true;
@@ -392,6 +438,7 @@ global.geo = {
 		/* Check final candidate actually inside box */
 		if (maxT[whichPlane] < 0.) return false;
 		if (maxT[whichPlane] > max_dist) return false; //NOT TESTED
+		this.last_t = maxT[whichPlane];
 
 		for (i = 0; i < 3; ++i)
 			if (whichPlane != i) {

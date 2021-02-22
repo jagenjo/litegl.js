@@ -79,7 +79,7 @@
 				uniform vec3 u_camera_eye;\
 				void main() {\
 				  vec3 N = normalize(v_normal);\
-				  vec4 color = textureCube( u_texture, N );\
+				  vec4 color = textureCube( u_texture, N, 3.0 );\
 				  gl_FragColor = color;\
 				}\
 			');

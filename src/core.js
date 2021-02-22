@@ -96,6 +96,12 @@ GL.create = function(options) {
 
 	//get some common extensions for webgl 1
 	gl.extensions = {};
+
+	var available_extensions = gl.getSupportedExtensions();
+	for(var i = 0; i < available_extensions.length; ++i)
+		gl.extensions[ available_extensions[i] ] = gl.getExtension( available_extensions[i] );
+
+	/*
 	gl.extensions["OES_standard_derivatives"] = gl.derivatives_supported = gl.getExtension('OES_standard_derivatives') || false;
 	gl.extensions["WEBGL_depth_texture"] = gl.getExtension("WEBGL_depth_texture") || gl.getExtension("WEBKIT_WEBGL_depth_texture") || gl.getExtension("MOZ_WEBGL_depth_texture");
 	gl.extensions["OES_element_index_uint"] = gl.getExtension("OES_element_index_uint");
@@ -118,6 +124,7 @@ GL.create = function(options) {
 	gl.extensions["OES_texture_half_float_linear"] = gl.getExtension("OES_texture_half_float_linear");
 	if(gl.extensions["OES_texture_half_float_linear"])
 		gl.extensions["OES_texture_half_float"] = gl.getExtension("OES_texture_half_float");
+	*/
 
 	if( gl.webgl_version == 1 )
 		gl.HIGH_PRECISION_FORMAT = gl.extensions["OES_texture_half_float"] ? GL.HALF_FLOAT_OES : (gl.extensions["OES_texture_float"] ? GL.FLOAT : GL.UNSIGNED_BYTE); //because Firefox dont support half float

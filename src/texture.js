@@ -269,6 +269,8 @@ Texture.prototype.computeInternalFormat = function()
 			}
 			else if( this.type == GL.FLOAT )
 			{
+				//if(gl.extensions.WEBGL_color_buffer_float)
+				//	this.internalFormat = this.format == GL.RGB ? gl.extensions.WEBGL_color_buffer_float.RGB32F_EXT : gl.extensions.WEBGL_color_buffer_float.RGBA32F_EXT;
 				//this.internalFormat = this.format == GL.RGB ? GL.RGB32F : GL.RGBA32F;
 			}
 		}
@@ -391,17 +393,43 @@ Texture.setUploadOptions = function(options, gl)
 {
 	gl = gl || global.gl;
 
-	if(options) //options that are not stored in the texture should be passed again to avoid reusing unknown state
+	//FIREFOX throws a warning because this cannot be used with arraybuffers as you are in charge or applying it manually...
+	if(!Texture.disable_deprecated)
 	{
-		gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, !!(options.premultiply_alpha) );
-		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, !(options.no_flip) );
+		if(options) //options that are not stored in the texture should be passed again to avoid reusing unknown state
+		{
+			gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, !!(options.premultiply_alpha) );
+			gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, !(options.no_flip) );
+		}
+		else
+		{
+			gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false );
+			gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true );
+		}
 	}
-	else
-	{
-		gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false );
-		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true );
-	}
+
 	gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+}
+
+//flips image data in Y in place
+Texture.flipYData = function( data, width, height, numchannels )
+{
+	var temp = new data.constructor( width * numchannels );
+	var pos = 0;
+	var lastpos = width * (height-1) * numchannels;
+	var l = Math.floor(height*0.5); //middle
+	for(var i = 0; i < l; ++i)
+	{
+		var row = data.subarray(pos, pos + width*numchannels);
+		var row2 = data.subarray(lastpos, lastpos + width*numchannels);
+		temp.set( row );
+		row.set( row2 );
+		row2.set( temp );
+		pos += width * numchannels;
+		lastpos -= width * numchannels;
+		if(pos > lastpos)
+			break;
+	}
 }
 
 /**

@@ -4134,6 +4134,8 @@ Mesh.mergeMeshes = function( meshes, options )
 	var vertex_offsets = [];
 	var current_vertex_offset = 0;
 	var groups = [];
+	var bones = [];
+	var bones_by_index = {};
 
 	//vertex buffers
 	//compute size
@@ -4169,6 +4171,31 @@ Mesh.mergeMeshes = function( meshes, options )
 			length: length,
 			material: ""
 		};
+
+		//add bones
+		if(mesh.bones)
+		{
+			var prev_bones_by_index = {};
+			for(var j = 0; j < mesh.bones.length; ++j)
+			{
+				var b = mesh.bones[j];
+				if(!bones_by_index[b[0]])
+				{
+					bones_by_index[b[0]] = bones.length;
+					bones.push(b);
+				}
+				prev_bones_by_index[j] = bones_by_index[b[0]];
+			}
+
+			//remap bones
+			var bones_buffer = mesh.vertexBuffers["bone_indices"].data;
+			for(var j = 0; j < bones_buffer.length; j+=1)
+			{
+				bones_buffer[j] = prev_bones_by_index[ bones_buffer[j] ];
+			}
+		}
+		else if(bones.length)
+			throw("cannot merge meshes, one contains bones, the other doesnt");
 
 		groups.push( group );
 	}
@@ -4267,6 +4294,8 @@ Mesh.mergeMeshes = function( meshes, options )
 	}
 
 	var extra = { info: { groups: groups } };
+	if(bones.length)
+		extra.bones = bones;
 
 	//return
 	if( typeof(gl) != "undefined" || options.only_data )
@@ -5790,6 +5819,8 @@ Texture.prototype.computeInternalFormat = function()
 			}
 			else if( this.type == GL.FLOAT )
 			{
+				//if(gl.extensions.WEBGL_color_buffer_float)
+				//	this.internalFormat = this.format == GL.RGB ? gl.extensions.WEBGL_color_buffer_float.RGB32F_EXT : gl.extensions.WEBGL_color_buffer_float.RGBA32F_EXT;
 				//this.internalFormat = this.format == GL.RGB ? GL.RGB32F : GL.RGBA32F;
 			}
 		}
@@ -5912,17 +5943,43 @@ Texture.setUploadOptions = function(options, gl)
 {
 	gl = gl || global.gl;
 
-	if(options) //options that are not stored in the texture should be passed again to avoid reusing unknown state
+	//FIREFOX throws a warning because this cannot be used with arraybuffers as you are in charge or applying it manually...
+	if(!Texture.disable_deprecated)
 	{
-		gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, !!(options.premultiply_alpha) );
-		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, !(options.no_flip) );
+		if(options) //options that are not stored in the texture should be passed again to avoid reusing unknown state
+		{
+			gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, !!(options.premultiply_alpha) );
+			gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, !(options.no_flip) );
+		}
+		else
+		{
+			gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false );
+			gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true );
+		}
 	}
-	else
-	{
-		gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false );
-		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true );
-	}
+
 	gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+}
+
+//flips image data in Y in place
+Texture.flipYData = function( data, width, height, numchannels )
+{
+	var temp = new data.constructor( width * numchannels );
+	var pos = 0;
+	var lastpos = width * (height-1) * numchannels;
+	var l = Math.floor(height*0.5); //middle
+	for(var i = 0; i < l; ++i)
+	{
+		var row = data.subarray(pos, pos + width*numchannels);
+		var row2 = data.subarray(lastpos, lastpos + width*numchannels);
+		temp.set( row );
+		row.set( row2 );
+		row2.set( temp );
+		pos += width * numchannels;
+		lastpos -= width * numchannels;
+		if(pos > lastpos)
+			break;
+	}
 }
 
 /**
@@ -9793,6 +9850,12 @@ GL.create = function(options) {
 
 	//get some common extensions for webgl 1
 	gl.extensions = {};
+
+	var available_extensions = gl.getSupportedExtensions();
+	for(var i = 0; i < available_extensions.length; ++i)
+		gl.extensions[ available_extensions[i] ] = gl.getExtension( available_extensions[i] );
+
+	/*
 	gl.extensions["OES_standard_derivatives"] = gl.derivatives_supported = gl.getExtension('OES_standard_derivatives') || false;
 	gl.extensions["WEBGL_depth_texture"] = gl.getExtension("WEBGL_depth_texture") || gl.getExtension("WEBKIT_WEBGL_depth_texture") || gl.getExtension("MOZ_WEBGL_depth_texture");
 	gl.extensions["OES_element_index_uint"] = gl.getExtension("OES_element_index_uint");
@@ -9815,6 +9878,7 @@ GL.create = function(options) {
 	gl.extensions["OES_texture_half_float_linear"] = gl.getExtension("OES_texture_half_float_linear");
 	if(gl.extensions["OES_texture_half_float_linear"])
 		gl.extensions["OES_texture_half_float"] = gl.getExtension("OES_texture_half_float");
+	*/
 
 	if( gl.webgl_version == 1 )
 		gl.HIGH_PRECISION_FORMAT = gl.extensions["OES_texture_half_float"] ? GL.HALF_FLOAT_OES : (gl.extensions["OES_texture_float"] ? GL.FLOAT : GL.UNSIGNED_BYTE); //because Firefox dont support half float
@@ -11173,6 +11237,8 @@ global.CLIP_OVERLAP = GL.CLIP_OVERLAP = 2;
 
 global.geo = {
 
+	last_t: -1,
+
 	/**
 	* Returns a float4 containing the info about a plane with normal N and that passes through point P
 	* @method createPlane
@@ -11303,8 +11369,9 @@ global.geo = {
 		var numer = D - vec3.dot(N, start);
 		var denom = vec3.dot(N, direction);
 		if( Math.abs(denom) < EPSILON) return false;
-		var t = (numer / denom);
-		if(t < 0.0) return false; //behind the ray
+		var t = this.last_t = (numer / denom);
+		if(t < 0.0)
+			return false; //behind the ray
 		if(result)
 			vec3.add( result,  start, vec3.scale( result, direction, t) );
 
@@ -11331,7 +11398,7 @@ global.geo = {
 			var denom = vec3.dot(N, direction);
 			if( Math.abs(denom) < EPSILON)
 				return false; //parallel 
-			var t = (numer / denom);
+			var t = this.last_t = (numer / denom);
 			if(t < 0.0)
 				return false; //behind the start
 			if(t > 1.0)
@@ -11383,10 +11450,51 @@ global.geo = {
 				var t = r1 < r2 ? r1 : r2;
 				if(max_dist !== undefined && t > max_dist)
 					return false;
+				this.last_t = t;
 				vec3.add(result, start, vec3.scale( result, direction, t ) );
 			}
 			return true;//real roots
 		};
+	})(),
+
+	//NOT TESTED!
+	hitTestTriangle: (function(){
+		var ab = vec3.create();
+		var ac = vec3.create();
+		var normal = vec3.create();
+		var temp = vec3.create();
+		var hit = vec3.create();
+		
+		return function(origin, direction, a, b, c, result) {
+			vec3.subtract(ab, b,a );
+			vec3.subtract(ac, c,a );
+			vec3.cross( normal, ab,ac);
+			vec3.normalize( normal, normal );
+			var t = vec3.dot(normal, vec3.subtract( temp, a,origin)) / vec3.dot(normal,direction);
+
+			if (t > 0) {
+				vec3.add( hit, origin, vec3.scale(temp, direction,t ));
+				var toHit = vec3.subtract( temp, temp, a);
+				var dot00 = vec3.dot(ac,ac);
+				var dot01 = vec3.dot(ac,ab);
+				var dot02 = vec3.dot(ac,toHit);
+				var dot11 = vec3.dot(ab,ab);
+				var dot12 = vec3.dot(ab,toHit);
+				var divide = dot00 * dot11 - dot01 * dot01;
+				var u = (dot11 * dot02 - dot01 * dot12) / divide;
+				var v = (dot00 * dot12 - dot01 * dot02) / divide;
+				if (u >= 0 && v >= 0 && u + v <= 1)
+				{
+					this.last_t = t;
+					//return new HitTest(t, hit, normal);
+					if(result)
+						vec3.add(result, origin, vec3.scale( temp, direction, t ) );
+					return true;
+				}
+			  }
+
+			  return false;
+			};
 	})(),
 
 	/**
@@ -11472,6 +11580,7 @@ global.geo = {
 			return k+dd - 2*md+t*(2*(mn - nd)+t*nn) <= 0.0;
 		}
 		// Segment intersects cylinder between the endcaps; t is correct
+		this.last_t = t;
 		if(result)
 			vec3.add(result, sa, vec3.scale(result, n,t) );
 		return true;
@@ -11528,6 +11637,7 @@ global.geo = {
 
 		/* Ray origin inside bounding box */
 		if(inside)	{
+			this.last_t = 0;
 			if(result)
 				vec3.copy(result, start);
 			return true;
@@ -11550,6 +11660,7 @@ global.geo = {
 		/* Check final candidate actually inside box */
 		if (maxT[whichPlane] < 0.) return false;
 		if (maxT[whichPlane] > max_dist) return false; //NOT TESTED
+		this.last_t = maxT[whichPlane];
 
 		for (i = 0; i < 3; ++i)
 			if (whichPlane != i) {
@@ -12907,6 +13018,7 @@ global.Ray = GL.Ray = function Ray( origin, direction )
 	this.origin = vec3.create();
 	this.direction = vec3.create();
 	this.collision_point = vec3.create();
+	this.t = -1;
 
 	if(origin)
 		this.origin.set( origin );
@@ -12916,13 +13028,26 @@ global.Ray = GL.Ray = function Ray( origin, direction )
 
 Ray.prototype.testPlane = function( P, N )
 {
-	return geo.testRayPlane( this.origin, this.direction, P, N, this.collision_point );
+	var r = geo.testRayPlane( this.origin, this.direction, P, N, this.collision_point );
+	r.t = geo.last_t;
+	return r;
 }
 
 Ray.prototype.testSphere = function( center, radius, max_dist )
 {
-	return geo.testRaySphere( this.origin, this.direction, center, radius, this.collision_point, max_dist );
+	var r = geo.testRaySphere( this.origin, this.direction, center, radius, this.collision_point, max_dist );
+	r.t = geo.last_t;
+	return r;
 }
+
+//box must be in BBox format, check BBox class
+Ray.prototype.testBBox = function( bbox, max_dist, model, in_local )
+{
+	var r = geo.testRayBBox( this.origin, this.direction, bbox, model, this.collision_point, max_dist, in_local );
+	r.t = geo.last_t;
+	return r;
+}
+
 
 // ### new GL.Raytracer()
 // 
@@ -13892,14 +14017,15 @@ Mesh.binary_file_formats["wbin"] = true;
 
 Mesh.parsers["wbin"] = Mesh.fromBinary = function( data_array, options )
 {
-	if(!global.WBin)
-		throw("To use binary meshes you need to install WBin.js from https://github.com/jagenjo/litescene.js/blob/master/src/utils/wbin.js ");
-
 	options = options || {};
 
 	var o = null;
 	if( data_array.constructor == ArrayBuffer )
+	{
+		if(!global.WBin)
+			throw("To use binary meshes you need to install WBin.js from https://github.com/jagenjo/litescene.js/blob/master/src/utils/wbin.js ");
 		o = WBin.load( data_array, true );
+	}
 	else
 		o = data_array;
 
@@ -14205,3 +14331,7 @@ Mesh.decompressors["bounding_compressed"] = function(o)
 
 //footer.js
 })( typeof(window) != "undefined" ? window : (typeof(self) != "undefined" ? self : global ) );
+
+//end of litegl.js
+
+

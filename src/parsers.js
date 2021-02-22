@@ -800,14 +800,15 @@ Mesh.binary_file_formats["wbin"] = true;
 
 Mesh.parsers["wbin"] = Mesh.fromBinary = function( data_array, options )
 {
-	if(!global.WBin)
-		throw("To use binary meshes you need to install WBin.js from https://github.com/jagenjo/litescene.js/blob/master/src/utils/wbin.js ");
-
 	options = options || {};
 
 	var o = null;
 	if( data_array.constructor == ArrayBuffer )
+	{
+		if(!global.WBin)
+			throw("To use binary meshes you need to install WBin.js from https://github.com/jagenjo/litescene.js/blob/master/src/utils/wbin.js ");
 		o = WBin.load( data_array, true );
+	}
 	else
 		o = data_array;
 

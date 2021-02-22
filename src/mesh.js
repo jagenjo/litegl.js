@@ -1880,6 +1880,8 @@ Mesh.mergeMeshes = function( meshes, options )
 	var vertex_offsets = [];
 	var current_vertex_offset = 0;
 	var groups = [];
+	var bones = [];
+	var bones_by_index = {};
 
 	//vertex buffers
 	//compute size
@@ -1915,6 +1917,31 @@ Mesh.mergeMeshes = function( meshes, options )
 			length: length,
 			material: ""
 		};
+
+		//add bones
+		if(mesh.bones)
+		{
+			var prev_bones_by_index = {};
+			for(var j = 0; j < mesh.bones.length; ++j)
+			{
+				var b = mesh.bones[j];
+				if(!bones_by_index[b[0]])
+				{
+					bones_by_index[b[0]] = bones.length;
+					bones.push(b);
+				}
+				prev_bones_by_index[j] = bones_by_index[b[0]];
+			}
+
+			//remap bones
+			var bones_buffer = mesh.vertexBuffers["bone_indices"].data;
+			for(var j = 0; j < bones_buffer.length; j+=1)
+			{
+				bones_buffer[j] = prev_bones_by_index[ bones_buffer[j] ];
+			}
+		}
+		else if(bones.length)
+			throw("cannot merge meshes, one contains bones, the other doesnt");
 
 		groups.push( group );
 	}
@@ -2013,6 +2040,8 @@ Mesh.mergeMeshes = function( meshes, options )
 	}
 
 	var extra = { info: { groups: groups } };
+	if(bones.length)
+		extra.bones = bones;
 
 	//return
 	if( typeof(gl) != "undefined" || options.only_data )
