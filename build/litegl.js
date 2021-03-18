@@ -8264,11 +8264,9 @@ global.Shader = GL.Shader = function Shader( vertexSource, fragmentSource, macro
 
 	gl.attachShader( this.program, vs, gl );
 	gl.attachShader( this.program, fs, gl );
-	gl.linkProgram(this.program);
-	if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
-		throw 'link error: ' + gl.getProgramInfoLog(this.program);
-	}
+	gl.linkProgram( this.program );
 
+	//store shaders separated
 	this.vs_shader = vs;
 	this.fs_shader = fs;
 
@@ -8277,9 +8275,13 @@ global.Shader = GL.Shader = function Shader( vertexSource, fragmentSource, macro
 	this.uniformInfo = {};
 	this.samplers = {};
 
-	//extract info about the shader to speed up future processes
-	this.extractShaderInfo();
+	if( !Shader.use_async )
+		this.checkLink();
+	else
+		this._first_use = true;
 }
+
+Shader.use_async = true; //https://toji.github.io/shader-perf/
 
 Shader.expandMacros = function(macros)
 {
@@ -8317,9 +8319,6 @@ Shader.compileSource = function( type, source, gl, shader )
 	shader = shader || gl.createShader(type);
 	gl.shaderSource(shader, source);
 	gl.compileShader(shader);
-	if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-		throw (type == gl.VERTEX_SHADER ? "Vertex" : "Fragment") + ' shader compile error: ' + gl.getShaderInfoLog(shader);
-	}
 	return shader;
 }
 
@@ -8373,9 +8372,6 @@ Shader.prototype.updateShader = function( vertexSource, fragmentSource, macros )
 	gl.attachShader( this.program, vs, gl );
 	gl.attachShader( this.program, fs, gl );
 	gl.linkProgram( this.program );
-	if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
-		throw 'link error: ' + gl.getProgramInfoLog( this.program );
-	}
 
 	//store shaders separated
 	this.vs_shader = vs;
@@ -8386,8 +8382,10 @@ Shader.prototype.updateShader = function( vertexSource, fragmentSource, macros )
 	this.uniformInfo = {};
 	this.samplers = {};
 
-	//extract info about the shader to speed up future processes
-	this.extractShaderInfo();
+	if( !Shader.use_async )
+		this.checkLink();
+	else
+		this._first_use = true;
 }
 
 /**
@@ -8593,6 +8591,21 @@ Shader.fromURL = function( vs_path, fs_path, on_complete )
 	return shader;
 }
 
+//check if shader works
+Shader.prototype.checkLink = function()
+{
+	if (!gl.getShaderParameter(this.vs_shader, gl.COMPILE_STATUS)) {
+		throw "Vertex shader compile error: " + gl.getShaderInfoLog(this.vs_shader);
+	}
+	if (!gl.getShaderParameter(this.fs_shader, gl.COMPILE_STATUS)) {
+		throw "Fragment shader compile error: " + gl.getShaderInfoLog(this.fs_shader);
+	}
+	if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
+		throw 'link error: ' + gl.getProgramInfoLog( this.program );
+	}
+	this.extractShaderInfo();
+}
+
 /**
 * enables the shader (calls useProgram)
 * @method bind
@@ -8600,6 +8613,13 @@ Shader.fromURL = function( vs_path, fs_path, on_complete )
 Shader.prototype.bind = function()
 {
 	var gl = this.gl;
+
+	if(Shader.use_async && this._first_use )
+	{
+		this.checkLink();
+		this._first_use = false;
+	}
+
 	gl.useProgram( this.program );
 	gl._current_shader = this;
 }
@@ -8627,6 +8647,8 @@ Shader._temp_uniform = new Float32Array(16);
 
 Shader.prototype.uniforms = function(uniforms) {
 	var gl = this.gl;
+	if(this._first_use)
+		this.checkLink();
 	gl.useProgram(this.program);
 	gl._current_shader = this;
 
@@ -8645,6 +8667,8 @@ Shader.prototype.uniforms = function(uniforms) {
 
 Shader.prototype.uniformsArray = function(array) {
 	var gl = this.gl;
+	if(this._first_use)
+		this.checkLink();
 	gl.useProgram( this.program );
 	gl._current_shader = this;
 
@@ -8700,6 +8724,9 @@ Shader.prototype._setUniform = (function(){
 
 	return (function(name, value)
 	{
+		if(this._first_use)
+			this.checkLink();
+
 		var info = this.uniformInfo[ name ];
 		if (!info)
 			return;
