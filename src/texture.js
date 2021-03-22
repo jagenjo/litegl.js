@@ -267,12 +267,14 @@ Texture.prototype.computeInternalFormat = function()
 				console.warn("webgl 1 does not use HALF_FLOAT, converting to HALF_FLOAT_OES")
 				this.type = GL.HALF_FLOAT_OES;
 			}
+			/*
 			else if( this.type == GL.FLOAT )
 			{
 				//if(gl.extensions.WEBGL_color_buffer_float)
 				//	this.internalFormat = this.format == GL.RGB ? gl.extensions.WEBGL_color_buffer_float.RGB32F_EXT : gl.extensions.WEBGL_color_buffer_float.RGBA32F_EXT;
 				//this.internalFormat = this.format == GL.RGB ? GL.RGB32F : GL.RGBA32F;
 			}
+			*/
 		}
 	}
 }
@@ -448,9 +450,19 @@ Texture.prototype.uploadImage = function( image, options )
 	Texture.setUploadOptions(options, gl);
 
 	try {
-		gl.texImage2D( gl.TEXTURE_2D, 0, this.format, this.format, this.type, image );
-		this.width = image.videoWidth || image.width;
-		this.height = image.videoHeight || image.height;
+		if(options.subimage) //upload partially
+		{
+			if(gl.webgl_version == 1)
+				gl.texSubImage2D( gl.TEXTURE_2D, 0, 0,0, this.format, this.format, this.type, image );
+			else
+				gl.texSubImage2D( gl.TEXTURE_2D, 0, 0,0,image.videoWidth || image.width,image.videoHeight || image.height, this.format, this.format, this.type, image );
+		}
+		else
+		{
+			gl.texImage2D( gl.TEXTURE_2D, 0, this.format, this.format, this.type, image );
+			this.width = image.videoWidth || image.width;
+			this.height = image.videoHeight || image.height;
+		}
 		this.data = image;
 	} catch (e) {
 		if (location.protocol == 'file:') {
@@ -2078,10 +2090,8 @@ Texture.blend = function( a, b, factor, out )
 
 Texture.cubemapToTexture2D = function( cubemap_texture, size, target_texture, keep_type, yaw )
 {
-	if(!cubemap_texture || cubemap_texture.texture_type != gl.TEXTURE_CUBE_MAP) {
+	if(!cubemap_texture || cubemap_texture.texture_type != gl.TEXTURE_CUBE_MAP)
 		throw("No cubemap in convert");
-		return null;
-	}
 
 	size = size || cubemap_texture.width;
 	var type = keep_type ? cubemap_texture.type : gl.UNSIGNED_BYTE;

@@ -15,16 +15,26 @@ global.isPowerOfTwo = GL.isPowerOfTwo = function isPowerOfTwo(v)
 }
 
 /**
-* Tells if one number is power of two (used for textures)
-* @method isPowerOfTwo
+* Tells you the closest POT size (it rounds, so 257 will give 256, while 511 will give 512)
+* @method nearestPowerOfTwo
 * @param {v} number
-* @return {boolean}
+* @return {number}
 */
 global.nearestPowerOfTwo = GL.nearestPowerOfTwo = function nearestPowerOfTwo(v)
 {
 	return Math.pow(2, Math.round( Math.log( v ) / Math.log(2) ) )
 }
 
+/**
+* Tells you the closest POT size (it ceils, so 256 will giev 256, but 257 will give 512)
+* @method nextPowerOfTwo
+* @param {v} number
+* @return {number}
+*/
+global.nextPowerOfTwo = GL.nextPowerOfTwo = function nextPowerOfTwo(v)
+{
+	return Math.pow(2, Math.ceil( Math.log( v ) / Math.log(2) ) )
+}
 
 /**
 * converts from polar to cartesian

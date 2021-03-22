@@ -366,6 +366,8 @@ Shader.fromURL = function( vs_path, fs_path, on_complete )
 //check if shader works
 Shader.prototype.checkLink = function()
 {
+	this._first_use = false;
+
 	if (!gl.getShaderParameter(this.vs_shader, gl.COMPILE_STATUS)) {
 		throw "Vertex shader compile error: " + gl.getShaderInfoLog(this.vs_shader);
 	}
