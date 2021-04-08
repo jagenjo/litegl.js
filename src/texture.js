@@ -450,12 +450,12 @@ Texture.prototype.uploadImage = function( image, options )
 	Texture.setUploadOptions(options, gl);
 
 	try {
-		if(options.subimage) //upload partially
+		if(options && options.subimage) //upload partially
 		{
 			if(gl.webgl_version == 1)
-				gl.texSubImage2D( gl.TEXTURE_2D, 0, 0,0, this.format, this.format, this.type, image );
+				gl.texSubImage2D( gl.TEXTURE_2D, 0, 0,0, this.format, this.type, image );
 			else
-				gl.texSubImage2D( gl.TEXTURE_2D, 0, 0,0,image.videoWidth || image.width,image.videoHeight || image.height, this.format, this.format, this.type, image );
+				gl.texSubImage2D( gl.TEXTURE_2D, 0, 0,0,image.videoWidth || image.width, image.videoHeight || image.height, this.format, this.type, image );
 		}
 		else
 		{
@@ -465,6 +465,7 @@ Texture.prototype.uploadImage = function( image, options )
 		}
 		this.data = image;
 	} catch (e) {
+		console.error(e);
 		if (location.protocol == 'file:') {
 			throw 'image not loaded for security reasons (serve this page over "http://" instead)';
 		} else {

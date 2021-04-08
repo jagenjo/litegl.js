@@ -252,42 +252,6 @@ global.nextPowerOfTwo = GL.nextPowerOfTwo = function nextPowerOfTwo(v)
 	return Math.pow(2, Math.ceil( Math.log( v ) / Math.log(2) ) )
 }
 
-/**
-* converts from polar to cartesian
-* @method polarToCartesian
-* @param {vec3} out
-* @param {number} azimuth orientation from 0 to 2PI
-* @param {number} inclianation from -PI to PI
-* @param {number} radius
-* @return {vec3} returns out
-*/
-global.polarToCartesian = function( out, azimuth, inclination, radius )
-{
-	out = out || vec3.create();
-	out[0] = radius * Math.sin(inclination) * Math.cos(azimuth);
-	out[1] = radius * Math.cos(inclination);
-	out[2] = radius * Math.sin(inclination) * Math.sin(azimuth);
-	return out;
-}
-
-/**
-* converts from cartesian to polar
-* @method cartesianToPolar
-* @param {vec3} out
-* @param {number} x
-* @param {number} y
-* @param {number} z
-* @return {vec3} returns [azimuth,inclination,radius]
-*/
-global.cartesianToPolar = function( out, x,y,z )
-{
-	out = out || vec3.create();
-	out[2] = Math.sqrt(x*x+y*y+z*z);
-	out[0] = Math.atan2(x,z);
-	out[1] = Math.acos(z/out[2]);
-	return out;
-}
-
 //Global Scope
 //better array conversion to string for serializing
 var typed_arrays = [ Uint8Array, Int8Array, Uint16Array, Int16Array, Uint32Array, Int32Array, Float32Array, Float64Array ];
@@ -1704,7 +1668,32 @@ vec3.random = function(vec, scale)
 	return vec;
 }
 
-//converts a polar coordinate (radius, lat, long) to (x,y,z)
+/**
+* converts from cartesian to polar
+* @method cartesianToPolar
+* @param {vec3} out
+* @param {vec3} v
+* @return {vec3} returns [radius,inclination,azimuth]
+*/
+vec3.cartesianToPolar = function( out, v )
+{
+	out = out || vec3.create();
+	var x = v[0];
+	var y = v[1];
+	var z = v[2];
+	out[0] = Math.sqrt(x*x+y*y+z*z); //radius
+	out[1] = Math.asin(y/out[0]); //inclination
+	out[2] = Math.atan2(x,z); //azimuth
+	return out;
+}
+
+/**
+* converts from polar to cartesian
+* @method polarToCartesian
+* @param {vec3} out
+* @param {vec3} v [r,lat,long] or [radius,inclination,azimuth]
+* @return {vec3} returns out
+*/
 vec3.polarToCartesian = function(out, v)
 {
 	var r = v[0];
@@ -1716,6 +1705,14 @@ vec3.polarToCartesian = function(out, v)
 	return out;
 }
 
+/**
+* reflects a vector over a normal
+* @method reflect
+* @param {vec3} out
+* @param {vec3} v
+* @param {vec3} n
+* @return {vec3} reflected vector
+*/
 vec3.reflect = function(out, v, n)
 {
 	var x = v[0]; var y = v[1]; var z = v[2];
@@ -6010,12 +6007,12 @@ Texture.prototype.uploadImage = function( image, options )
 	Texture.setUploadOptions(options, gl);
 
 	try {
-		if(options.subimage) //upload partially
+		if(options && options.subimage) //upload partially
 		{
 			if(gl.webgl_version == 1)
-				gl.texSubImage2D( gl.TEXTURE_2D, 0, 0,0, this.format, this.format, this.type, image );
+				gl.texSubImage2D( gl.TEXTURE_2D, 0, 0,0, this.format, this.type, image );
 			else
-				gl.texSubImage2D( gl.TEXTURE_2D, 0, 0,0,image.videoWidth || image.width,image.videoHeight || image.height, this.format, this.format, this.type, image );
+				gl.texSubImage2D( gl.TEXTURE_2D, 0, 0,0,image.videoWidth || image.width, image.videoHeight || image.height, this.format, this.type, image );
 		}
 		else
 		{
@@ -6025,6 +6022,7 @@ Texture.prototype.uploadImage = function( image, options )
 		}
 		this.data = image;
 	} catch (e) {
+		console.error(e);
 		if (location.protocol == 'file:') {
 			throw 'image not loaded for security reasons (serve this page over "http://" instead)';
 		} else {

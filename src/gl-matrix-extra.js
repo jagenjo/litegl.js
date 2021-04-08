@@ -157,7 +157,32 @@ vec3.random = function(vec, scale)
 	return vec;
 }
 
-//converts a polar coordinate (radius, lat, long) to (x,y,z)
+/**
+* converts from cartesian to polar
+* @method cartesianToPolar
+* @param {vec3} out
+* @param {vec3} v
+* @return {vec3} returns [radius,inclination,azimuth]
+*/
+vec3.cartesianToPolar = function( out, v )
+{
+	out = out || vec3.create();
+	var x = v[0];
+	var y = v[1];
+	var z = v[2];
+	out[0] = Math.sqrt(x*x+y*y+z*z); //radius
+	out[1] = Math.asin(y/out[0]); //inclination
+	out[2] = Math.atan2(x,z); //azimuth
+	return out;
+}
+
+/**
+* converts from polar to cartesian
+* @method polarToCartesian
+* @param {vec3} out
+* @param {vec3} v [r,lat,long] or [radius,inclination,azimuth]
+* @return {vec3} returns out
+*/
 vec3.polarToCartesian = function(out, v)
 {
 	var r = v[0];
@@ -169,6 +194,14 @@ vec3.polarToCartesian = function(out, v)
 	return out;
 }
 
+/**
+* reflects a vector over a normal
+* @method reflect
+* @param {vec3} out
+* @param {vec3} v
+* @param {vec3} n
+* @return {vec3} reflected vector
+*/
 vec3.reflect = function(out, v, n)
 {
 	var x = v[0]; var y = v[1]; var z = v[2];
