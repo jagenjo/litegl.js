@@ -13076,14 +13076,14 @@ global.Ray = GL.Ray = function Ray( origin, direction )
 Ray.prototype.testPlane = function( P, N )
 {
 	var r = geo.testRayPlane( this.origin, this.direction, P, N, this.collision_point );
-	r.t = geo.last_t;
+	this.t = geo.last_t;
 	return r;
 }
 
 Ray.prototype.testSphere = function( center, radius, max_dist )
 {
 	var r = geo.testRaySphere( this.origin, this.direction, center, radius, this.collision_point, max_dist );
-	r.t = geo.last_t;
+	this.t = geo.last_t;
 	return r;
 }
 
@@ -13091,7 +13091,7 @@ Ray.prototype.testSphere = function( center, radius, max_dist )
 Ray.prototype.testBBox = function( bbox, max_dist, model, in_local )
 {
 	var r = geo.testRayBBox( this.origin, this.direction, bbox, model, this.collision_point, max_dist, in_local );
-	r.t = geo.last_t;
+	this.t = geo.last_t;
 	return r;
 }
 
