@@ -5,7 +5,7 @@
 
 (function(global){
 
-var GL = global.GL = {};
+var GL = global.GL = global.LiteGL = {};
 
 if(typeof(glMatrix) == "undefined")
 	throw("litegl.js requires gl-matrix to work. It must be included before litegl.");
