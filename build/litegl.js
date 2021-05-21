@@ -9382,6 +9382,7 @@ Shader.createFX = function(code, uniforms, shader)
 {
 	//remove comments
 	code = GL.Shader.removeComments( code, true ); //remove comments and breaklines to avoid problems with the macros
+	uniforms = GL.Shader.removeComments( uniforms, true ); //remove comments and breaklines to avoid problems with the macros
 	var macros = {
 		FX_CODE: code,
 		FX_UNIFORMS: uniforms || ""
