@@ -580,6 +580,8 @@ Shader.prototype.drawBuffers = function( vertexBuffers, indexBuffer, mode, range
 
 	var gl = this.gl;
 
+	if(this._first_use)
+		this.checkLink();
 	gl.useProgram(this.program); //this could be removed assuming every shader is called with some uniforms 
 
 	// enable attributes as necessary.
@@ -658,6 +660,8 @@ Shader.prototype.drawInstanced = function( mesh, primitive, indices, instanced_u
 	if( gl.webgl_version == 1 && !gl.extensions.ANGLE_instanced_arrays )
 		throw("instancing not supported");
 
+	if(this._first_use)
+		this.checkLink();
 	gl.useProgram(this.program); //this could be removed assuming every shader is called with some uniforms 
 
 	// enable attributes as necessary.
