@@ -71,6 +71,14 @@ This is useful to create postprocessing effects or to bake information.
 
 To render to one texture (or several) check the guide for the [GL.FBO](fbos.md) class.
 
+Also you can use the method texture.drawTo but it is slightly slower as it must update the FBO:
+```js
+texture.drawTo( function(){
+  gl.clear( gl.COLOR_BUFFER_BIT );
+  //...
+});
+```
+
 ## Texture pool 
 
 When using temporary textures is always better to reuse old ones instead of creating and destroying them which would lead to garbage and fragmented memory.
