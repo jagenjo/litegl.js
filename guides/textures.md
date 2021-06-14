@@ -40,6 +40,26 @@ If you want to use an existing image as a texture you can use the loading method
   var texture = GL.Texture.fromURL( "myimage.png", {} );
 ```
 
+## Updating texture content (Image/Canvas/Video or data)
+
+You can create or update a texture using an image, or video or Canvas2D.
+
+```javascript
+var texture = GL.Texture.fromImage( image );
+```
+
+Or if the texture already exists:
+
+```javascript
+texture.uploadImage( image );
+``` 
+
+Or if you have the pixels in an array:
+```javascript
+texture.uploadData( data );
+``` 
+
+
 ## Cubemaps
 
 Using cubemaps is very useful to create interesting effects but loading or generating is hard and prone to errors.
