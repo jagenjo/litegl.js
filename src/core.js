@@ -555,7 +555,8 @@ GL.create = function(options) {
 		e.eventType = e.type; //type cannot be overwritten, so I make a clone to allow me to overwrite
 
 		var target_element = e.target.nodeName.toLowerCase();
-		if(target_element === "input" || target_element === "textarea" || target_element === "select")
+		if( target_element === "input" || target_element === "textarea" || 
+			target_element === "select" || e.target.contentEditable === "true" )
 			return;
 
 		e.character = String.fromCharCode(e.keyCode).toLowerCase();
@@ -1010,6 +1011,12 @@ GL.augmentEvent = function(e, root_element)
 	e.canvasy = b.height - e.mousey;
 	e.deltax = 0;
 	e.deltay = 0;
+
+	if(document.pointerLockElement === root_element)
+	{
+		e.canvasx = e.mousex = b.width * 0.5;
+		e.canvasy = e.mousey = b.height * 0.5;
+	}
 	
 	if(e.type == "mousedown")
 	{
