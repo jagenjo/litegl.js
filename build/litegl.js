@@ -4332,14 +4332,22 @@ Mesh.fromURL = function(url, on_complete, gl, options)
 {
 	options = options || {};
 	gl = gl || global.gl;
-	
-	var mesh = new GL.Mesh(undefined,undefined,undefined,gl);
-	mesh.ready = false;
 
 	var pos = url.lastIndexOf(".");
 	var extension = url.substr(pos+1).toLowerCase();
 	if(options.extension)
 		extension = options.extension;
+
+	var parser = GL.Mesh.parsers[ extension.toLowerCase() ];
+	if(!parser)
+	{
+		console.error("No parser available in litegl to parse mesh of type",extension);
+		return null;
+	}
+
+	var mesh = new GL.Mesh(undefined,undefined,undefined,gl);
+	mesh.ready = false;
+
 	options.binary = Mesh.binary_file_formats[ extension ];
 
 	HttpRequest( url, null, function(data) {
@@ -10371,8 +10379,10 @@ GL.create = function(options) {
 		if(!key) //this key doesnt look like an special key
 			key = e.character;
 
+		var modified_key = e.altKey || e.ctrlKey || e.metaKey;
+
 		//regular key
-		if (!e.altKey && !e.ctrlKey && !e.metaKey) {
+		if (!modified_key) {
 			if (key) 
 				gl.keys[key] = e.type == "keydown";
 			prev_state = gl.keys[e.keyCode];
@@ -10380,7 +10390,7 @@ GL.create = function(options) {
 		}
 
 		//avoid repetition if key stays pressed
-		if(prev_state != gl.keys[e.keyCode])
+		if( prev_state != gl.keys[e.keyCode] || modified_key )
 		{
 			if(e.type == "keydown" && gl.onkeydown) 
 				gl.onkeydown(e);
@@ -10789,6 +10799,10 @@ GL.mapKeyCode = function(code)
 		17: 'CTRL',
 		27: 'ESCAPE',
 		32: 'SPACE',
+		33: 'PAGEUP',
+		34: 'PAGEDOWN',
+		35: 'END',
+		36: 'HOME',
 		37: 'LEFT',
 		38: 'UP',
 		39: 'RIGHT',

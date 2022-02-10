@@ -2071,14 +2071,22 @@ Mesh.fromURL = function(url, on_complete, gl, options)
 {
 	options = options || {};
 	gl = gl || global.gl;
-	
-	var mesh = new GL.Mesh(undefined,undefined,undefined,gl);
-	mesh.ready = false;
 
 	var pos = url.lastIndexOf(".");
 	var extension = url.substr(pos+1).toLowerCase();
 	if(options.extension)
 		extension = options.extension;
+
+	var parser = GL.Mesh.parsers[ extension.toLowerCase() ];
+	if(!parser)
+	{
+		console.error("No parser available in litegl to parse mesh of type",extension);
+		return null;
+	}
+
+	var mesh = new GL.Mesh(undefined,undefined,undefined,gl);
+	mesh.ready = false;
+
 	options.binary = Mesh.binary_file_formats[ extension ];
 
 	HttpRequest( url, null, function(data) {

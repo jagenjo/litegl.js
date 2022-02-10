@@ -565,8 +565,10 @@ GL.create = function(options) {
 		if(!key) //this key doesnt look like an special key
 			key = e.character;
 
+		var modified_key = e.altKey || e.ctrlKey || e.metaKey;
+
 		//regular key
-		if (!e.altKey && !e.ctrlKey && !e.metaKey) {
+		if (!modified_key) {
 			if (key) 
 				gl.keys[key] = e.type == "keydown";
 			prev_state = gl.keys[e.keyCode];
@@ -574,7 +576,7 @@ GL.create = function(options) {
 		}
 
 		//avoid repetition if key stays pressed
-		if(prev_state != gl.keys[e.keyCode])
+		if( prev_state != gl.keys[e.keyCode] || modified_key )
 		{
 			if(e.type == "keydown" && gl.onkeydown) 
 				gl.onkeydown(e);
@@ -983,6 +985,10 @@ GL.mapKeyCode = function(code)
 		17: 'CTRL',
 		27: 'ESCAPE',
 		32: 'SPACE',
+		33: 'PAGEUP',
+		34: 'PAGEDOWN',
+		35: 'END',
+		36: 'HOME',
 		37: 'LEFT',
 		38: 'UP',
 		39: 'RIGHT',
