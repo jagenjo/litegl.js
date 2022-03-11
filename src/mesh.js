@@ -1944,6 +1944,7 @@ Mesh.mergeMeshes = function( meshes, options )
 			throw("cannot merge meshes, one contains bones, the other doesnt");
 
 		groups.push( group );
+
 	}
 
 	//allocate
@@ -2045,7 +2046,11 @@ Mesh.mergeMeshes = function( meshes, options )
 
 	//return
 	if( typeof(gl) != "undefined" || options.only_data )
-		return new GL.Mesh( vertex_buffers,index_buffers, extra );
+	{
+		var mesh = new GL.Mesh( vertex_buffers,index_buffers, extra );
+		mesh.updateBoundingBox();
+		return mesh;
+	}
 	return { 
 		vertexBuffers: vertex_buffers, 
 		indexBuffers: index_buffers, 
