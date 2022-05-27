@@ -701,14 +701,23 @@ Mesh.parsers["mesh"] = function( text, options )
 
 		if(type == "-") //buffer
 		{
-			var data = new Float32Array( Number(t[1]) );
+			var factor = 1;
+			var datatype = Float32Array;
+			if( name == "weights" || name == "bone_indices" )
+				datatype = Uint8Array;
+			if( name == "weights" )
+				factor = 255;
+			var data = new datatype( Number(t[1]) );
 			for(var j = 0; j < data.length; ++j)
-				data[j] = Number(t[j+2]);
+				data[j] = Number(t[j+2]) * factor;
 			mesh[name] = data;
 		}
 		else if(type == "*") //index
 		{
-			var data = Number(t[1]) > 256*256 ? new Uint32Array( Number(t[1]) ) : new Uint16Array( Number(t[1]) );
+			var datatype = Uint16Array;
+			if( Number(t[1]) > 256*256 )
+				datatype = Uint32Array;
+			var data = new datatype( Number(t[1]) );
 			for(var j = 0; j < data.length; ++j)
 				data[j] = Number(t[j+2]);
 			mesh[name] = data;
@@ -759,14 +768,21 @@ Mesh.encoders["mesh"] = function( mesh, options )
 	for(var i in mesh.vertexBuffers )
 	{
 		var buffer = mesh.vertexBuffers[i];
-		var line = ["-"+i, buffer.data.length, buffer.data, typedArrayToArray( buffer.data ) ];
+		var buffer_data = typedArrayToArray( buffer.data );
+		if( buffer.normalize && buffer.data.constructor == Uint8Array ) //denormalize
+		{
+			for(var j = 0; j < buffer_data.length; ++j)	
+				buffer_data[j] /= 255;
+		}
+		var line = ["-"+i, buffer.data.length, buffer.data, buffer_data ];
 		lines.push(line.join(","));
 	}
 
 	for(var i in mesh.indexBuffers )
 	{
 		var buffer = mesh.indexBuffers[i];
-		var line = [ "*" + i, buffer.data.length, buffer.data, typedArrayToArray( buffer.data ) ];
+		var buffer_data = typedArrayToArray( buffer.data );
+		var line = [ "*" + i, buffer.data.length, buffer.data, buffer_data ];
 		lines.push(line.join(","));
 	}
 

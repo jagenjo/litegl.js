@@ -605,7 +605,7 @@ Shader.prototype.drawBuffers = function( vertexBuffers, indexBuffer, mode, range
 		gl.bindBuffer(gl.ARRAY_BUFFER, buffer.buffer);
 		gl.enableVertexAttribArray(location);
 
-		gl.vertexAttribPointer(location, buffer.buffer.spacing, buffer.buffer.gl_type, false, 0, 0);
+		gl.vertexAttribPointer(location, buffer.buffer.spacing, buffer.buffer.gl_type, buffer.normalize, 0, 0);
 		length = buffer.buffer.length / buffer.buffer.spacing;
 	}
 
@@ -687,7 +687,7 @@ Shader.prototype.drawInstanced = function( mesh, primitive, indices, instanced_u
 		gl.bindBuffer(gl.ARRAY_BUFFER, buffer.buffer);
 		gl.enableVertexAttribArray(location);
 
-		gl.vertexAttribPointer(location, buffer.buffer.spacing, buffer.buffer.gl_type, false, 0, 0);
+		gl.vertexAttribPointer(location, buffer.buffer.spacing, buffer.buffer.gl_type, buffer.normalize, 0, 0);
 		length = buffer.buffer.length / buffer.buffer.spacing;
 	}
 

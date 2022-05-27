@@ -163,7 +163,7 @@ GL.create = function(options) {
 	}
 	
 	//just some checks
-	if(typeof(glMatrix) == "undefined")
+	if(window.glMatrix == undefined)
 		throw("glMatrix not found, LiteGL requires glMatrix to be included");
 
 	var last_click_time = 0;
@@ -339,6 +339,7 @@ GL.create = function(options) {
 
 		canvas.addEventListener("mousedown", onmouse);
 		canvas.addEventListener("mousemove", onmouse);
+		canvas.addEventListener("drag", onmouse);
 		canvas.addEventListener("dragstart", onmouse);
 		if(capture_wheel)
 		{
@@ -1013,6 +1014,10 @@ GL.augmentEvent = function(e, root_element)
 		
 	e.mousex = e.clientX - b.left;
 	e.mousey = e.clientY - b.top;
+	if (e.is_touch) { //not sure about this
+		e.mousex = e.surfaceX;
+		e.mousey = e.surfaceY;
+	}
 	e.canvasx = e.mousex;
 	e.canvasy = b.height - e.mousey;
 	e.deltax = 0;
@@ -1039,7 +1044,7 @@ GL.augmentEvent = function(e, root_element)
 			this.dragging = false;
 	}
 
-	if( e.movementX !== undefined && !GL.isMobile() ) //pointer lock (mobile gives always zero)
+	if( e.movementX !== undefined && !e.is_touch && !GL.isMobile() ) //pointer lock (mobile gives always zero)
 	{
 		//console.log( e.movementX )
 		e.deltax = e.movementX;

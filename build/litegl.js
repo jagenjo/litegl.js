@@ -8,7 +8,19 @@
 var GL = global.GL = global.LiteGL = {};
 
 if(typeof(glMatrix) == "undefined")
-	throw("litegl.js requires gl-matrix to work. It must be included before litegl.");
+{
+	if( typeof(window) == "undefined" ) //nodejs?
+	{
+		console.log("importing glMatrix");
+		//import * as glMatrix from './core/libs/gl-matrix-min.js';		
+		global.glMatrix = require("./gl-matrix-min.js");
+		var glMatrix = global.glMatrix;
+		for(var i in glMatrix)
+			global[i] = glMatrix[i];
+	}
+	else if( window.glMatrix == "undefined" )
+		throw("litegl.js requires gl-matrix to work. It must be included before litegl.");
+}
 else
 {
 	if(!global.vec2)
@@ -1510,8 +1522,8 @@ if(typeof(global) != "undefined")
 	global.DDS = DDS;
 
 /* this file adds some extra functions to gl-matrix library */
-if(typeof(glMatrix) == "undefined")
-	throw("You must include glMatrix on your project");
+//if(typeof(glMatrix) == "undefined")
+//	throw("You must include glMatrix on your project");
 
 Math.clamp = function(v,a,b) { return (a > v ? a : (b < v ? b : v)); }
 Math.lerp =  function(a,b,f) { return a * (1 - f) + b * f; }
@@ -2304,6 +2316,7 @@ GL.Buffer = function Buffer( target, data, spacing, stream_type, gl ) {
 	this.buffer = null; //webgl buffer
 	this.target = target; //GL.ARRAY_BUFFER, GL.ELEMENT_ARRAY_BUFFER
 	this.attribute = null; //name of the attribute in the shader ("a_vertex","a_normal","a_coord",...)
+	this.normalize = false; //if the value should be normalized between 0 and 1 based on type
 
 	//optional
 	this.data = data;
@@ -2324,7 +2337,7 @@ GL.Buffer.prototype.bind = function( location, gl )
 
 	gl.bindBuffer( gl.ARRAY_BUFFER, this.buffer );
 	gl.enableVertexAttribArray( location );
-	gl.vertexAttribPointer( location, this.spacing, this.buffer.gl_type, false, 0, 0);
+	gl.vertexAttribPointer( location, this.spacing, this.buffer.gl_type, this.normalize || false, 0, 0);
 }
 
 /**
@@ -2604,10 +2617,10 @@ Mesh.common_buffers = {
 	"coords": { spacing:2, attribute: "a_coord"},
 	"coords1": { spacing:2, attribute: "a_coord1"},
 	"coords2": { spacing:2, attribute: "a_coord2"},
-	"colors": { spacing:4, attribute: "a_color"}, 
+	"colors": { spacing:4, attribute: "a_color" }, // cant use Uint8Array, dont know how as data comes in another format
 	"tangents": { spacing:3, attribute: "a_tangent"},
 	"bone_indices": { spacing:4, attribute: "a_bone_indices", type: Uint8Array },
-	"weights": { spacing:4, attribute: "a_weights"},
+	"weights": { spacing:4, attribute: "a_weights", normalize: true }, // cant use Uint8Array, dont know how
 	"extra": { spacing:1, attribute: "a_extra"},
 	"extra2": { spacing:2, attribute: "a_extra2"},
 	"extra3": { spacing:3, attribute: "a_extra3"},
@@ -2792,6 +2805,14 @@ Mesh.prototype.createVertexBuffer = function( name, attribute, buffer_spacing, b
 	buffer.name = name;
 	buffer.attribute = attribute;
 
+	//to convert [255,128,...] into [1,0.5,...]  in the shader
+	if( buffer_data.constructor == Uint8Array || 
+		buffer_data.constructor == Int8Array )
+	{
+		if( common && common.normalize )
+			buffer.normalize = true;
+	}
+
 	return buffer;
 }
 
@@ -2969,7 +2990,7 @@ Mesh.prototype.bindBuffers = function( shader )
 			continue; 
 		gl.bindBuffer(gl.ARRAY_BUFFER, buffer.buffer);
 		gl.enableVertexAttribArray(location);
-		gl.vertexAttribPointer(location, buffer.buffer.spacing, buffer.buffer.gl_type, false, 0, 0);
+		gl.vertexAttribPointer(location, buffer.buffer.spacing, buffer.buffer.gl_type, buffer.normalize || false, 0, 0);
 	}
 }
 
@@ -8864,7 +8885,7 @@ Shader.prototype.drawBuffers = function( vertexBuffers, indexBuffer, mode, range
 		gl.bindBuffer(gl.ARRAY_BUFFER, buffer.buffer);
 		gl.enableVertexAttribArray(location);
 
-		gl.vertexAttribPointer(location, buffer.buffer.spacing, buffer.buffer.gl_type, false, 0, 0);
+		gl.vertexAttribPointer(location, buffer.buffer.spacing, buffer.buffer.gl_type, buffer.normalize, 0, 0);
 		length = buffer.buffer.length / buffer.buffer.spacing;
 	}
 
@@ -8946,7 +8967,7 @@ Shader.prototype.drawInstanced = function( mesh, primitive, indices, instanced_u
 		gl.bindBuffer(gl.ARRAY_BUFFER, buffer.buffer);
 		gl.enableVertexAttribArray(location);
 
-		gl.vertexAttribPointer(location, buffer.buffer.spacing, buffer.buffer.gl_type, false, 0, 0);
+		gl.vertexAttribPointer(location, buffer.buffer.spacing, buffer.buffer.gl_type, buffer.normalize, 0, 0);
 		length = buffer.buffer.length / buffer.buffer.spacing;
 	}
 
@@ -9982,7 +10003,7 @@ GL.create = function(options) {
 	}
 	
 	//just some checks
-	if(typeof(glMatrix) == "undefined")
+	if(window.glMatrix == undefined)
 		throw("glMatrix not found, LiteGL requires glMatrix to be included");
 
 	var last_click_time = 0;
@@ -10158,6 +10179,7 @@ GL.create = function(options) {
 
 		canvas.addEventListener("mousedown", onmouse);
 		canvas.addEventListener("mousemove", onmouse);
+		canvas.addEventListener("drag", onmouse);
 		canvas.addEventListener("dragstart", onmouse);
 		if(capture_wheel)
 		{
@@ -10832,6 +10854,10 @@ GL.augmentEvent = function(e, root_element)
 		
 	e.mousex = e.clientX - b.left;
 	e.mousey = e.clientY - b.top;
+	if (e.is_touch) { //not sure about this
+		e.mousex = e.surfaceX;
+		e.mousey = e.surfaceY;
+	}
 	e.canvasx = e.mousex;
 	e.canvasy = b.height - e.mousey;
 	e.deltax = 0;
@@ -10858,7 +10884,7 @@ GL.augmentEvent = function(e, root_element)
 			this.dragging = false;
 	}
 
-	if( e.movementX !== undefined && !GL.isMobile() ) //pointer lock (mobile gives always zero)
+	if( e.movementX !== undefined && !e.is_touch && !GL.isMobile() ) //pointer lock (mobile gives always zero)
 	{
 		//console.log( e.movementX )
 		e.deltax = e.movementX;
@@ -13996,14 +14022,23 @@ Mesh.parsers["mesh"] = function( text, options )
 
 		if(type == "-") //buffer
 		{
-			var data = new Float32Array( Number(t[1]) );
+			var factor = 1;
+			var datatype = Float32Array;
+			if( name == "weights" || name == "bone_indices" )
+				datatype = Uint8Array;
+			if( name == "weights" )
+				factor = 255;
+			var data = new datatype( Number(t[1]) );
 			for(var j = 0; j < data.length; ++j)
-				data[j] = Number(t[j+2]);
+				data[j] = Number(t[j+2]) * factor;
 			mesh[name] = data;
 		}
 		else if(type == "*") //index
 		{
-			var data = Number(t[1]) > 256*256 ? new Uint32Array( Number(t[1]) ) : new Uint16Array( Number(t[1]) );
+			var datatype = Uint16Array;
+			if( Number(t[1]) > 256*256 )
+				datatype = Uint32Array;
+			var data = new datatype( Number(t[1]) );
 			for(var j = 0; j < data.length; ++j)
 				data[j] = Number(t[j+2]);
 			mesh[name] = data;
@@ -14054,14 +14089,21 @@ Mesh.encoders["mesh"] = function( mesh, options )
 	for(var i in mesh.vertexBuffers )
 	{
 		var buffer = mesh.vertexBuffers[i];
-		var line = ["-"+i, buffer.data.length, buffer.data, typedArrayToArray( buffer.data ) ];
+		var buffer_data = typedArrayToArray( buffer.data );
+		if( buffer.normalize && buffer.data.constructor == Uint8Array ) //denormalize
+		{
+			for(var j = 0; j < buffer_data.length; ++j)	
+				buffer_data[j] /= 255;
+		}
+		var line = ["-"+i, buffer.data.length, buffer.data, buffer_data ];
 		lines.push(line.join(","));
 	}
 
 	for(var i in mesh.indexBuffers )
 	{
 		var buffer = mesh.indexBuffers[i];
-		var line = [ "*" + i, buffer.data.length, buffer.data, typedArrayToArray( buffer.data ) ];
+		var buffer_data = typedArrayToArray( buffer.data );
+		var line = [ "*" + i, buffer.data.length, buffer.data, buffer_data ];
 		lines.push(line.join(","));
 	}
 

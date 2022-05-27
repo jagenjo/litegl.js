@@ -1,6 +1,6 @@
 /* this file adds some extra functions to gl-matrix library */
-if(typeof(glMatrix) == "undefined")
-	throw("You must include glMatrix on your project");
+//if(typeof(glMatrix) == "undefined")
+//	throw("You must include glMatrix on your project");
 
 Math.clamp = function(v,a,b) { return (a > v ? a : (b < v ? b : v)); }
 Math.lerp =  function(a,b,f) { return a * (1 - f) + b * f; }
