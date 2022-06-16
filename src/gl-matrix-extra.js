@@ -1,6 +1,14 @@
+
 /* this file adds some extra functions to gl-matrix library */
-//if(typeof(glMatrix) == "undefined")
-//	throw("You must include glMatrix on your project");
+if(typeof(glMatrix) == "undefined")
+{
+	//detects if in node, and if glMatrix is in this context, and extract all
+	if(typeof(exports) != "undefined" && typeof(process) !== undefined && exports.vec3)
+	{
+		for(var i in exports)
+			global[i] = exports[i];
+	}
+}
 
 Math.clamp = function(v,a,b) { return (a > v ? a : (b < v ? b : v)); }
 Math.lerp =  function(a,b,f) { return a * (1 - f) + b * f; }
@@ -502,13 +510,13 @@ quat.toEuler = function(out, quat) {
 	{
 		heading = 2 * Math.atan2(q[0],q[3]);
 		bank = 0;
-		attitude = 0; //¿?
+		attitude = 0; //ï¿½?
 	}
 	else if( (q[0]*q[1] + q[2]*q[3]) == 0.5 )
 	{
 		heading = -2 * Math.atan2(q[0],q[3]);
 		bank = 0;
-		attitude = 0; //¿?
+		attitude = 0; //ï¿½?
 	}
 	else
 	{

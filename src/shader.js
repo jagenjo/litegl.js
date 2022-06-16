@@ -112,6 +112,24 @@ Shader.parseError = function( error_str, vs_code, fs_code )
 }
 
 /**
+* clears all memory allocated by this shader
+* @method delete
+*/
+Shader.prototype.delete = function()
+{
+	if(this.program)
+		this.gl.deleteProgram(this.program);
+	if(this.vs_shader)
+		this.gl.deleteShader(this.vs_shader);
+	if(this.fs_shader)
+		this.gl.deleteShader(this.fs_shader);
+	this.gl = null;
+	this.attributes = {}; 
+	this.uniformInfo = {};
+	this.samplers = {};	
+}
+
+/**
 * It updates the code inside one shader
 * @method updateShader
 * @param {String} vertexSource 

@@ -268,6 +268,36 @@ GL.create = function(options) {
 			document.removeEventListener("keyup", onkey_handler );
 		}
 
+		if(onmouse_handler)
+		{
+			this.canvas.removeEventListener("mousedown", onmouse_handler );
+			this.canvas.removeEventListener("mousemove", onmouse_handler );
+			this.canvas.removeEventListener("mouseup", onmouse_handler );
+			this.canvas.addEventListener("drag", onmouse_handler);
+			this.canvas.addEventListener("dragstart", onmouse_handler);
+			this.canvas.addEventListener("wheel", onmouse_handler);
+		}
+
+		//clear all containers
+		for(var i in this.shaders)
+		{
+			this.shaders[i].delete();
+			this.shaders[i] = null;
+		}
+		this.shaders = {};
+		for(var i in this.meshes)
+		{
+			this.meshes[i].deleteBuffers();
+			this.meshes[i] = null;
+		}
+		this.meshes = {};
+		for(var i in this.textures)
+		{
+			this.textures[i].delete();
+			this.textures[i] = null;
+		}
+		this.textures = {};
+
 		if(this.canvas.parentNode)
 			this.canvas.parentNode.removeChild(this.canvas);
 		this.destroyed = true;
@@ -453,6 +483,7 @@ GL.create = function(options) {
 			return false;
 		}
 	}
+	var onmouse_handler = onmouse;
 
 	var translate_touches = false;
 

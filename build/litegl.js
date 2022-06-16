@@ -1521,9 +1521,17 @@ var DDS = (function () {
 if(typeof(global) != "undefined")
 	global.DDS = DDS;
 
+
 /* this file adds some extra functions to gl-matrix library */
-//if(typeof(glMatrix) == "undefined")
-//	throw("You must include glMatrix on your project");
+if(typeof(glMatrix) == "undefined")
+{
+	//detects if in node, and if glMatrix is in this context, and extract all
+	if(typeof(exports) != "undefined" && typeof(process) !== undefined && exports.vec3)
+	{
+		for(var i in exports)
+			global[i] = exports[i];
+	}
+}
 
 Math.clamp = function(v,a,b) { return (a > v ? a : (b < v ? b : v)); }
 Math.lerp =  function(a,b,f) { return a * (1 - f) + b * f; }
@@ -2025,13 +2033,13 @@ quat.toEuler = function(out, quat) {
 	{
 		heading = 2 * Math.atan2(q[0],q[3]);
 		bank = 0;
-		attitude = 0; //¿?
+		attitude = 0; //ï¿½?
 	}
 	else if( (q[0]*q[1] + q[2]*q[3]) == 0.5 )
 	{
 		heading = -2 * Math.atan2(q[0],q[3]);
 		bank = 0;
-		attitude = 0; //¿?
+		attitude = 0; //ï¿½?
 	}
 	else
 	{
@@ -8392,6 +8400,24 @@ Shader.parseError = function( error_str, vs_code, fs_code )
 }
 
 /**
+* clears all memory allocated by this shader
+* @method delete
+*/
+Shader.prototype.delete = function()
+{
+	if(this.program)
+		this.gl.deleteProgram(this.program);
+	if(this.vs_shader)
+		this.gl.deleteShader(this.vs_shader);
+	if(this.fs_shader)
+		this.gl.deleteShader(this.fs_shader);
+	this.gl = null;
+	this.attributes = {}; 
+	this.uniformInfo = {};
+	this.samplers = {};	
+}
+
+/**
 * It updates the code inside one shader
 * @method updateShader
 * @param {String} vertexSource 
@@ -10108,6 +10134,36 @@ GL.create = function(options) {
 			document.removeEventListener("keyup", onkey_handler );
 		}
 
+		if(onmouse_handler)
+		{
+			this.canvas.removeEventListener("mousedown", onmouse_handler );
+			this.canvas.removeEventListener("mousemove", onmouse_handler );
+			this.canvas.removeEventListener("mouseup", onmouse_handler );
+			this.canvas.addEventListener("drag", onmouse_handler);
+			this.canvas.addEventListener("dragstart", onmouse_handler);
+			this.canvas.addEventListener("wheel", onmouse_handler);
+		}
+
+		//clear all containers
+		for(var i in this.shaders)
+		{
+			this.shaders[i].delete();
+			this.shaders[i] = null;
+		}
+		this.shaders = {};
+		for(var i in this.meshes)
+		{
+			this.meshes[i].deleteBuffers();
+			this.meshes[i] = null;
+		}
+		this.meshes = {};
+		for(var i in this.textures)
+		{
+			this.textures[i].delete();
+			this.textures[i] = null;
+		}
+		this.textures = {};
+
 		if(this.canvas.parentNode)
 			this.canvas.parentNode.removeChild(this.canvas);
 		this.destroyed = true;
@@ -10293,6 +10349,7 @@ GL.create = function(options) {
 			return false;
 		}
 	}
+	var onmouse_handler = onmouse;
 
 	var translate_touches = false;
 
