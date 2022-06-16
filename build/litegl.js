@@ -10854,10 +10854,6 @@ GL.augmentEvent = function(e, root_element)
 		
 	e.mousex = e.clientX - b.left;
 	e.mousey = e.clientY - b.top;
-	if (e.is_touch) { //not sure about this
-		e.mousex = e.surfaceX;
-		e.mousey = e.surfaceY;
-	}
 	e.canvasx = e.mousex;
 	e.canvasy = b.height - e.mousey;
 	e.deltax = 0;
