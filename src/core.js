@@ -1050,6 +1050,10 @@ GL.augmentEvent = function(e, root_element)
 	e.deltax = 0;
 	e.deltay = 0;
 
+	if (e.is_touch) {
+		gl.mouse.buttons = e.which;
+	}
+
 	if(document.pointerLockElement === root_element)
 	{
 		e.canvasx = e.mousex = b.width * 0.5;
