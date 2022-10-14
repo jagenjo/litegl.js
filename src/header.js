@@ -8,7 +8,14 @@ var GL = global.GL = global.LiteGL = {};
 
 if(typeof(glMatrix) == "undefined")
 {
-	if( typeof(window) == "undefined" ) //nodejs?
+	if( typeof(self) != "undefined" ) //worker?
+	{
+		//DONT DO ANYTHING, whoever included this should also include glMatrix
+		//console.log("importing glMatrix from worker");
+		//import * as glMatrix from './core/libs/gl-matrix-min.js';		
+		//importScripts("./gl-matrix-min.js");
+	}
+	else if( typeof(window) == "undefined" ) //nodejs?
 	{
 		console.log("importing glMatrix");
 		//import * as glMatrix from './core/libs/gl-matrix-min.js';		
@@ -17,7 +24,7 @@ if(typeof(glMatrix) == "undefined")
 		for(var i in glMatrix)
 			global[i] = glMatrix[i];
 	}
-	else if( window.glMatrix == "undefined" )
+	else if( typeof(glMatrix) == "undefined" )
 		throw("litegl.js requires gl-matrix to work. It must be included before litegl.");
 }
 else

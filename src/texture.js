@@ -204,6 +204,8 @@ Texture.renderbuffer = null;
 Texture.loading_color = new Uint8Array([0,0,0,0]);
 Texture.use_renderbuffer_pool = true; //should improve performance
 
+Texture.CROSS_ORIGIN_CREDENTIALS = "Anonymous";
+
 //because usually you dont want to specify the internalFormat, this tries to guess it from its format
 //check https://webgl2fundamentals.org/webgl/lessons/webgl-data-textures.html for more info
 Texture.prototype.computeInternalFormat = function()
@@ -459,9 +461,13 @@ Texture.prototype.uploadImage = function( image, options )
 		}
 		else
 		{
+			var w = image.videoWidth || image.width;
+			var h = image.videoHeight || image.height;
+			if(w != this.width || h != this.height)
+				console.warn("image uploaded has a different size than texture, resizing it.");
 			gl.texImage2D( gl.TEXTURE_2D, 0, this.format, this.format, this.type, image );
-			this.width = image.videoWidth || image.width;
-			this.height = image.videoHeight || image.height;
+			this.width = w;
+			this.height = h;
 		}
 		this.data = image;
 	} catch (e) {
@@ -1298,6 +1304,7 @@ Texture.fromURL = function( url, options, on_complete, gl ) {
 	{
 		var image = new Image();
 		image.src = url;
+		image.crossOrigin = Texture.CROSS_ORIGIN_CREDENTIALS; //to please the CORS gods
 		var that = this;
 		image.onload = function()
 		{
@@ -2206,7 +2213,7 @@ Texture.getTemporary = function( width, height, options, gl )
 	}
 
 	//not found, create it
-	var tex = new GL.Texture( width, height, { type: type, texture_type: texture_type, format: format });
+	var tex = new GL.Texture( width, height, { type: type, texture_type: texture_type, format: format, filter: gl.LINEAR });
 	tex._key = key;
 	tex._pool = 0;
 	return tex;
