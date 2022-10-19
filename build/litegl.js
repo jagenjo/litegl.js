@@ -10367,18 +10367,20 @@ GL.create = function(options) {
 
 	var translate_touches = false;
 
-	var mc = new Hammer.Manager(canvas);
-	var pinch = new Hammer.Pinch({threshold: 0.3});
-	if (mc && pinch) {
-		mc.add(pinch);
-		mc.on("pinch", function(event) {
-			pinchZoom(event)
-		});
+	//if Hammer lib available, use it for pinch
+	if(typeof(Hammer) !== "undefined" )
+	{
+		var mc = new Hammer.Manager(canvas);
+		var pinch = new Hammer.Pinch({threshold: 0.3});
+		if (mc && pinch) {
+			mc.add(pinch);
+			mc.on("pinch", pinchZoom );
+		}
 	}
 
 	function pinchZoom(event)
 	{
-		const originalEvent = event.srcEvent;
+		var originalEvent = event.srcEvent;
 		var type = "wheel";
 		var simulatedEvent = document.createEvent("MouseEvent");
 		simulatedEvent.initMouseEvent(type, true, true, window, 1,
@@ -10387,7 +10389,7 @@ GL.create = function(options) {
 								  false, false, false, 0/*left*/, null);
 		simulatedEvent.originalEvent = simulatedEvent;
 		simulatedEvent.is_touch = true;
-		let processPinch = false;
+		var processPinch = false;
 		if (event.additionalEvent === "pinchin") {
 			simulatedEvent.deltaY = 1;
 			processPinch = true;

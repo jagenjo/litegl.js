@@ -487,6 +487,45 @@ GL.create = function(options) {
 
 	var translate_touches = false;
 
+	//if Hammer lib available, use it for pinch
+	if(typeof(Hammer) !== "undefined" )
+	{
+		var mc = new Hammer.Manager(canvas);
+		var pinch = new Hammer.Pinch({threshold: 0.3});
+		if (mc && pinch) {
+			mc.add(pinch);
+			mc.on("pinch", pinchZoom );
+		}
+	}
+
+	function pinchZoom(event)
+	{
+		var originalEvent = event.srcEvent;
+		var type = "wheel";
+		var simulatedEvent = document.createEvent("MouseEvent");
+		simulatedEvent.initMouseEvent(type, true, true, window, 1,
+								  originalEvent.screenX, originalEvent.screenY,
+								  originalEvent.clientX, originalEvent.clientY, false,
+								  false, false, false, 0/*left*/, null);
+		simulatedEvent.originalEvent = simulatedEvent;
+		simulatedEvent.is_touch = true;
+		var processPinch = false;
+		if (event.additionalEvent === "pinchin") {
+			simulatedEvent.deltaY = 1;
+			processPinch = true;
+		} else if (event.additionalEvent === "pinchout") {
+			simulatedEvent.deltaY = -1;
+			processPinch = true;
+		}
+		if (processPinch) {
+			simulatedEvent.pinchScaling = event.distance*0.0312;
+			originalEvent.target.dispatchEvent( simulatedEvent );
+		} 
+
+		//if we block this touch (to avoid weird canvas draggings) then we are blocking the gestures
+		originalEvent.preventDefault();
+	}
+
 	gl.captureTouch = function( translate_to_mouse_events )
 	{
 		translate_touches = translate_to_mouse_events;
