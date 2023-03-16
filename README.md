@@ -18,7 +18,7 @@ Some features are:
 * Loaders for Images and Meshes from URL (uses a placeholder till its loaded)
 * Uses typed-arrays for everything (uses glMatrix for all operations)
 * No garbage generated (reuses containers)
-* Basic Raytracing (for ray-sphere and ray-plane collision)
+* Basic Raytracing (for ray-sphere, ray-aabb, ray-plane, and ray-mesh)
 * Events system 
 * Cross-browser input handling for mouse, keyboard and gamepad
 * Supports multiple WebGL contexts
