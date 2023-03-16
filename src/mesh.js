@@ -1971,7 +1971,18 @@ Mesh.mergeMeshes = function( meshes, options )
 		}
 
 		if(!datatype)
-			datatype = Float32Array;
+		{
+			var one_buffer = mesh.vertexBuffers[j];
+			if(one_buffer)
+			{
+				if(one_buffer.data)
+					one_buffer = one_buffer.data;
+				if(one_buffer.constructor !== Array)
+					datatype = one_buffer.constructor;
+			}
+			if(!datatype)
+				datatype = Float32Array;
+		}
 
 		vertex_buffers[j] = new datatype( vertex_buffers[j] );
 		offsets[j] = 0;
