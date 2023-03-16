@@ -294,6 +294,18 @@ FBO.prototype.update = function( skip_disable )
 */
 FBO.prototype.bind = function( keep_old )
 {
+	if( this.multi_sample )
+	{
+		this._old_fbo_handler = gl.getParameter( gl.FRAMEBUFFER_BINDING );
+		this._old_viewport.set( gl.viewport_data );
+		gl.bindFramebuffer( gl.FRAMEBUFFER, this.handler );
+		gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, this.colorRenderbuffer);
+		gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this.depthRenderbuffer);	
+		gl.viewport( 0,0, this.width, this.height );
+		FBO.current = this;
+		return;
+	}
+
 	if(!this.color_textures.length && !this.depth_texture)
 		throw("FBO: no textures attached to FBO");
 	this._old_viewport.set( gl.viewport_data );
@@ -431,4 +443,62 @@ FBO.prototype.clearSecondary = function( color )
 		ext.drawBuffersWEBGL( this.order );
 	else
 		gl.drawBuffers( this.order );
+}
+
+//WebGL 2
+
+//allows to render to a FBO that will be multisampled
+FBO.prototype.makeMultiSample = function(width,height,samples,options)
+{
+	if(this.gl.webgl_version == 1)
+		throw("cannot use makeMultiSample in webgl 1.0");
+
+	this.width = width;
+	this.height = height;
+	samples = samples || 4;
+	options = options || {};
+	var format = options.format || gl.RGBA8;
+	var depth_format = gl.DEPTH_COMPONENT16;
+
+	this._old_fbo_handler = gl.getParameter( gl.FRAMEBUFFER_BINDING );
+
+	this.handler = gl.createFramebuffer();
+	gl.bindFramebuffer( gl.FRAMEBUFFER, this.handler );
+
+	this.colorRenderbuffer = gl.createRenderbuffer();
+	gl.bindRenderbuffer(gl.RENDERBUFFER, this.colorRenderbuffer);
+	gl.renderbufferStorageMultisample( gl.RENDERBUFFER, samples, format, this.width, this.height);
+
+	this.depthRenderbuffer = gl.createRenderbuffer();
+	gl.bindRenderbuffer(gl.RENDERBUFFER, this.depthRenderbuffer);
+	gl.renderbufferStorageMultisample(gl.RENDERBUFFER, samples, depth_format, this.width, this.height);
+
+	gl.bindFramebuffer( gl.FRAMEBUFFER, this.handler );
+	gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, this.colorRenderbuffer);
+	gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this.depthRenderbuffer);	
+
+	gl.bindFramebuffer( gl.FRAMEBUFFER, this._old_fbo_handler );
+	this._old_fbo_handler = null;
+
+	this.multi_sample = true;
+}
+
+FBO.prototype.blitMultisample = function( fbo )
+{
+	if(!fbo || fbo.constructor !== GL.FBO)
+		throw("parameter must be GL.FBO");
+
+	gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this.handler);
+	gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, fbo.handler );
+
+	gl.blitFramebuffer(0, 0, this.width, this.height,
+					0, 0, this.width, this.height,
+					gl.COLOR_BUFFER_BIT, gl.LINEAR);
+
+	gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null );
+	gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null );
+
+	gl.bindFramebuffer( gl.FRAMEBUFFER, this._old_fbo_handler );
+	this._old_fbo_handler = null;
+	gl.setViewport( this._old_viewport );
 }
