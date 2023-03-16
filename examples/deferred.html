@@ -38,7 +38,7 @@
 
 	var texture_albedo = new GL.Texture(w,h, { type: type, filter: gl.NEAREST });
 	var texture_normal = new GL.Texture(w,h, { type: type, filter: gl.NEAREST });
-	var texture_depth = new GL.Texture(w,h, { format: gl.DEPTH_COMPONENT, type: gl.UNSIGNED_INT}); 
+	var texture_depth = new GL.Texture(w,h, { format: gl.DEPTH_COMPONENT, filter: gl.NEAREST, type: gl.UNSIGNED_INT}); 
 	var textures = [ texture_albedo, texture_normal ];
 
 	var fbo = new GL.FBO( textures, texture_depth );

@@ -1,0 +1,126 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!--
+<meta property="og:title" content="GameEditor" />
+<meta property="og:description" content="GameEditor for simple games" />
+<meta property="og:image" content="" />
+-->
+
+<title>litegl.js: mesh from code example</title>
+	<link rel="stylesheet" type="text/css" href="style.css" />
+	<style type='text/css'>
+		html, body { background-color: #DDD; margin: 0; padding: 0; width: 100%; height: 100%;}
+	</style>
+	<script type="text/javascript" src="../external/gl-matrix.js"></script>
+	<script type="text/javascript" src="../build/litegl.js"></script>
+	<script type="text/javascript">
+	
+	function init()
+	{
+		//create the rendering context
+        var container = document.body;
+		var gl = GL.create({width: container.offsetWidth, height: container.offsetHeight});
+		container.appendChild(gl.canvas);
+		gl.animate();
+
+        //create mesh data
+        var vertices = [];
+        for(var x = -50; x < 50; ++x)
+            for(var y = -50; y < 50; ++y)
+        {
+            vertices.push(x,0,y);
+            vertices.push(x+1,0,y);
+            vertices.push(x+1,0,y+1);
+        }
+
+        //pass data to mesh (names for streams are: vertices,normals,coords,colors)
+		var mesh = GL.Mesh.load({vertices});
+
+		//create basic matrices for cameras and transformation
+		var persp = mat4.create();
+		var view = mat4.create();
+		var model = mat4.create();
+		var mvp = mat4.create();
+		var temp = mat4.create();
+
+		//get mouse actions
+		gl.captureMouse();
+		gl.onmousemove = function(e)
+		{
+			if(e.dragging)
+				mat4.rotateY(model,model,e.deltax * 0.01);
+		}
+
+		//set the camera position
+		mat4.perspective(persp, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 0.1, 1000);
+		mat4.lookAt(view, [0,10,10],[0,0,0], [0,1,0]);
+
+		//basic phong shader
+		var shader = new Shader('\
+				precision highp float;\
+				attribute vec3 a_vertex;\
+                uniform mat4 u_mvp;\
+				void main() {\
+					gl_Position = u_mvp * vec4(a_vertex,1.0);\
+				}\
+				', '\
+				precision highp float;\
+				uniform vec4 u_color;\
+				void main() {\
+				  gl_FragColor = u_color;\
+				}\
+			');
+
+
+		//generic gl flags and settings
+		gl.clearColor(0.1,0.1,0.1,1);
+
+		//rendering loop
+		gl.ondraw = function()
+		{
+			gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
+            gl.disable( gl.CULL_FACE );
+            gl.enable( gl.DEPTH_TEST );
+
+            //example of updating vertex in a mesh
+            //first regenerate the data
+            var t = getTime()*0.001;
+            var vertices = [];
+            for(var x = -50; x < 50; ++x)
+                for(var y = -50; y < 50; ++y)
+            {
+                var h = Math.sin((x+y+t)/10) * 2;
+                vertices.push(x,h,y);
+                vertices.push(x+1,h,y);
+                vertices.push(x+1,h,y+1);
+            }
+            //upload to GPU
+            var buffer = mesh.getBuffer("vertices");
+            buffer.data.set(vertices);
+            buffer.upload();
+
+            mat4.lookAt(view, [0,10,10],[0,0,0], [0,1,0]);
+
+			//create modelview and projection matrices
+			mat4.multiply(temp,view,model);
+			mat4.multiply(mvp,persp,temp);
+
+			//render mesh using the shader
+			if(mesh)
+				shader.uniforms({
+					u_color: [0.5,0.5,0.6,1],
+					u_mvp: mvp
+				}).draw(mesh);
+		};
+	}	
+	
+	</script>
+</head>
+<body>
+<script>init();</script>
+</body>
+</html>
+
+

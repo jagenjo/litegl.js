@@ -2628,11 +2628,11 @@ global.Mesh = GL.Mesh = function Mesh( vertexbuffers, indexbuffers, options, gl 
 Mesh.common_buffers = {
 	"vertices": { spacing:3, attribute: "a_vertex"},
 	"vertices2D": { spacing:2, attribute: "a_vertex2D"},
-	"normals": { spacing:3, attribute: "a_normal"},
+	"normals": { spacing:3, attribute: "a_normal", normalize: true },
 	"coords": { spacing:2, attribute: "a_coord"},
 	"coords1": { spacing:2, attribute: "a_coord1"},
 	"coords2": { spacing:2, attribute: "a_coord2"},
-	"colors": { spacing:4, attribute: "a_color" }, // cant use Uint8Array, dont know how as data comes in another format
+	"colors": { spacing:4, attribute: "a_color", normalize: true }, // cant use Uint8Array, dont know how as data comes in another format
 	"tangents": { spacing:3, attribute: "a_tangent"},
 	"bone_indices": { spacing:4, attribute: "a_bone_indices", type: Uint8Array },
 	"weights": { spacing:4, attribute: "a_weights", normalize: true }, // cant use Uint8Array, dont know how
@@ -2822,7 +2822,11 @@ Mesh.prototype.createVertexBuffer = function( name, attribute, buffer_spacing, b
 
 	//to convert [255,128,...] into [1,0.5,...]  in the shader
 	if( buffer_data.constructor == Uint8Array || 
-		buffer_data.constructor == Int8Array )
+		buffer_data.constructor == Int8Array ||
+		buffer_data.constructor == Uint16Array || 
+		buffer_data.constructor == Int16Array ||
+		buffer_data.constructor == Uint32Array || 
+		buffer_data.constructor == Int32Array )
 	{
 		if( common && common.normalize )
 			buffer.normalize = true;
