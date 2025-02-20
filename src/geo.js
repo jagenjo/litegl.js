@@ -30,6 +30,61 @@ global.geo = {
 	},
 
 	/**
+	* assigns a float4 containing the info about a plane that passes the three vertices
+	* @method planeFromTriangle
+	* @param {vec3} out
+	* @param {vec3} A
+	* @param {vec3} B
+	* @param {vec3} C
+	* @return {vec4} plane values
+	*/
+	planeFromTriangle: (function(){
+		var V1 = vec3.create();
+		var V2 = vec3.create();
+		var N = vec3.create();
+
+		return function(out, A,B,C)
+		{
+			vec3.sub(V1,B,A);
+			vec3.sub(V2,C,A);
+			vec3.cross( N, V1,V2);
+			vec3.normalize(N,N);
+			out[0] = N[0];
+			out[1] = N[1];
+			out[2] = N[2];
+			out[3] = -vec3.dot(A,N);
+			return out;
+		}
+	})(),	
+
+	/**
+	* computes the normal of a triangle
+	* @method computeTriangleNormal
+	* @param {vec3} out
+	* @param {vec3} A
+	* @param {vec3} B
+	* @param {vec3} C
+	* @return {vec4} plane values
+	*/
+	computeTriangleNormal: (function(){
+		var V1 = vec3.create();
+		var V2 = vec3.create();
+		var N = vec3.create();
+
+		return function(out, A,B,C)
+		{
+			vec3.sub(V1,B,A);
+			vec3.sub(V2,C,A);
+			vec3.cross( N, V1,V2);
+			vec3.normalize(N,N);
+			out[0] = N[0];
+			out[1] = N[1];
+			out[2] = N[2];
+			return out;
+		}
+	})(),	
+
+	/**
 	* Computes the distance between the point and the plane
 	* @method distancePointToPlane
 	* @param {vec3} point
@@ -54,7 +109,7 @@ global.geo = {
 	},
 
 	/**
-	* Projects a 3D point on a 3D line
+	* Projects a 3D point on a 3D infinite line
 	* @method projectPointOnLine
 	* @param {vec3} P
 	* @param {vec3} A line start
@@ -62,21 +117,25 @@ global.geo = {
 	* @param {vec3} result to store result (optional)
 	* @return {vec3} projectec point
 	*/
-	projectPointOnLine: function( P, A, B, result )
-	{
-		result = result || vec3.create();
-		//A + dot(AP,AB) / dot(AB,AB) * AB
-		var AP = vec3.fromValues( P[0] - A[0], P[1] - A[1], P[2] - A[2]);
-		var AB = vec3.fromValues( B[0] - A[0], B[1] - A[1], B[2] - A[2]);
-		var div = vec3.dot(AP,AB) / vec3.dot(AB,AB);
-		result[0] = A[0] + div[0] * AB[0];
-		result[1] = A[1] + div[1] * AB[1];
-		result[2] = A[2] + div[2] * AB[2];
-		return result;
-	},
+	projectPointOnLine: (function(){
+		var AP = vec3.create();
+		var AB = vec3.create();
+		return function( P, A, B, result )
+		{
+			result = result || vec3.create();
+			//A + dot(AP,AB) / dot(AB,AB) * AB
+			vec3.sub(AP, P, A);
+			vec3.sub(AB, B, A);
+			var div = vec3.dot(AP,AB) / vec3.dot(AB,AB);
+			result[0] = A[0] + div * AB[0];
+			result[1] = A[1] + div * AB[1];
+			result[2] = A[2] + div * AB[2];
+			return result;
+		}
+	})(),
 
 	/**
-	* Projects a 2D point on a 2D line
+	* Projects a 2D point on a 2D infinite line
 	* @method project2DPointOnLine
 	* @param {vec2} P
 	* @param {vec2} A line start
@@ -91,10 +150,37 @@ global.geo = {
 		var AP = vec2.fromValues(P[0] - A[0], P[1] - A[1]);
 		var AB = vec2.fromValues(B[0] - A[0], B[1] - A[1]);
 		var div = vec2.dot(AP,AB) / vec2.dot(AB,AB);
-		result[0] = A[0] + div[0] * AB[0];
-		result[1] = A[1] + div[1] * AB[1];
+		result[0] = A[0] + div * AB[0];
+		result[1] = A[1] + div * AB[1];
 		return result;
 	},
+
+	/**
+	* returns the closest point to a 3D segment
+	* @method closestPointToSegment
+	* @param {vec3} P
+	* @param {vec3} A line start
+	* @param {vec3} B line end
+	* @param {vec3} result to store result (optional)
+	* @return {vec3} projectec point
+	*/
+	closestPointToSegment: (function(){ 
+		var AP = vec3.create();
+		var AB = vec3.create();
+		return function( P, A, B, result )
+		{
+			result = result || vec3.create();
+			//A + dot(AP,AB) / dot(AB,AB) * AB
+			vec3.sub(AP, P, A);
+			vec3.sub(AB, B, A);
+			var div = vec3.dot(AP,AB) / vec3.dot(AB,AB);
+			div = Math.min(1, Math.max(0,div) ); //restrict
+			result[0] = A[0] + div * AB[0];
+			result[1] = A[1] + div * AB[1];
+			result[2] = A[2] + div * AB[2];
+			return result;
+		}
+	})(),	
 
 	/**
 	* Projects point on plane
@@ -105,13 +191,50 @@ global.geo = {
 	* @param {vec3} result to store result (optional)
 	* @return {vec3} projectec point
 	*/
-	projectPointOnPlane: function(point, P, N, result)
-	{
-		result = result || vec3.create();
-		var v = vec3.subtract( vec3.create(), point, P );
-		var dist = vec3.dot(v,N);
-		return vec3.subtract( result, point , vec3.scale( vec3.create(), N, dist ) );
-	},
+	projectPointOnPlane: (function(){
+		var V = vec3.create();
+		return function(point, P, N, result)
+		{
+			result = result || vec3.create();
+			vec3.sub( V, point, P );
+			var dist = vec3.dot(V,N);
+			vec3.scale( V, N, dist )
+			return vec3.sub( result, point, V );
+		}
+	})(),
+
+	/**
+	* Tells if a coplanar point is inside the triangle
+	* @method isPointInsideTriangle
+	* @param {vec3} point
+	* @param {vec3} A 
+	* @param {vec3} B 
+	* @param {vec3} C 
+	* @return {boolean} 
+	*/
+	isPointInsideTriangle: (function(){
+		var A = vec3.create();
+		var B = vec3.create();
+		var C = vec3.create();
+		var U = vec3.create();
+		var V = vec3.create();
+		var W = vec3.create();
+		return function(p, a,b,c){
+			// Move the triangle so that the point becomes the 
+			// triangles origin
+			vec3.sub(A,a,p);
+			vec3.sub(B,b,p);
+			vec3.sub(C,c,p);
+			// Compute the normal vectors for triangles:
+			vec3.cross(U,B,C);
+			vec3.cross(V,C,A);
+			vec3.cross(W,A,B);
+			if (vec3.dot(U, V) < 0.0 || vec3.dot(U, W) < 0.0)
+				return false;
+			// All normals facing the same way, return true
+			return true;
+		}
+	})(),
 
 	/**
 	* Finds the reflected point over a plane (useful for reflecting camera position when rendering reflections)
@@ -301,8 +424,8 @@ global.geo = {
 		var dd = vec3.dot(d, d);
 
 		// Test if segment fully outside either endcap of cylinder
-		if (md < 0.0 && md + nd < 0.0) return false; // Segment outside ’p’ side of cylinder
-		if (md > dd && md + nd > dd) return false; // Segment outside ’q’ side of cylinder
+		if (md < 0.0 && md + nd < 0.0) return false; // Segment outside ï¿½pï¿½ side of cylinder
+		if (md > dd && md + nd > dd) return false; // Segment outside ï¿½qï¿½ side of cylinder
 
 		var nn = vec3.dot(n, n);
 		var mn = vec3.dot(m, n);
@@ -314,15 +437,15 @@ global.geo = {
 		{
 			// Segment runs parallel to cylinder axis
 			if (c > 0.0) return false;
-			// ’a’ and thus the segment lie outside cylinder
+			// ï¿½aï¿½ and thus the segment lie outside cylinder
 			// Now known that segment intersects cylinder; figure out how it intersects
 			if (md < 0.0) t = -mn/nn;
-			// Intersect segment against ’p’ endcap
+			// Intersect segment against ï¿½pï¿½ endcap
 			else if (md > dd)
 				t=(nd-mn)/nn;
-			// Intersect segment against ’q’ endcap
+			// Intersect segment against ï¿½qï¿½ endcap
 			else t = 0.0;
-			// ’a’ lies inside cylinder
+			// ï¿½aï¿½ lies inside cylinder
 			if(result) 
 				vec3.add(result, sa, vec3.scale(result, n,t) );
 			return true;
@@ -338,7 +461,7 @@ global.geo = {
 		// Intersection lies outside segment
 		if(md+t*nd < 0.0)
 		{
-			// Intersection outside cylinder on ’p’ side
+			// Intersection outside cylinder on ï¿½pï¿½ side
 			if (nd <= 0.0) 
 				return false;
 			// Segment pointing away from endcap
@@ -349,7 +472,7 @@ global.geo = {
 			return k+2*t*(mn+t*nn) <= 0.0;
 		} else if (md+t*nd>dd)
 		{
-			// Intersection outside cylinder on ’q’ side
+			// Intersection outside cylinder on ï¿½qï¿½ side
 			if (nd >= 0.0) return false; //Segment pointing away from endcap
 			t = (dd - md) / nd;
 			// Keep intersection if Dot(S(t) - q, S(t) - q) <= r^2

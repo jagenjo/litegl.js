@@ -1,0 +1,179 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<!--
+<meta property="og:title" content="GameEditor" />
+<meta property="og:description" content="GameEditor for simple games" />
+<meta property="og:image" content="" />
+-->
+
+<title>litegl.js: octree nearest example</title>
+	<link rel="stylesheet" type="text/css" href="style.css" />
+	<style type='text/css'>
+		html, body { width: 100%; height: 100%; margin: 0; padding: 0 }
+		body { background-color: #DDD;}
+	</style>
+	<script type="text/javascript" src="../external/gl-matrix.js"></script>
+	<script type="text/javascript" src="../build/litegl.js"></script>
+	<script type="text/javascript">
+
+	function init()
+	{
+		//create the rendering context
+		var container = document.body;
+
+		var gl = GL.create({width: container.offsetWidth, height: container.offsetHeight});
+		container.appendChild(gl.canvas);
+		gl.animate();
+
+		//build the mesh
+		//var mesh = GL.Mesh.fromURL("man.obj");
+        //var mesh = GL.Mesh.plane({size:50});
+        var mesh = GL.Mesh.fromURL("navmesh.obj");
+		var sphere = GL.Mesh.sphere();
+		var cam_pos = vec3.fromValues(5,10,10);
+		var cam_target = vec3.fromValues(0,10,0);
+        var player_pos = [0,0,0];
+        var yaw = 0;
+        var pitch = 0;
+        var front = vec3.create();
+
+		var nearest = [0,0,0];
+
+		//create basic matrices for cameras and transformation
+		var proj = window.proj = mat4.create();
+		var view = window.view = mat4.create();
+		var vp = window.vp = mat4.create();
+		var identity = mat4.create();
+
+		//set the camera perspective
+		mat4.perspective(proj, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 0.1, 1000);
+
+		function findNearest(pos,out)
+		{
+			if( !mesh || mesh.ready === false )
+				return;
+			if(!mesh.octree)
+				mesh.octree = new GL.Octree( mesh );
+			mesh.octree.findNearestPoint(pos,out);
+		}
+
+		gl.captureMouse(true);
+		gl.captureKeys(true);
+		gl.onmousemove = function(e)
+		{
+            if(e.buttons)
+            {
+                yaw += e.deltax * 0.01;
+                pitch += e.deltay * -0.01;
+                //vec3.scaleAndAdd( player_pos, player_pos, front, e.deltay * -0.02 );
+            }
+		}
+        gl.onmousewheel = function(e)
+        {
+            console.log(e.delta)
+            cam_pos[0] *= 1/(1-e.delta*0.01);
+            cam_pos[2] *= 1/(1-e.delta*0.01);
+        }
+
+		//basic phong shader
+		var shader = new Shader('\
+				precision highp float;\
+				attribute vec3 a_vertex;\
+				attribute vec3 a_normal;\
+				varying vec3 v_normal;\
+				uniform mat4 u_vp;\
+				uniform mat4 u_model;\
+				void main() {\
+					v_normal = (u_model * vec4(a_normal,0.0)).xyz;\
+                    vec3 vertex = (u_model * vec4(a_vertex,1.0)).xyz;\
+					gl_Position = u_vp * vec4(vertex,1.0);\
+					gl_PointSize = 10.0;\
+				}\
+				', '\
+				precision highp float;\
+				varying vec3 v_normal;\
+				uniform vec3 u_lightvector;\
+				uniform vec4 u_color;\
+				void main() {\
+				  vec3 N = normalize(v_normal);\
+				  gl_FragColor = u_color * max(0.0, dot(u_lightvector,N));\
+				}\
+			');
+
+		//basic phong shader
+		var flat_shader = new Shader('\
+				precision highp float;\
+				attribute vec3 a_vertex;\
+				uniform mat4 u_vp;\
+				uniform mat4 u_model;\
+				void main() {\
+                    vec3 vertex = (u_model * vec4(a_vertex,1.0)).xyz;\
+					gl_Position = u_vp * vec4(vertex,1.0);\
+					gl_PointSize = 10.0;\
+				}\
+				', '\
+				precision highp float;\
+				uniform vec4 u_color;\
+				void main() {\
+				  gl_FragColor = u_color;\
+				}\
+			');
+
+
+		//generic gl flags and settings
+		gl.clearColor(0.01,0.01,0.01,1);
+		gl.enable( gl.DEPTH_TEST );
+		gl.enable( gl.CULL_FACE );
+
+		var L = vec3.normalize(vec3.create(),[1.5,1.8,1.4]);
+
+		//rendering loop
+		gl.ondraw = function()
+		{
+            findNearest(player_pos, nearest);
+            vec3.copy(player_pos, nearest);
+
+			gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
+            vec3.rotateX(front, [0,0,-1], pitch);
+            vec3.rotateY(front, front, yaw);
+            vec3.add(cam_pos, player_pos, [0,0.28,0]);
+            vec3.add(cam_target, cam_pos, front);
+			mat4.lookAt(view, cam_pos, cam_target, [0,1,0]);
+			mat4.multiply(vp,proj,view); //vp
+
+            gl.disable(gl.CULL_FACE);
+
+			//render mesh using the shader
+			shader.uniforms({
+				u_color: [1,1,1,1],
+				u_lightvector: L,
+				u_model: identity,
+				u_vp: vp
+			}).draw(mesh);
+
+            var m = mat4.create();
+            mat4.translate(m,m,nearest);
+		};
+
+		//update loop
+		gl.onupdate = function(dt)
+		{
+            var delta = [0,0,0];
+            if( gl.keys["W"] || gl.keys["UP"]) delta[2] = -1;
+            if( gl.keys["S"] || gl.keys["DOWN"]) delta[2] = 1;
+            if( gl.keys["A"] || gl.keys["LEFT"]) delta[0] = -1;
+            if( gl.keys["D"] || gl.keys["RIGHT"]) delta[0] = 1;
+            vec3.rotateY( delta, delta, yaw );
+            vec3.scaleAndAdd( player_pos, player_pos, delta, dt);
+		};
+	}
+	
+	</script>
+</head>
+<body>
+
+<script>init();</script>
+</body>
+</html>

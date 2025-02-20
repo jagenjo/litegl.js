@@ -463,7 +463,7 @@ Texture.prototype.uploadImage = function( image, options )
 		{
 			var w = image.videoWidth || image.width;
 			var h = image.videoHeight || image.height;
-			if(w != this.width || h != this.height)
+			if((w != this.width || h != this.height) && (this.width != 1 && this.height != 1))
 				console.warn("image uploaded has a different size than texture, resizing it.");
 			gl.texImage2D( gl.TEXTURE_2D, 0, this.format, this.format, this.type, image );
 			this.width = w;
@@ -1373,12 +1373,12 @@ Texture.fromImage = function( image, options ) {
 	texture.uploadImage( image, options );
 
 	texture.bind();
-	gl.texParameteri(texture.texture_type, gl.TEXTURE_MAG_FILTER, texture.magFilter );
-	gl.texParameteri(texture.texture_type, gl.TEXTURE_MIN_FILTER, texture.minFilter );
-	gl.texParameteri(texture.texture_type, gl.TEXTURE_WRAP_S, texture.wrapS );
-	gl.texParameteri(texture.texture_type, gl.TEXTURE_WRAP_T, texture.wrapT );
+	gl.texParameteri(texture.texture_type, gl.TEXTURE_MAG_FILTER, texture.magFilter || GL.LINEAR );
+	gl.texParameteri(texture.texture_type, gl.TEXTURE_MIN_FILTER, texture.minFilter || GL.LINEAR_MIPMAP_LINEAR );
+	gl.texParameteri(texture.texture_type, gl.TEXTURE_WRAP_S, texture.wrapS || GL.REPEAT );
+	gl.texParameteri(texture.texture_type, gl.TEXTURE_WRAP_T, texture.wrapT || GL.REPEAT );
 
-	if (GL.isPowerOfTwo(texture.width) && GL.isPowerOfTwo(texture.height) )
+	if ((GL.isPowerOfTwo(texture.width) && GL.isPowerOfTwo(texture.height)) || gl.webgl_version > 1)
 	{
 		if( options.minFilter && options.minFilter != gl.NEAREST && options.minFilter != gl.LINEAR)
 		{

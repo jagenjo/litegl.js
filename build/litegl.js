@@ -6084,7 +6084,7 @@ Texture.prototype.uploadImage = function( image, options )
 		{
 			var w = image.videoWidth || image.width;
 			var h = image.videoHeight || image.height;
-			if(w != this.width || h != this.height)
+			if((w != this.width || h != this.height) && (this.width != 1 && this.height != 1))
 				console.warn("image uploaded has a different size than texture, resizing it.");
 			gl.texImage2D( gl.TEXTURE_2D, 0, this.format, this.format, this.type, image );
 			this.width = w;
@@ -6994,12 +6994,12 @@ Texture.fromImage = function( image, options ) {
 	texture.uploadImage( image, options );
 
 	texture.bind();
-	gl.texParameteri(texture.texture_type, gl.TEXTURE_MAG_FILTER, texture.magFilter );
-	gl.texParameteri(texture.texture_type, gl.TEXTURE_MIN_FILTER, texture.minFilter );
-	gl.texParameteri(texture.texture_type, gl.TEXTURE_WRAP_S, texture.wrapS );
-	gl.texParameteri(texture.texture_type, gl.TEXTURE_WRAP_T, texture.wrapT );
+	gl.texParameteri(texture.texture_type, gl.TEXTURE_MAG_FILTER, texture.magFilter || GL.LINEAR );
+	gl.texParameteri(texture.texture_type, gl.TEXTURE_MIN_FILTER, texture.minFilter || GL.LINEAR_MIPMAP_LINEAR );
+	gl.texParameteri(texture.texture_type, gl.TEXTURE_WRAP_S, texture.wrapS || GL.REPEAT );
+	gl.texParameteri(texture.texture_type, gl.TEXTURE_WRAP_T, texture.wrapT || GL.REPEAT );
 
-	if (GL.isPowerOfTwo(texture.width) && GL.isPowerOfTwo(texture.height) )
+	if ((GL.isPowerOfTwo(texture.width) && GL.isPowerOfTwo(texture.height)) || gl.webgl_version > 1)
 	{
 		if( options.minFilter && options.minFilter != gl.NEAREST && options.minFilter != gl.LINEAR)
 		{
@@ -11550,6 +11550,61 @@ global.geo = {
 	},
 
 	/**
+	* assigns a float4 containing the info about a plane that passes the three vertices
+	* @method planeFromTriangle
+	* @param {vec3} out
+	* @param {vec3} A
+	* @param {vec3} B
+	* @param {vec3} C
+	* @return {vec4} plane values
+	*/
+	planeFromTriangle: (function(){
+		var V1 = vec3.create();
+		var V2 = vec3.create();
+		var N = vec3.create();
+
+		return function(out, A,B,C)
+		{
+			vec3.sub(V1,B,A);
+			vec3.sub(V2,C,A);
+			vec3.cross( N, V1,V2);
+			vec3.normalize(N,N);
+			out[0] = N[0];
+			out[1] = N[1];
+			out[2] = N[2];
+			out[3] = -vec3.dot(A,N);
+			return out;
+		}
+	})(),	
+
+	/**
+	* computes the normal of a triangle
+	* @method computeTriangleNormal
+	* @param {vec3} out
+	* @param {vec3} A
+	* @param {vec3} B
+	* @param {vec3} C
+	* @return {vec4} plane values
+	*/
+	computeTriangleNormal: (function(){
+		var V1 = vec3.create();
+		var V2 = vec3.create();
+		var N = vec3.create();
+
+		return function(out, A,B,C)
+		{
+			vec3.sub(V1,B,A);
+			vec3.sub(V2,C,A);
+			vec3.cross( N, V1,V2);
+			vec3.normalize(N,N);
+			out[0] = N[0];
+			out[1] = N[1];
+			out[2] = N[2];
+			return out;
+		}
+	})(),	
+
+	/**
 	* Computes the distance between the point and the plane
 	* @method distancePointToPlane
 	* @param {vec3} point
@@ -11574,7 +11629,7 @@ global.geo = {
 	},
 
 	/**
-	* Projects a 3D point on a 3D line
+	* Projects a 3D point on a 3D infinite line
 	* @method projectPointOnLine
 	* @param {vec3} P
 	* @param {vec3} A line start
@@ -11582,21 +11637,25 @@ global.geo = {
 	* @param {vec3} result to store result (optional)
 	* @return {vec3} projectec point
 	*/
-	projectPointOnLine: function( P, A, B, result )
-	{
-		result = result || vec3.create();
-		//A + dot(AP,AB) / dot(AB,AB) * AB
-		var AP = vec3.fromValues( P[0] - A[0], P[1] - A[1], P[2] - A[2]);
-		var AB = vec3.fromValues( B[0] - A[0], B[1] - A[1], B[2] - A[2]);
-		var div = vec3.dot(AP,AB) / vec3.dot(AB,AB);
-		result[0] = A[0] + div[0] * AB[0];
-		result[1] = A[1] + div[1] * AB[1];
-		result[2] = A[2] + div[2] * AB[2];
-		return result;
-	},
+	projectPointOnLine: (function(){
+		var AP = vec3.create();
+		var AB = vec3.create();
+		return function( P, A, B, result )
+		{
+			result = result || vec3.create();
+			//A + dot(AP,AB) / dot(AB,AB) * AB
+			vec3.sub(AP, P, A);
+			vec3.sub(AB, B, A);
+			var div = vec3.dot(AP,AB) / vec3.dot(AB,AB);
+			result[0] = A[0] + div * AB[0];
+			result[1] = A[1] + div * AB[1];
+			result[2] = A[2] + div * AB[2];
+			return result;
+		}
+	})(),
 
 	/**
-	* Projects a 2D point on a 2D line
+	* Projects a 2D point on a 2D infinite line
 	* @method project2DPointOnLine
 	* @param {vec2} P
 	* @param {vec2} A line start
@@ -11611,10 +11670,37 @@ global.geo = {
 		var AP = vec2.fromValues(P[0] - A[0], P[1] - A[1]);
 		var AB = vec2.fromValues(B[0] - A[0], B[1] - A[1]);
 		var div = vec2.dot(AP,AB) / vec2.dot(AB,AB);
-		result[0] = A[0] + div[0] * AB[0];
-		result[1] = A[1] + div[1] * AB[1];
+		result[0] = A[0] + div * AB[0];
+		result[1] = A[1] + div * AB[1];
 		return result;
 	},
+
+	/**
+	* returns the closest point to a 3D segment
+	* @method closestPointToSegment
+	* @param {vec3} P
+	* @param {vec3} A line start
+	* @param {vec3} B line end
+	* @param {vec3} result to store result (optional)
+	* @return {vec3} projectec point
+	*/
+	closestPointToSegment: (function(){ 
+		var AP = vec3.create();
+		var AB = vec3.create();
+		return function( P, A, B, result )
+		{
+			result = result || vec3.create();
+			//A + dot(AP,AB) / dot(AB,AB) * AB
+			vec3.sub(AP, P, A);
+			vec3.sub(AB, B, A);
+			var div = vec3.dot(AP,AB) / vec3.dot(AB,AB);
+			div = Math.min(1, Math.max(0,div) ); //restrict
+			result[0] = A[0] + div * AB[0];
+			result[1] = A[1] + div * AB[1];
+			result[2] = A[2] + div * AB[2];
+			return result;
+		}
+	})(),	
 
 	/**
 	* Projects point on plane
@@ -11625,13 +11711,50 @@ global.geo = {
 	* @param {vec3} result to store result (optional)
 	* @return {vec3} projectec point
 	*/
-	projectPointOnPlane: function(point, P, N, result)
-	{
-		result = result || vec3.create();
-		var v = vec3.subtract( vec3.create(), point, P );
-		var dist = vec3.dot(v,N);
-		return vec3.subtract( result, point , vec3.scale( vec3.create(), N, dist ) );
-	},
+	projectPointOnPlane: (function(){
+		var V = vec3.create();
+		return function(point, P, N, result)
+		{
+			result = result || vec3.create();
+			vec3.sub( V, point, P );
+			var dist = vec3.dot(V,N);
+			vec3.scale( V, N, dist )
+			return vec3.sub( result, point, V );
+		}
+	})(),
+
+	/**
+	* Tells if a coplanar point is inside the triangle
+	* @method isPointInsideTriangle
+	* @param {vec3} point
+	* @param {vec3} A 
+	* @param {vec3} B 
+	* @param {vec3} C 
+	* @return {boolean} 
+	*/
+	isPointInsideTriangle: (function(){
+		var A = vec3.create();
+		var B = vec3.create();
+		var C = vec3.create();
+		var U = vec3.create();
+		var V = vec3.create();
+		var W = vec3.create();
+		return function(p, a,b,c){
+			// Move the triangle so that the point becomes the 
+			// triangles origin
+			vec3.sub(A,a,p);
+			vec3.sub(B,b,p);
+			vec3.sub(C,c,p);
+			// Compute the normal vectors for triangles:
+			vec3.cross(U,B,C);
+			vec3.cross(V,C,A);
+			vec3.cross(W,A,B);
+			if (vec3.dot(U, V) < 0.0 || vec3.dot(U, W) < 0.0)
+				return false;
+			// All normals facing the same way, return true
+			return true;
+		}
+	})(),
 
 	/**
 	* Finds the reflected point over a plane (useful for reflecting camera position when rendering reflections)
@@ -11821,8 +11944,8 @@ global.geo = {
 		var dd = vec3.dot(d, d);
 
 		// Test if segment fully outside either endcap of cylinder
-		if (md < 0.0 && md + nd < 0.0) return false; // Segment outside ’p’ side of cylinder
-		if (md > dd && md + nd > dd) return false; // Segment outside ’q’ side of cylinder
+		if (md < 0.0 && md + nd < 0.0) return false; // Segment outside ï¿½pï¿½ side of cylinder
+		if (md > dd && md + nd > dd) return false; // Segment outside ï¿½qï¿½ side of cylinder
 
 		var nn = vec3.dot(n, n);
 		var mn = vec3.dot(m, n);
@@ -11834,15 +11957,15 @@ global.geo = {
 		{
 			// Segment runs parallel to cylinder axis
 			if (c > 0.0) return false;
-			// ’a’ and thus the segment lie outside cylinder
+			// ï¿½aï¿½ and thus the segment lie outside cylinder
 			// Now known that segment intersects cylinder; figure out how it intersects
 			if (md < 0.0) t = -mn/nn;
-			// Intersect segment against ’p’ endcap
+			// Intersect segment against ï¿½pï¿½ endcap
 			else if (md > dd)
 				t=(nd-mn)/nn;
-			// Intersect segment against ’q’ endcap
+			// Intersect segment against ï¿½qï¿½ endcap
 			else t = 0.0;
-			// ’a’ lies inside cylinder
+			// ï¿½aï¿½ lies inside cylinder
 			if(result) 
 				vec3.add(result, sa, vec3.scale(result, n,t) );
 			return true;
@@ -11858,7 +11981,7 @@ global.geo = {
 		// Intersection lies outside segment
 		if(md+t*nd < 0.0)
 		{
-			// Intersection outside cylinder on ’p’ side
+			// Intersection outside cylinder on ï¿½pï¿½ side
 			if (nd <= 0.0) 
 				return false;
 			// Segment pointing away from endcap
@@ -11869,7 +11992,7 @@ global.geo = {
 			return k+2*t*(mn+t*nn) <= 0.0;
 		} else if (md+t*nd>dd)
 		{
-			// Intersection outside cylinder on ’q’ side
+			// Intersection outside cylinder on ï¿½qï¿½ side
 			if (nd >= 0.0) return false; //Segment pointing away from endcap
 			t = (dd - md) / nd;
 			// Keep intersection if Dot(S(t) - q, S(t) - q) <= r^2
@@ -12721,10 +12844,12 @@ Octree.prototype.buildFromMesh = function( mesh, start, length )
 	{
 		for(var i = start; i < end; i+=3)
 		{
+			//10th position contains the face index
 			var face = new Float32Array([vertices[triangles[i]*3], vertices[triangles[i]*3+1],vertices[triangles[i]*3+2],
 						vertices[triangles[i+1]*3], vertices[triangles[i+1]*3+1],vertices[triangles[i+1]*3+2],
 						vertices[triangles[i+2]*3], vertices[triangles[i+2]*3+1],vertices[triangles[i+2]*3+2],i/3]);
-			this.addToNode( face,root,0);
+			if(Octree.isValidFace(face))
+				this.addToNode( face,root,0);
 		}
 	}
 	else
@@ -12734,12 +12859,30 @@ Octree.prototype.buildFromMesh = function( mesh, start, length )
 			var face = new Float32Array( 10 );
 			face.set( vertices.subarray(i,i+9) );
 			face[9] = i/9;
-			this.addToNode(face,root,0);
+			if(Octree.isValidFace(face))
+				this.addToNode(face,root,0);
 		}
 	}
 
 	return root;
 }
+
+Octree.isValidFace = (function(){
+	var V1 = vec3.create();
+	var V2 = vec3.create();
+	var N = vec3.create();
+
+	return function( face )
+	{
+		var A = face.subarray(0,3);
+		var B = face.subarray(3,6);
+		var C = face.subarray(6,9);
+		vec3.sub(V1,B,A);
+		vec3.sub(V2,C,A);
+		vec3.cross( N, V1,V2);
+		return vec3.length(N) > 0;
+	}
+})();
 
 Octree.prototype.addToNode = function( face, node, depth )
 {
@@ -12750,7 +12893,7 @@ Octree.prototype.addToNode = function( face, node, depth )
 	{
 		var aabb = this.computeAABB(face);
 		var added = false;
-		for(var i in node.c)
+		for(var i = 0; i < node.c.length; ++i)
 		{
 			var child = node.c[i];
 			if (Octree.isInsideAABB(aabb,child))
@@ -12776,6 +12919,7 @@ Octree.prototype.addToNode = function( face, node, depth )
 		//split
 		if(node.faces.length > this.max_node_triangles && depth < Octree.MAX_OCTREE_DEPTH)
 		{
+			//create empty children nodes
 			this.splitNode(node);
 			if(this.total_depth < depth + 1)
 				this.total_depth = depth + 1;
@@ -12784,12 +12928,12 @@ Octree.prototype.addToNode = function( face, node, depth )
 			node.faces = null;
 
 			//redistribute all nodes
-			for(var i in faces)
+			for(var i = 0; i < faces.length; ++i)
 			{
 				var face = faces[i];
 				var aabb = this.computeAABB(face);
 				var added = false;
-				for(var j in node.c)
+				for(var j = 0; j < node.c.length; ++j)
 				{
 					var child = node.c[j];
 					if (Octree.isInsideAABB(aabb,child))
@@ -12817,7 +12961,7 @@ Octree.prototype.splitNode = function(node)
 	node.c = [];
 	var half = [(node.max[0] - node.min[0]) * 0.5, (node.max[1] - node.min[1]) * 0.5, (node.max[2] - node.min[2]) * 0.5];
 
-	for(var i in this.octree_pos_ref)
+	for(var i = 0; i < this.octree_pos_ref.length; ++i)
 	{
 		var ref = this.octree_pos_ref[i];
 
@@ -12832,12 +12976,14 @@ Octree.prototype.splitNode = function(node)
 	}
 }
 
+//receives typed array with three vertices of a triangle (plus the index)
 Octree.prototype.computeAABB = function(vertices)
 {
 	var min = new Float32Array([ vertices[0], vertices[1], vertices[2] ]);
-	var max = new Float32Array([ vertices[0], vertices[1], vertices[2] ]);
+	var max = new Float32Array(min);
 
-	for(var i = 0; i < vertices.length; i+=3)
+	//last one is the index, skip it
+	for(var i = 3; i < vertices.length - 1; i+=3)
 	{
 		for(var j = 0; j < 3; j++)
 		{
@@ -13095,6 +13241,110 @@ Octree.testSphereInNode = function( node, origin, radius2 )
 	return false;
 }
 
+//finds which is the nearest point to a mesh, and also the normal of that point
+//returns the distance
+Octree.prototype.findNearestPoint = function( v, out, minDist, normal )
+{
+	minDist = minDist || Infinity;
+	if(v === out)
+		throw("findNearestPoint input point and output cannot be the same");
+	return Octree.nearestInNode( this.root, v, out, minDist, normal );
+}
+
+Octree.nearestInNode = function( node, origin, out, minDist, normal )
+{
+	var test = null;
+	var prev_test = null;
+	octree_tested_boxes += 1;
+	var current = vec3.create(); //needs to be created
+	var currentNormal;
+	if(normal)
+		currentNormal = vec3.create(); //needs to be created
+
+	//test faces
+	if(node.faces)
+		for(var i = 0, l = node.faces.length; i < l; ++i)
+		{
+			var face = node.faces[i];
+			octree_tested_triangles += 1;
+			Octree.closestPointOnTriangle( origin, face.subarray(0,3) , face.subarray(3,6), face.subarray(6,9), current );
+			var dist = vec3.dist(current, origin);
+			if(dist < minDist)
+			{
+				minDist = dist;
+				vec3.copy(out, current);
+				if(normal)
+					geo.computeTriangleNormal( normal, face.subarray(0,3) , face.subarray(3,6), face.subarray(6,9) );
+			}
+		}
+
+	//test children nodes faces
+	if(!node.c)
+		return minDist;
+
+	for(var i = 0; i < node.c.length; ++i)
+	{
+		//test if AABB is further of minDist
+		var child = node.c[i];
+
+		//test with node box
+		var distToAABB = Octree.distanceToBox( origin, child.min, child.max );
+		if( distToAABB > minDist)
+			continue;
+
+		//test collision with node content
+		var dist = Octree.nearestInNode( child, origin, current, minDist, currentNormal );
+		if(dist < minDist)
+		{
+			minDist = dist;
+			vec3.copy(out, current);
+			if(normal)
+				vec3.copy( normal, currentNormal );
+		}
+	}
+
+	return minDist;
+}
+
+Octree.closestPointOnTriangle = (function(){
+	var plane = new Float32Array(4);
+	var point = vec3.create();
+	var c1 = vec3.create();
+	var c2 = vec3.create();
+	var c3 = vec3.create();
+	return function(p, a, b, c, out)
+	{
+		geo.planeFromTriangle(plane,a,b,c);
+		if(vec3.length(plane) > 0.000001) //in case is an aberrated triangle, although that case is controlled
+		{
+			geo.projectPointOnPlane(p, a, plane, point);
+
+			//inside
+			if (geo.isPointInsideTriangle(point,a,b,c)) {
+				vec3.copy(out, point);
+				return out;
+			}
+		}
+
+		//check edges
+		geo.closestPointToSegment(point, a, b, c1);
+		geo.closestPointToSegment(point, b, c, c2);
+		geo.closestPointToSegment(point, c, a, c3);
+		var mag1 = vec3.sqrDist(point, c1);
+		var mag2 = vec3.sqrDist(point, c2);
+		var mag3 = vec3.sqrDist(point, c3);
+	
+		var min = Math.min(mag1, mag2, mag3);
+		if (min === mag1)
+			vec3.copy(out,c1);
+		else if (min === mag2)
+			vec3.copy(out,c2);
+		else
+			vec3.copy(out,c3);
+		return out;
+	}
+})();
+
 //test if one bounding is inside or overlapping another bounding
 Octree.isInsideAABB = function(a,b)
 {
@@ -13102,6 +13352,25 @@ Octree.isInsideAABB = function(a,b)
 		a.max[0] > b.max[0] || a.max[1] > b.max[1] || a.max[2] > b.max[2])
 		return false;
 	return true;
+}
+
+//from https://iquilezles.org/articles/distfunctions/
+Octree.distanceToBox = function(point,min,max)
+{
+	var centerx = (max[0] + min[0]) * 0.5;
+	var centery = (max[1] + min[1]) * 0.5;
+	var centerz = (max[2] + min[2]) * 0.5;
+	var halfsizex = max[0] - centerx;
+	var halfsizey = max[1] - centery;
+	var halfsizez = max[2] - centerz;
+	var x = Math.abs(point[0] - centerx) - halfsizex;
+	var y = Math.abs(point[1] - centery) - halfsizey;
+	var z = Math.abs(point[2] - centerz) - halfsizez;
+	var d = Math.min(Math.max(x,y,z),0.0);
+	x = Math.max(x,0.0);
+	y = Math.max(y,0.0);
+	z = Math.max(z,0.0);
+	return Math.sqrt(x*x + y*y + z*z) + d;
 }
 
 
