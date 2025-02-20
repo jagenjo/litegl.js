@@ -16,6 +16,9 @@ LEvent.bind( object, "eventname", callback, instance );
 //this will dispatch the event
 LEvent.trigger( object, "eventname", params); 
 
+//this will unbind the event
+LEvent.unbind( object, "eventname", callback, instance );
+
 ```
 
 You can bind events to gl context like mousedown, mousemove, keydown, etc if you want to avoid using the callbacks.
