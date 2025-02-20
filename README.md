@@ -23,7 +23,7 @@ Some features are:
 * Cross-browser input handling for mouse, keyboard and gamepad
 * Supports multiple WebGL contexts
 * Supports WebGL1 and WebGL2
-* Octree class
+* Octree class that support ray-test, sphere-test and find nearest point to mesh
 
 It is a fork from [LightGL.js](https://github.com/evanw/lightgl.js/) by [Evan Wallace](http://madebyevan.com), but some major changes have been made.
 Some of the main differences:
