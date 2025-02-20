@@ -474,8 +474,18 @@ Octree.testSphereInNode = function( node, origin, radius2 )
 	return false;
 }
 
-//finds which is the nearest point to a mesh, and also the normal of that point
-//returns the distance
+//
+//
+
+/**
+* finds which is the nearest point to a mesh, and also the normal of that point, and returns the distance
+* @method findNearestPoint
+* @param {vec3} v the point to which find the nearest
+* @param {vec3} out where to store the nearest point
+* @param {number} minDist the minimum distance to check
+* @param {vec3} normal [optional] where to store the nearest point normal
+* @return {number} the distance to the nearest point found
+*/
 Octree.prototype.findNearestPoint = function( v, out, minDist, normal )
 {
 	minDist = minDist || Infinity;
@@ -500,14 +510,17 @@ Octree.nearestInNode = function( node, origin, out, minDist, normal )
 		{
 			var face = node.faces[i];
 			octree_tested_triangles += 1;
-			Octree.closestPointOnTriangle( origin, face.subarray(0,3) , face.subarray(3,6), face.subarray(6,9), current );
+			var A = face.subarray(0,3);
+			var B = face.subarray(3,6);
+			var C = face.subarray(6,9);
+			Octree.closestPointOnTriangle( origin, A, B, C, current );
 			var dist = vec3.dist(current, origin);
 			if(dist < minDist)
 			{
 				minDist = dist;
 				vec3.copy(out, current);
 				if(normal)
-					geo.computeTriangleNormal( normal, face.subarray(0,3) , face.subarray(3,6), face.subarray(6,9) );
+					geo.computeTriangleNormal( normal,  A, B, C );
 			}
 		}
 
@@ -548,7 +561,7 @@ Octree.closestPointOnTriangle = (function(){
 	return function(p, a, b, c, out)
 	{
 		geo.planeFromTriangle(plane,a,b,c);
-		if(vec3.length(plane) > 0.000001) //in case is an aberrated triangle, although that case is controlled
+		if(vec3.length(plane) > 0.00000001) //in case is an aberrated triangle, although that case is controlled
 		{
 			geo.projectPointOnPlane(p, a, plane, point);
 
