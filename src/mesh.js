@@ -318,7 +318,8 @@ global.Mesh = GL.Mesh = function Mesh( vertexbuffers, indexbuffers, options, gl 
 	}
 
 	//used to avoid problems with resources moving between different webgl context
-	this._context_id = gl.context_id; 
+	if(this.gl)
+		this._context_id = this.gl.context_id; 
 
 	this.vertexBuffers = {};
 	this.indexBuffers = {};
@@ -528,7 +529,7 @@ Mesh.prototype.createVertexBuffer = function( name, attribute, buffer_spacing, b
 		throw("Buffer data MUST be typed array");
 
 	//used to ensure the buffers are held in the same gl context as the mesh
-	var buffer = this.vertexBuffers[name] = new GL.Buffer( gl.ARRAY_BUFFER, buffer_data, buffer_spacing, stream_type, this.gl );
+	var buffer = this.vertexBuffers[name] = new GL.Buffer( GL.ARRAY_BUFFER, buffer_data, buffer_spacing, stream_type, this.gl );
 	buffer.name = name;
 	buffer.attribute = attribute;
 
@@ -625,7 +626,7 @@ Mesh.prototype.createIndexBuffer = function(name, buffer_data, stream_type) {
 		}
 	}
 
-	var buffer = this.indexBuffers[name] = new GL.Buffer(gl.ELEMENT_ARRAY_BUFFER, buffer_data, 0, stream_type, this.gl );
+	var buffer = this.indexBuffers[name] = new GL.Buffer(GL.ELEMENT_ARRAY_BUFFER, buffer_data, 0, stream_type, this.gl );
 	return buffer;
 }
 
@@ -2069,7 +2070,7 @@ Mesh.mergeMeshes = function( meshes, options )
 		extra.bones = bones;
 
 	//return
-	if( typeof(gl) != "undefined" || options.only_data )
+	if( !options.only_data )
 	{
 		var mesh = new GL.Mesh( vertex_buffers,index_buffers, extra );
 		mesh.updateBoundingBox();

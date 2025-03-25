@@ -17,12 +17,15 @@ if(typeof(glMatrix) == "undefined")
 	}
 	else if( typeof(window) == "undefined" ) //nodejs?
 	{
-		console.log("importing glMatrix");
-		//import * as glMatrix from './core/libs/gl-matrix-min.js';		
-		global.glMatrix = require("./gl-matrix-min.js");
-		var glMatrix = global.glMatrix;
-		for(var i in glMatrix)
-			global[i] = glMatrix[i];
+		if( typeof(SKIP_REQUIRES) === "undefined" )
+		{
+			console.log("importing glMatrix");
+			//import * as glMatrix from './core/libs/gl-matrix-min.js';		
+			global.glMatrix = require("./gl-matrix-min.js");
+			var glMatrix = global.glMatrix;
+			for(var i in glMatrix)
+				global[i] = glMatrix[i];
+		}
 	}
 	else if( typeof(glMatrix) == "undefined" )
 		throw("litegl.js requires gl-matrix to work. It must be included before litegl.");
