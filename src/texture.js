@@ -230,13 +230,17 @@ Texture.prototype.computeInternalFormat = function()
 	}
 
 	//automatic selection of internal format for depth textures to avoid problems between webgl1 and 2
-	if( this.format == GL.DEPTH_COMPONENT )
+	if( this.format == GL.DEPTH_COMPONENT || this.format === GL.DEPTH_STENCIL )
 	{
-		this.minFilter = GL.NEAREST; //this.magFilter = 
+		this.minFilter = GL.NEAREST;
 
 		if( gl.webgl_version == 2 ) 
 		{
-			if( this.type == GL.UNSIGNED_SHORT )
+			if( this.type === GL.UNSIGNED_INT_24_8 && this.format === GL.DEPTH_STENCIL)
+				this.internalFormat = GL.DEPTH24_STENCIL8; 
+			else if(this.type === GL.FLOAT && this.format === GL.DEPTH_STENCIL)
+				this.internalFormat = gl.FLOAT_32_UNSIGNED_INT_24_8_REV;
+			else if( this.type == GL.UNSIGNED_SHORT )
 				this.internalFormat = GL.DEPTH_COMPONENT16;
 			else if( this.type == GL.UNSIGNED_INT )
 				this.internalFormat = GL.DEPTH_COMPONENT24;
@@ -281,7 +285,10 @@ Texture.prototype.computeInternalFormat = function()
 			if( this.type == GL.FLOAT )
 				this.internalFormat = GL.RGB32F;
 			else if( this.type == GL.HALF_FLOAT )
-				this.internalFormat = GL.RGB16F;
+			{
+				throw "GL.RGB HALF_FLOAT is not supported, use RGBA instead";
+				this.internalFormat = GL.RGB; //not GL.RGB16F
+			}
 		}
 	}
 }
