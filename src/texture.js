@@ -212,6 +212,23 @@ Texture.prototype.computeInternalFormat = function()
 {
 	this.internalFormat = this.format; //default
 
+	if( gl.webgl_version == 1 )
+	{
+		if( this.type == GL.HALF_FLOAT )
+		{
+			console.warn("webgl 1 does not use HALF_FLOAT, converting to HALF_FLOAT_OES")
+			this.type = GL.HALF_FLOAT_OES;
+		}
+	}
+	else
+	{
+		if( this.type == GL.HALF_FLOAT_OES )
+		{
+			console.warn("webgl 2 does not use HALF_FLOAT_OES, converting to HALF_FLOAT")
+			this.type = GL.HALF_FLOAT;
+		}		
+	}
+
 	//automatic selection of internal format for depth textures to avoid problems between webgl1 and 2
 	if( this.format == GL.DEPTH_COMPONENT )
 	{
@@ -243,12 +260,6 @@ Texture.prototype.computeInternalFormat = function()
 				this.internalFormat = GL.RGBA32F;
 			else if( this.type == GL.HALF_FLOAT )
 				this.internalFormat = GL.RGBA16F;
-			else if( this.type == GL.HALF_FLOAT_OES )
-			{
-				console.warn("webgl 2 does not use HALF_FLOAT_OES, converting to HALF_FLOAT")
-				this.type = GL.HALF_FLOAT;
-				this.internalFormat = GL.RGBA16F;
-			}
 			/*
 			else if( this.type == GL.UNSIGNED_SHORT )
 			{
@@ -262,21 +273,15 @@ Texture.prototype.computeInternalFormat = function()
 			}
 			*/
 		}
-		else if( gl.webgl_version == 1 )
+	}
+	else if( this.format == gl.RGB )
+	{
+		if( gl.webgl_version == 2 ) 
 		{
-			if( this.type == GL.HALF_FLOAT )
-			{
-				console.warn("webgl 1 does not use HALF_FLOAT, converting to HALF_FLOAT_OES")
-				this.type = GL.HALF_FLOAT_OES;
-			}
-			/*
-			else if( this.type == GL.FLOAT )
-			{
-				//if(gl.extensions.WEBGL_color_buffer_float)
-				//	this.internalFormat = this.format == GL.RGB ? gl.extensions.WEBGL_color_buffer_float.RGB32F_EXT : gl.extensions.WEBGL_color_buffer_float.RGBA32F_EXT;
-				//this.internalFormat = this.format == GL.RGB ? GL.RGB32F : GL.RGBA32F;
-			}
-			*/
+			if( this.type == GL.FLOAT )
+				this.internalFormat = GL.RGB32F;
+			else if( this.type == GL.HALF_FLOAT )
+				this.internalFormat = GL.RGB16F;
 		}
 	}
 }
@@ -1370,13 +1375,13 @@ Texture.fromImage = function( image, options ) {
 	options = options || {};
 
 	var texture = options.texture || new GL.Texture( image.width, image.height, options);
-	texture.uploadImage( image, options );
+	texture.uploadImage( image, options ); //options could have a prototype 
 
 	texture.bind();
-	gl.texParameteri(texture.texture_type, gl.TEXTURE_MAG_FILTER, texture.magFilter || GL.LINEAR );
-	gl.texParameteri(texture.texture_type, gl.TEXTURE_MIN_FILTER, texture.minFilter || GL.LINEAR_MIPMAP_LINEAR );
-	gl.texParameteri(texture.texture_type, gl.TEXTURE_WRAP_S, texture.wrapS || GL.REPEAT );
-	gl.texParameteri(texture.texture_type, gl.TEXTURE_WRAP_T, texture.wrapT || GL.REPEAT );
+	gl.texParameteri(texture.texture_type, gl.TEXTURE_MAG_FILTER, texture.magFilter || Texture.DEFAULT_MAG_FILTER );
+	gl.texParameteri(texture.texture_type, gl.TEXTURE_MIN_FILTER, texture.minFilter || Texture.DEFAULT_MIN_FILTER );
+	gl.texParameteri(texture.texture_type, gl.TEXTURE_WRAP_S, texture.wrapS || Texture.DEFAULT_WRAP_S );
+	gl.texParameteri(texture.texture_type, gl.TEXTURE_WRAP_T, texture.wrapT || Texture.DEFAULT_WRAP_T );
 
 	if ((GL.isPowerOfTwo(texture.width) && GL.isPowerOfTwo(texture.height)) || gl.webgl_version > 1)
 	{
@@ -1391,6 +1396,7 @@ Texture.fromImage = function( image, options ) {
 	{
 		//no mipmaps supported
 		gl.texParameteri(texture.texture_type, gl.TEXTURE_MIN_FILTER, GL.LINEAR );
+		//gl.texParameteri(texture.texture_type, gl.TEXTURE_MAG_FILTER, GL.LINEAR );
 		gl.texParameteri(texture.texture_type, gl.TEXTURE_WRAP_S, GL.CLAMP_TO_EDGE );
 		gl.texParameteri(texture.texture_type, gl.TEXTURE_WRAP_T, GL.CLAMP_TO_EDGE );
 		texture.has_mipmaps = false;

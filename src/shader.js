@@ -1016,6 +1016,17 @@ Shader.SCREEN_VERTEX_SHADER = "\n\
 			}\n\
 			";
 
+Shader.SCREEN_300_VERTEX_SHADER = "#version 300 es\n\
+			precision highp float;\n\
+			in vec3 a_vertex;\n\
+			in vec2 a_coord;\n\
+			out vec2 v_coord;\n\
+			void main() { \n\
+				v_coord = a_coord; \n\
+				gl_Position = vec4(a_coord * 2.0 - 1.0, 0.0, 1.0); \n\
+			}\n\
+			";			
+
 Shader.SCREEN_FRAGMENT_SHADER = "\n\
 			precision highp float;\n\
 			uniform sampler2D u_texture;\n\
