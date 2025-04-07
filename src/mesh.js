@@ -1893,9 +1893,12 @@ Mesh.mergeMeshes = function( meshes, options )
 	var offsets = {}; //tells how many positions indices must be offseted
 	var vertex_offsets = [];
 	var current_vertex_offset = 0;
+	var num_vertices = 0;
 	var groups = [];
 	var bones = [];
 	var bones_by_index = {};
+	var num_morphs = 0;
+	var morphs = null;
 
 	//vertex buffers
 	//compute size
@@ -1959,6 +1962,14 @@ Mesh.mergeMeshes = function( meshes, options )
 
 		groups.push( group );
 
+		if(mesh.morphs)
+		{
+			var num = Object.values( mesh.morphs ).length;
+			if(num_morphs == 0)
+				num_morphs = num;
+			else if (num_morphs !== num)
+				throw ("cannot merge meshes with and without morph targets")
+		}
 	}
 
 	//allocate
@@ -1987,8 +1998,30 @@ Mesh.mergeMeshes = function( meshes, options )
 
 		vertex_buffers[j] = new datatype( vertex_buffers[j] );
 		offsets[j] = 0;
+		if(j === "vertices")
+			num_vertices = vertex_buffers[j].length / 3;
 	}
 
+	//allocate for morph targets too
+	if(num_morphs)
+	{
+		morphs = [];
+		for(var i = 0; i < num_morphs; ++i)
+		{
+			var base_mesh = meshes[0].mesh;
+			var morph_data = {
+				name: base_mesh.morphs[i].name,
+				weight: base_mesh.morphs[i].weight,
+				buffers: {
+					vertices: new Float32Array(num_vertices*3),
+					normals: new Float32Array(num_vertices*3)
+				}
+			}
+			morphs.push(morph_data);
+		}
+	}
+
+	//and for indices
 	for(var j in index_buffers)
 	{
 		var datatype = current_vertex_offset < 256*256 ? Uint16Array : Uint32Array;
@@ -2001,7 +2034,7 @@ Mesh.mergeMeshes = function( meshes, options )
 	{
 		var mesh_info = meshes[i];
 		var mesh = mesh_info.mesh;
-		var offset = 0;
+		var offset = offsets["vertices"];
 		var length = 0;
 
 		for(var j in mesh.vertexBuffers)
@@ -2032,6 +2065,17 @@ Mesh.mergeMeshes = function( meshes, options )
 			index_buffers[j].set( mesh.indexBuffers[j].data, offsets[j] );
 			apply_offset( index_buffers[j], offsets[j], mesh.indexBuffers[j].data.length, vertex_offsets[i] );
 			offsets[j] += mesh.indexBuffers[j].data.length;
+		}
+
+		if(num_morphs)
+		for(var j = 0; j < mesh.morphs.length; ++j)
+		{
+			var morph = mesh.morphs[j]
+			for(var k in morph.buffers)
+			{
+				var morph_data = morph.buffers[k];
+				morphs[j].buffers[k].set( morph_data, offset );
+			}
 		}
 	}
 
@@ -2074,12 +2118,15 @@ Mesh.mergeMeshes = function( meshes, options )
 	{
 		var mesh = new GL.Mesh( vertex_buffers,index_buffers, extra );
 		mesh.updateBoundingBox();
+		if(morphs)
+			mesh.morphs = morphs;
 		return mesh;
 	}
 	return { 
 		vertexBuffers: vertex_buffers, 
 		indexBuffers: index_buffers, 
-		info: { groups: groups } 
+		info: { groups: groups },
+		morphs: morphs
 	};
 }
 

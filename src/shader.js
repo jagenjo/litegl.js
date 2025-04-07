@@ -247,8 +247,10 @@ Shader.prototype.extractShaderInfo = function()
 			type_length: type_length,
 			size: data.size,
 			loc: null 
-		}; //gl.getAttribLocation( this.program, data.name )
-		this.attributes[ data.name ] = gl.getAttribLocation(this.program, data.name );	
+		}; 
+		//gl.getAttribLocation( this.program, data.name )
+		if( data.name !== "gl_VertexID" ) //if gl_VertexID is used, it appears as a attribute!
+			this.attributes[ data.name ] = gl.getAttribLocation(this.program, data.name );	
 	}
 }
 
