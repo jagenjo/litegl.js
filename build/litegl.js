@@ -13130,7 +13130,7 @@ Octree.prototype.trim = function(node)
 * @param {number} dist_max
 * @param {number} test_backfaces if rays colliding with the back face must be considered a valid collision
 * @param {number} mode which mode to use (Octree.NEAREST: nearest collision to origin, Octree.FIRST: first collision detected (fastest), Octree.ALL: all collision (slowest)
-* @return {HitTest} object containing pos and normal
+* @return {HitTest} object containing pos, normal, index
 */
 Octree.prototype.testRay = (function(){ 
 	var origin_temp = vec3.create();
@@ -13665,16 +13665,16 @@ global.HitTest = GL.HitTest = HitTest;
 // ### .mergeWith(other)
 // 
 // Changes this object to be the closer of the two hit test results.
-HitTest.prototype = {
-  mergeWith: function(other) {
-    if (other.t > 0 && other.t < this.t) {
-      this.t = other.t;
-      this.hit = other.hit;
-      this.normal = other.normal;
-	  this.face = other.face;
-    }
+HitTest.prototype.mergeWith = function(other) {
+  if (other.t > 0 && other.t < this.t) {
+    this.t = other.t;
+    this.hit = other.hit;
+    this.normal = other.normal;
+    this.face = other.face;
+    this.index = other.index;
   }
-};
+}
+
 
 // ### new GL.Ray( origin, direction )
 global.Ray = GL.Ray = function Ray( origin, direction )

@@ -20,16 +20,16 @@ global.HitTest = GL.HitTest = HitTest;
 // ### .mergeWith(other)
 // 
 // Changes this object to be the closer of the two hit test results.
-HitTest.prototype = {
-  mergeWith: function(other) {
-    if (other.t > 0 && other.t < this.t) {
-      this.t = other.t;
-      this.hit = other.hit;
-      this.normal = other.normal;
-	  this.face = other.face;
-    }
+HitTest.prototype.mergeWith = function(other) {
+  if (other.t > 0 && other.t < this.t) {
+    this.t = other.t;
+    this.hit = other.hit;
+    this.normal = other.normal;
+    this.face = other.face;
+    this.index = other.index;
   }
-};
+}
+
 
 // ### new GL.Ray( origin, direction )
 global.Ray = GL.Ray = function Ray( origin, direction )

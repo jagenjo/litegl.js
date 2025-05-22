@@ -285,7 +285,7 @@ Octree.prototype.trim = function(node)
 * @param {number} dist_max
 * @param {number} test_backfaces if rays colliding with the back face must be considered a valid collision
 * @param {number} mode which mode to use (Octree.NEAREST: nearest collision to origin, Octree.FIRST: first collision detected (fastest), Octree.ALL: all collision (slowest)
-* @return {HitTest} object containing pos and normal
+* @return {HitTest} object containing pos, normal, index
 */
 Octree.prototype.testRay = (function(){ 
 	var origin_temp = vec3.create();
