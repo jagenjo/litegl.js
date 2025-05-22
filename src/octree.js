@@ -2,6 +2,22 @@
 * @namespace GL
 */
 
+class OctreeNode {
+	min = null
+	max = null
+	size = null;
+	faces = null; //[ Float32Array[10], ... ]
+	inside = 0;
+	c = null; //children
+
+	constructor(min,max)
+	{
+		this.min = min;
+		this.max = max;
+		this.size = vec3.sub( vec3.create(), max, min);
+	}
+}
+
 /**
 *   Octree generator for fast ray triangle collision with meshes
 *	Dependencies: glmatrix.js (for vector and matrix operations)
@@ -10,19 +26,20 @@
 * @param {Mesh} mesh object containing vertices buffer (indices buffer optional)
 */
 
-global.Octree = GL.Octree = function Octree( mesh, start, length )
-{
-	this.root = null;
-	this.total_depth = 0;
-	this.total_nodes = 0;
-	if(mesh)
+class Octree {
+	constructor( mesh, start, length )
 	{
-		this.buildFromMesh(mesh, start, length);
-		this.total_nodes = this.trim();
+		this.root = null;
+		this.total_depth = 0;
+		this.total_nodes = 0;
+		if(mesh)
+			this.buildFromMesh(mesh, start, length);
 	}
 }
 
-Octree.MAX_NODE_TRIANGLES_RATIO = 0.1;
+global.Octree = GL.Octree = Octree;
+
+Octree.MAX_NODE_TRIANGLES_RATIO = 0.05;
 Octree.MAX_OCTREE_DEPTH = 8;
 Octree.OCTREE_MARGIN_RATIO = 0.01;
 Octree.OCTREE_MIN_MARGIN = 0.1;
@@ -49,11 +66,13 @@ Octree.prototype.buildFromMesh = function( mesh, start, length )
 	if( !length )
 		length = triangles ? triangles.length : vertices.length / 3;
 
-	var root = null;
+	var bounding;
 	if( triangles )
-		root = this.computeAABBFromIndices(vertices,triangles,start,length);
+		bounding = this.computeAABBFromIndices(vertices,triangles,start,length);
 	else
-		root = this.computeAABB(vertices);
+		bounding = this.computeAABB(vertices);
+
+	var root = new OctreeNode(bounding.min, bounding.max);
 	this.root = root;
 	this.total_nodes = 1;
 	this.total_triangles = triangles ? triangles.length / 3 : vertices.length / 9;
@@ -69,7 +88,6 @@ Octree.prototype.buildFromMesh = function( mesh, start, length )
 	vec3.add(root.max, root.max, margin);
 
 	root.faces = [];
-	root.inside = 0;
 
 	//indexed
 	var end = start + length;
@@ -96,6 +114,8 @@ Octree.prototype.buildFromMesh = function( mesh, start, length )
 				this.addToNode(face,root,0);
 		}
 	}
+
+	this.total_nodes = this.trim();	
 
 	return root;
 }
@@ -157,10 +177,10 @@ Octree.prototype.addToNode = function( face, node, depth )
 			if(this.total_depth < depth + 1)
 				this.total_depth = depth + 1;
 
-			var faces = node.faces.concat();
+			var faces = node.faces;
 			node.faces = null;
 
-			//redistribute all nodes
+			//redistribute all faces
 			for(var i = 0; i < faces.length; ++i)
 			{
 				var face = faces[i];
@@ -198,11 +218,12 @@ Octree.prototype.splitNode = function(node)
 	{
 		var ref = this.octree_pos_ref[i];
 
-		var newnode = {};
+		var min = [ node.min[0] + half[0] * ref[0],  node.min[1] + half[1] * ref[1],  node.min[2] + half[2] * ref[2]];
+		var max = [ min[0] + half[0], min[1] + half[1], min[2] + half[2]];
+
+		var newnode = new OctreeNode(min,max);
 		this.total_nodes += 1;
 
-		newnode.min = [ node.min[0] + half[0] * ref[0],  node.min[1] + half[1] * ref[1],  node.min[2] + half[2] * ref[2]];
-		newnode.max = [newnode.min[0] + half[0], newnode.min[1] + half[1], newnode.min[2] + half[2]];
 		newnode.faces = null;
 		newnode.inside = 0;
 		node.c.push(newnode);
@@ -227,7 +248,7 @@ Octree.prototype.computeAABB = function(vertices)
 		}
 	}
 
-	return {min: min, max: max, size: vec3.sub( vec3.create(), max, min) };
+	return {min,max};
 }
 
 Octree.prototype.computeAABBFromIndices = function(vertices,indices,start,length)
@@ -251,7 +272,7 @@ Octree.prototype.computeAABBFromIndices = function(vertices,indices,start,length
 		}
 	}
 
-	return {min: min, max: max, size: vec3.sub( vec3.create(), max, min) };
+	return { min,max }
 }
 
 //remove empty nodes

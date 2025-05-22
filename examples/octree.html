@@ -8,7 +8,7 @@
 <meta property="og:image" content="" />
 -->
 
-<title>litegl.js: octree example</title>
+<title>litegl.js: visualize octree</title>
 	<link rel="stylesheet" type="text/css" href="style.css" />
 	<style type='text/css'>
 		html, body { width: 100%; height: 100%; margin: 0; padding: 0 }
@@ -27,46 +27,37 @@
 		container.appendChild(gl.canvas);
 		gl.animate();
 
+		//GL.Octree.MAX_OCTREE_DEPTH = 3;
+		GL.Octree.MAX_NODE_TRIANGLES_RATIO = 0.05;
+
 		//build the mesh
 		var mesh = GL.Mesh.fromURL("man.obj");
-		var cam_pos = vec3.fromValues(100,200,200);
+		var cube = GL.Mesh.cube();
+		var wire = GL.Mesh.cube({wireframe:true});
+		var cam_pos = vec3.fromValues(100,200,250);
 		var cam_target = vec3.fromValues(0,100,0);
-
-		var points = [0,0,0];
 
 		//create basic matrices for cameras and transformation
 		var proj = window.proj = mat4.create();
 		var view = window.view = mat4.create();
+		var model = window.model = mat4.create();
 		var vp = window.vp = mat4.create();
+		var mvp = window.vp = mat4.create();
 		var identity = mat4.create();
+		var center = vec3.create()
+		var size = vec3.create()
 
 		//set the camera perspective
 		mat4.perspective(proj, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 0.1, 1000);
 
-		function testCollision(x,y)
-		{
-
-			mat4.multiply( vp, proj, view );
-
-			var RT = new GL.Raytracer(vp);
-			var ray = RT.getRayForPixel(x,y);
-			if( !mesh || mesh.ready === false )
-				return;
-
-			if(!mesh.octree)
-				mesh.octree = new GL.Octree( mesh );
-
-			var hit = mesh.octree.testRay( cam_pos, ray, 0.01, 1000 );
-			if(!hit)
-				return;
-			
-			points.push( hit.pos[0], hit.pos[1], hit.pos[2] );
-		}
-
 		gl.captureMouse();
 		gl.onmousemove = function(e)
 		{
-			testCollision(e.canvasx, gl.canvas.height - e.canvasy);
+			if(e.dragging)
+			{
+				vec3.rotateY(cam_pos,cam_pos,e.deltax*0.001)
+			}
+				
 		}
 
 		//basic phong shader
@@ -89,7 +80,7 @@
 				uniform vec4 u_color;\
 				void main() {\
 				  vec3 N = normalize(v_normal);\
-				  gl_FragColor = u_color * max(0.0, dot(u_lightvector,N));\
+				  gl_FragColor = u_color * (0.5 + 0.5 * dot(u_lightvector,N));\
 				}\
 			');
 
@@ -127,29 +118,53 @@
 
 			//render mesh using the shader
 			shader.uniforms({
-				u_color: [1,1,1,1],
+				u_color: [0.8,0.8,0.8,1],
 				u_lightvector: L,
 				u_model: identity,
 				u_mvp: vp
 			}).draw(mesh);
 
-			if(points.length)
+			if( mesh && mesh.ready !== false && !mesh.octree)
+				mesh.octree = new GL.Octree( mesh );
+
+			if(mesh.octree)
 			{
-				var points_mesh = GL.Mesh.load({vertices: points});
-				//render mesh using the shader
-				flat_shader.uniforms({
-					u_color: [1,0,0,1],
-					u_lightvector: L,
-					u_model: identity,
-					u_mvp: vp
-				}).draw(points_mesh, gl.POINTS);
+				gl.enable(gl.BLEND)
+				gl.blendFunc(gl.SRC_ALPHA,gl.ONE);
+				gl.depthMask(false)
+				//gl.disable(gl.DEPTH_TEST);
+				drawOctreeNode(mesh.octree.root);
+				gl.disable(gl.BLEND)
+				gl.depthMask(true)
+				gl.enable(gl.DEPTH_TEST);
 			}
 		};
+
+		function drawOctreeNode(node,level=2)
+		{
+			mat4.identity( model );
+			vec3.lerp(center,node.min,node.max, 0.5)
+			vec3.sub(size,node.max,node.min)
+			mat4.translate( model, model, center )
+			vec3.scale(size,size,0.9)
+			mat4.scale( model, model, size );
+			mat4.mul(mvp,vp,model)
+
+			flat_shader.uniforms({
+				u_color: [0.5*level/10,0.5*level/10,level/10,0.5],
+				u_lightvector: L,
+				u_model: model,
+				u_mvp: mvp
+			}).draw(wire, gl.LINES, "wireframe");
+
+			if(node.c)
+			for(var i = 0; i < node.c.length; ++i)
+				drawOctreeNode(node.c[i],level+1);
+		}
 
 		//update loop
 		gl.onupdate = function(dt)
 		{
-			cam_pos[0] = Math.sin( getTime() * 0.001 ) * 100;
 		};
 	}
 	
