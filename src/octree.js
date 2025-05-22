@@ -344,6 +344,7 @@ Octree.testRayInNode = function( node, origin, direction, test_backfaces, mode )
 			test = Octree.hitTestTriangle( origin, direction, face.subarray(0,3) , face.subarray(3,6), face.subarray(6,9), test_backfaces );
 			if (test == null)
 				continue;
+			test.index = face[9]
 			if(mode == Octree.FIRST)
 				return test;
 			if(mode == Octree.ALL)

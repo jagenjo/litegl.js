@@ -1,0 +1,12 @@
+node_modules/
+node_modules/*
+npm-debug.log
+temp/
+temp/*
+coverage/
+
+# Editors
+/.vscode/*
+!/.vscode/extensions.json
+*.bak
+.project

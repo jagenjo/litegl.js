@@ -5,12 +5,17 @@
 // This is the object used to return hit test results. If there are no
 // arguments, the constructed argument represents a hit infinitely far
 // away.
-global.HitTest = GL.HitTest = function HitTest(t, hit, normal) {
-  this.t = arguments.length ? t : Number.MAX_VALUE;
-  this.hit = hit;
-  this.normal = normal;
-  this.face = null;
+class HitTest {
+  constructor(t, hit, normal, index) {
+    this.t = arguments.length ? t : Number.MAX_VALUE;
+    this.hit = hit;
+    this.normal = normal;
+    this.face = null;
+    this.index = index;
+  }
 }
+
+global.HitTest = GL.HitTest = HitTest;
 
 // ### .mergeWith(other)
 // 

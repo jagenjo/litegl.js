@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "build" : "cd utils;./build.sh",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },  
+  "dependencies": {
+    "google-closure-compiler": "^20231112.0.0"
+  }
+}
