@@ -202,7 +202,7 @@
       <div class="demo-card">
         <canvas id="hero-demo" width="640" height="480"></canvas>
         <div class="demo-tag">live — rendered with litegl.js</div>
-        <div class="demo-fallback" id="demo-fallback" hidden>Your browser could not start WebGL, but the library still works elsewhere. 🙂</div>
+        <div class="demo-fallback" id="demo-fallback" hidden></div>
       </div>
     </div>
   </section>
@@ -212,8 +212,9 @@
   <!-- FEATURES -->
   <section id="features">
     <div class="section-head">
-      <h2>Everything you need, nothing you don't</h2>
+      <h2>Less boilerplate</h2>
       <p>A thin layer over WebGL that removes the boilerplate while keeping the low-level access when you want it.</p>
+      <p>Allows to write clean code while accessing the GPU.</p>
     </div>
     <div class="features">
       <div class="feature"><div class="ico">🎛️</div><h4>Easy context creation</h4><p>Spin up a WebGL 1 or 2 context, canvas included, in a single call.</p></div>
@@ -318,10 +319,6 @@ gl.ondraw = () =&gt; {
       <a class="eco-card" href="https://github.com/jagenjo/Canvas2DtoWebGL">
         <h4>Canvas2DtoWebGL →</h4>
         <p>A drop-in Canvas2D API accelerated by WebGL, powered by litegl.</p>
-      </a>
-      <a class="eco-card" href="http://glmatrix.net/">
-        <h4>glMatrix →</h4>
-        <p>The fast vector &amp; matrix math library litegl uses for all its operations (v2.x).</p>
       </a>
     </div>
   </section>
