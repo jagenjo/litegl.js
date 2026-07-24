@@ -1,88 +1,527 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-<!--
-<meta property="og:title" content="GameEditor" />
-<meta property="og:description" content="GameEditor for simple games" />
-<meta property="og:image" content="" />
--->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>litegl.js — a friendly WebGL wrapper</title>
+<meta name="description" content="litegl.js is a small, dependency-light library that wraps WebGL 1 & 2 with easy classes for Mesh, Texture, Shader and FBO. Now written in TypeScript." />
+<meta property="og:title" content="litegl.js" />
+<meta property="og:description" content="A friendly WebGL 1 & 2 wrapper with classes for Mesh, Texture, Shader and FBO." />
+<meta property="og:type" content="website" />
+<style>
+  :root {
+    --bg: #f7f8fb;
+    --bg-soft: #ffffff;
+    --bg-elev: #ffffff;
+    --border: #e5e8f0;
+    --text: #1b2030;
+    --muted: #5a6478;
+    --accent: #4f6bff;
+    --accent-2: #9b5cff;
+    --accent-ink: #ffffff;
+    --code-bg: #0f1424;
+    --code-text: #e6ebff;
+    --shadow: 0 1px 2px rgba(20,28,60,.06), 0 8px 24px rgba(20,28,60,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0c0f1a;
+      --bg-soft: #11162400;
+      --bg-elev: #141a2b;
+      --border: #232a40;
+      --text: #e8ecf7;
+      --muted: #9aa4bd;
+      --accent: #6d84ff;
+      --accent-2: #b07bff;
+      --code-bg: #0a0e1a;
+      --code-text: #e6ebff;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #f7f8fb; --bg-elev: #ffffff; --border: #e5e8f0; --text: #1b2030;
+    --muted: #5a6478; --accent: #4f6bff; --accent-2: #9b5cff; --code-bg: #0f1424; --code-text:#e6ebff;
+    --shadow: 0 1px 2px rgba(20,28,60,.06), 0 8px 24px rgba(20,28,60,.06);
+  }
+  :root[data-theme="dark"] {
+    --bg: #0c0f1a; --bg-elev: #141a2b; --border: #232a40; --text: #e8ecf7;
+    --muted: #9aa4bd; --accent: #6d84ff; --accent-2: #b07bff; --code-bg: #0a0e1a; --code-text:#e6ebff;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.35);
+  }
 
-<title>litegl.js</title>
-	<link type="text/css" rel="stylesheet" media="all" href="https://github.com/assets/github-c066013be20516a6aae45467044fa109f18bd0c6.css">
-	<link type="text/css" rel="stylesheet" media="all" href="https://github.com/assets/github2-97081caeb5890bc349a9ff52de33ac5ba1a4b6cc.css">
-	<link type="text/css" rel="stylesheet" media="all" href="https://github.com/assets/styleguide-4a2ef42768c9e616cf8022dec2fe99290430ac2c.css">
-	<link rel="stylesheet" type="text/css" href="style.css" />
-	<style type='text/css'>
-	</style>
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+  code, pre, kbd { font-family: "SFMono-Regular", ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace; }
+
+  /* ---- Top nav ---- */
+  header.nav {
+    position: sticky; top: 0; z-index: 20;
+    backdrop-filter: saturate(160%) blur(10px);
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner { display: flex; align-items: center; gap: 18px; height: 60px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; color: var(--text); }
+  .brand:hover { text-decoration: none; }
+  .brand .logo { width: 26px; height: 26px; display: block; }
+  .nav-links { margin-left: auto; display: flex; gap: 4px; align-items: center; }
+  .nav-links a { color: var(--muted); padding: 8px 12px; border-radius: 8px; font-size: 15px; }
+  .nav-links a:hover { color: var(--text); background: var(--bg-elev); text-decoration: none; }
+  .icon-btn { background: none; border: 1px solid var(--border); color: var(--muted); width: 38px; height: 38px; border-radius: 9px; cursor: pointer; font-size: 16px; display: grid; place-items: center; }
+  .icon-btn:hover { color: var(--text); border-color: var(--accent); }
+  @media (max-width: 720px) { .nav-links a.hide-sm { display: none; } }
+
+  /* ---- Buttons ---- */
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px; border-radius: 10px; font-weight: 600; font-size: 15px; border: 1px solid var(--border); background: var(--bg-elev); color: var(--text); cursor: pointer; transition: transform .06s ease, box-shadow .2s ease; }
+  .btn:hover { text-decoration: none; box-shadow: var(--shadow); transform: translateY(-1px); }
+  .btn.primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: var(--accent-ink); border: none; }
+
+  /* ---- Hero ---- */
+  .hero { padding: 64px 0 40px; }
+  .hero-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: 40px; align-items: center; }
+  @media (max-width: 860px) { .hero-grid { grid-template-columns: 1fr; } }
+  .eyebrow { display: inline-block; font-size: 13px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); padding: 5px 11px; border-radius: 999px; margin-bottom: 18px; }
+  h1.title { font-size: clamp(34px, 6vw, 52px); line-height: 1.08; margin: 0 0 16px; letter-spacing: -.02em; }
+  h1.title .grad { background: linear-gradient(120deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .lede { font-size: 19px; color: var(--muted); margin: 0 0 28px; max-width: 40ch; }
+  .cta { display: flex; flex-wrap: wrap; gap: 12px; }
+
+  .demo-card { position: relative; border: 1px solid var(--border); border-radius: 18px; overflow: hidden; box-shadow: var(--shadow); background: radial-gradient(120% 120% at 100% 0%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 55%), radial-gradient(120% 120% at 0% 100%, color-mix(in srgb, var(--accent-2) 22%, transparent), transparent 55%), var(--bg-elev); aspect-ratio: 4 / 3; }
+  .demo-card canvas { display: block; width: 100%; height: 100%; }
+  .demo-tag { position: absolute; left: 12px; bottom: 12px; font-size: 12px; color: var(--muted); background: color-mix(in srgb, var(--bg) 70%, transparent); padding: 4px 9px; border-radius: 7px; border: 1px solid var(--border); }
+  .demo-fallback { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font-size: 14px; padding: 20px; text-align: center; }
+
+  /* ---- Sections ---- */
+  section { padding: 46px 0; }
+  .section-head { max-width: 62ch; margin-bottom: 30px; }
+  h2 { font-size: clamp(24px, 4vw, 32px); letter-spacing: -.01em; margin: 0 0 10px; }
+  .section-head p { color: var(--muted); margin: 0; font-size: 17px; }
+  h3 { font-size: 15px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 34px 0 14px; font-weight: 700; }
+
+  /* ---- Features ---- */
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 820px) { .features { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 520px) { .features { grid-template-columns: 1fr; } }
+  .feature { border: 1px solid var(--border); border-radius: 14px; padding: 20px; background: var(--bg-elev); }
+  .feature .ico { font-size: 22px; }
+  .feature h4 { margin: 12px 0 6px; font-size: 16px; }
+  .feature p { margin: 0; color: var(--muted); font-size: 14.5px; }
+
+  /* ---- Code ---- */
+  .code { position: relative; background: var(--code-bg); color: var(--code-text); border-radius: 12px; padding: 18px 18px; overflow-x: auto; font-size: 13.5px; line-height: 1.65; border: 1px solid #ffffff12; }
+  .code pre { margin: 0; }
+  .copy { position: absolute; top: 10px; right: 10px; font-size: 12px; color: #cdd6ff; background: #ffffff14; border: 1px solid #ffffff22; padding: 5px 10px; border-radius: 7px; cursor: pointer; }
+  .copy:hover { background: #ffffff26; }
+  .steps { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: start; }
+  @media (max-width: 820px) { .steps { grid-template-columns: 1fr; } }
+  .step { border: 1px solid var(--border); border-radius: 14px; background: var(--bg-elev); overflow: hidden; }
+  .step .step-h { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border); font-weight: 600; }
+  .step .num { width: 24px; height: 24px; border-radius: 7px; background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); display: grid; place-items: center; font-size: 13px; font-weight: 700; }
+  .step .code { border-radius: 0; border: none; }
+
+  /* ---- Examples ---- */
+  .ex-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 820px) { .ex-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 520px) { .ex-grid { grid-template-columns: 1fr; } }
+  .ex { display: block; border: 1px solid var(--border); border-radius: 13px; padding: 16px; background: var(--bg-elev); color: var(--text); transition: transform .07s ease, box-shadow .2s ease, border-color .2s ease; }
+  .ex:hover { text-decoration: none; transform: translateY(-2px); box-shadow: var(--shadow); border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); }
+  .ex .ex-ico { font-size: 20px; }
+  .ex .ex-title { font-weight: 650; margin: 8px 0 3px; font-size: 15.5px; }
+  .ex .ex-desc { color: var(--muted); font-size: 13.5px; }
+  .ex .ex-extra { margin-top: 8px; font-size: 12.5px; }
+  .ex .ex-extra a { color: var(--accent); }
+
+  /* ---- Ecosystem ---- */
+  .eco { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 820px) { .eco { grid-template-columns: 1fr; } }
+  .eco-card { border: 1px solid var(--border); border-radius: 14px; padding: 22px; background: var(--bg-elev); }
+  .eco-card h4 { margin: 0 0 8px; font-size: 17px; }
+  .eco-card p { margin: 0; color: var(--muted); font-size: 14.5px; }
+
+  /* ---- Footer ---- */
+  footer { border-top: 1px solid var(--border); padding: 34px 0 60px; color: var(--muted); font-size: 14px; }
+  footer .foot-inner { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center; }
+  .pill { font-size: 12.5px; color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: 4px 11px; }
+  .divider { height: 1px; background: var(--border); border: 0; margin: 0; }
+</style>
 </head>
 <body>
 
-<div id="wrap">
-	<div id="main">
-		<div id="content" class="markdown-body">
-			<h1>litegl.js</h1>
-			<p>Litegl.js is a library that wraps WebGL to make it more user-friendly by creating classes for managing different items like Buffer, Mesh, Texture, Shader and other common aspects of any WebGL applications.</p>
-			<p>It is a fork from <a href="https://github.com/evanw/lightgl.js/">LightGL.js</a> by <a href="http://madebyevan.com">Evan Wallace</a>, but some major changes have been made.</p>
-			<p>Some of the main differences:</p>
-			<ul>
-				<li>Matrices have been replaced by glMatrix</li>
-				<li>Meshes are forced to be stored in ArrayBuffer formats</li>
-				<li>Meshes support range rendering with offset</li>
-				<li>Removed fixed pipeline behaviour</li>
-				<li>Better event handling (mouse position, mouse wheel, dragging)</li>
-				<li>Textures expanded to support Arraybuffers and Cubemaps</li>
-				<li>Allows to work with multiple WebGL contexts in the same page.</li>
-			</ul>
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#top">
+      <svg class="logo" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#4f6bff"/><stop offset="1" stop-color="#9b5cff"/>
+        </linearGradient></defs>
+        <path d="M16 2 4 8.5v15L16 30l12-6.5v-15L16 2Z" fill="url(#g)" opacity="0.18"/>
+        <path d="M16 2 4 8.5 16 15l12-6.5L16 2Z" fill="url(#g)"/>
+        <path d="M4 8.5v15L16 30V15L4 8.5Z" fill="url(#g)" opacity="0.55"/>
+        <path d="M28 8.5v15L16 30V15l12-6.5Z" fill="url(#g)" opacity="0.32"/>
+      </svg>
+      litegl.js
+    </a>
+    <nav class="nav-links">
+      <a class="hide-sm" href="#features">Features</a>
+      <a class="hide-sm" href="#quickstart">Quick start</a>
+      <a href="#examples">Examples</a>
+      <a class="hide-sm" href="doc">Docs</a>
+      <a href="https://github.com/jagenjo/litegl.js">GitHub</a>
+      <button class="icon-btn" id="theme-toggle" title="Toggle light / dark" aria-label="Toggle theme">◐</button>
+    </nav>
+  </div>
+</header>
 
-			<p>This library has been used in several projects like <a href="https://github.com/jagenjo/rendeer.js">Rendeer.js</a> or <a href="https://github.com/jagenjo/Canvas2DtoWebGL">Canvas2DtoWebGL</a>.</p>
+<a id="top"></a>
+<div class="wrap">
 
-			<a name="download"></a>
-			<h2>Download</h2>
-			<p>You can download the full source code from <a href="https://github.com/jagenjo/litegl.js">GitHub</a>, or use just the library using this link <a href="http://tamats.com/webglstudio/litegl/build/litegl.js">litegl.js</a> (<a href="http://tamats.com/webglstudio/litegl/build/litegl.min.js">compressed version</a>)</p>
-			
-			<a name="usage"></a>
-			<h2>Usage</h2>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-grid">
+      <div>
+        <span class="eyebrow">WebGL 1 &amp; 2 · now in TypeScript</span>
+        <h1 class="title">A friendly wrapper for <span class="grad">raw WebGL</span>.</h1>
+        <p class="lede">litegl.js gives you clean classes for <strong>Mesh</strong>, <strong>Texture</strong>, <strong>Shader</strong> and <strong>FBO</strong> — without hiding the GL underneath or taking away any control.</p>
+        <div class="cta">
+          <a class="btn primary" href="#quickstart">Get started →</a>
+          <a class="btn" href="#examples">Browse examples</a>
+          <a class="btn" href="https://github.com/jagenjo/litegl.js">★ GitHub</a>
+        </div>
+      </div>
+      <div class="demo-card">
+        <canvas id="hero-demo" width="640" height="480"></canvas>
+        <div class="demo-tag">live — rendered with litegl.js</div>
+        <div class="demo-fallback" id="demo-fallback" hidden></div>
+      </div>
+    </div>
+  </section>
 
-			<p>Include the script</p>
-			<pre>&lt;script src="js/litegl.js"&gt;&lt;/script&gt;</pre>
+  <hr class="divider" />
 
-			<p>Create the context by typing:</p>
-			<pre>var gl = GL.create({width:800, height:600});</pre>
+  <!-- FEATURES -->
+  <section id="features">
+    <div class="section-head">
+      <h2>Less boilerplate</h2>
+      <p>A thin layer over WebGL that removes the boilerplate while keeping the low-level access when you want it.</p>
+      <p>Allows to write clean code while accessing the GPU.</p>
+    </div>
+    <div class="features">
+      <div class="feature"><div class="ico">🎛️</div><h4>Easy context creation</h4><p>Spin up a WebGL 1 or 2 context, canvas included, in a single call.</p></div>
+      <div class="feature"><div class="ico">📦</div><h4>Meshes &amp; buffers</h4><p>Fill typed-array buffers and upload to the GPU. Range rendering with offsets built in.</p></div>
+      <div class="feature"><div class="ico">🖼️</div><h4>Textures &amp; cubemaps</h4><p>Load, fill, clone, copy and blur — for TEXTURE_2D and TEXTURE_CUBE_MAP.</p></div>
+      <div class="feature"><div class="ico">✨</div><h4>Shaders</h4><p>Compile from strings, inject macros, and get every uniform location extracted for you.</p></div>
+      <div class="feature"><div class="ico">🎯</div><h4>FBOs</h4><p>Render to a texture, to many textures, or to a depth texture with a friendly FBO class.</p></div>
+      <div class="feature"><div class="ico">🔻</div><h4>Primitives</h4><p>plane, cube, sphere, cylinder, hemisphere and more, ready to draw.</p></div>
+      <div class="feature"><div class="ico">🖱️</div><h4>Input &amp; events</h4><p>Cross-browser mouse, keyboard and gamepad handling, plus an events system.</p></div>
+      <div class="feature"><div class="ico">📐</div><h4>Raytracing &amp; Octree</h4><p>Ray tests against spheres, AABBs, planes and meshes, accelerated by an octree.</p></div>
+      <div class="feature"><div class="ico">🧩</div><h4>OBJ &amp; more</h4><p>Parse and encode OBJ and binary meshes; load images and meshes from URLs.</p></div>
+    </div>
+  </section>
 
-			<p>Attach it to the DOM:</p>
-			<pre>document.getElementById("mycontainer").appendChild( gl.canvas )</pre>
+  <hr class="divider" />
 
-			<p>Hook events</p>
-			<pre>gl.ondraw = function() { ... }</pre>
-			<pre>gl.onupdate = function(dt) { ... }</pre>
+  <!-- QUICK START -->
+  <section id="quickstart">
+    <div class="section-head">
+      <h2>Quick start</h2>
+      <p>Load glMatrix 2.x and litegl, create a context, and draw. That's it.</p>
+    </div>
 
-			<p>Get input</p>
-			<pre>gl.captureMouse();
-gl.onmousedown = function(e) { ... }</pre>
+    <h3>Install</h3>
+    <div class="steps">
+      <div class="step">
+        <div class="step-h"><span class="num">A</span> Classic &lt;script&gt; (global build)</div>
+        <div class="code" data-code><button class="copy">Copy</button><pre>&lt;script src="gl-matrix.js"&gt;&lt;/script&gt;
+&lt;script src="litegl.js"&gt;&lt;/script&gt;
+&lt;!-- exposes the GL namespace + Mesh, Texture, Shader... --&gt;</pre></div>
+      </div>
+      <div class="step">
+        <div class="step-h"><span class="num">B</span> ES modules with types</div>
+        <div class="code" data-code><button class="copy">Copy</button><pre>import { GL, Mesh, Shader, Texture } from "litegl.js";
+// glMatrix 2.x must be present as a global
+// full TypeScript declarations included</pre></div>
+      </div>
+    </div>
 
-			<p>Compile shader</p>
-			<pre>var shader = new Shader( vertex_shader_code, fragment_shader_code); </pre>
+    <h3>A minimal app</h3>
+    <div class="code" data-code>
+      <button class="copy">Copy</button>
+<pre>// 1 · create a context (creates the canvas for you)
+const gl = GL.create({ width: 800, height: 600 });
+document.body.appendChild(gl.canvas);
+gl.animate();                       // starts the render loop
 
-			<p>Create Mesh</p>
-			<pre>var mesh = Mesh.cube(); </pre>
+// 2 · a mesh and a shader
+const mesh = Mesh.cube();
+const shader = new Shader(vertexSource, fragmentSource);
 
-			<p>Render</p>
-			<pre>shader.uniforms( my_uniforms ).draw( mesh ); </pre>
+// 3 · input
+gl.captureMouse();
+gl.onmousemove = (e) =&gt; { if (e.dragging) mat4.rotateY(model, model, e.deltax * 0.01); };
 
-			<a name="examples"></a>
-			<h2>Examples</h2>
-			<p>Check the examples in the <a href="examples">examples folder</a>.</p>
+// 4 · draw every frame
+gl.ondraw = () =&gt; {
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  shader.uniforms({ u_mvp: mvp, u_color: [1, 1, 1, 1] }).draw(mesh);
+};</pre>
+    </div>
 
-			<a name="doc"></a>
-			<h2>Documentation</h2>
-			<p><a href="doc">Click here to read the documentation</a>, it is automatically generated using yui, and can be located in the doc folder.</p>
-			<p>Check also the <a href="http://glmatrix.net/docs/2.2.0/symbols/vec3.html">gl-matrix documentation</a> to a better understanding of how to operate with matrices and vectors.</p>
+    <h3>Load a texture</h3>
+    <div class="code" data-code>
+      <button class="copy">Copy</button>
+<pre>const texture = GL.Texture.fromURL("image.jpg", {
+  minFilter: gl.LINEAR_MIPMAP_LINEAR
+});
 
-		</div>
-	</div>
+gl.ondraw = () =&gt; {
+  texture.bind(0);
+  shader.uniforms({ u_texture: 0 }).draw(mesh);
+};</pre>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- EXAMPLES -->
+  <section id="examples">
+    <div class="section-head">
+      <h2>Examples</h2>
+      <p>Runnable demos covering the whole library. Open any of them — they live in the <a href="examples/">examples folder</a>.</p>
+    </div>
+    <div id="examples-root"></div>
+    <noscript><p><a href="examples/">Open the examples index →</a></p></noscript>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ECOSYSTEM -->
+  <section id="ecosystem">
+    <div class="section-head">
+      <h2>Part of a bigger toolkit</h2>
+      <p>litegl.js is the foundation for several higher-level graphics libraries.</p>
+    </div>
+    <div class="eco">
+      <a class="eco-card" href="https://github.com/jagenjo/rendeer.js">
+        <h4>Rendeer.js →</h4>
+        <p>A scene-graph + renderer with GLTF, skeletal animation and PBR — built on top of litegl.</p>
+      </a>
+      <a class="eco-card" href="https://github.com/jagenjo/Canvas2DtoWebGL">
+        <h4>Canvas2DtoWebGL →</h4>
+        <p>A drop-in Canvas2D API accelerated by WebGL, powered by litegl.</p>
+      </a>
+    </div>
+  </section>
+
 </div>
 
+<footer>
+  <div class="wrap foot-inner">
+    <div>
+      <strong>litegl.js</strong> · MIT licensed · by <a href="http://tamats.com">Javi Agenjo (@tamat)</a><br />
+      Forked from <a href="https://github.com/evanw/lightgl.js/">lightgl.js</a> by Evan Wallace.
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <span class="pill">TypeScript</span>
+      <span class="pill">WebGL 1 &amp; 2</span>
+      <a class="pill" href="https://github.com/jagenjo/litegl.js">GitHub</a>
+      <a class="pill" href="doc">Docs</a>
+    </div>
+  </div>
+</footer>
+
+<!-- Live hero demo powered by the actual library build -->
+<script src="external/gl-matrix.js"></script>
+<script src="build/litegl.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- theme toggle ---------- */
+  var toggle = document.getElementById("theme-toggle");
+  try {
+    var saved = localStorage.getItem("litegl-theme");
+    if (saved) document.documentElement.setAttribute("data-theme", saved);
+  } catch (e) {}
+  toggle.addEventListener("click", function () {
+    var cur = document.documentElement.getAttribute("data-theme");
+    var isDark = cur ? cur === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    var next = isDark ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    try { localStorage.setItem("litegl-theme", next); } catch (e) {}
+  });
+
+  /* ---------- copy buttons ---------- */
+  document.querySelectorAll(".copy").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var pre = btn.parentElement.querySelector("pre");
+      navigator.clipboard.writeText(pre.innerText).then(function () {
+        var old = btn.textContent; btn.textContent = "Copied!";
+        setTimeout(function () { btn.textContent = old; }, 1400);
+      }).catch(function () {});
+    });
+  });
+
+  /* ---------- examples gallery ---------- */
+  var groups = [
+    { name: "API basics", items: [
+      { icon: "📏", href: "examples/lines.html", title: "Lines & axes", desc: "Draw colored 3D lines with a basic shader." },
+      { icon: "🌀", href: "examples/shader_quad.html", title: "Fullscreen shader", desc: "A fragment-shader distortion effect over a texture." },
+    ]},
+    { name: "Meshes", items: [
+      { icon: "🧱", href: "examples/mesh_from_code.html", title: "Mesh from code", desc: "Build geometry by filling vertex buffers by hand." },
+      { icon: "🔷", href: "examples/meshes.html", title: "Primitive gallery", desc: "Every built-in primitive lit by a shader." },
+      { icon: "📥", href: "examples/mesh_formats.html", title: "Load meshes", desc: "Download and parse OBJ / binary meshes." },
+      { icon: "💾", href: "examples/encode.html", title: "Encode & download", desc: "Serialize a mesh and save it to disk." },
+      { icon: "✳️", href: "examples/points.html", title: "Points system", desc: "Particles moving along a Lorenz attractor." },
+    ]},
+    { name: "Textures", items: [
+      { icon: "🖼️", href: "examples/texture.html", title: "Textured mesh", desc: "Sample a 2D texture in a shader." },
+      { icon: "🎨", href: "examples/texture_process.html", title: "Texture FX", desc: "Post-process a texture with effects." },
+      { icon: "🌐", href: "examples/cubemap.html", title: "Cubemaps", desc: "Render with a cubemap texture.", extra: [["Float","examples/cubemap_float.html"],["Half float","examples/cubemap_half_float.html"],["Polar","examples/cubemap_polar.html"]] },
+      { icon: "🌫️", href: "examples/cubemap_blur.html", title: "Blur a cubemap", desc: "Convolve a cubemap for soft reflections." },
+      { icon: "🗜️", href: "examples/dds.html", title: "DDS textures", desc: "Load compressed DDS texture files." },
+      { icon: "🏷️", href: "examples/texture_tga.html", title: "TGA with alpha", desc: "Decode TGA images with transparency." },
+    ]},
+    { name: "Render to texture", items: [
+      { icon: "🪞", href: "examples/rendertexture_drawto.html", title: "Render to texture", desc: "Off-screen rendering with drawTo().", extra: [["To depth","examples/rendertexture_drawto_depth.html"]] },
+      { icon: "🎯", href: "examples/rendertexture_fbo.html", title: "FBO rendering", desc: "Render into a texture with an FBO.", extra: [["Half float","examples/rendertexture_fbo_halffloat.html"]] },
+      { icon: "🗂️", href: "examples/rendermultibuffer.html", title: "Multiple targets", desc: "Write to several textures at once (MRT).", extra: [["Deferred","examples/deferred.html"]] },
+      { icon: "📦", href: "examples/rendertocubemap.html", title: "Render to cubemap", desc: "Render the scene into all six faces." },
+    ]},
+    { name: "Picking & octree", items: [
+      { icon: "🖱️", href: "examples/picking.html", title: "Bounding-box picking", desc: "Ray-pick against AABBs." },
+      { icon: "🎯", href: "examples/mesh_picking.html", title: "Mesh picking", desc: "Ray-pick against triangles of a mesh." },
+      { icon: "🌳", href: "examples/octree.html", title: "Octree nodes", desc: "Visualize the octree acceleration structure." },
+      { icon: "📍", href: "examples/octree_nearest.html", title: "Nearest point", desc: "Find the closest point on a mesh surface." },
+    ]},
+    { name: "Advanced & WebGL2", items: [
+      { icon: "♻️", href: "examples/instancing.html", title: "Instancing", desc: "Draw many copies in one call." },
+      { icon: "🩹", href: "examples/stencil.html", title: "Stencil buffer", desc: "Mask rendering with the stencil test." },
+      { icon: "🧊", href: "examples/texture3d.html", title: "3D textures", desc: "Volumetric TEXTURE_3D (WebGL2)." },
+    ]},
+  ];
+
+  var root = document.getElementById("examples-root");
+  if (root) {
+    groups.forEach(function (g) {
+      var h = document.createElement("h3");
+      h.textContent = g.name;
+      root.appendChild(h);
+      var grid = document.createElement("div");
+      grid.className = "ex-grid";
+      g.items.forEach(function (it) {
+        var a = document.createElement("a");
+        a.className = "ex";
+        a.href = it.href;
+        var extra = "";
+        if (it.extra) {
+          extra = '<div class="ex-extra">also: ' + it.extra.map(function (e) {
+            return '<a href="' + e[1] + '">' + e[0] + "</a>";
+          }).join(" · ") + "</div>";
+        }
+        a.innerHTML =
+          '<div class="ex-ico">' + it.icon + "</div>" +
+          '<div class="ex-title">' + it.title + "</div>" +
+          '<div class="ex-desc">' + it.desc + "</div>" + extra;
+        grid.appendChild(a);
+      });
+      root.appendChild(grid);
+    });
+  }
+
+  /* ---------- live hero demo: a rotating lit cube ---------- */
+  (function heroDemo() {
+    var canvas = document.getElementById("hero-demo");
+    var fallback = document.getElementById("demo-fallback");
+    if (!canvas || typeof GL === "undefined") { if (fallback) fallback.hidden = false; return; }
+
+    var gl;
+    function fit() {
+      var r = canvas.getBoundingClientRect();
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.max(1, Math.round(r.width * dpr));
+      canvas.height = Math.max(1, Math.round(r.height * dpr));
+    }
+    fit();
+
+    try {
+      gl = GL.create({ canvas: canvas, alpha: true, antialias: true, premultipliedAlpha: false });
+    } catch (e) {
+      if (fallback) fallback.hidden = false;
+      return;
+    }
+
+    var shader = new GL.Shader(
+      "precision highp float;\n" +
+      "attribute vec3 a_vertex;\n" +
+      "attribute vec3 a_normal;\n" +
+      "uniform mat4 u_mvp;\n" +
+      "uniform mat4 u_model;\n" +
+      "varying vec3 v_normal;\n" +
+      "void main(){\n" +
+      "  v_normal = (u_model * vec4(a_normal,0.0)).xyz;\n" +
+      "  gl_Position = u_mvp * vec4(a_vertex,1.0);\n" +
+      "}\n",
+      "precision highp float;\n" +
+      "varying vec3 v_normal;\n" +
+      "uniform vec3 u_lightdir;\n" +
+      "uniform vec3 u_colorA;\n" +
+      "uniform vec3 u_colorB;\n" +
+      "void main(){\n" +
+      "  vec3 N = normalize(v_normal);\n" +
+      "  float d = max(dot(N, normalize(u_lightdir)), 0.0);\n" +
+      "  float rim = pow(1.0 - max(N.z, 0.0), 2.0);\n" +
+      "  vec3 c = mix(u_colorA, u_colorB, d) + rim * 0.25;\n" +
+      "  gl_FragColor = vec4(c, 1.0);\n" +
+      "}\n"
+    );
+
+    var mesh = GL.Mesh.cube({ size: 1.4 });
+    var persp = mat4.create(), view = mat4.create(), model = mat4.create(), mvp = mat4.create();
+
+    function resize() {
+      fit();
+      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    }
+    window.addEventListener("resize", resize);
+    resize();
+
+    gl.onupdate = function (dt) {
+      mat4.rotateY(model, model, dt * 0.6);
+      mat4.rotateX(model, model, dt * 0.22);
+    };
+
+    gl.ondraw = function () {
+      gl.clearColor(0, 0, 0, 0);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+      gl.enable(gl.DEPTH_TEST);
+      mat4.perspective(persp, 0.85, gl.canvas.width / gl.canvas.height, 0.1, 100);
+      mat4.lookAt(view, [0, 1.1, 4.2], [0, 0, 0], [0, 1, 0]);
+      mat4.multiply(mvp, persp, view);
+      mat4.multiply(mvp, mvp, model);
+      shader.uniforms({
+        u_mvp: mvp,
+        u_model: model,
+        u_lightdir: [0.5, 0.85, 0.7],
+        u_colorA: [0.16, 0.20, 0.42],
+        u_colorB: [0.43, 0.55, 1.0]
+      }).draw(mesh);
+    };
+
+    gl.animate();
+  })();
+})();
+</script>
 </body>
 </html>
-

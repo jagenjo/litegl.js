@@ -1,9 +1,45 @@
 {
+  "name": "litegl.js",
+  "version": "0.4.0",
+  "description": "A WebGL 1/2 wrapper library with classes for Mesh, Texture, Shader, FBO and more.",
+  "author": "Javi Agenjo (@tamat)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jagenjo/litegl.js.git"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "unpkg": "./build/litegl.js",
+  "jsdelivr": "./build/litegl.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./global": "./build/litegl.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "build",
+    "src",
+    "external",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
-    "build" : "cd utils;./build.sh",
+    "typecheck": "tsc --noEmit",
+    "build:types": "tsc",
+    "build:global": "node scripts/build.mjs",
+    "build": "npm run typecheck && npm run build:types && npm run build:global",
+    "watch": "tsc --watch",
     "test": "echo \"Error: no test specified\" && exit 1"
-  },  
-  "dependencies": {
-    "google-closure-compiler": "^20231112.0.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.1",
+    "typescript": "^7.0.2"
   }
 }
