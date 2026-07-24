@@ -50,10 +50,16 @@ Demos are included in the Examples folder but you can check them in [this websit
 Usage
 -----
 
-Include the library and dependencies
+Include the library and dependencies (classic global build):
 ```html
 <script src="js/gl-matrix-min.js"></script>
 <script src="js/litegl.js"></script>
+```
+This exposes the same `GL` (a.k.a. `LiteGL`) global and bare classes (`Texture`, `Mesh`, `Shader`, ...) as before.
+
+Or, as an ES module with TypeScript types (glMatrix 2.x must still be present as a global):
+```js
+import { GL, Texture, Mesh, Shader } from "litegl.js";
 ```
 
 Create the context
@@ -110,10 +116,23 @@ The doc folder contains the documentation. For info about [glmatrix.net](http://
 
 Check the [guides](guides) folder to see how to use all the features.
 
-Utils
------
+Development
+-----------
 
-It includes several commands in the utils folder to generate doc, check errors and build minifyed version.
+The library is written in **TypeScript** (`src/*.ts`) and built with a Node pipeline (`tsc` +
+[esbuild](https://esbuild.github.io/)). glMatrix 2.x is treated as an external global (it is **not**
+bundled) — load it before litegl exactly as before.
+
+```bash
+npm install        # install dev dependencies (typescript, esbuild)
+npm run typecheck  # strict type-check, no output
+npm run build      # type-check + emit dist/ (ESM + .d.ts) + build/litegl.js & build/litegl.min.js
+npm run watch      # tsc --watch
+```
+
+Outputs:
+- `dist/` — ES modules and `.d.ts` type declarations, for `import` / npm consumers (git-ignored, published to npm).
+- `build/litegl.js` and `build/litegl.min.js` — the browser-global IIFE bundles for classic `<script src>` / CDN usage (committed).
 
 
 Feedback

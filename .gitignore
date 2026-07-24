@@ -5,6 +5,10 @@ temp/
 temp/*
 coverage/
 
+# Generated ESM output (published to npm, not committed). The browser-global
+# bundle in build/ is kept committed for classic <script src> / CDN consumers.
+dist/
+
 # Editors
 /.vscode/*
 !/.vscode/extensions.json

@@ -1,62 +1,196 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>litegl.js — examples</title>
+<meta name="description" content="Runnable WebGL demos built with litegl.js: meshes, textures, cubemaps, FBOs, picking, octree, instancing and more." />
+<style>
+  :root {
+    --bg: #f7f8fb; --bg-elev: #ffffff; --border: #e5e8f0; --text: #1b2030;
+    --muted: #5a6478; --accent: #4f6bff; --accent-2: #9b5cff; --accent-ink: #fff;
+    --shadow: 0 1px 2px rgba(20,28,60,.06), 0 8px 24px rgba(20,28,60,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0c0f1a; --bg-elev: #141a2b; --border: #232a40; --text: #e8ecf7;
+      --muted: #9aa4bd; --accent: #6d84ff; --accent-2: #b07bff;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="light"] { --bg:#f7f8fb; --bg-elev:#fff; --border:#e5e8f0; --text:#1b2030; --muted:#5a6478; --accent:#4f6bff; --accent-2:#9b5cff; --shadow:0 1px 2px rgba(20,28,60,.06),0 8px 24px rgba(20,28,60,.06); }
+  :root[data-theme="dark"] { --bg:#0c0f1a; --bg-elev:#141a2b; --border:#232a40; --text:#e8ecf7; --muted:#9aa4bd; --accent:#6d84ff; --accent-2:#b07bff; --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px rgba(0,0,0,.35); }
 
-<title>litegl.js examples</title>
-	<link type="text/css" rel="stylesheet" media="all" href="https://github.com/assets/github-c066013be20516a6aae45467044fa109f18bd0c6.css">
-	<link type="text/css" rel="stylesheet" media="all" href="https://github.com/assets/github2-97081caeb5890bc349a9ff52de33ac5ba1a4b6cc.css">
-	<link type="text/css" rel="stylesheet" media="all" href="https://github.com/assets/styleguide-4a2ef42768c9e616cf8022dec2fe99290430ac2c.css">
-	<link rel="stylesheet" type="text/css" href="../style.css" />
-	<style type='text/css'>
-	</style>
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: var(--text); background: var(--bg); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+
+  header.nav { position: sticky; top: 0; z-index: 20; backdrop-filter: saturate(160%) blur(10px); background: color-mix(in srgb, var(--bg) 82%, transparent); border-bottom: 1px solid var(--border); }
+  .nav-inner { display: flex; align-items: center; gap: 18px; height: 60px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; color: var(--text); }
+  .brand:hover { text-decoration: none; }
+  .brand .logo { width: 26px; height: 26px; display: block; }
+  .nav-links { margin-left: auto; display: flex; gap: 4px; align-items: center; }
+  .nav-links a { color: var(--muted); padding: 8px 12px; border-radius: 8px; font-size: 15px; }
+  .nav-links a:hover { color: var(--text); background: var(--bg-elev); text-decoration: none; }
+  .icon-btn { background: none; border: 1px solid var(--border); color: var(--muted); width: 38px; height: 38px; border-radius: 9px; cursor: pointer; font-size: 16px; display: grid; place-items: center; }
+  .icon-btn:hover { color: var(--text); border-color: var(--accent); }
+
+  .page-head { padding: 46px 0 8px; }
+  .eyebrow { display:inline-block; font-size:13px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); padding:5px 11px; border-radius:999px; margin-bottom:16px; }
+  h1 { font-size: clamp(28px, 5vw, 42px); letter-spacing: -.02em; margin: 0 0 12px; }
+  .lede { color: var(--muted); font-size: 18px; margin: 0; max-width: 60ch; }
+  h3 { font-size: 15px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 36px 0 14px; font-weight: 700; }
+
+  .ex-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 820px) { .ex-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 520px) { .ex-grid { grid-template-columns: 1fr; } }
+  .ex { display: block; border: 1px solid var(--border); border-radius: 13px; padding: 16px; background: var(--bg-elev); color: var(--text); transition: transform .07s ease, box-shadow .2s ease, border-color .2s ease; }
+  .ex:hover { text-decoration: none; transform: translateY(-2px); box-shadow: var(--shadow); border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); }
+  .ex .ex-ico { font-size: 20px; }
+  .ex .ex-title { font-weight: 650; margin: 8px 0 3px; font-size: 15.5px; }
+  .ex .ex-desc { color: var(--muted); font-size: 13.5px; }
+  .ex .ex-extra { margin-top: 8px; font-size: 12.5px; }
+
+  footer { border-top: 1px solid var(--border); margin-top: 50px; padding: 30px 0 60px; color: var(--muted); font-size: 14px; }
+</style>
 </head>
 <body>
 
-<div id="wrap">
-	<div id="main">
-		<div id="content" class="markdown-body">
-			<h1>litegl.js</h1>
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="../index.html">
+      <svg class="logo" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#4f6bff"/><stop offset="1" stop-color="#9b5cff"/>
+        </linearGradient></defs>
+        <path d="M16 2 4 8.5v15L16 30l12-6.5v-15L16 2Z" fill="url(#g)" opacity="0.18"/>
+        <path d="M16 2 4 8.5 16 15l12-6.5L16 2Z" fill="url(#g)"/>
+        <path d="M4 8.5v15L16 30V15L4 8.5Z" fill="url(#g)" opacity="0.55"/>
+        <path d="M28 8.5v15L16 30V15l12-6.5Z" fill="url(#g)" opacity="0.32"/>
+      </svg>
+      litegl.js
+    </a>
+    <nav class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../doc">Docs</a>
+      <a href="https://github.com/jagenjo/litegl.js">GitHub</a>
+      <button class="icon-btn" id="theme-toggle" title="Toggle light / dark" aria-label="Toggle theme">◐</button>
+    </nav>
+  </div>
+</header>
 
-			<a name="examples"></a>
-			<ul>
-				<h2>API Basics</h2>
-				<li><a href="lines.html">Basic lines rendering</a></li>
-				<li><a href="shader_quad.html">Simple shader demo</a></li>
-				<h2>Meshes</h2>
-				<li><a href="mesh_from_code.html">Creating a mesh from code</a></li>
-				<li><a href="meshes.html">Render all geometric primitives with a light shader</a></li>
-				<li><a href="mesh_formats.html">Render one mesh with light shader (example of how to load/download meshes)</a></li>
-				<li><a href="encode.html">Encoding and downloading a mesh</a></li>
-				<li><a href="points.html">Points moving using Lorenz Attractor</a></li>
-				<h2>Textures</h2>
-				<li><a href="texture.html">Rendering with textures</a></li>
-				<li><a href="texture_process.html">Apply FX to textures</a></li>
-				<li><a href="cubemap.html">Rendering using a cubemap texture</a> (<a href="cubemap_float.html">Float</a>) (<a href="cubemap_half_float.html">Half Float</a>)</li>
-				<li><a href="cubemap_blur.html">Blurring a cubemap</a></li>
-				<li><a href="dds.html">Use of DDS</a></li>
-				<li><a href="texture_tga.html">Use of TGA with alpha</a></li>
-				<h2>Render to Texture</h2>
-				<li><a href="rendertexture_drawto.html">Rendering to texture using drawTo</a> (<a href="rendertexture_drawto_depth.html">to depth</a>)</li>
-				<li><a href="rendertexture_fbo.html">Rendering to texture using FBO</a> (<a href="rendertexture_fbo_halffloat.html">Half Float</a>)</li>
-				<li><a href="rendermultibuffer.html">Rendering to multiple textures</a> (<a href="deferred.html">Deferred rendering example</a>)</li>
-				<li><a href="rendertocubemap.html">Rendering to cubemap texture</a></li>
-				<h2>Octree</h2>
-				<li><a href="picking.html">Basic Raypicking on Bounding Boxes</a></li>
-				<li><a href="mesh_picking.html">RayPicking on a Mesh</a></li>
-				<li><a href="octree.html">Display Octree nodes</a></li>
-				<li><a href="octree_nearest.html">Nearest point to a Mesh</a></li>
-				<h2>Others</h2>
-				<li><a href="instancing.html">Instancing demo</a></li>
-				<li><a href="stencil.html">Simple stencil demo</a></li>
-				<h2>WebGL2</h2>
-				<li><a href="texture3d.html">Texture3D</a></li>
-			</ul>
+<div class="wrap">
+  <div class="page-head">
+    <span class="eyebrow">Examples</span>
+    <h1>litegl.js in action</h1>
+    <p class="lede">Small, self-contained demos covering the whole library. Each page loads glMatrix + litegl and runs in your browser — view source on any of them to see the code.</p>
+  </div>
 
-		</div>
-	</div>
+  <div id="examples-root"></div>
+
+  <noscript>
+    <h3>All demos</h3>
+    <ul>
+      <li><a href="lines.html">Lines &amp; axes</a> · <a href="shader_quad.html">Fullscreen shader</a></li>
+      <li><a href="mesh_from_code.html">Mesh from code</a> · <a href="meshes.html">Primitive gallery</a> · <a href="mesh_formats.html">Load meshes</a> · <a href="encode.html">Encode &amp; download</a> · <a href="points.html">Points system</a></li>
+      <li><a href="texture.html">Textured mesh</a> · <a href="texture_process.html">Texture FX</a> · <a href="cubemap.html">Cubemaps</a> · <a href="cubemap_blur.html">Blur a cubemap</a> · <a href="dds.html">DDS</a> · <a href="texture_tga.html">TGA</a></li>
+      <li><a href="rendertexture_drawto.html">Render to texture</a> · <a href="rendertexture_fbo.html">FBO</a> · <a href="rendermultibuffer.html">MRT</a> · <a href="rendertocubemap.html">Render to cubemap</a></li>
+      <li><a href="picking.html">BBox picking</a> · <a href="mesh_picking.html">Mesh picking</a> · <a href="octree.html">Octree nodes</a> · <a href="octree_nearest.html">Nearest point</a></li>
+      <li><a href="instancing.html">Instancing</a> · <a href="stencil.html">Stencil</a> · <a href="texture3d.html">3D textures</a> · <a href="simulation.html">GPU simulation</a></li>
+    </ul>
+  </noscript>
 </div>
 
+<footer>
+  <div class="wrap">
+    <a href="../index.html">← Back to litegl.js</a> · MIT licensed · by <a href="http://tamats.com">Javi Agenjo (@tamat)</a>
+  </div>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  var toggle = document.getElementById("theme-toggle");
+  try { var saved = localStorage.getItem("litegl-theme"); if (saved) document.documentElement.setAttribute("data-theme", saved); } catch (e) {}
+  toggle.addEventListener("click", function () {
+    var cur = document.documentElement.getAttribute("data-theme");
+    var isDark = cur ? cur === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    var next = isDark ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    try { localStorage.setItem("litegl-theme", next); } catch (e) {}
+  });
+
+  var groups = [
+    { name: "API basics", items: [
+      { icon: "📏", href: "lines.html", title: "Lines & axes", desc: "Draw colored 3D lines with a basic shader." },
+      { icon: "🌀", href: "shader_quad.html", title: "Fullscreen shader", desc: "A fragment-shader distortion effect over a texture." },
+    ]},
+    { name: "Meshes", items: [
+      { icon: "🧱", href: "mesh_from_code.html", title: "Mesh from code", desc: "Build geometry by filling vertex buffers by hand." },
+      { icon: "🔷", href: "meshes.html", title: "Primitive gallery", desc: "Every built-in primitive lit by a shader." },
+      { icon: "📥", href: "mesh_formats.html", title: "Load meshes", desc: "Download and parse OBJ / binary meshes." },
+      { icon: "💾", href: "encode.html", title: "Encode & download", desc: "Serialize a mesh and save it to disk." },
+      { icon: "✳️", href: "points.html", title: "Points system", desc: "Particles moving along a Lorenz attractor." },
+    ]},
+    { name: "Textures", items: [
+      { icon: "🖼️", href: "texture.html", title: "Textured mesh", desc: "Sample a 2D texture in a shader." },
+      { icon: "🎨", href: "texture_process.html", title: "Texture FX", desc: "Post-process a texture with effects." },
+      { icon: "🌐", href: "cubemap.html", title: "Cubemaps", desc: "Render with a cubemap texture.", extra: [["Float","cubemap_float.html"],["Half float","cubemap_half_float.html"],["Polar","cubemap_polar.html"]] },
+      { icon: "🌫️", href: "cubemap_blur.html", title: "Blur a cubemap", desc: "Convolve a cubemap for soft reflections." },
+      { icon: "🗜️", href: "dds.html", title: "DDS textures", desc: "Load compressed DDS texture files." },
+      { icon: "🏷️", href: "texture_tga.html", title: "TGA with alpha", desc: "Decode TGA images with transparency." },
+    ]},
+    { name: "Render to texture", items: [
+      { icon: "🪞", href: "rendertexture_drawto.html", title: "Render to texture", desc: "Off-screen rendering with drawTo().", extra: [["To depth","rendertexture_drawto_depth.html"]] },
+      { icon: "🎯", href: "rendertexture_fbo.html", title: "FBO rendering", desc: "Render into a texture with an FBO.", extra: [["Half float","rendertexture_fbo_halffloat.html"]] },
+      { icon: "🗂️", href: "rendermultibuffer.html", title: "Multiple targets", desc: "Write to several textures at once (MRT).", extra: [["Deferred","deferred.html"]] },
+      { icon: "📦", href: "rendertocubemap.html", title: "Render to cubemap", desc: "Render the scene into all six faces." },
+    ]},
+    { name: "Picking & octree", items: [
+      { icon: "🖱️", href: "picking.html", title: "Bounding-box picking", desc: "Ray-pick against AABBs." },
+      { icon: "🎯", href: "mesh_picking.html", title: "Mesh picking", desc: "Ray-pick against triangles of a mesh." },
+      { icon: "🌳", href: "octree.html", title: "Octree nodes", desc: "Visualize the octree acceleration structure." },
+      { icon: "📍", href: "octree_nearest.html", title: "Nearest point", desc: "Find the closest point on a mesh surface." },
+    ]},
+    { name: "Advanced & WebGL2", items: [
+      { icon: "♻️", href: "instancing.html", title: "Instancing", desc: "Draw many copies in one call." },
+      { icon: "🩹", href: "stencil.html", title: "Stencil buffer", desc: "Mask rendering with the stencil test." },
+      { icon: "🧊", href: "texture3d.html", title: "3D textures", desc: "Volumetric TEXTURE_3D (WebGL2)." },
+      { icon: "🧪", href: "simulation.html", title: "GPU simulation", desc: "State updated entirely on the GPU." },
+    ]},
+  ];
+
+  var root = document.getElementById("examples-root");
+  groups.forEach(function (g) {
+    var h = document.createElement("h3");
+    h.textContent = g.name;
+    root.appendChild(h);
+    var grid = document.createElement("div");
+    grid.className = "ex-grid";
+    g.items.forEach(function (it) {
+      var a = document.createElement("a");
+      a.className = "ex";
+      a.href = it.href;
+      var extra = "";
+      if (it.extra) {
+        extra = '<div class="ex-extra">also: ' + it.extra.map(function (e) {
+          return '<a href="' + e[1] + '">' + e[0] + "</a>";
+        }).join(" · ") + "</div>";
+      }
+      a.innerHTML =
+        '<div class="ex-ico">' + it.icon + "</div>" +
+        '<div class="ex-title">' + it.title + "</div>" +
+        '<div class="ex-desc">' + it.desc + "</div>" + extra;
+      grid.appendChild(a);
+    });
+    root.appendChild(grid);
+  });
+})();
+</script>
 </body>
 </html>
-
